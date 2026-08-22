@@ -122,11 +122,18 @@ export default function DashboardScreen() {
 
       {/* 2. Search Area */}
       <View style={styles.searchSection}>
-        <Pressable onPress={() => router.push('/search')} style={{ flex: 1 }}>
-          <View pointerEvents="none">
-            <SearchBar placeholder="Search" />
-          </View>
-        </Pressable>
+        <View style={{ flex: 1 }}>
+          <SearchBar 
+            placeholder="Search" 
+            value={searchQuery}
+            onChangeText={(text) => {
+              setSearchQuery(text);
+              if (text.length % 3 === 0 && text.length > 0) {
+                console.log('[DashboardScreen] Search query updated:', text);
+              }
+            }}
+          />
+        </View>
       </View>
 
       {/* 3. Quick Actions Section */}
@@ -134,7 +141,7 @@ export default function DashboardScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll} contentContainerStyle={{ paddingRight: 40 }}>
           <QuickAction title="Add Account" icon="user-plus" variant="primary" onPress={() => router.push('/accounts/new')} />
           <QuickAction title="Add Customer" icon="user" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Add Customer')} />
-          <QuickAction title="Create Deal" icon="handshake" iconFamily="FontAwesome5" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Create Deal')} />
+          <QuickAction title="Create Deal" icon="briefcase" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Create Deal')} />
           <QuickAction title="Create Reminder" icon="check-square" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Create Reminder')} />
         </ScrollView>
       </View>
@@ -143,10 +150,10 @@ export default function DashboardScreen() {
       <View style={[styles.section, styles.lastSection]}>
         <View style={styles.grid}>
           <StatCard title="Accounts" value={getMetric('leads')} icon="user" onPress={() => router.push('/leads')} />
-          <StatCard title="Deals" value={getMetric('deals')} icon="handshake" iconFamily="FontAwesome5" onPress={() => router.push('/deals')} />
+          <StatCard title="Deals" value={getMetric('deals')} icon="briefcase" onPress={() => router.push('/deals')} />
           <StatCard title="Reminders" value={getMetric('reminders')} icon="check-square" onPress={() => router.push('/reminders')} />
           <StatCard title="Customers" value={getMetric('customers')} icon="users" onPress={() => router.push('/customers')} />
-          <StatCard title="Support Requests" value={getMetric('supportRequests')} icon="headphones" onPress={() => router.push('/(tabs)/support')} />
+          <StatCard title="Support Requests" value={getMetric('supportRequests')} icon="headphones" onPress={() => router.push('/support')} />
           <StatCard title="Quotations" value={getMetric('quotations')} icon="file-text" onPress={() => router.push('/quotations')} />
         </View>
       </View>
@@ -367,4 +374,3 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
-

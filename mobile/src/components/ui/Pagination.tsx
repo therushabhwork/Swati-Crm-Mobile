@@ -37,16 +37,6 @@ export const Pagination: React.FC<PaginationProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* First Button */}
-      <TouchableOpacity
-        style={[styles.button, styles.navButton, { marginRight: 4 }, currentPage === 1 && styles.disabledButton]}
-        onPress={() => onPageChange(1)}
-        disabled={currentPage === 1}
-        accessibilityLabel="First Page"
-      >
-        <Text style={[styles.navText, currentPage === 1 && styles.disabledText]}>First</Text>
-      </TouchableOpacity>
-
       {/* Back Button */}
       <TouchableOpacity
         style={[styles.button, styles.navButton, currentPage === 1 && styles.disabledButton]}
@@ -84,16 +74,6 @@ export const Pagination: React.FC<PaginationProps> = ({
         accessibilityLabel="Next Page"
       >
         <Feather name="chevron-right" size={16} color={currentPage === totalPages ? '#9CA3AF' : '#C62828'} />
-      </TouchableOpacity>
-
-      {/* Last Button */}
-      <TouchableOpacity
-        style={[styles.button, styles.navButton, { marginLeft: 4 }, currentPage === totalPages && styles.disabledButton]}
-        onPress={() => onPageChange(totalPages)}
-        disabled={currentPage === totalPages}
-        accessibilityLabel="Last Page"
-      >
-        <Text style={[styles.navText, currentPage === totalPages && styles.disabledText]}>Last</Text>
       </TouchableOpacity>
     </View>
   );

@@ -4,10 +4,10 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "start": "node start-expo.js --port 8081",
+    "android": "node start-expo.js --android --port 8081",
+    "ios": "node start-expo.js --ios --port 8081",
+    "web": "node start-expo.js --web --port 8081"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",

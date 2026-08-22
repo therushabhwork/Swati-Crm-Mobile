@@ -1,0 +1,5 @@
+env: load .env
+env: export EXPO_PUBLIC_API_URL EXPO_NO_QR
+Starting project at D:\Final server crm2\mobile
+› Port 8081 is being used by another process
+› Skipping dev server

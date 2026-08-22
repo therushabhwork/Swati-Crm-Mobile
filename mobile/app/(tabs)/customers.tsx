@@ -74,7 +74,7 @@ export default function CustomersScreen() {
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardId}>{custNo}</Text>
+          <Text style={styles.cardId}>Ex: {custNo}</Text>
           <View style={styles.statusBadge}>
             <Text style={styles.statusText}>{status}</Text>
           </View>

@@ -9,10 +9,9 @@ interface SearchBarProps {
   placeholder?: string;
   value?: string;
   onChangeText?: (text: string) => void;
-  onSubmitEditing?: () => void;
 }
 
-export function SearchBar({ placeholder = 'Search...', value, onChangeText, onSubmitEditing }: SearchBarProps) {
+export function SearchBar({ placeholder = 'Search...', value, onChangeText }: SearchBarProps) {
   return (
     <View style={styles.container}>
       <Feather name="search" size={18} color={colors.textSecondary} style={styles.icon} />
@@ -22,8 +21,6 @@ export function SearchBar({ placeholder = 'Search...', value, onChangeText, onSu
         placeholderTextColor={colors.textSecondary}
         value={value}
         onChangeText={onChangeText}
-        onSubmitEditing={onSubmitEditing}
-        returnKeyType="search"
         autoCapitalize="none"
         autoCorrect={false}
       />

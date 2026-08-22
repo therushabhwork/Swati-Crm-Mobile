@@ -7,7 +7,6 @@ interface CalendarDayProps {
   isSelected: boolean;
   remindersCount: number;
   onPress: (date: Date) => void;
-  isCompact?: boolean;
 }
 
 export const CalendarDay: React.FC<CalendarDayProps> = ({
@@ -16,10 +15,9 @@ export const CalendarDay: React.FC<CalendarDayProps> = ({
   isSelected,
   remindersCount,
   onPress,
-  isCompact = false,
 }) => {
   if (!date) {
-    return <View style={[styles.dayContainer, isCompact && styles.compactDayContainer]} />;
+    return <View style={styles.dayContainer} />;
   }
 
   const handlePress = () => {
@@ -48,7 +46,6 @@ export const CalendarDay: React.FC<CalendarDayProps> = ({
     <TouchableOpacity
       style={[
         styles.dayContainer,
-        isCompact && styles.compactDayContainer,
         isToday && !isSelected ? styles.todayContainer : null,
         isSelected ? styles.selectedContainer : null,
       ]}
@@ -57,7 +54,6 @@ export const CalendarDay: React.FC<CalendarDayProps> = ({
       <Text
         style={[
           styles.dayText,
-          isCompact && styles.compactDayText,
           isToday && !isSelected ? styles.todayText : null,
           isSelected ? styles.selectedText : null,
         ]}
@@ -78,10 +74,6 @@ const styles = StyleSheet.create({
     marginVertical: 4,
     borderRadius: 8,
   },
-  compactDayContainer: {
-    width: 32,
-    height: 32,
-  },
   todayContainer: {
     borderWidth: 1,
     borderColor: '#E8B5B5',
@@ -95,9 +87,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: '#111827',
-  },
-  compactDayText: {
-    fontSize: 13,
   },
   todayText: {
     color: '#A00000',

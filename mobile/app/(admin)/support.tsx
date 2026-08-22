@@ -120,7 +120,7 @@ export default function SupportScreen() {
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardId}>{srNo}</Text>
+          <Text style={styles.cardId}>Ex: {srNo}</Text>
           <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
             <Text style={[styles.statusText, { color: statusColor }]}>{status}</Text>
           </View>

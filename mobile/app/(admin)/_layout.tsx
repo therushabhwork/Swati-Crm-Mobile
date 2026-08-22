@@ -1,7 +1,7 @@
 import { Tabs, Redirect } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { Feather, FontAwesome5 } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { colors } from '../../src/theme/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -58,7 +58,7 @@ export default function TabLayout() {
         name="deals"
         options={{
           title: 'Deals',
-          tabBarIcon: ({ color }) => <FontAwesome5 name="handshake" size={20} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="target" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -79,6 +79,7 @@ export default function TabLayout() {
       {/* Hidden Screens */}
       <Tabs.Screen name="support" options={{ href: null }} />
       <Tabs.Screen name="reminders" options={{ href: null }} />
+      <Tabs.Screen name="tasks" options={{ href: null }} />
       <Tabs.Screen name="quotations" options={{ href: null }} />
       
       {/* Hide detail screens from tab bar AND hide tab bar itself on these screens */}
@@ -87,7 +88,6 @@ export default function TabLayout() {
       <Tabs.Screen name="deal-details/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="support-details/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="reminder-details/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
-      <Tabs.Screen name="reminders/new" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="quotation-details/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="accounts/new" options={{ href: null, tabBarStyle: { display: 'none' } }} />
     </Tabs>

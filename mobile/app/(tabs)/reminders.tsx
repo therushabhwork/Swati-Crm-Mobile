@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { router, useFocusEffect } from 'expo-router';
+import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import apiClient from '../../src/api/client';
 import { AppHeader } from '../../src/components/ui/AppHeader';
@@ -11,7 +11,6 @@ import { LoadingSkeleton } from '../../src/components/ui/LoadingSkeleton';
 import { colors } from '../../src/theme/colors';
 import { CalendarButton } from '../../src/components/reminders/CalendarButton';
 import { CalendarModal } from '../../src/components/calendar/CalendarModal';
-import { TimelineReminderList } from '../../src/components/reminders/timeline/TimelineReminderList';
 import { isSameDay } from 'date-fns';
 
 export default function TasksScreen() {
@@ -21,9 +20,9 @@ export default function TasksScreen() {
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-  const fetchData = async (silent = false) => {
+  const fetchData = async () => {
     try {
-      if (!silent) setIsLoading(true);
+      setIsLoading(true);
       const res = await apiClient.get('/reminders');
       if (res.data?.success) {
         setData(res.data.data || []);
@@ -35,11 +34,9 @@ export default function TasksScreen() {
     }
   };
 
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchData(true);
-    }, [])
-  );
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const columns = [
     { id: 'title', header: 'Title', accessor: (item: any) => item.title || item.taskName || 'Unknown', width: 180 },
@@ -74,6 +71,49 @@ export default function TasksScreen() {
     return matchesSearch && matchesDate;
   });
 
+  const renderMobileCard = (item: any) => {
+    const title = item.title || item.taskName || 'Unknown';
+    const priority = item.priority || '-';
+    const status = item.status || '-';
+    const dueDate = item.dueDate ? new Date(item.dueDate).toLocaleDateString() : '-';
+    
+    let statusColor = '#4a5568';
+    let statusBg = '#edf2f7';
+    const s = status.toLowerCase();
+    if (s === 'completed') { statusColor = '#38a169'; statusBg = '#f0fff4'; }
+    else if (s === 'pending') { statusColor = '#dd6b20'; statusBg = '#feebc8'; }
+    else if (s === 'in progress') { statusColor = colors.primary; statusBg = colors.primaryLight; }
+
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>{title}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
+            <Text style={[styles.statusText, { color: statusColor }]}>{status}</Text>
+          </View>
+        </View>
+        
+        <View style={styles.cardGrid}>
+          <View style={styles.cardGridItem}>
+            <Text style={styles.cardLabel}>Priority</Text>
+            <Text style={styles.cardValue}>{priority}</Text>
+          </View>
+          <View style={styles.cardGridItem}>
+            <Text style={styles.cardLabel}>Due Date</Text>
+            <Text style={styles.cardValue}>{dueDate}</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity 
+          style={styles.viewDetailsBtn}
+          onPress={() => router.push(`/reminder-details/${item._id || item.id}`)}
+        >
+          <Text style={styles.viewDetailsText}>View Details</Text>
+          <Feather name="chevron-right" size={16} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -81,7 +121,7 @@ export default function TasksScreen() {
         title="Reminders" 
         onSearch={() => {}} 
         onFilter={() => {}} 
-        rightContent={<CalendarButton isActive={isCalendarVisible} onPress={() => setIsCalendarVisible(true)} />}
+        rightContent={<CalendarButton onPress={() => setIsCalendarVisible(true)} />}
       />
       
       {isLoading ? (
@@ -105,9 +145,13 @@ export default function TasksScreen() {
             searchPlaceholder="Search reminders..." 
             onSearch={setSearchQuery} 
           />
-          <TimelineReminderList
+          <ResponsiveList
             data={filteredData}
+            columns={columns}
+            keyExtractor={(item: any) => item._id || item.id}
             onRowPress={(item: any) => router.push(`/reminder-details/${item._id || item.id}`)}
+            renderMobileCard={renderMobileCard}
+            hideEmptyState={true}
           />
           {filteredData.length === 0 && (
             <View style={styles.emptyStateContainer}>
@@ -132,32 +176,11 @@ export default function TasksScreen() {
         }}
         reminders={data}
       />
-
-      <TouchableOpacity style={styles.fab} onPress={() => router.push('/reminders/new')}>
-        <Feather name="plus" size={24} color="#FFF" />
-      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    zIndex: 100,
-  },
   container: {
     flex: 1,
     backgroundColor: '#f7fafc',

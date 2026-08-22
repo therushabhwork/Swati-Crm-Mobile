@@ -24,7 +24,6 @@ interface CalendarModalProps {
   selectedDate: Date | null;
   onSelectDate: (date: Date) => void;
   reminders: any[];
-  position?: 'bottom' | 'center';
 }
 
 export const CalendarModal: React.FC<CalendarModalProps> = ({
@@ -33,7 +32,6 @@ export const CalendarModal: React.FC<CalendarModalProps> = ({
   selectedDate,
   onSelectDate,
   reminders,
-  position = 'bottom',
 }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [calendarView, setCalendarView] = useState<'calendar' | 'months' | 'years'>('calendar');
@@ -102,14 +100,14 @@ export const CalendarModal: React.FC<CalendarModalProps> = ({
     <Modal
       visible={visible}
       transparent
-      animationType={position === 'bottom' ? "slide" : "fade"}
+      animationType="slide"
       onRequestClose={onClose}
     >
       <TouchableWithoutFeedback onPress={onClose}>
-        <View style={[styles.overlay, position === 'center' && styles.overlayCenter]}>
+        <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <View style={[styles.content, position === 'center' && styles.contentCenter]}>
-              {position === 'bottom' && <View style={styles.handleBar} />}
+            <View style={styles.content}>
+              <View style={styles.handleBar} />
               <CalendarHeader
                 currentMonth={currentMonth}
                 onPreviousMonth={handlePreviousMonth}
@@ -123,14 +121,13 @@ export const CalendarModal: React.FC<CalendarModalProps> = ({
               />
               {calendarView === 'calendar' && (
                 <>
-                  <CalendarWeekdays isCompact={position === 'center'} />
+                  <CalendarWeekdays />
                   <CalendarGrid
                     days={days}
                     currentMonth={currentMonth}
                     selectedDate={selectedDate}
                     onSelectDate={onSelectDate}
                     getRemindersCount={getRemindersCount}
-                    isCompact={position === 'center'}
                   />
                 </>
               )}
@@ -160,11 +157,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.30)',
     justifyContent: 'flex-end',
   },
-  overlayCenter: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
   content: {
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 28,
@@ -176,12 +168,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 10,
-    width: '100%',
-  },
-  contentCenter: {
-    borderRadius: 20,
-    paddingBottom: 24, // less padding for center
-    maxWidth: 400,
   },
   handleBar: {
     width: 40,

@@ -3,15 +3,11 @@ import { View, Text, StyleSheet } from 'react-native';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-interface CalendarWeekdaysProps {
-  isCompact?: boolean;
-}
-
-export const CalendarWeekdays: React.FC<CalendarWeekdaysProps> = ({ isCompact = false }) => {
+export const CalendarWeekdays: React.FC = () => {
   return (
     <View style={styles.container}>
       {WEEKDAYS.map((day) => (
-        <Text key={day} style={[styles.dayText, isCompact && styles.compactDayText]}>
+        <Text key={day} style={styles.dayText}>
           {day}
         </Text>
       ))}
@@ -32,9 +28,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#9A9A9A',
-  },
-  compactDayText: {
-    width: 32,
-    fontSize: 12,
   },
 });

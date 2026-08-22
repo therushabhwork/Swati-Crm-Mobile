@@ -6,7 +6,7 @@ import { AppHeader } from '../../../src/components/ui/AppHeader';
 import { colors } from '../../../src/theme/colors';
 
 export default function CustomerDetailsScreen() {
-  const { id, fromSearch } = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -29,7 +29,7 @@ export default function CustomerDetailsScreen() {
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <AppHeader title="Customer Details" showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/customers')} />
+        <AppHeader title="Customer Details" showBack onBack={() => router.push('/(admin)/customers')} />
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -40,7 +40,7 @@ export default function CustomerDetailsScreen() {
   if (!data) {
     return (
       <View style={styles.centerContainer}>
-        <AppHeader title="Customer Details" showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/customers')} />
+        <AppHeader title="Customer Details" showBack onBack={() => router.push('/(admin)/customers')} />
         <View style={styles.loaderContainer}>
           <Text style={styles.errorText}>Customer not found.</Text>
         </View>
@@ -62,7 +62,7 @@ export default function CustomerDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title={data.customerName || data.name || "Customer Details"} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/customers')} />
+      <AppHeader title={data.customerName || data.name || "Customer Details"} showBack onBack={() => router.push('/(admin)/customers')} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Information</Text>

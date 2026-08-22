@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Feather, FontAwesome5 } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { spacing, radii, shadows } from '../theme/spacing';
 import { typography } from '../theme/typography';
@@ -8,12 +8,11 @@ import { typography } from '../theme/typography';
 interface StatCardProps {
   title: string;
   value: string | number;
-  icon: string;
-  iconFamily?: 'Feather' | 'FontAwesome5';
+  icon: keyof typeof Feather.glyphMap;
   onPress?: () => void;
 }
 
-export function StatCard({ title, value, icon, iconFamily = 'Feather', onPress }: StatCardProps) {
+export function StatCard({ title, value, icon, onPress }: StatCardProps) {
   return (
     <Pressable 
       style={({ pressed }) => [
@@ -23,11 +22,7 @@ export function StatCard({ title, value, icon, iconFamily = 'Feather', onPress }
       onPress={onPress}
     >
       <View style={styles.iconContainer}>
-        {iconFamily === 'FontAwesome5' ? (
-          <FontAwesome5 name={icon as any} size={20} color={colors.primary} />
-        ) : (
-          <Feather name={icon as any} size={20} color={colors.primary} />
-        )}
+        <Feather name={icon} size={20} color={colors.primary} />
       </View>
       <Text style={styles.value}>{value}</Text>
       <Text style={styles.title}>{title}</Text>

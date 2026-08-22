@@ -74,7 +74,7 @@ export default function DashboardScreen() {
   }
 
   return (
-    <ScrollView
+    <ScrollView 
       style={[styles.container, { paddingTop: insets.top }]}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
@@ -87,17 +87,17 @@ export default function DashboardScreen() {
             ? styles.lumosLogoContainer
             : styles.logoContainer
         }>
-          <Image
+          <Image 
             source={
               user?.email?.toLowerCase().includes('@lumossolution.com') || user?.email?.toLowerCase().includes('@gmail.com')
                 ? require('../../assets/images/lumos-logo.png')
                 : require('../../assets/images/logo.png')
-            }
+            } 
             style={
               user?.email?.toLowerCase().includes('@lumossolution.com') || user?.email?.toLowerCase().includes('@gmail.com')
                 ? styles.lumosLogo
                 : styles.logo
-            }
+            } 
           />
         </View>
         <View style={styles.headerText}>
@@ -109,7 +109,7 @@ export default function DashboardScreen() {
           <View style={styles.headerIcon}>
             <Feather name="bell" size={20} color={colors.textPrimary} />
           </View>
-          <Pressable
+          <Pressable 
             style={[styles.headerIcon, { marginLeft: spacing.sm }]}
             onPress={() => setProfileDropdownVisible(true)}
           >
@@ -121,17 +121,13 @@ export default function DashboardScreen() {
       {/* 2. Search Area */}
       <View style={styles.searchSection}>
         <View style={{ flex: 1 }}>
-          <SearchBar
-            placeholder="Search"
+          <SearchBar 
+            placeholder="Search" 
             value={searchQuery}
             onChangeText={(text) => {
               setSearchQuery(text);
-              console.log('[DashboardScreen] Search query updated:', text);
-            }}
-            onSubmitEditing={() => {
-              if (searchQuery.trim().length > 0) {
-                console.log('[DashboardScreen] Exact search query executed:', searchQuery);
-                router.push({ pathname: '/search', params: { q: searchQuery } });
+              if (text.length % 3 === 0 && text.length > 0) {
+                console.log('[DashboardScreen] Search query updated:', text);
               }
             }}
           />
@@ -143,7 +139,7 @@ export default function DashboardScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll} contentContainerStyle={{ paddingRight: 40 }}>
           <QuickAction title="Add Account" icon="user-plus" variant="primary" onPress={() => router.push('/accounts/new')} />
           <QuickAction title="Add Customer" icon="user" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Add Customer')} />
-          <QuickAction title="Create Deal" icon="handshake" iconFamily="FontAwesome5" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Create Deal')} />
+          <QuickAction title="Create Deal" icon="briefcase" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Create Deal')} />
           <QuickAction title="Create Reminder" icon="check-square" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Create Reminder')} />
         </ScrollView>
       </View>
@@ -152,10 +148,10 @@ export default function DashboardScreen() {
       <View style={[styles.section, styles.lastSection]}>
         <View style={styles.grid}>
           <StatCard title="Accounts" value={getMetric('leads')} icon="user" onPress={() => router.push('/leads')} />
-          <StatCard title="Deals" value={getMetric('deals')} icon="handshake" iconFamily="FontAwesome5" onPress={() => router.push('/deals')} />
+          <StatCard title="Deals" value={getMetric('deals')} icon="briefcase" onPress={() => router.push('/deals')} />
           <StatCard title="Reminders" value={getMetric('reminders')} icon="check-square" onPress={() => router.push('/reminders')} />
           <StatCard title="Customers" value={getMetric('customers')} icon="users" onPress={() => router.push('/customers')} />
-          <StatCard title="Support Requests" value={getMetric('supportRequests')} icon="headphones" onPress={() => router.push('/(admin)/support')} />
+          <StatCard title="Support Requests" value={getMetric('supportRequests')} icon="headphones" onPress={() => router.push('/support')} />
           <StatCard title="Quotations" value={getMetric('quotations')} icon="file-text" onPress={() => router.push('/quotations')} />
         </View>
       </View>
@@ -167,9 +163,9 @@ export default function DashboardScreen() {
         animationType="fade"
         onRequestClose={() => setProfileDropdownVisible(false)}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1} 
           onPress={() => setProfileDropdownVisible(false)}
         >
           <View style={styles.dropdownMenu}>
@@ -178,7 +174,7 @@ export default function DashboardScreen() {
               <Text style={styles.dropdownEmail}>{user?.email || 'admin@system.com'}</Text>
             </View>
             <View style={styles.dropdownDivider} />
-            <TouchableOpacity
+            <TouchableOpacity 
               style={styles.dropdownItem}
               onPress={() => {
                 setProfileDropdownVisible(false);
@@ -376,4 +372,3 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
-

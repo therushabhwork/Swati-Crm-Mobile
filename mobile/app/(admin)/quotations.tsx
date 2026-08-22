@@ -80,7 +80,7 @@ export default function QuotationsScreen() {
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardId}>{qtNo}</Text>
+          <Text style={styles.cardId}>Ex: {qtNo}</Text>
           <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
             <Text style={[styles.statusText, { color: statusColor }]}>{status}</Text>
           </View>

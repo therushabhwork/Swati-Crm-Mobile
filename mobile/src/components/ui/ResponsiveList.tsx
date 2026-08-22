@@ -1,5 +1,5 @@
 import React from 'react';
-import { useWindowDimensions, View, StyleSheet, FlatList } from 'react-native';
+import { useWindowDimensions, View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { DataTable } from './DataTable';
 import { EmptyState } from './EmptyState';
 import { Pagination } from './Pagination';
@@ -13,6 +13,9 @@ export type ResponsiveListProps<T> = {
   emptyTitle?: string;
   emptyMessage?: string;
   hideEmptyState?: boolean;
+  refreshing?: boolean;
+  onRefresh?: () => void;
+  ListHeaderComponent?: React.ReactElement;
 };
 
 export function ResponsiveList<T>({
@@ -24,6 +27,9 @@ export function ResponsiveList<T>({
   emptyTitle = 'No Records Found',
   emptyMessage = 'There are currently no records matching your criteria.',
   hideEmptyState = false,
+  refreshing,
+  onRefresh,
+  ListHeaderComponent,
 }: ResponsiveListProps<T>) {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768; // standard tablet/desktop breakpoint
@@ -65,6 +71,7 @@ export function ResponsiveList<T>({
   if (isDesktop) {
     return (
       <View style={styles.desktopContainer}>
+        {ListHeaderComponent}
         <DataTable 
           data={data}
           columns={columns}
@@ -83,6 +90,10 @@ export function ResponsiveList<T>({
       renderItem={({ item }) => <>{renderMobileCard(item)}</>}
       contentContainerStyle={styles.mobileListContent}
       showsVerticalScrollIndicator={false}
+      ListHeaderComponent={ListHeaderComponent}
+      refreshControl={
+        onRefresh ? <RefreshControl refreshing={refreshing || false} onRefresh={onRefresh} /> : undefined
+      }
       ListFooterComponent={
         totalPages > 1 ? (
           <View style={styles.paginationWrapper}>

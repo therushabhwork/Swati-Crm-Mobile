@@ -1,35 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
 import apiClient from '../../../src/api/client';
 import { AppHeader } from '../../../src/components/ui/AppHeader';
 import { colors } from '../../../src/theme/colors';
 
 export default function LeadDetailsScreen() {
-  const { id, fromSearch } = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDetails = async () => {
-      try {
-        const res = await apiClient.get(`/leads/${id}`);
-        if (res.data?.success) {
-          setData(res.data.data);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchDetails = async () => {
+        try {
+          const res = await apiClient.get(`/leads/${id}`);
+          if (res.data?.success) {
+            setData(res.data.data);
+          }
+        } catch (error: any) {
+          console.log(`[API Error] GET /leads/${id} - Status: ${error?.response?.status}`);
+        } finally {
+          setIsLoading(false);
         }
-      } catch (error: any) {
-        console.log(`[API Error] GET /leads/${id} - Status: ${error?.response?.status}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    if (id) fetchDetails();
-  }, [id]);
+      };
+      if (id) fetchDetails();
+    }, [id])
+  );
 
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <AppHeader title="Account Details" showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(tabs)/leads')} />
+        <AppHeader title="Account Details" showBack onBack={() => router.push('/(tabs)/leads')} />
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -40,7 +42,7 @@ export default function LeadDetailsScreen() {
   if (!data) {
     return (
       <View style={styles.centerContainer}>
-        <AppHeader title="Account Details" showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(tabs)/leads')} />
+        <AppHeader title="Account Details" showBack onBack={() => router.push('/(tabs)/leads')} />
         <View style={styles.loaderContainer}>
           <Text style={styles.errorText}>Account not found.</Text>
         </View>
@@ -67,7 +69,7 @@ export default function LeadDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title={data.accountName || data.name || "Account Details"} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(tabs)/leads')} />
+      <AppHeader title={data.accountName || data.name || "Account Details"} showBack onBack={() => router.push('/(tabs)/leads')} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Information</Text>

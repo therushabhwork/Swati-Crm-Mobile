@@ -6,7 +6,7 @@ import { AppHeader } from '../../../src/components/ui/AppHeader';
 import { colors } from '../../../src/theme/colors';
 
 export default function LeadDetailsScreen() {
-  const { id, fromSearch } = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -29,7 +29,7 @@ export default function LeadDetailsScreen() {
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <AppHeader title="Account Details" showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/leads')} />
+        <AppHeader title="Account Details" showBack onBack={() => router.push('/(admin)/leads')} />
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -40,7 +40,7 @@ export default function LeadDetailsScreen() {
   if (!data) {
     return (
       <View style={styles.centerContainer}>
-        <AppHeader title="Account Details" showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/leads')} />
+        <AppHeader title="Account Details" showBack onBack={() => router.push('/(admin)/leads')} />
         <View style={styles.loaderContainer}>
           <Text style={styles.errorText}>Account not found.</Text>
         </View>
@@ -67,7 +67,7 @@ export default function LeadDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title={data.accountName || data.name || "Account Details"} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/leads')} />
+      <AppHeader title={data.accountName || data.name || "Account Details"} showBack onBack={() => router.push('/(admin)/leads')} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Information</Text>

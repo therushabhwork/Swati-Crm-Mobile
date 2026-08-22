@@ -88,7 +88,7 @@ export default function DealsScreen() {
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardId}>{dealNo}</Text>
+          <Text style={styles.cardId}>Ex: {dealNo}</Text>
           <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
             <Text style={[styles.statusText, { color: statusColor }]}>{status}</Text>
           </View>

@@ -1,0 +1,11 @@
+
+> crm-mobile@1.0.0 start
+> node start-expo.js --port 8081 -c
+
+env: load .env
+env: export EXPO_PUBLIC_API_URL
+Starting project at D:\Final server crm2\mobile
+Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Waiting on http://localhost:8081
+Logs for your project will appear below.

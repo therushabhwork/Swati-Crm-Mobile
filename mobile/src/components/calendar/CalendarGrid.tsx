@@ -8,7 +8,6 @@ interface CalendarGridProps {
   selectedDate: Date | null;
   onSelectDate: (date: Date) => void;
   getRemindersCount: (date: Date) => number;
-  isCompact?: boolean;
 }
 
 export const CalendarGrid: React.FC<CalendarGridProps> = ({
@@ -17,7 +16,6 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   selectedDate,
   onSelectDate,
   getRemindersCount,
-  isCompact = false,
 }) => {
   const weeks: Date[][] = [];
   let currentWeek: Date[] = [];
@@ -55,7 +53,6 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                 isSelected={isSameDay(day, selectedDate)}
                 remindersCount={isCurrentMonth ? getRemindersCount(day) : 0}
                 onPress={onSelectDate}
-                isCompact={isCompact}
               />
             );
           })}

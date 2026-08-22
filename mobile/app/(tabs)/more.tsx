@@ -14,7 +14,7 @@ export default function MoreScreen() {
   const menuItems = [
     { label: 'Quotations', icon: 'file-text', onPress: () => router.push('/quotations') },
     { label: 'Support Requests', icon: 'help-circle', onPress: () => router.push('/support') },
-    { label: 'Tasks', icon: 'check-square', onPress: () => router.push('/tasks') },
+    { label: 'Tasks', icon: 'check-square', onPress: () => router.push('/reminders') },
   ];
 
   return (

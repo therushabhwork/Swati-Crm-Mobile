@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View, ScrollView, TextInput } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Modal, Pressable, StyleSheet, Text, View, ScrollView } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 
@@ -22,10 +21,6 @@ export function SelectField({
   error,
 }: SelectFieldProps) {
   const [visible, setVisible] = useState(false);
-  const [searchText, setSearchText] = useState('');
-  const filteredOptions = options.filter(opt => 
-    opt.toLowerCase().includes(searchText.toLowerCase())
-  );
 
   return (
     <>
@@ -51,28 +46,16 @@ export function SelectField({
         transparent
         animationType="fade"
         onRequestClose={() => setVisible(false)}
-        onShow={() => setSearchText('')}
       >
         <Pressable
           style={styles.overlay}
           onPress={() => setVisible(false)}
         >
           <View style={styles.modal}>
-            <View style={styles.searchContainer}>
-              <Feather name="search" size={18} color={colors.textSecondary} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search..."
-                value={searchText}
-                onChangeText={setSearchText}
-                placeholderTextColor={colors.textMuted}
-                autoCapitalize="none"
-              />
-            </View>
-            <ScrollView showsVerticalScrollIndicator={true} keyboardShouldPersistTaps="handled">
+            <ScrollView showsVerticalScrollIndicator={true}>
               <ScrollView horizontal showsHorizontalScrollIndicator={true}>
                 <View style={{ minWidth: '100%' }}>
-                  {filteredOptions.length === 0 ? <Text style={styles.noResults}>No results found</Text> : filteredOptions.map((option) => (
+                  {options.map((option) => (
                     <Pressable
                       key={option}
                       style={styles.option}
@@ -151,27 +134,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: '#F9FAFB',
-  },
-  searchInput: {
-    flex: 1,
-    height: 48,
-    marginLeft: 8,
-    ...typography.body,
-    color: colors.textPrimary,
-  },
-  noResults: {
-    padding: 18,
-    ...typography.body,
-    color: colors.textMuted,
-    textAlign: 'center',
   },
   optionText: {
     ...typography.body,

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import apiClient from '../../src/api/client';
 import { AppHeader } from '../../src/components/ui/AppHeader';
@@ -14,10 +14,14 @@ export default function LeadsScreen() {
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = async (isManualRefresh = false) => {
     try {
-      setIsLoading(true);
+      // Only show full loading skeleton if we have no data and it's not a manual pull-refresh
+      if (!isManualRefresh && data.length === 0) {
+        setIsLoading(true);
+      }
       const res = await apiClient.get('/leads');
       if (res.data?.success) {
         setData(res.data.data || []);
@@ -29,9 +33,17 @@ export default function LeadsScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData(true);
+    setRefreshing(false);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [])
+  );
 
   const columns = [
     { id: 'accountNo', header: 'Account No.', accessor: (item: any) => item.accountNo || item.leadNo || item.id || '-', width: 100 },
@@ -77,7 +89,7 @@ export default function LeadsScreen() {
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardId}>{accNo}</Text>
+          <Text style={styles.cardId}>Ex: {accNo}</Text>
           <View style={styles.statusBadge}>
             <Text style={styles.statusText}>{status}</Text>
           </View>
@@ -122,24 +134,28 @@ export default function LeadsScreen() {
       {isLoading ? (
         <LoadingSkeleton />
       ) : (
-        <>
-          <SummaryWidget
-            title="Accounts"
-            totalCount={data.length}
-            metrics={summaryMetrics}
-          />
-          <ListControls
-            searchPlaceholder="Search accounts..."
-            onSearch={setSearchQuery}
-          />
-          <ResponsiveList
-            data={filteredData}
-            columns={columns}
-            keyExtractor={(item: any) => item._id || item.id}
-            onRowPress={(item: any) => router.push(`/lead-details/${item._id || item.id}`)}
-            renderMobileCard={renderMobileCard}
-          />
-        </>
+        <ResponsiveList
+          data={filteredData}
+          columns={columns}
+          keyExtractor={(item: any) => item._id || item.id}
+          onRowPress={(item: any) => router.push(`/lead-details/${item._id || item.id}`)}
+          renderMobileCard={renderMobileCard}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          ListHeaderComponent={
+            <>
+              <SummaryWidget
+                title="Accounts"
+                totalCount={data.length}
+                metrics={summaryMetrics}
+              />
+              <ListControls
+                searchPlaceholder="Search accounts..."
+                onSearch={setSearchQuery}
+              />
+            </>
+          }
+        />
       )}
     </View>
   );

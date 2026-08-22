@@ -121,7 +121,7 @@ export default function TasksScreen() {
         title="Reminders" 
         onSearch={() => {}} 
         onFilter={() => {}} 
-        rightContent={<CalendarButton isActive={isCalendarVisible} onPress={() => setIsCalendarVisible(true)} />}
+        rightContent={<CalendarButton onPress={() => setIsCalendarVisible(true)} />}
       />
       
       {isLoading ? (
@@ -176,32 +176,11 @@ export default function TasksScreen() {
         }}
         reminders={data}
       />
-
-      <TouchableOpacity style={styles.fab} onPress={() => router.push('/reminders/new')}>
-        <Feather name="plus" size={24} color="#FFF" />
-      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    zIndex: 100,
-  },
   container: {
     flex: 1,
     backgroundColor: '#f7fafc',

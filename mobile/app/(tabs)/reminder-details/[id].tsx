@@ -6,7 +6,7 @@ import { AppHeader } from '../../../src/components/ui/AppHeader';
 import { colors } from '../../../src/theme/colors';
 
 export default function TaskDetailsScreen() {
-  const { id, fromSearch } = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -29,7 +29,7 @@ export default function TaskDetailsScreen() {
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <AppHeader title="Reminder Details" showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(tabs)/reminders')} />
+        <AppHeader title="Reminder Details" showBack onBack={() => router.push('/(tabs)/reminders')} />
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -40,7 +40,7 @@ export default function TaskDetailsScreen() {
   if (!data) {
     return (
       <View style={styles.centerContainer}>
-        <AppHeader title="Reminder Details" showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(tabs)/reminders')} />
+        <AppHeader title="Reminder Details" showBack onBack={() => router.push('/(tabs)/reminders')} />
         <View style={styles.loaderContainer}>
           <Text style={styles.errorText}>Task not found.</Text>
         </View>
@@ -61,7 +61,7 @@ export default function TaskDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title={data.title || data.taskName || "Reminder Details"} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(tabs)/reminders')} />
+      <AppHeader title={data.title || data.taskName || "Reminder Details"} showBack onBack={() => router.push('/(tabs)/reminders')} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Information</Text>

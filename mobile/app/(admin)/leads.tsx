@@ -77,7 +77,7 @@ export default function LeadsScreen() {
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardId}>{accNo}</Text>
+          <Text style={styles.cardId}>Ex: {accNo}</Text>
           <View style={styles.statusBadge}>
             <Text style={styles.statusText}>{status}</Text>
           </View>

@@ -4,14 +4,13 @@ import { Feather } from '@expo/vector-icons';
 
 interface CalendarButtonProps {
   onPress: () => void;
-  isActive?: boolean;
   style?: ViewStyle;
 }
 
-export const CalendarButton: React.FC<CalendarButtonProps> = ({ onPress, isActive, style }) => {
+export const CalendarButton: React.FC<CalendarButtonProps> = ({ onPress, style }) => {
   return (
-    <TouchableOpacity style={[styles.button, isActive ? styles.activeButton : styles.inactiveButton, style]} onPress={onPress}>
-      <Feather name="calendar" size={20} color={isActive ? "#FFFFFF" : "#C62828"} />
+    <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
+      <Feather name="calendar" size={20} color="#B91C1C" />
     </TouchableOpacity>
   );
 };
@@ -21,16 +20,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
+    backgroundColor: '#FEE2E2',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-  },
-  activeButton: {
-    backgroundColor: '#C62828',
-    borderColor: '#C62828',
-  },
-  inactiveButton: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E5E7EB',
+    borderColor: '#FCA5A5',
   },
 });

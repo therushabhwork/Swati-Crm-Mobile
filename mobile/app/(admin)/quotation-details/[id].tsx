@@ -6,7 +6,7 @@ import { AppHeader } from '../../../src/components/ui/AppHeader';
 import { colors } from '../../../src/theme/colors';
 
 export default function QuotationDetailsScreen() {
-  const { id, fromSearch } = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -29,7 +29,7 @@ export default function QuotationDetailsScreen() {
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <AppHeader title="Quotation Details" showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/quotations')} />
+        <AppHeader title="Quotation Details" showBack onBack={() => router.push('/(admin)/quotations')} />
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -40,7 +40,7 @@ export default function QuotationDetailsScreen() {
   if (!data) {
     return (
       <View style={styles.centerContainer}>
-        <AppHeader title="Quotation Details" showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/quotations')} />
+        <AppHeader title="Quotation Details" showBack onBack={() => router.push('/(admin)/quotations')} />
         <View style={styles.loaderContainer}>
           <Text style={styles.errorText}>Quotation not found.</Text>
         </View>
@@ -61,7 +61,7 @@ export default function QuotationDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title={`Quotation #${data.quotationNo || data.quotationNumber || data.id || ''}`} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/quotations')} />
+      <AppHeader title={`Quotation #${data.quotationNo || data.quotationNumber || data.id || ''}`} showBack onBack={() => router.push('/(admin)/quotations')} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Information</Text>
