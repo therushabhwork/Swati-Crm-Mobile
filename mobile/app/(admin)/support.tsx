@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import apiClient from '../../src/api/client';
@@ -8,6 +8,8 @@ import { ResponsiveList } from '../../src/components/ui/ResponsiveList';
 import { SummaryWidget } from '../../src/components/ui/SummaryWidget';
 import { ListControls } from '../../src/components/ui/ListControls';
 import { LoadingSkeleton } from '../../src/components/ui/LoadingSkeleton';
+import { SearchModal } from '../../src/components/ui/SearchModal';
+import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
 
 export default function SupportScreen() {
@@ -15,6 +17,10 @@ export default function SupportScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isClosedTab, setIsClosedTab] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const { user } = useAuth();
+  
+  const isSupportUser = user?.email?.endsWith('@support.com');
 
   const fetchData = async () => {
     try {
@@ -28,6 +34,28 @@ export default function SupportScreen() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCloseRequest = (id: string) => {
+    Alert.alert(
+      'Close Request',
+      'Are you sure you want to close this request?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Close', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await apiClient.post(`/support-requests/${id}/close`);
+              fetchData();
+            } catch (error) {
+              console.log('Error closing request:', error);
+            }
+          }
+        }
+      ]
+    );
   };
 
   useEffect(() => {
@@ -118,7 +146,10 @@ export default function SupportScreen() {
     else if (s === 'escalated') { statusColor = '#e53e3e'; statusBg = '#fff5f5'; }
 
     return (
-      <View style={styles.card}>
+      <TouchableOpacity 
+        style={styles.card} 
+        onPress={() => router.push(`/support-details/${item._id || item.id}`)}
+      >
         <View style={styles.cardHeader}>
           <Text style={styles.cardId}>{srNo}</Text>
           <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
@@ -163,17 +194,28 @@ export default function SupportScreen() {
           <Text style={styles.updateValue}>{lastUpdated}</Text>
         </View>
         
-        <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => router.push(`/support-details/${item._id || item.id}`)}>
-          <Text style={styles.viewDetailsText}>View Request</Text>
-          <Feather name="chevron-right" size={16} color="#C62828" />
-        </TouchableOpacity>
-      </View>
+        {isSupportUser && s !== 'closed' && s !== 'resolved' && !isClosedTab && (
+          <TouchableOpacity 
+            style={styles.closeBtn} 
+            onPress={() => handleCloseRequest(item._id || item.id)}
+          >
+            <Text style={styles.closeBtnText}>Close</Text>
+          </TouchableOpacity>
+        )}
+        
+        {!isSupportUser && (
+          <View style={styles.viewDetailsBtn}>
+            <Text style={styles.viewDetailsText}>View Request</Text>
+            <Feather name="chevron-right" size={16} color="#C62828" />
+          </View>
+        )}
+      </TouchableOpacity>
     );
   };
 
   return (
     <View style={styles.container}>
-      <AppHeader title="Support Requests" onSearch={() => {}} onFilter={() => {}} />
+      <AppHeader title="Support Requests" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
       
       <View style={styles.segmentContainer}>
         <TouchableOpacity 
@@ -205,8 +247,9 @@ export default function SupportScreen() {
             />
           )}
           <ListControls 
-            searchPlaceholder="Search requests..." 
             onSearch={setSearchQuery} 
+            onAddPress={() => router.push('/(admin)/support/new')}
+            addLabel="Add SR"
           />
           <ResponsiveList
             data={filteredData}
@@ -214,6 +257,14 @@ export default function SupportScreen() {
             keyExtractor={(item: any) => item._id || item.id}
             onRowPress={(item: any) => router.push(`/support-details/${item._id || item.id}`)}
             renderMobileCard={renderMobileCard}
+          />
+          
+          <SearchModal
+            visible={isSearchVisible}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onClose={() => setIsSearchVisible(false)}
+            placeholder="Search requests..."
           />
         </>
       )}
@@ -243,7 +294,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   segmentActive: {
-    backgroundColor: '#FDECEC',
+    backgroundColor: '#C62828',
     borderWidth: 1,
     borderColor: '#C62828',
   },
@@ -253,7 +304,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   segmentTextActive: {
-    color: '#2b6cb0',
+    color: '#ffffff',
     fontWeight: '600',
   },
   card: {
@@ -341,5 +392,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     marginRight: 4,
+  },
+  closeBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  closeBtnText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 'bold',
   }
 });

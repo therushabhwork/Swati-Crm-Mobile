@@ -9,23 +9,27 @@ import { SummaryWidget } from '../../src/components/ui/SummaryWidget';
 import { ListControls } from '../../src/components/ui/ListControls';
 import { LoadingSkeleton } from '../../src/components/ui/LoadingSkeleton';
 import { SearchModal } from '../../src/components/ui/SearchModal';
+import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
 
-export default function CustomersScreen() {
+export default function GroupAccountsScreen() {
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const { user } = useAuth();
 
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const res = await apiClient.get('/customers');
+      const endpoint = `/leads`;
+        
+      const res = await apiClient.get(endpoint);
       if (res.data?.success) {
         setData(res.data.data || []);
       }
     } catch (error) {
-      console.log('Error fetching customers:', error);
+      console.log('Error fetching accounts:', error);
     } finally {
       setIsLoading(false);
     }
@@ -33,87 +37,84 @@ export default function CustomersScreen() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [user]);
 
   const columns = [
-    { id: 'customerNumber', header: 'Customer Number', accessor: (item: any) => item.customerNo || item.id || '-', width: 130 },
-    { id: 'customerName', header: 'Customer Name', accessor: (item: any) => item.customerName || item.name || '-', width: 150 },
-    { id: 'addedDate', header: 'Added Date', accessor: (item: any) => item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-', width: 100 },
-    { id: 'email', header: 'Email', accessor: (item: any) => item.email || '-', width: 180 },
+    { id: 'accountNo', header: 'Account No.', accessor: (item: any) => item.accountNo || item.leadNo || item.id || '-', width: 100 },
+    { id: 'accountName', header: 'Account Name', accessor: (item: any) => item.accountName || item.name || item.companyName || '-', width: 150 },
+    { id: 'projectName', header: 'Project Name', accessor: (item: any) => item.projectName || item.project || '-', width: 150 },
+    { id: 'accountOwner', header: 'Account Owner', accessor: (item: any) => item.accountOwner || item.ownerUserId || '-', width: 120 },
+    { id: 'accountDate', header: 'Account Date', accessor: (item: any) => item.accountDate || item.createdAt ? new Date(item.accountDate || item.createdAt).toLocaleDateString() : '-', width: 100 },
+    { id: 'accountCategory', header: 'Account Category', accessor: (item: any) => item.accountCategory || item.category || '-', width: 120 },
+    { id: 'accountStatus', header: 'Account Status', accessor: (item: any) => item.accountStatus || item.status || '-', width: 100 },
+    { id: 'accountState', header: 'Account State', accessor: (item: any) => item.accountState || item.state || '-', width: 100 },
     { id: 'phone', header: 'Phone', accessor: (item: any) => item.phone || '-', width: 120 },
-    { id: 'customerCategory', header: 'Customer Category', accessor: (item: any) => item.customerCategory || item.category || '-', width: 130 },
-    { id: 'customerOwner', header: 'Customer Owner', accessor: (item: any) => item.customerOwner || item.ownerUserId || '-', width: 120 },
-    { id: 'customerStatus', header: 'Customer Status', accessor: (item: any) => item.customerStatus || item.status || '-', width: 100 }
+    { id: 'email', header: 'Email', accessor: (item: any) => item.email || '-', width: 180 },
+    { id: 'contactPerson', header: 'Contact Person', accessor: (item: any) => item.contactPerson || item.contactName || '-', width: 120 },
+    { id: 'poValue', header: 'PO Value', accessor: (item: any) => item.poValue ? `\u20B9${item.poValue.toLocaleString()}` : '-', width: 100 },
+    { id: 'jobNo', header: 'Job No', accessor: (item: any) => item.jobNo || '-', width: 100 }
   ];
 
-  // Dynamically compute category counts
-  const categoryCounts = data.reduce((acc, item) => {
-    const cat = item.customerCategory || item.category || 'Unknown';
-    acc[cat] = (acc[cat] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const activeCount = data.filter(d => (d.status || d.accountStatus || '').toLowerCase() === 'active').length;
+  const pendingCount = data.filter(d => (d.status || d.accountStatus || '').toLowerCase() === 'pending').length;
+  const draftCount = data.filter(d => (d.status || d.accountStatus || '').toLowerCase() === 'draft').length;
 
-  const summaryMetrics = Object.entries(categoryCounts).map(([label, value]) => ({
-    label,
-    value: value as number
-  }));
+  const summaryMetrics = [
+    { label: 'Active', value: activeCount },
+    { label: 'Pending', value: pendingCount },
+    { label: 'Draft', value: draftCount }
+  ];
 
   const filteredData = data.filter(item => {
-    const searchString = `${item.customerName} ${item.name} ${item.customerNo}`.toLowerCase();
+    const searchString = `${item.accountName} ${item.name} ${item.companyName} ${item.accountNo}`.toLowerCase();
     return searchString.includes(searchQuery.toLowerCase());
   });
 
   const renderMobileCard = (item: any) => {
-    const custNo = item.customerNo || item.id || '-';
-    const name = item.customerName || item.name || '-';
-    const status = item.customerStatus || item.status || '-';
-    const category = item.customerCategory || item.category || '-';
-    const owner = item.customerOwner || item.ownerUserId || '-';
-    const addedDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-';
-    const phone = item.phone || '-';
-    const email = item.email || '-';
+    const accNo = item.accountNo || item.leadNo || item.id || '-';
+    const name = item.accountName || item.name || item.companyName || '-';
+    const status = item.accountStatus || item.status || '-';
+    const project = item.projectName || item.project || '-';
+    const owner = item.accountOwner || item.ownerUserId || '-';
+    const category = item.accountCategory || item.category || '-';
+    const state = item.accountState || item.state || '-';
+    const val = item.poValue ? `\u20B9${item.poValue.toLocaleString()}` : '-';
 
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardId}>{custNo}</Text>
+          <Text style={styles.cardId}>{accNo}</Text>
           <View style={styles.statusBadge}>
             <Text style={styles.statusText}>{status}</Text>
           </View>
         </View>
         
         <Text style={styles.cardTitle}>{name}</Text>
+        <Text style={styles.cardSubtitle}>{project}</Text>
         
         <View style={styles.cardDivider} />
         
         <View style={styles.cardGrid}>
           <View style={styles.cardGridItem}>
+            <Text style={styles.cardLabel}>Account Owner</Text>
+            <Text style={styles.cardValue}>{owner}</Text>
+          </View>
+          <View style={styles.cardGridItem}>
             <Text style={styles.cardLabel}>Category</Text>
             <Text style={styles.cardValue}>{category}</Text>
           </View>
           <View style={styles.cardGridItem}>
-            <Text style={styles.cardLabel}>Owner</Text>
-            <Text style={styles.cardValue}>{owner}</Text>
+            <Text style={styles.cardLabel}>State</Text>
+            <Text style={styles.cardValue}>{state}</Text>
           </View>
           <View style={styles.cardGridItem}>
-            <Text style={styles.cardLabel}>Added Date</Text>
-            <Text style={styles.cardValue}>{addedDate}</Text>
-          </View>
-        </View>
-
-        <View style={styles.contactInfo}>
-          <View style={styles.contactRow}>
-            <Feather name="phone" size={14} color="#718096" style={styles.contactIcon} />
-            <Text style={styles.contactText}>{phone}</Text>
-          </View>
-          <View style={styles.contactRow}>
-            <Feather name="mail" size={14} color="#718096" style={styles.contactIcon} />
-            <Text style={styles.contactText}>{email}</Text>
+            <Text style={styles.cardLabel}>PO Value</Text>
+            <Text style={styles.cardValue}>{val}</Text>
           </View>
         </View>
         
-        <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => router.push(`/customer-details/${item._id || item.id}`)}>
-          <Text style={styles.viewDetailsText}>View Details</Text>
+        <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => router.push(`/lead-details/${item._id || item.id}`)}>
+          <Text style={styles.viewDetailsText}>View details</Text>
           <Feather name="chevron-right" size={16} color="#C62828" />
         </TouchableOpacity>
       </View>
@@ -122,14 +123,14 @@ export default function CustomersScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title="Customers" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
+      <AppHeader title="My Group Accounts" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
       
       {isLoading ? (
         <LoadingSkeleton />
       ) : (
         <>
           <SummaryWidget 
-            title="Customers" 
+            title="My Group Accounts" 
             totalCount={data.length} 
             metrics={summaryMetrics} 
           />
@@ -138,7 +139,7 @@ export default function CustomersScreen() {
             data={filteredData}
             columns={columns}
             keyExtractor={(item: any) => item._id || item.id}
-            onRowPress={(item: any) => router.push(`/customer-details/${item._id || item.id}`)}
+            onRowPress={(item: any) => router.push(`/lead-details/${item._id || item.id}`)}
             renderMobileCard={renderMobileCard}
           />
           <SearchModal
@@ -146,7 +147,7 @@ export default function CustomersScreen() {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onClose={() => setIsSearchVisible(false)}
-            placeholder="Search customers..."
+            placeholder="Search group accounts..."
           />
         </>
       )}
@@ -193,6 +194,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#2d3748',
+    marginBottom: 4,
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    color: '#4a5568',
+    marginBottom: 12,
   },
   cardDivider: {
     height: 1,
@@ -217,30 +224,11 @@ const styles = StyleSheet.create({
     color: '#2d3748',
     fontWeight: '500',
   },
-  contactInfo: {
-    backgroundColor: '#f8fafc',
-    padding: 8,
-    borderRadius: 6,
-    marginBottom: 12,
-  },
-  contactRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  contactIcon: {
-    marginRight: 8,
-    width: 16,
-  },
-  contactText: {
-    fontSize: 13,
-    color: '#4a5568',
-  },
   viewDetailsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    marginTop: 4,
+    marginTop: 8,
   },
   viewDetailsText: {
     color: '#C62828',
@@ -249,3 +237,4 @@ const styles = StyleSheet.create({
     marginRight: 4,
   }
 });
+

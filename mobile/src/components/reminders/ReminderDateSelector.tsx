@@ -1,16 +1,17 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { colors } from '../../theme/colors';
-import { radii, spacing } from '../../theme/spacing';
+import { radii, shadows, spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 import { format, addDays, isSameDay } from 'date-fns';
 
 interface Props {
   selectedDate: Date | null;
   onDateChange: (date: Date | null) => void;
+  variant?: 'default' | 'dashboard';
 }
 
-export function ReminderDateSelector({ selectedDate, onDateChange }: Props) {
+export function ReminderDateSelector({ selectedDate, onDateChange, variant = 'default' }: Props) {
   const flatListRef = useRef<FlatList>(null);
   
   // We need a stable reference date to generate the range around.
@@ -54,12 +55,15 @@ export function ReminderDateSelector({ selectedDate, onDateChange }: Props) {
 
   const renderItem = ({ item }: { item: Date }) => {
     const isSelected = selectedDate ? isSameDay(item, selectedDate) : false;
-    
+    const isDashboard = variant === 'dashboard';
+
     return (
       <TouchableOpacity
-        style={[styles.card, isSelected && styles.selectedCard]}
+        style={[
+          isDashboard ? styles.cardDashboard : styles.card,
+          isSelected && (isDashboard ? styles.selectedCardDashboard : styles.selectedCard)
+        ]}
         onPress={() => {
-          // If we tap the already selected date, deselect it to show "All"
           if (isSelected) {
             onDateChange(null);
           } else {
@@ -68,11 +72,17 @@ export function ReminderDateSelector({ selectedDate, onDateChange }: Props) {
         }}
         activeOpacity={0.7}
       >
-        <Text style={[styles.dayText, isSelected && styles.selectedText]}>
+        <Text style={[
+          isDashboard ? styles.dayTextDashboard : styles.dayText, 
+          isSelected && styles.selectedText
+        ]}>
           {format(item, 'EEE').toUpperCase()}
         </Text>
-        <Text style={[styles.dateText, isSelected && styles.selectedText]}>
-          {format(item, 'dd')}
+        <Text style={[
+          isDashboard ? styles.dateTextDashboard : styles.dateText, 
+          isSelected && styles.selectedText
+        ]}>
+          {format(item, 'd')}
         </Text>
       </TouchableOpacity>
     );
@@ -88,10 +98,10 @@ export function ReminderDateSelector({ selectedDate, onDateChange }: Props) {
         data={dates}
         keyExtractor={(item) => item.toISOString()}
         renderItem={renderItem}
-        getItemLayout={(data, index) => (
+        getItemLayout={variant === 'default' ? (data, index) => (
           // card width is 52, marginRight is 12 -> total width is 64
           { length: 64, offset: 64 * index, index }
-        )}
+        ) : undefined}
         onScrollToIndexFailed={(info) => {
           const wait = new Promise(resolve => setTimeout(resolve, 500));
           wait.then(() => {
@@ -105,7 +115,7 @@ export function ReminderDateSelector({ selectedDate, onDateChange }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
     paddingBottom: spacing.sm,
   },
   listContent: {
@@ -114,15 +124,31 @@ const styles = StyleSheet.create({
   card: {
     width: 52,
     height: 72,
-    backgroundColor: '#F3F4F6', // very light gray
-    borderRadius: 26, // pill shape
+    backgroundColor: 'transparent',
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   selectedCard: {
-    backgroundColor: colors.primary, // App's primary color
-    // Add subtle shadow for selected card
+    backgroundColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardDashboard: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: 'transparent',
+    borderRadius: radii.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  selectedCardDashboard: {
+    backgroundColor: colors.primary,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -139,6 +165,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#172033',
+  },
+  dayTextDashboard: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  dateTextDashboard: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.textPrimary,
   },
   selectedText: {
     color: '#FFFFFF',

@@ -82,3 +82,13 @@ export const STATE_OPTIONS = [
 ];
 
 export const REMINDER_MODE_OPTIONS = ['call', 'meeting', 'visit', 'email'];
+
+export const SUPPORT_REQUEST_TYPE_OPTIONS = [
+  'Commissioning Support',
+  'Component Burned or Malfunctioning',
+  'Others',
+  'Painting Issue',
+  'Parameter Setting',
+  'Retrofitting Job - Old to New',
+  'Short Material',
+];

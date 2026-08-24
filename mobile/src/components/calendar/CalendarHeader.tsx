@@ -72,11 +72,6 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
       </View>
 
       <View style={styles.controlsRow}>
-        <TouchableOpacity style={styles.filterButton} onPress={onFilterToggle}>
-          <Text style={styles.filterText}>All</Text>
-          <Feather name="chevron-down" size={16} color="#4B5563" />
-        </TouchableOpacity>
-
         <TouchableOpacity style={styles.todayButton} onPress={onToday}>
           <Text style={styles.todayText}>Today</Text>
         </TouchableOpacity>
@@ -122,7 +117,7 @@ const styles = StyleSheet.create({
   },
   controlsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
   },
   filterButton: {

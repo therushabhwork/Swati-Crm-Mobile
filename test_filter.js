@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+﻿
 // @ts-nocheck
 const toSlug = (value) => String(value || '')
   .trim()
@@ -10,7 +10,7 @@ const stripOwnerCodePrefix = (value) => String(value || '')
   .trim()
   .replace(/^\d{4,}\s*-\s*/u, '')
 
-export const normalizeCrmUserName = (value) => stripOwnerCodePrefix(value)
+const normalizeCrmUserName = (value) => stripOwnerCodePrefix(value)
   .trim()
   .toLowerCase()
   .replace(/\s+/g, ' ')
@@ -37,7 +37,7 @@ const CRM_DIRECTORY_USERS = [
   { ownerCode: '1019', name: 'Samir Seth', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: [] },
 ]
 
-export const CRM_OWNER_DIRECTORY = CRM_DIRECTORY_USERS.map((user) => ({
+const CRM_OWNER_DIRECTORY = CRM_DIRECTORY_USERS.map((user) => ({
   ...user,
   ownerDisplayName: user.name,
 }))
@@ -53,7 +53,7 @@ const CRM_OWNER_RECORDS_BY_NAME = new Map(
   ])
 )
 
-export const getCrmOwnerRecord = (value) => {
+const getCrmOwnerRecord = (value) => {
   const trimmedValue = String(value || '').trim()
   if (!trimmedValue) {
     return null
@@ -64,11 +64,11 @@ export const getCrmOwnerRecord = (value) => {
     || null
 }
 
-export const getCanonicalCrmUserName = (value) => getCrmOwnerRecord(value)?.name || ''
+const getCanonicalCrmUserName = (value) => getCrmOwnerRecord(value)?.name || ''
 
-export const getCrmOwnerCode = (value) => getCrmOwnerRecord(value)?.ownerCode || ''
+const getCrmOwnerCode = (value) => getCrmOwnerRecord(value)?.ownerCode || ''
 
-export const getCrmOwnerDisplay = (value, fallbackValue = '') => {
+const getCrmOwnerDisplay = (value, fallbackValue = '') => {
   const ownerRecord = getCrmOwnerRecord(value)
   if (ownerRecord) {
     return ownerRecord.ownerDisplayName
@@ -83,7 +83,7 @@ export const getCrmOwnerDisplay = (value, fallbackValue = '') => {
   return resolvedValue
 }
 
-export const isSameCrmOwner = (leftValue, rightValue) => {
+const isSameCrmOwner = (leftValue, rightValue) => {
   // When both values resolve to a known CRM owner (by code, name, or alias),
   // compare on the canonical owner code so that a code ("1006"), a name
   // ("Keval V Shah"), and a code-prefixed name ("1006 - Keval V Shah") all
@@ -102,16 +102,16 @@ export const isSameCrmOwner = (leftValue, rightValue) => {
   return Boolean(leftNormalizedValue) && leftNormalizedValue === rightNormalizedValue
 }
 
-export const CRM_OWNER_LABELS = CRM_OWNER_DIRECTORY.map((user) => user.name)
+const CRM_OWNER_LABELS = CRM_OWNER_DIRECTORY.map((user) => user.name)
 
-export const CRM_OWNER_OPTIONS = CRM_OWNER_DIRECTORY.map((user) => ({
+const CRM_OWNER_OPTIONS = CRM_OWNER_DIRECTORY.map((user) => ({
   value: user.name,
   label: user.ownerDisplayName,
   ownerCode: user.ownerCode,
   ownerName: user.name,
 }))
 
-export const CRM_FILTER_USERS = CRM_OWNER_DIRECTORY.map((user) => ({
+const CRM_FILTER_USERS = CRM_OWNER_DIRECTORY.map((user) => ({
   id: `crm-${toSlug(user.name)}`,
   username: toSlug(user.name),
   name: user.name,
@@ -125,7 +125,7 @@ export const CRM_FILTER_USERS = CRM_OWNER_DIRECTORY.map((user) => ({
   userType: user.userType,
 }))
 
-export const isHiddenFilterUser = (user = {}) => {
+const isHiddenFilterUser = (user = {}) => {
   const searchable = [
     user.name,
     user.username,
@@ -136,3 +136,85 @@ export const isHiddenFilterUser = (user = {}) => {
 }
 
 
+
+﻿
+
+
+const normalizeCompareValue = (value) => String(value || '').trim().toLowerCase();
+
+const isOwnedByCurrentUser = (record, user) => {
+  if (!user) return false;
+
+  const raw = record.raw || {};
+
+  // 1) Match by owner code when both sides expose one.
+  const userOwnerCode = String(user.ownerCode || '').trim();
+  if (userOwnerCode && String(record.accountOwnerCode || '').trim() === userOwnerCode) {
+    return true;
+  }
+
+  // 2) Match by id against any owner/creator id on the raw record.
+  const userId = normalizeCompareValue(user.id || user._id);
+  if (userId) {
+    const matchingIds = [
+      raw.userId,
+      raw.ownerId,
+      raw.createdByUserId,
+      raw.assignedToUserId,
+      raw.assignedTo,
+      raw.assignedUserId,
+      record.ownerUserId,
+      record.ownerId,
+      record.assignedTo,
+      record.assignedUserId,
+      record.createdBy,
+    ].map(normalizeCompareValue);
+
+    if (matchingIds.includes(userId)) {
+      return true;
+    }
+  }
+
+  // 3) Match by owner / added-by name using CRM-aware comparison
+  const candidateOwners = [
+    record.accountOwner,
+    record.accountOwnerDisplay,
+    record.accountOwnerName,
+    record.ownerName,
+    record.assignedUserName,
+    record.addedBy,
+    record.addedByDisplay,
+    raw.accountOwner,
+    raw.accountOwnerDisplay,
+    raw.accountOwnerName,
+    raw.ownerName,
+    raw.assignedUserName,
+    raw.addedBy,
+    raw.addedByName,
+  ];
+
+  const userNames = [
+    user.name,
+    user.ownerDisplayName,
+    user.username,
+    user.email,
+    user.ownerCode,
+  ];
+
+  return candidateOwners.some((candidate) => (
+    userNames.some((userName) => isSameCrmOwner(candidate, userName))
+  ));
+};
+
+
+
+const user = { name: 'Marketing', email: 'mkt@swatiswitchgears.com', id: 16 };
+const record = { 
+  raw: { ownerName: 'Atish Shah', createdByUserId: 1 }, 
+  accountOwner: 'Atish Shah', 
+  createdBy: 1 
+};
+console.log('Test 1 (should be false):', isOwnedByCurrentUser(record, user));
+
+const user2 = { name: 'Keval V Shah', email: 'keval@swatiswitchgears.com', id: 10 };
+console.log('Test 2 (should be true for Keval?):', isOwnedByCurrentUser(record, user2));

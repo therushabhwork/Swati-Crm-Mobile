@@ -8,12 +8,14 @@ import { ResponsiveList } from '../../src/components/ui/ResponsiveList';
 import { SummaryWidget } from '../../src/components/ui/SummaryWidget';
 import { ListControls } from '../../src/components/ui/ListControls';
 import { LoadingSkeleton } from '../../src/components/ui/LoadingSkeleton';
+import { SearchModal } from '../../src/components/ui/SearchModal';
 import { colors } from '../../src/theme/colors';
 
 export default function CustomersScreen() {
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -120,7 +122,7 @@ export default function CustomersScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title="Customers" onSearch={() => {}} onFilter={() => {}} />
+      <AppHeader title="Customers" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
       
       {isLoading ? (
         <LoadingSkeleton />
@@ -131,16 +133,20 @@ export default function CustomersScreen() {
             totalCount={data.length} 
             metrics={summaryMetrics} 
           />
-          <ListControls 
-            searchPlaceholder="Search customers..." 
-            onSearch={setSearchQuery} 
-          />
+          <ListControls />
           <ResponsiveList
             data={filteredData}
             columns={columns}
             keyExtractor={(item: any) => item._id || item.id}
             onRowPress={(item: any) => router.push(`/customer-details/${item._id || item.id}`)}
             renderMobileCard={renderMobileCard}
+          />
+          <SearchModal
+            visible={isSearchVisible}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onClose={() => setIsSearchVisible(false)}
+            placeholder="Search customers..."
           />
         </>
       )}

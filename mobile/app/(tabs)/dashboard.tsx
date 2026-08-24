@@ -12,6 +12,8 @@ import { StatCard } from '../../src/components/StatCard';
 import { ActivityItem } from '../../src/components/ActivityItem';
 import { QuickAction } from '../../src/components/QuickAction';
 import { SearchBar } from '../../src/components/SearchBar';
+import { ReminderDateSelector } from '../../src/components/reminders/ReminderDateSelector';
+import { format, isToday, isTomorrow, isYesterday } from 'date-fns';
 
 interface DashboardMetrics {
   leads: number | string;
@@ -22,22 +24,58 @@ interface DashboardMetrics {
   quotations: number | string;
   openTasks: number | string;
   reminders: number | string;
+  groupAccounts?: number | string;
 }
 
 export default function DashboardScreen() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [isolatedAccountsCount, setIsolatedAccountsCount] = useState<number | string>('-');
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [profileDropdownVisible, setProfileDropdownVisible] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const { user, logout } = useAuth();
   const insets = useSafeAreaInsets();
+
+  const getDateLabel = (d: Date | null) => {
+    const date = d || new Date();
+    if (isToday(date)) return `Today, ${format(date, 'dd MMM yyyy')}`;
+    if (isTomorrow(date)) return `Tomorrow, ${format(date, 'dd MMM yyyy')}`;
+    if (isYesterday(date)) return `Yesterday, ${format(date, 'dd MMM yyyy')}`;
+    return format(date, 'EEE, dd MMM yyyy');
+  };
 
   useFocusEffect(
     useCallback(() => {
       fetchDashboardData();
+      fetchIsolatedAccountsCount();
     }, [])
   );
+
+  const fetchIsolatedAccountsCount = async () => {
+    if (!user) return;
+    try {
+      const res = await apiClient.get('/leads');
+      if (res.data?.success) {
+        const allLeads = res.data.data || [];
+        const myLeads = allLeads.filter((item: any) => {
+          const userId = user.id;
+          const userEmail = user.email?.toLowerCase();
+          
+          const isCreatorById = item.createdByUserId === userId || item.createdBy === userId;
+          const isCreatorByEmail = item.createdUserBy?.toLowerCase() === userEmail;
+          const isAssigned = item.assignedTo === userId || item.assignedToUserId === userId;
+          const isOwnerById = item.ownerUserId === userId || item.ownerId === userId;
+          
+          return isCreatorById || isCreatorByEmail || isAssigned || isOwnerById;
+        });
+        setIsolatedAccountsCount(myLeads.length);
+      }
+    } catch (error) {
+      console.log('[DashboardScreen] Error fetching isolated accounts count:', error);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -56,7 +94,10 @@ export default function DashboardScreen() {
   const onRefresh = async () => {
     console.log('[DashboardScreen] Manual refresh triggered');
     setRefreshing(true);
-    await fetchDashboardData();
+    await Promise.all([
+      fetchDashboardData(),
+      fetchIsolatedAccountsCount()
+    ]);
     setRefreshing(false);
     console.log('[DashboardScreen] Manual refresh completed');
   };
@@ -76,12 +117,14 @@ export default function DashboardScreen() {
   }
 
   return (
-    <ScrollView 
-      style={[styles.container, { paddingTop: insets.top }]}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-      }
-    >
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 80 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+      >
       {/* 1. Top Header */}
       <View style={styles.header}>
         <View style={
@@ -120,6 +163,7 @@ export default function DashboardScreen() {
         </View>
       </View>
 
+
       {/* 2. Search Area */}
       <View style={styles.searchSection}>
         <Pressable onPress={() => router.push('/search')} style={{ flex: 1 }}>
@@ -140,14 +184,33 @@ export default function DashboardScreen() {
       </View>
 
       {/* 4. Unified Grid Section */}
-      <View style={[styles.section, styles.lastSection]}>
+      <View style={styles.section}>
         <View style={styles.grid}>
-          <StatCard title="Accounts" value={getMetric('leads')} icon="user" onPress={() => router.push('/leads')} />
+          <StatCard title="Accounts" value={isolatedAccountsCount.toString()} icon="user" onPress={() => router.push('/leads')} />
+          <StatCard title="My Group Accounts" value={getMetric('leads')} icon="users" onPress={() => router.push('/group-accounts')} />
           <StatCard title="Deals" value={getMetric('deals')} icon="handshake" iconFamily="FontAwesome5" onPress={() => router.push('/deals')} />
-          <StatCard title="Reminders" value={getMetric('reminders')} icon="check-square" onPress={() => router.push('/reminders')} />
           <StatCard title="Customers" value={getMetric('customers')} icon="users" onPress={() => router.push('/customers')} />
           <StatCard title="Support Requests" value={getMetric('supportRequests')} icon="headphones" onPress={() => router.push('/(tabs)/support')} />
           <StatCard title="Quotations" value={getMetric('quotations')} icon="file-text" onPress={() => router.push('/quotations')} />
+        </View>
+      </View>
+
+      {/* 5. Date Strip Section */}
+      <View style={[styles.section, styles.lastSection]}>
+        <View style={styles.calendarCard}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Feather name="calendar" size={16} color={colors.textPrimary} />
+              <Text style={{ marginLeft: 6, fontSize: 14, fontWeight: '600', color: colors.textPrimary }}>
+                {getDateLabel(selectedDate)}
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => router.push({ pathname: '/reminders', params: { date: selectedDate?.toISOString() } })} style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ fontSize: 11, color: colors.textSecondary, marginRight: 2 }}>View Calendar</Text>
+              <Feather name="chevron-right" size={12} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+          <ReminderDateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} variant="dashboard" />
         </View>
       </View>
 
@@ -182,7 +245,8 @@ export default function DashboardScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -300,7 +364,17 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   lastSection: {
-    marginBottom: spacing.xxl * 2,
+    marginBottom: spacing.lg,
+  },
+  calendarCard: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   sectionTitle: {
     ...typography.h3,

@@ -8,19 +8,38 @@ import { ResponsiveList } from '../../src/components/ui/ResponsiveList';
 import { SummaryWidget } from '../../src/components/ui/SummaryWidget';
 import { ListControls } from '../../src/components/ui/ListControls';
 import { LoadingSkeleton } from '../../src/components/ui/LoadingSkeleton';
+import { SearchModal } from '../../src/components/ui/SearchModal';
+import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
 
 export default function LeadsScreen() {
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const { user } = useAuth();
 
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const res = await apiClient.get('/leads');
+      const endpoint = `/leads`;
+        
+      const res = await apiClient.get(endpoint);
       if (res.data?.success) {
-        setData(res.data.data || []);
+        const allLeads = res.data.data || [];
+        const myLeads = allLeads.filter((item: any) => {
+          if (!user) return false;
+          const userId = user.id;
+          const userEmail = user.email?.toLowerCase();
+          
+          const isCreatorById = item.createdByUserId === userId || item.createdBy === userId;
+          const isCreatorByEmail = item.createdUserBy?.toLowerCase() === userEmail;
+          const isAssigned = item.assignedTo === userId || item.assignedToUserId === userId;
+          const isOwnerById = item.ownerUserId === userId || item.ownerId === userId;
+          
+          return isCreatorById || isCreatorByEmail || isAssigned || isOwnerById;
+        });
+        setData(myLeads);
       }
     } catch (error) {
       console.log('Error fetching accounts:', error);
@@ -31,7 +50,7 @@ export default function LeadsScreen() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [user]);
 
   const columns = [
     { id: 'accountNo', header: 'Account No.', accessor: (item: any) => item.accountNo || item.leadNo || item.id || '-', width: 100 },
@@ -45,7 +64,7 @@ export default function LeadsScreen() {
     { id: 'phone', header: 'Phone', accessor: (item: any) => item.phone || '-', width: 120 },
     { id: 'email', header: 'Email', accessor: (item: any) => item.email || '-', width: 180 },
     { id: 'contactPerson', header: 'Contact Person', accessor: (item: any) => item.contactPerson || item.contactName || '-', width: 120 },
-    { id: 'poValue', header: 'PO Value', accessor: (item: any) => item.poValue ? `₹${item.poValue.toLocaleString()}` : '-', width: 100 },
+    { id: 'poValue', header: 'PO Value', accessor: (item: any) => item.poValue ? `\u20B9${item.poValue.toLocaleString()}` : '-', width: 100 },
     { id: 'jobNo', header: 'Job No', accessor: (item: any) => item.jobNo || '-', width: 100 }
   ];
 
@@ -72,7 +91,7 @@ export default function LeadsScreen() {
     const owner = item.accountOwner || item.ownerUserId || '-';
     const category = item.accountCategory || item.category || '-';
     const state = item.accountState || item.state || '-';
-    const val = item.poValue ? `₹${item.poValue.toLocaleString()}` : '-';
+    const val = item.poValue ? `\u20B9${item.poValue.toLocaleString()}` : '-';
 
     return (
       <View style={styles.card}>
@@ -117,7 +136,7 @@ export default function LeadsScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title="Accounts" onSearch={() => {}} onFilter={() => {}} />
+      <AppHeader title="Accounts" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
       
       {isLoading ? (
         <LoadingSkeleton />
@@ -128,16 +147,20 @@ export default function LeadsScreen() {
             totalCount={data.length} 
             metrics={summaryMetrics} 
           />
-          <ListControls 
-            searchPlaceholder="Search accounts..." 
-            onSearch={setSearchQuery} 
-          />
+          <ListControls />
           <ResponsiveList
             data={filteredData}
             columns={columns}
             keyExtractor={(item: any) => item._id || item.id}
             onRowPress={(item: any) => router.push(`/lead-details/${item._id || item.id}`)}
             renderMobileCard={renderMobileCard}
+          />
+          <SearchModal
+            visible={isSearchVisible}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onClose={() => setIsSearchVisible(false)}
+            placeholder="Search accounts..."
           />
         </>
       )}

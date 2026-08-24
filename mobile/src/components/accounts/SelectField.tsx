@@ -4,13 +4,16 @@ import { Feather } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 
+export type SelectOption = string | { label: string; value: string };
+
 interface SelectFieldProps {
   label: string;
   value: string;
-  options: string[];
+  options: SelectOption[];
   onChange: (val: string) => void;
   required?: boolean;
   error?: string;
+  placeholder?: string;
   renderTrigger?: (onPress: () => void, value: string) => React.ReactNode;
 }
 
@@ -21,13 +24,21 @@ export function SelectField({
   onChange,
   required,
   error,
+  placeholder,
   renderTrigger,
 }: SelectFieldProps) {
   const [visible, setVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
+
+  const getOptionLabel = (opt: SelectOption) => typeof opt === 'string' ? opt : opt.label;
+  const getOptionValue = (opt: SelectOption) => typeof opt === 'string' ? opt : opt.value;
+
   const filteredOptions = options.filter(opt => 
-    opt.toLowerCase().includes(searchText.toLowerCase())
+    getOptionLabel(opt).toLowerCase().includes(searchText.toLowerCase())
   );
+
+  const selectedOption = options.find(opt => getOptionValue(opt) === value);
+  const displayValue = selectedOption ? getOptionLabel(selectedOption) : value;
 
   return (
     <>
@@ -45,7 +56,7 @@ export function SelectField({
             onPress={() => setVisible(true)}
           >
             <Text style={[styles.value, !value && styles.placeholder]}>
-              {value || 'Select'}
+              {displayValue || placeholder || 'Select'}
             </Text>
           </Pressable>
         )}
@@ -78,18 +89,22 @@ export function SelectField({
             <ScrollView showsVerticalScrollIndicator={true} keyboardShouldPersistTaps="handled">
               <ScrollView horizontal showsHorizontalScrollIndicator={true}>
                 <View style={{ minWidth: '100%' }}>
-                  {filteredOptions.length === 0 ? <Text style={styles.noResults}>No results found</Text> : filteredOptions.map((option) => (
-                    <Pressable
-                      key={option}
-                      style={styles.option}
-                      onPress={() => {
-                        onChange(option);
-                        setVisible(false);
-                      }}
-                    >
-                      <Text style={styles.optionText}>{option}</Text>
-                    </Pressable>
-                  ))}
+                  {filteredOptions.length === 0 ? <Text style={styles.noResults}>No results found</Text> : filteredOptions.map((option, index) => {
+                    const optLabel = getOptionLabel(option);
+                    const optValue = getOptionValue(option);
+                    return (
+                      <Pressable
+                        key={`${optValue}-${index}`}
+                        style={styles.option}
+                        onPress={() => {
+                          onChange(optValue);
+                          setVisible(false);
+                        }}
+                      >
+                        <Text style={styles.optionText}>{optLabel}</Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
               </ScrollView>
             </ScrollView>

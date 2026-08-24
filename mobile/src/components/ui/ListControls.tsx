@@ -9,6 +9,8 @@ export type ListControlsProps = {
   onSortPress?: () => void;
   filterLabel?: string;
   sortLabel?: string;
+  onAddPress?: () => void;
+  addLabel?: string;
 };
 
 export const ListControls: React.FC<ListControlsProps> = ({
@@ -16,26 +18,24 @@ export const ListControls: React.FC<ListControlsProps> = ({
   onSearch,
   onFilterPress,
   onSortPress,
-  filterLabel = 'All'
+  filterLabel = 'All',
+  onAddPress,
+  addLabel = 'Add',
 }) => {
   return (
     <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <Feather name="search" size={18} color="#a0aec0" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder={searchPlaceholder}
-          placeholderTextColor="#a0aec0"
-          onChangeText={onSearch}
-        />
-      </View>
-      
       <View style={styles.actionsContainer}>
         <TouchableOpacity style={styles.actionButton} onPress={onFilterPress}>
           <Text style={styles.actionLabel}>Filter: </Text>
           <Text style={styles.actionValue}>{filterLabel}</Text>
           <Feather name="chevron-down" size={16} color="#718096" />
         </TouchableOpacity>
+        {onAddPress && (
+          <TouchableOpacity style={[styles.actionButton, styles.addButton]} onPress={onAddPress}>
+            <Feather name="plus" size={16} color="#ffffff" style={{ marginRight: 4 }} />
+            <Text style={styles.addButtonText}>{addLabel}</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -45,26 +45,6 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     marginBottom: 12,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 44,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginBottom: 10,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    height: '100%',
-    fontSize: 15,
-    color: '#2d3748',
   },
   actionsContainer: {
     flexDirection: 'row',
@@ -91,5 +71,14 @@ const styles = StyleSheet.create({
     color: '#2d3748',
     fontWeight: '600',
     marginRight: 4,
+  },
+  addButton: {
+    backgroundColor: '#C62828',
+    borderColor: '#C62828',
+  },
+  addButtonText: {
+    fontSize: 13,
+    color: '#ffffff',
+    fontWeight: '600',
   }
 });

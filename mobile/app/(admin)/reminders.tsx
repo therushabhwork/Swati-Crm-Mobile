@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, TextInput } from 'react-native';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import apiClient from '../../src/api/client';
 import { AppHeader } from '../../src/components/ui/AppHeader';
@@ -24,6 +24,13 @@ export default function TasksScreen() {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState('');
+  const params = useLocalSearchParams();
+
+  useEffect(() => {
+    if (params.date && typeof params.date === 'string') {
+      setSelectedDate(new Date(params.date));
+    }
+  }, [params.date]);
 
   const fetchData = async (silent = false) => {
     try {

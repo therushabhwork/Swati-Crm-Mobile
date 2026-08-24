@@ -80,12 +80,14 @@ export default function TabLayout() {
       <Tabs.Screen name="support" options={{ href: null }} />
       <Tabs.Screen name="reminders" options={{ href: null }} />
       <Tabs.Screen name="quotations" options={{ href: null }} />
+      <Tabs.Screen name="group-accounts" options={{ href: null }} />
       
       {/* Hide detail screens from tab bar AND hide tab bar itself on these screens */}
       <Tabs.Screen name="lead-details/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="customer-details/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="deal-details/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="support-details/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="support/new" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="reminder-details/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="reminders/new" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="quotation-details/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />

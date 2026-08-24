@@ -13,6 +13,10 @@ export type ResponsiveListProps<T> = {
   emptyTitle?: string;
   emptyMessage?: string;
   hideEmptyState?: boolean;
+  serverSidePagination?: boolean;
+  serverCurrentPage?: number;
+  serverTotalPages?: number;
+  onServerPageChange?: (page: number) => void;
 };
 
 export function ResponsiveList<T>({
@@ -24,6 +28,10 @@ export function ResponsiveList<T>({
   emptyTitle = 'No Records Found',
   emptyMessage = 'There are currently no records matching your criteria.',
   hideEmptyState = false,
+  serverSidePagination = false,
+  serverCurrentPage = 1,
+  serverTotalPages = 1,
+  onServerPageChange,
 }: ResponsiveListProps<T>) {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768; // standard tablet/desktop breakpoint
@@ -31,22 +39,35 @@ export function ResponsiveList<T>({
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 3;
   
-  // Reset pagination when data changes significantly
+  // Reset pagination when data changes significantly (only for local)
   React.useEffect(() => {
-    setCurrentPage(1);
-  }, [data.length]);
+    if (!serverSidePagination) {
+      setCurrentPage(1);
+    }
+  }, [data.length, serverSidePagination]);
 
-  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const totalPages = serverSidePagination 
+    ? serverTotalPages 
+    : Math.ceil(data.length / itemsPerPage);
   
+  const displayCurrentPage = serverSidePagination ? serverCurrentPage : currentPage;
+
   // Only paginate on mobile
   const paginatedData = isDesktop 
     ? data 
-    : data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    : (serverSidePagination 
+        ? data // Backend already sliced the data
+        : data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+      );
 
   const flatListRef = React.useRef<FlatList>(null);
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    if (serverSidePagination && onServerPageChange) {
+      onServerPageChange(page);
+    } else {
+      setCurrentPage(page);
+    }
     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
@@ -87,7 +108,7 @@ export function ResponsiveList<T>({
         totalPages > 1 ? (
           <View style={styles.paginationWrapper}>
             <Pagination
-              currentPage={currentPage}
+              currentPage={displayCurrentPage}
               totalPages={totalPages}
               onPageChange={handlePageChange}
             />

@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import apiClient from '../../../src/api/client';
 import { AppHeader } from '../../../src/components/ui/AppHeader';
+import { useAuth } from '../../../src/context/AuthContext';
 import { colors } from '../../../src/theme/colors';
 
 export default function SupportDetailsScreen() {
   const { id, fromSearch } = useLocalSearchParams();
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  
+  const isSupportUser = user?.email?.endsWith('@support.com');
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -25,6 +29,32 @@ export default function SupportDetailsScreen() {
     };
     if (id) fetchDetails();
   }, [id]);
+
+  const handleCloseRequest = () => {
+    Alert.alert(
+      'Close Request',
+      'Are you sure you want to close this request?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Close', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await apiClient.post(`/support-requests/${id}/close`);
+              if (fromSearch === 'true' && router.canGoBack()) {
+                router.back();
+              } else {
+                router.push('/(admin)/support');
+              }
+            } catch (error) {
+              console.log('Error closing request:', error);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   if (isLoading) {
     return (
@@ -63,7 +93,7 @@ export default function SupportDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title={`SR #${data.srNumber || data.ticketNo || data.id || ''}`} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/support')} />
+      <AppHeader title="Support Request" showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/support')} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Information</Text>
@@ -77,6 +107,12 @@ export default function SupportDetailsScreen() {
           ))}
           
         </View>
+        
+        {isSupportUser && (data.status?.toLowerCase() !== 'closed' && data.status?.toLowerCase() !== 'resolved') && (
+          <TouchableOpacity style={styles.closeBtn} onPress={handleCloseRequest}>
+            <Text style={styles.closeBtnText}>Close Request</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </View>
   );
@@ -138,5 +174,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#2d3748',
     fontWeight: '600',
+  },
+  closeBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
+  closeBtnText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
   }
 });
