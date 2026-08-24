@@ -11,6 +11,7 @@ interface SelectFieldProps {
   onChange: (val: string) => void;
   required?: boolean;
   error?: string;
+  renderTrigger?: (onPress: () => void, value: string) => React.ReactNode;
 }
 
 export function SelectField({
@@ -20,6 +21,7 @@ export function SelectField({
   onChange,
   required,
   error,
+  renderTrigger,
 }: SelectFieldProps) {
   const [visible, setVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -35,14 +37,18 @@ export function SelectField({
           {required && <Text style={styles.required}> *</Text>}
         </Text>
 
-        <Pressable
-          style={[styles.input, error ? styles.inputError : null]}
-          onPress={() => setVisible(true)}
-        >
-          <Text style={[styles.value, !value && styles.placeholder]}>
-            {value || 'Select'}
-          </Text>
-        </Pressable>
+        {renderTrigger ? (
+          renderTrigger(() => setVisible(true), value)
+        ) : (
+          <Pressable
+            style={[styles.input, error ? styles.inputError : null]}
+            onPress={() => setVisible(true)}
+          >
+            <Text style={[styles.value, !value && styles.placeholder]}>
+              {value || 'Select'}
+            </Text>
+          </Pressable>
+        )}
         {!!error && <Text style={styles.errorText}>{error}</Text>}
       </View>
 

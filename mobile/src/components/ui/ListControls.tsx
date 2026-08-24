@@ -16,8 +16,7 @@ export const ListControls: React.FC<ListControlsProps> = ({
   onSearch,
   onFilterPress,
   onSortPress,
-  filterLabel = 'All',
-  sortLabel = 'Recent'
+  filterLabel = 'All'
 }) => {
   return (
     <View style={styles.container}>
@@ -35,12 +34,6 @@ export const ListControls: React.FC<ListControlsProps> = ({
         <TouchableOpacity style={styles.actionButton} onPress={onFilterPress}>
           <Text style={styles.actionLabel}>Filter: </Text>
           <Text style={styles.actionValue}>{filterLabel}</Text>
-          <Feather name="chevron-down" size={16} color="#718096" />
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.actionButton} onPress={onSortPress}>
-          <Text style={styles.actionLabel}>Sort: </Text>
-          <Text style={styles.actionValue}>{sortLabel}</Text>
           <Feather name="chevron-down" size={16} color="#718096" />
         </TouchableOpacity>
       </View>
@@ -78,7 +71,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   actionButton: {
-    flex: 1,
+    width: '48%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

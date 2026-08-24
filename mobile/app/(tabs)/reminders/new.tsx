@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Platform, KeyboardAvoidingView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, Platform, KeyboardAvoidingView, Keyboard } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -13,6 +13,7 @@ import apiClient from '../../../src/api/client';
 import { format } from 'date-fns';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { CalendarModal } from '../../../src/components/calendar/CalendarModal';
+import { SelectField } from '../../../src/components/accounts/SelectField';
 
 export default function AddReminderScreen() {
   const { accountId, contextName } = useLocalSearchParams();
@@ -22,7 +23,44 @@ export default function AddReminderScreen() {
   const [note, setNote] = useState('');
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [isNoteFocused, setIsNoteFocused] = useState(false);
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState(accountId || '');
   const insets = useSafeAreaInsets();
+  const scrollRef = React.useRef<ScrollView>(null);
+
+  React.useEffect(() => {
+    apiClient.get('/leads').then(res => {
+      if (res.data?.success) {
+        setAccounts(res.data.data || []);
+      }
+    }).catch(console.error);
+  }, []);
+
+  React.useEffect(() => {
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setIsNoteFocused(false);
+      }
+    );
+
+    return () => {
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
+  const parseTime = (timeStr: string) => {
+    const match = timeStr.match(/(\d+):(\d+)\s?(AM|PM)?/i);
+    if (!match) return '09:00:00';
+    let [, h, m, p] = match;
+    let hours = parseInt(h, 10);
+    if (p) {
+      if (p.toUpperCase() === 'PM' && hours < 12) hours += 12;
+      if (p.toUpperCase() === 'AM' && hours === 12) hours = 0;
+    }
+    return `${hours.toString().padStart(2, '0')}:${m}:00`;
+  };
 
   const handleSave = async () => {
     if (!note.trim()) {
@@ -34,14 +72,14 @@ export default function AddReminderScreen() {
       const payload = {
         title: `${mode} Reminder`,
         message: note,
-        remindAt: `${date}T${time.length > 5 ? new Date('2000-01-01 ' + time).toTimeString().substring(0, 5) : time}:00`,
+        remindAt: `${date}T${parseTime(time)}`,
         recurrence: 'none',
         status: 'scheduled',
         relatedEntityType: 'account',
-        relatedEntityId: accountId || null,
+        relatedEntityId: selectedAccountId || null,
         reminderMode: mode,
         reminderDate: date,
-        reminderTime: time.length > 5 ? new Date('2000-01-01 ' + time).toTimeString().substring(0, 5) : time,
+        reminderTime: time,
       };
       
       const res = await apiClient.post('/reminders', payload);
@@ -65,12 +103,20 @@ export default function AddReminderScreen() {
     }
   };
 
+  const accountOptions = Array.from(new Set(accounts.map(a => a.accountName || a.name || a.companyName || a.id).filter(Boolean)));
+  const selectedAccount = accounts.find(a => a.id === selectedAccountId || a._id === selectedAccountId);
+  const selectedAccountLabel = selectedAccount ? (selectedAccount.accountName || selectedAccount.name || selectedAccount.companyName || selectedAccount.id) : '';
+
+  const handleAccountSelect = (name: string) => {
+    const acc = accounts.find(a => (a.accountName || a.name || a.companyName || a.id) === name);
+    if (acc) {
+      setSelectedAccountId(acc.id || acc._id);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <KeyboardAvoidingView 
-        style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+
         {/* Header */}
       <View style={styles.header}>
         <View>
@@ -85,8 +131,29 @@ export default function AddReminderScreen() {
       </View>
       <View style={styles.divider} />
 
-      <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
+      <KeyboardAvoidingView 
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
+
+      <ScrollView 
+        ref={scrollRef} 
+        style={styles.scrollContainer} 
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: isNoteFocused ? 300 : 40 }]} 
+        keyboardShouldPersistTaps="handled"
+      >
         
+        {/* Account Selector */}
+        <View style={styles.section}>
+          <SelectField 
+            label="Link Account (Optional)" 
+            value={selectedAccountLabel} 
+            options={accountOptions} 
+            onChange={handleAccountSelect} 
+          />
+        </View>
+
         {/* Date Selector */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -124,24 +191,31 @@ export default function AddReminderScreen() {
             placeholder="Add reminder note here..."
             placeholderTextColor={colors.textMuted}
             multiline
+            scrollEnabled={true}
             textAlignVertical="top"
             value={note}
             onChangeText={setNote}
+            onFocus={() => {
+              setIsNoteFocused(true);
+              setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 200);
+            }}
+            onBlur={() => setIsNoteFocused(false)}
           />
         </View>
 
       </ScrollView>
 
       {/* Save Button */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : spacing.md }]}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 16 }]}>
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.saveButtonText}>Save Reminder</Text>
         </TouchableOpacity>
       </View>
+      </KeyboardAvoidingView>
 
       {showTimePicker && (
         <DateTimePicker
-          value={new Date(`${date}T${time.length > 5 ? new Date('2000-01-01 ' + time).toTimeString().substring(0, 5) : time}:00`)}
+          value={new Date(`${date}T${parseTime(time)}`)}
           mode="time"
           is24Hour={false}
           textColor={colors.primary}
@@ -161,7 +235,6 @@ export default function AddReminderScreen() {
         reminders={[]}
         position="center"
       />
-      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -204,7 +277,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: spacing.md,
-    paddingBottom: 40,
   },
   section: {
     marginBottom: spacing.xl,
@@ -257,14 +329,16 @@ const styles = StyleSheet.create({
     color: '#172033',
   },
   footer: {
-    padding: spacing.md,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
     backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: '#DDE2EA',
   },
   saveButton: {
     backgroundColor: colors.primary, // Uses dashboard maroon/red
-    height: 52,
+    height: 56,
     borderRadius: radii.md,
     justifyContent: 'center',
     alignItems: 'center',

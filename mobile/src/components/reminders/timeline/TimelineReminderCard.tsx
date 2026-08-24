@@ -1,121 +1,100 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { colors } from '../../../theme/colors';
-import { spacing } from '../../../theme/spacing';
-import { typography } from '../../../theme/typography';
+import { getCrmOwnerCode } from '../../../utils/crmUserDirectory';
 
 interface TimelineReminderCardProps {
   item: any;
+  accountInfo?: any;
   onPress: () => void;
 }
 
-export function TimelineReminderCard({ item, onPress }: TimelineReminderCardProps) {
+const RED = '#F4512C';
+const TEXT_PRIMARY = '#171717';
+const TEXT_SECONDARY = '#666666';
+
+export function TimelineReminderCard({ item, accountInfo, onPress }: TimelineReminderCardProps) {
   const title = item.title || item.taskName || 'Unknown';
-  const priority = item.priority || '-';
   const status = item.status || 'scheduled';
-  const dueDate = item.reminderDate ? new Date(item.reminderDate).toLocaleDateString() : '-';
+  const rawOwner = accountInfo?.accountOwner || accountInfo?.ownerName || '';
+  const dateStr = item.reminderDate || item.data?.reminderDate || item.dueDate || item.data?.dueDate || item.remindAt;
+  const dueDate = dateStr ? new Date(dateStr).toLocaleDateString() : '-';
+  const ownerCode = getCrmOwnerCode(rawOwner) || accountInfo?.accountOwnerCode || '-';
+  const accountName = accountInfo?.accountName || accountInfo?.name || accountInfo?.companyName || '';
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.card}
-        onPress={onPress}
-        activeOpacity={0.8}
-      >
-        <View style={styles.content}>
-          <Text style={styles.title} numberOfLines={1}>{title}</Text>
-          <Text style={styles.status}>{status}</Text>
-          
-          <View style={styles.metaRow}>
-            <View style={styles.metaItem}>
-              <Text style={styles.metaLabel}>Priority</Text>
-              <Text style={styles.metaValue}>{priority}</Text>
-            </View>
-            <View style={styles.metaItem}>
-              <Text style={styles.metaLabel}>Due Date</Text>
-              <Text style={styles.metaValue}>{dueDate}</Text>
-            </View>
-          </View>
-        </View>
+    <TouchableOpacity 
+      style={styles.card}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <Text style={styles.title} numberOfLines={1}>{title}</Text>
+      
+      <View style={styles.metaRow}>
+        <Text style={styles.metaText}>Status: {status}</Text>
+      </View>
 
-        <View style={styles.actionButtonContainer}>
-          <View style={styles.actionButton}>
-            <Feather name="arrow-right" size={20} color={colors.primary} />
+      <View style={styles.metaRowFlex}>
+        <View style={styles.metaCol}>
+          <Text style={styles.metaLabel}>Due Date</Text>
+          <Text style={styles.metaValue}>{dueDate}</Text>
+        </View>
+      </View>
+
+      {accountInfo && (
+        <View style={[styles.metaRowFlex, { marginTop: 4 }]}>
+          <View style={styles.metaCol}>
+            <Text style={styles.metaLabel}>Account ({ownerCode})</Text>
+            <Text style={styles.metaValue} numberOfLines={1}>{accountName}</Text>
           </View>
         </View>
-      </TouchableOpacity>
-    </View>
+      )}
+
+      <Text style={styles.actionText}>View Reminder &gt;</Text>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingLeft: spacing.xs,
-    paddingRight: spacing.md,
-    paddingBottom: spacing.lg,
-  },
   card: {
-    backgroundColor: colors.primary,
-    borderRadius: 20,
-    padding: spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  content: {
-    flex: 1,
-    paddingRight: spacing.md,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 10,
+    paddingRight: 16,
   },
   title: {
-    ...typography.h3,
-    color: colors.white,
+    fontSize: 14,
+    fontWeight: '600',
+    color: TEXT_PRIMARY,
     marginBottom: 4,
   },
-  status: {
-    ...typography.caption,
-    color: 'rgba(255, 255, 255, 0.8)',
-    textTransform: 'capitalize',
-    marginBottom: spacing.md,
-  },
   metaRow: {
-    flexDirection: 'row',
-    gap: spacing.lg,
+    marginBottom: 6,
   },
-  metaItem: {
-    flex: 1,
+  metaRowFlex: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  metaCol: {
+    marginRight: 24,
+  },
+  metaText: {
+    fontSize: 11,
+    color: TEXT_SECONDARY,
+    textTransform: 'capitalize',
   },
   metaLabel: {
-    ...typography.caption,
-    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 10,
+    color: '#999999',
     marginBottom: 2,
   },
   metaValue: {
-    ...typography.body,
-    color: colors.white,
+    fontSize: 11,
+    color: TEXT_PRIMARY,
+    fontWeight: '500',
+  },
+  actionText: {
+    fontSize: 12,
+    color: RED,
     fontWeight: '600',
-  },
-  actionButtonContainer: {
-    justifyContent: 'flex-end',
-    alignItems: 'flex-end',
-    alignSelf: 'stretch',
-    paddingBottom: 4,
-  },
-  actionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
+    marginTop: 4,
+  }
 });

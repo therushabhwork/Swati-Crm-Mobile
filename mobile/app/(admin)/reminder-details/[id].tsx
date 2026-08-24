@@ -4,19 +4,40 @@ import { useLocalSearchParams, router } from 'expo-router';
 import apiClient from '../../../src/api/client';
 import { AppHeader } from '../../../src/components/ui/AppHeader';
 import { colors } from '../../../src/theme/colors';
+import { getCrmOwnerCode } from '../../../src/utils/crmUserDirectory';
 
 export default function TaskDetailsScreen() {
   const { id, fromSearch } = useLocalSearchParams();
   const [data, setData] = useState<any>(null);
+  const [users, setUsers] = useState<any[]>([]);
+  const [account, setAccount] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        const res = await apiClient.get(`/reminders/${id}`);
+        const [res, usersRes, leadsRes] = await Promise.all([
+          apiClient.get(`/reminders/${id}`),
+          apiClient.get('/users/directory').catch(() => ({ data: { success: false, data: [] } })),
+          apiClient.get('/leads').catch(() => ({ data: { success: false, data: [] } }))
+        ]);
+
+        let fetchedReminder = null;
         if (res.data?.success) {
-          setData(res.data.data);
+          fetchedReminder = res.data.data;
+          setData(fetchedReminder);
         }
+
+        if (usersRes.data?.success) {
+          setUsers(usersRes.data.data || []);
+        }
+
+        if (leadsRes.data?.success && fetchedReminder?.relatedEntityId) {
+          const leads = leadsRes.data.data || [];
+          const match = leads.find((l: any) => (l.id || l._id) === fetchedReminder.relatedEntityId);
+          if (match) setAccount(match);
+        }
+
       } catch (error) {
         console.log('Error fetching task details:', error);
       } finally {
@@ -48,15 +69,19 @@ export default function TaskDetailsScreen() {
     );
   }
 
-  // Fields based on Task schema
+  const assignedUser = users.find(u => (u.id || u._id) === data.ownerUserId);
+  const assignedEmail = assignedUser?.email || data.assignedTo || data.ownerUserId || '-';
+  
+  const rawOwner = account?.accountOwner || account?.ownerName || '';
+  const ownerCode = getCrmOwnerCode(rawOwner) || account?.accountOwnerCode || '-';
+
   const fields = [
     { label: 'Title', value: data.title || data.taskName || 'Unknown' },
-    { label: 'Priority', value: data.priority || '-' },
     { label: 'Status', value: data.status || '-' },
-    { label: 'Due Date', value: data.dueDate ? new Date(data.dueDate).toLocaleDateString() : '-' },
+    { label: 'Due Date', value: (data.reminderDate || data.dueDate) ? new Date(data.reminderDate || data.dueDate).toLocaleDateString() : '-' },
     { label: 'Description', value: data.description || '-' },
-    { label: 'Assigned To', value: data.assignedTo || data.ownerUserId || '-' },
-    { label: 'Created At', value: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : '-' }
+    { label: 'Assigned To', value: assignedEmail },
+    { label: 'Account', value: ownerCode !== '-' ? ownerCode : (account?.accountName || account?.name || account?.companyName || '-') }
   ];
 
   return (

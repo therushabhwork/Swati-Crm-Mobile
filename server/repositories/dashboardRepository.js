@@ -18,6 +18,7 @@ const collectionModels = {
   customers: getMongoModel('customers'),
   supportRequests: getMongoModel('support_requests'),
   quotations: getMongoModel('quotations'),
+  reminders: getMongoModel('reminders'),
 }
 
 const resolveScope = async (actor) => {
@@ -63,7 +64,7 @@ const getStats = async (actor) => {
   const commonScope = buildScopeFilter(actor, { scopeUserIds })
   const leadScope = buildScopeFilter(actor, { scopeUserIds, scopeOwnerCodes, includeOwnerCodeScope: true })
 
-  const [leads, deals, tasks, customers, supportRequests, quotations, openTasks] = await Promise.all([
+  const [leads, deals, tasks, customers, supportRequests, quotations, openTasks, reminders] = await Promise.all([
     safeCount(collectionModels.leads, leadScope),
     safeCount(collectionModels.deals, commonScope),
     safeCount(collectionModels.tasks, commonScope),
@@ -71,9 +72,10 @@ const getStats = async (actor) => {
     safeCount(collectionModels.supportRequests, commonScope),
     safeCount(collectionModels.quotations, commonScope),
     safeCount(collectionModels.tasks, mergeFilters({ status: 'open' }, commonScope)),
+    safeCount(collectionModels.reminders, commonScope),
   ])
 
-  return { leads, deals, tasks, customers, supportRequests, quotations, openTasks }
+  return { leads, deals, tasks, customers, supportRequests, quotations, openTasks, reminders }
 }
 
 const getDealsByStage = async (actor) => {

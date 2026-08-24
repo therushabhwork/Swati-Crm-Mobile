@@ -58,7 +58,7 @@ export default function LoginScreen() {
               } 
             />
           </View>
-          <Text style={styles.title}>CRM</Text>
+          <Text style={styles.title}>Sales CRM</Text>
           <Text style={styles.subtitle}>Sign in to your account</Text>
           
             <TextInput

@@ -1,52 +1,77 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, FlatList, StyleSheet, Text } from 'react-native';
 import { TimelineReminderCard } from './TimelineReminderCard';
-import { colors } from '../../../theme/colors';
-import { spacing } from '../../../theme/spacing';
-import { typography } from '../../../theme/typography';
 
 interface TimelineReminderListProps {
   data: any[];
+  accountMap?: Record<string, any>;
   onRowPress: (item: any) => void;
 }
 
-export function TimelineReminderList({ data, onRowPress }: TimelineReminderListProps) {
+const COLORS = ['#9C27B0', '#E53935', '#29B6C7', '#D96A55'];
+
+const getDotColor = (status: string, title: string) => {
+  const str = (status || '') + (title || '');
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return COLORS[Math.abs(hash) % COLORS.length];
+};
+
+export function TimelineReminderList({ data, accountMap, onRowPress }: TimelineReminderListProps) {
   
   if (!data || data.length === 0) {
-    return null; // The parent component handles the empty state
+    return null;
   }
 
+  const sortedData = useMemo(() => {
+    return [...data].sort((a, b) => {
+      const dateA = new Date(a.reminderDate || a.dueDate || a.remindAt || 0).getTime();
+      const dateB = new Date(b.reminderDate || b.dueDate || b.remindAt || 0).getTime();
+      return dateA - dateB;
+    });
+  }, [data]);
+
   const renderItem = ({ item, index }: { item: any; index: number }) => {
-    // Strictly extract time directly from reminderTime without fallback
-    let timeLabel = item.reminderTime || '12:00'; // Default to 12:00 if totally absent, but prioritize reminderTime
+    const dateStr = item.reminderDate || item.dueDate || item.data?.reminderDate || item.data?.dueDate || item.remindAt;
+    const dateObj = dateStr ? new Date(dateStr) : new Date();
     
-    // Ensure it's just HH:MM if it has seconds or is a long string
-    if (timeLabel && timeLabel.length > 5) {
-      timeLabel = timeLabel.substring(0, 5);
+    let isFirstOfDate = true;
+    if (index > 0) {
+      const prevItem = sortedData[index - 1];
+      const prevDateStr = prevItem.reminderDate || prevItem.dueDate || prevItem.data?.reminderDate || prevItem.data?.dueDate || prevItem.remindAt;
+      const prevDateObj = prevDateStr ? new Date(prevDateStr) : new Date();
+      if (dateObj.toDateString() === prevDateObj.toDateString()) {
+        isFirstOfDate = false;
+      }
     }
-    
-    if (timeLabel === 'Invalid Date' || !timeLabel) {
-      timeLabel = '12:00'; // Fallback
-    }
+
+    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+    const dayNum = dateObj.getDate().toString();
+    const dotColor = getDotColor(item.status, item.title || item.taskName);
 
     return (
       <View style={styles.itemWrapper}>
-        {/* Time Label on the left */}
-        <View style={styles.timeContainer}>
-          <Text style={styles.timeText}>{timeLabel}</Text>
+        <View style={styles.dateContainer}>
+          {isFirstOfDate && (
+            <>
+              <Text style={styles.dayText}>{dayName}</Text>
+              <Text style={styles.dateText}>{dayNum}</Text>
+            </>
+          )}
         </View>
 
-        {/* The timeline axis line */}
         <View style={styles.timelineAxis}>
-          <View style={styles.timelineDot} />
-          {/* Don't draw the line below the last item */}
-          {index < data.length - 1 && <View style={styles.timelineLine} />}
+          {isFirstOfDate && index > 0 && <View style={styles.timelineLineTop} />}
+          <View style={[styles.timelineDot, { backgroundColor: dotColor }]} />
+          {index < sortedData.length - 1 && <View style={styles.timelineLine} />}
         </View>
         
-        {/* The card */}
         <View style={styles.cardWrapper}>
           <TimelineReminderCard 
             item={item}
+            accountInfo={accountMap ? accountMap[item.relatedEntityId] : undefined}
             onPress={() => onRowPress(item)}
           />
         </View>
@@ -56,8 +81,8 @@ export function TimelineReminderList({ data, onRowPress }: TimelineReminderListP
 
   return (
     <FlatList
-      style={{ flex: 1 }}
-      data={data}
+      style={{ flex: 1, backgroundColor: '#FFFFFF' }}
+      data={sortedData}
       keyExtractor={(item) => item._id || item.id || Math.random().toString()}
       renderItem={renderItem}
       contentContainerStyle={styles.listContainer}
@@ -69,53 +94,61 @@ export function TimelineReminderList({ data, onRowPress }: TimelineReminderListP
 const styles = StyleSheet.create({
   listContainer: {
     flexGrow: 1,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingBottom: 100, // Extra padding at bottom for FAB
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 100,
+    backgroundColor: '#FFFFFF',
   },
   itemWrapper: {
     flexDirection: 'row',
   },
-  timeContainer: {
-    width: 60,
-    alignItems: 'flex-end',
-    paddingRight: spacing.sm,
-    paddingTop: 18,
+  dateContainer: {
+    width: 45,
+    alignItems: 'center',
+    paddingTop: 4,
   },
-  timeText: {
-    ...typography.caption,
-    fontWeight: '600',
-    color: colors.textSecondary,
+  dayText: {
+    fontSize: 12,
+    color: '#666666',
+    fontWeight: '500',
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#171717',
+    fontWeight: 'bold',
+    marginTop: 2,
   },
   timelineAxis: {
     width: 24,
     alignItems: 'center',
-    marginRight: spacing.sm,
+    marginRight: 12,
+    marginLeft: 4,
   },
   timelineDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.primary,
-    marginTop: 24, // Align dot with the first line of text roughly
-    borderWidth: 2,
-    borderColor: colors.white,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1,
-    elevation: 2,
-    zIndex: 1,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginTop: 10,
+    zIndex: 2,
   },
   timelineLine: {
     position: 'absolute',
-    top: 36, // Start below the dot
-    bottom: -24, // Connect to the next dot
-    width: 2,
-    backgroundColor: colors.border, // Subtle gray line
-    zIndex: 0,
+    top: 20, 
+    bottom: -10, 
+    width: 1,
+    backgroundColor: '#DCDCDC',
+    zIndex: 1,
+  },
+  timelineLineTop: {
+    position: 'absolute',
+    top: -10, 
+    bottom: 0, 
+    width: 1,
+    backgroundColor: '#DCDCDC',
+    zIndex: 1,
   },
   cardWrapper: {
     flex: 1,
+    paddingBottom: 24,
   }
 });
