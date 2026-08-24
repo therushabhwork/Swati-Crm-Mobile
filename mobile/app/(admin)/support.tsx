@@ -12,6 +12,25 @@ import { SearchModal } from '../../src/components/ui/SearchModal';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
 
+const normalizeSupportRequestRecord = (sr: any = {}) => {
+  const data = sr.data && typeof sr.data === 'object' ? sr.data : {};
+  const srNumber = sr.srNumber || data.srNumber || sr.legacyId || data.id;
+  
+  return {
+    ...data,
+    ...sr,
+    id: sr.id || sr._id,
+    srNumber,
+    title: sr.subject || data.title || sr.title || '',
+    subject: sr.subject || data.title || sr.title || '',
+    description: sr.description || data.description || '',
+    status: sr.status || data.status || 'open',
+    customerName: sr.customerName || data.customerName || 'Unknown',
+    ownerName: data.ownerName || data.addedByName || sr.ownerName || '-',
+    requestType: sr.requestType || data.requestType || '-',
+  };
+};
+
 export default function SupportScreen() {
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,7 +46,8 @@ export default function SupportScreen() {
       setIsLoading(true);
       const res = await apiClient.get('/support-requests');
       if (res.data?.success) {
-        setData(res.data.data || []);
+        const normalizedData = (res.data.data || []).map(normalizeSupportRequestRecord);
+        setData(normalizedData);
       }
     } catch (error) {
       console.log('Error fetching support requests:', error);
@@ -63,21 +83,21 @@ export default function SupportScreen() {
   }, []);
 
   const openColumns = [
-    { id: 'srNumber', header: 'SR Number', accessor: (item: any) => item.srNumber || item.ticketNo || item.legacyId || '-', width: 100 },
+    { id: 'srNumber', header: 'SR Number', accessor: (item: any) => item.srNumber || '-', width: 100 },
     { id: 'customer', header: 'Customer Name', accessor: (item: any) => item.customerName || 'Unknown', width: 150 },
-    { id: 'serviceType', header: 'Service Type', accessor: (item: any) => item.serviceType || '-', width: 120 },
+    { id: 'serviceType', header: 'Service Type', accessor: (item: any) => item.requestType || '-', width: 120 },
     { id: 'serviceDate', header: 'Service Date', accessor: (item: any) => item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-', width: 100 },
-    { id: 'owner', header: 'Owner', accessor: (item: any) => item.ownerUserId || item.assignedTo || '-', width: 120 },
+    { id: 'owner', header: 'Owner', accessor: (item: any) => item.ownerName || item.ownerUserId || item.assignedTo || '-', width: 120 },
     { id: 'status', header: 'Status', accessor: (item: any) => item.status || '-', width: 100 },
     { id: 'lastUpdated', header: 'Last Updated', accessor: (item: any) => item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : '-', width: 100 }
   ];
 
   const closedColumns = [
-    { id: 'srNumber', header: 'SR Number', accessor: (item: any) => item.srNumber || item.ticketNo || item.legacyId || '-', width: 100 },
+    { id: 'srNumber', header: 'SR Number', accessor: (item: any) => item.srNumber || '-', width: 100 },
     { id: 'customer', header: 'Customer Name', accessor: (item: any) => item.customerName || 'Unknown', width: 150 },
-    { id: 'serviceType', header: 'Service Type', accessor: (item: any) => item.serviceType || '-', width: 120 },
+    { id: 'serviceType', header: 'Service Type', accessor: (item: any) => item.requestType || '-', width: 120 },
     { id: 'requestDate', header: 'Request Date', accessor: (item: any) => item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-', width: 100 },
-    { id: 'owner', header: 'Owner', accessor: (item: any) => item.ownerUserId || item.assignedTo || '-', width: 120 },
+    { id: 'owner', header: 'Owner', accessor: (item: any) => item.ownerName || item.ownerUserId || item.assignedTo || '-', width: 120 },
     { id: 'closedOn', header: 'Closed On', accessor: (item: any) => item.closedAt || item.updatedAt ? new Date(item.closedAt || item.updatedAt).toLocaleDateString() : '-', width: 100 },
     { id: 'closedBy', header: 'Closed By', accessor: (item: any) => item.closedBy || item.updatedBy || '-', width: 120 },
     { id: 'lastUpdated', header: 'Last Updated', accessor: (item: any) => item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : '-', width: 100 }
@@ -125,11 +145,11 @@ export default function SupportScreen() {
   });
 
   const renderMobileCard = (item: any) => {
-    const srNo = item.srNumber || item.ticketNo || item.legacyId || '-';
+    const srNo = item.srNumber || '-';
     const custName = item.customerName || 'Unknown';
     const status = item.status || '-';
-    const serviceType = item.serviceType || '-';
-    const owner = item.ownerUserId || item.assignedTo || '-';
+    const serviceType = item.requestType || '-';
+    const owner = item.ownerName || item.ownerUserId || item.assignedTo || '-';
     
     // Dates
     const serviceDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-';
