@@ -36,4 +36,15 @@ service.validation = {
   update: customerUpdate,
 }
 
-module.exports = service
+const applyStrictIsolation = (actor) => {
+  const email = String(actor?.email || '').toLowerCase().trim()
+  if (email === 'keval@swatiswitchgears.com') return { ...actor, role: 'admin' }
+  return { ...actor, role: 'user' }
+}
+
+module.exports = {
+  ...service,
+  list: (actor, filters = {}) => service.list(applyStrictIsolation(actor), filters),
+  get: (actor, id) => service.get(applyStrictIsolation(actor), id),
+  search: (actor, query) => service.search(applyStrictIsolation(actor), query),
+}

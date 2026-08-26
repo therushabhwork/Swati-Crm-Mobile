@@ -19,16 +19,22 @@ const mapNotificationRow = (record) => {
     senderId: row.senderId,
     receiverId: row.receiverId,
     message: row.message,
+    notificationType: row.notificationType,
+    entityType: row.entityType,
+    entityId: row.entityId,
     isRead: Boolean(row.isRead),
     createdAt: row.createdAt,
   }
 }
 
-const createNotification = async ({ senderId, receiverId, message, companyId }) => {
+const createNotification = async ({ senderId, receiverId, message, companyId, notificationType, entityType, entityId }) => {
   const created = await baseRepository.create({
     senderId,
     receiverId,
     message,
+    notificationType,
+    entityType,
+    entityId,
     isRead: false,
     companyId: companyId || 1,
   })

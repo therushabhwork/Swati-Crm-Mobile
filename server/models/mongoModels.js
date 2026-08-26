@@ -3,6 +3,11 @@ const mongoose = require('mongoose')
 const { Schema } = mongoose
 
 const COLLECTION_INDEXES = {
+  user_devices: [
+    { fields: { userId: 1, companyId: 1 } },
+    { fields: { pushToken: 1 }, options: { unique: true } },
+    { fields: { isActive: 1 } },
+  ],
   users: [
     { fields: { legacyId: 1 }, options: { unique: true, sparse: true } },
     { fields: { username: 1 }, options: { unique: true, sparse: true } },

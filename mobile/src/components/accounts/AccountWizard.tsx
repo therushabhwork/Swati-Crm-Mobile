@@ -27,6 +27,12 @@ import {
   REMINDER_MODE_OPTIONS,
 } from '../../utils/constants';
 
+const formatDateLocal = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export function AccountWizard() {
   const insets = useSafeAreaInsets();
@@ -38,7 +44,7 @@ export function AccountWizard() {
     state: '',
     description: '',
     address: '',
-    accountDate: new Date().toISOString().slice(0, 10),
+    accountDate: formatDateLocal(new Date()),
     accountSource: '',
     customerName: '',
     consultantName: '',
@@ -104,7 +110,24 @@ export function AccountWizard() {
 
   const submitAccount = async (data: AccountForm) => {
     try {
-      await apiClient.post('/leads', data);
+      const res = await apiClient.post('/leads', data);
+      const createdLead = res.data?.data;
+      
+      if (createdLead && (data.reminderDate || data.remark)) {
+        await apiClient.post('/reminders', {
+          title: 'Account Follow-up',
+          message: data.remark?.trim() || '',
+          remindAt: data.reminderDate ? new Date(`${data.reminderDate}T10:00:00`).toISOString() : new Date().toISOString(),
+          status: 'scheduled',
+          relatedEntityType: 'account',
+          relatedEntityId: createdLead.id,
+          assignedTo: data.accountOwner,
+          reminderDate: data.reminderDate,
+          reminderTime: '10:00',
+          reminderMode: data.reminderMode,
+        }).catch((err) => console.log('Failed to create reminder', err));
+      }
+
       Alert.alert('Success', 'Successfully Created Account', [
         { text: 'OK', onPress: () => router.back() }
       ]);
@@ -195,7 +218,7 @@ export function AccountWizard() {
                 label="Account Date"
                 required
                 value={form.accountDate}
-                onChange={(date) => update('accountDate', date.toISOString().slice(0, 10))}
+                onChange={(date) => update('accountDate', formatDateLocal(date))}
                 error={errors.accountDate}
               />
               <SelectField
@@ -230,7 +253,7 @@ export function AccountWizard() {
               <DateField
                 label="Inquiry Ref Date"
                 value={form.customerRefDate}
-                onChange={(date) => update('customerRefDate', date.toISOString().slice(0, 10))}
+                onChange={(date) => update('customerRefDate', formatDateLocal(date))}
               />
               <SelectField
                 label="Industry Type"
@@ -305,7 +328,7 @@ export function AccountWizard() {
               <DateField
                 label="Reminder Date"
                 value={form.reminderDate}
-                onChange={(date) => update('reminderDate', date.toISOString().slice(0, 10))}
+                onChange={(date) => update('reminderDate', formatDateLocal(date))}
               />
               <SelectField
                 label="Reminder Mode"

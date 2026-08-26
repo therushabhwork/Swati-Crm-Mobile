@@ -50,6 +50,7 @@ const { requireAuth } = require('./middleware/authMiddleware')
 const { requireAdmin } = require('./middleware/roleMiddleware')
 const ovrcRoutes = require('./routes/ovrcRoutes')
 const databaseRoutes = require('./routes/databaseRoutes')
+const userDeviceRoutes = require('./routes/userDeviceRoutes')
 
 
 const tryRequire = (moduleName) => {
@@ -260,6 +261,7 @@ app.use('/api/products', requireBackendReady, productRoutes)
 app.use('/api/admin/password-reset-requests', requireBackendReady, passwordResetRoutes)
 app.use('/api/ovrc', requireBackendReady, requireAuth, ovrcRoutes)
 app.use('/api/database', requireBackendReady, databaseRoutes)
+app.use('/api/devices', requireBackendReady, userDeviceRoutes)
 app.use('/api', requireBackendReady, remarkRoutes)
 
 app.use(express.static(clientDistPath))

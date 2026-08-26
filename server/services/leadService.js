@@ -255,6 +255,9 @@ const emitLeadRealtime = async ({ action, lead, actor, assignedUserId, previousL
       receiverIds: notificationRecipients,
       message: notificationMessage,
       companyId: actor.companyId,
+      notificationType: `account_${action}`,
+      entityType: 'account',
+      entityId: lead.id,
     })
 
     notifications.forEach((notification) => {
@@ -271,6 +274,9 @@ const emitLeadRealtime = async ({ action, lead, actor, assignedUserId, previousL
       receiverIds: adminIds,
       message: notificationMessage,
       companyId: actor.companyId,
+      notificationType: `account_${action}`,
+      entityType: 'account',
+      entityId: lead.id,
     })
 
     notifications.forEach((notification) => {
@@ -622,9 +628,11 @@ const bulkReassign = async (actor, payload = {}) => {
   }
 }
 
+const applyCompanyWide = (actor) => ({ ...actor, role: 'admin' })
+
 module.exports = {
-  listLeads,
-  getLeadById,
+  listLeads: (actor, query) => listLeads(applyCompanyWide(actor), query),
+  getLeadById: (actor, id) => getLeadById(applyCompanyWide(actor), id),
   createLead,
   updateLead,
   deleteLead,

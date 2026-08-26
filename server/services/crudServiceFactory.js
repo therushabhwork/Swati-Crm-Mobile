@@ -2,7 +2,7 @@ const { AppError } = require('../utils/appError')
 const { getSocketServer } = require('../socket/socketServer')
 const { SOCKET_EVENTS } = require('../socket/socketEvents')
 const auditLog = require('./auditLog')
-const notificationRepository = require('../repositories/notificationRepository')
+const notificationService = require('./notificationService')
 const { applyOwnershipMetadata, assertRecordAccess, isPrivilegedRole, toNumberOrNull } = require('../security/accessScope')
 const { resolveCrmGroupScope } = require('../security/crmGroupScope')
 const userRepository = require('../repositories/userRepository')
@@ -81,11 +81,14 @@ const emitEntity = (entityType, action, record, actor) => {
   if (assignedUserId && assignedUserId !== actor.id) {
     const notificationMessage = `${actor.name || 'A user'} ${action} a ${entityType}.`
 
-    notificationRepository.createNotification({
+    notificationService.notifyUsers({
       senderId: actor.id,
-      receiverId: assignedUserId,
+      receiverIds: [assignedUserId],
       message: notificationMessage,
       companyId: actor.companyId,
+      notificationType: `${entityType}_${action}`,
+      entityType,
+      entityId: record?.id,
     }).catch(() => {})
 
     socketServer.emitToUser(assignedUserId, eventName, payload)

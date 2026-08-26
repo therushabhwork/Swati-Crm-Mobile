@@ -187,7 +187,6 @@ export default function DashboardScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll} contentContainerStyle={{ paddingRight: 40 }}>
           <QuickAction title="Add Account" icon="user-plus" variant="primary" onPress={() => router.push('/accounts/new')} />
           <QuickAction title="Add Customer" icon="user" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Add Customer')} />
-          <QuickAction title="Create Deal" icon="handshake" iconFamily="FontAwesome5" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Create Deal')} />
           <QuickAction title="Create Reminder" icon="check-square" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Create Reminder')} />
         </ScrollView>
       </View>

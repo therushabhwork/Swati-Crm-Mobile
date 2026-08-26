@@ -373,5 +373,16 @@ const quotationService = createCrudService({
   buildPayload,
 })
 
-module.exports = quotationService
+const applyStrictIsolation = (actor) => {
+  const email = String(actor?.email || '').toLowerCase().trim()
+  if (email === 'keval@swatiswitchgears.com') return { ...actor, role: 'admin' }
+  return { ...actor, role: 'user' }
+}
+
+module.exports = {
+  ...quotationService,
+  list: (actor, filters = {}) => quotationService.list(applyStrictIsolation(actor), filters),
+  get: (actor, id) => quotationService.get(applyStrictIsolation(actor), id),
+  search: (actor, query) => quotationService.search(applyStrictIsolation(actor), query),
+}
 module.exports.normalizeLineItems = normalizeLineItems

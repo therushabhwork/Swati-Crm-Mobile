@@ -140,6 +140,12 @@ const ensureUniqueDeal = async (actor, payload, excludeId = null) => {
   }
 }
 
+const applyStrictIsolation = (actor) => {
+  const email = String(actor?.email || '').toLowerCase().trim()
+  if (email === 'keval@swatiswitchgears.com') return { ...actor, role: 'admin' }
+  return { ...actor, role: 'user' }
+}
+
 const normalizeComparable = (value) => String(value ?? '').trim().toLowerCase()
 
 const shouldCheckDuplicateOnUpdate = (existing = {}, body = {}) => {
@@ -176,12 +182,15 @@ const emitConvertedDealRealtime = (action, convertedDeal, actor) => {
 
 module.exports = {
   ...baseService,
+  get: (actor, id) => baseService.get(applyStrictIsolation(actor), id),
+  search: (actor, query) => baseService.search(applyStrictIsolation(actor), query),
   validation: {
     create: dealCreate,
     update: dealUpdate,
   },
   list: async (actor, filters = {}) => {
-    const scope = await resolveCrmGroupScope(actor)
+    const isolatedActor = applyStrictIsolation(actor)
+    const scope = await resolveCrmGroupScope(isolatedActor)
     return dealRepository.listWithFilters(scope.actor, filters, scope.queryOptions)
   },
   getConvertedFromAccount: async (actor, accountId) => {

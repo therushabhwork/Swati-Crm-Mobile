@@ -1,5 +1,5 @@
 const messageRepository = require('../repositories/messageRepository')
-const notificationRepository = require('../repositories/notificationRepository')
+const notificationService = require('./notificationService')
 const { getSocketServer } = require('../socket/socketServer')
 const { SOCKET_EVENTS } = require('../socket/socketEvents')
 const { AppError } = require('../utils/appError')
@@ -45,11 +45,14 @@ const sendMessage = async (actor, payload = {}) => {
       companyId: actor.companyId,
     })
 
-    const notification = await notificationRepository.createNotification({
+    const [notification] = await notificationService.notifyUsers({
       senderId: actor.id,
-      receiverId,
+      receiverIds: [receiverId],
       message: `${actor.name} sent you a new message.`,
       companyId: actor.companyId,
+      notificationType: 'private_message',
+      entityType: 'message',
+      entityId: message.id,
     })
 
     if (socketServer) {
