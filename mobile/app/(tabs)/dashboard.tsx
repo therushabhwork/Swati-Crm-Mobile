@@ -120,7 +120,7 @@ export default function DashboardScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
       <ScrollView 
         style={styles.container}
-        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 80 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   lastSection: {
-    marginBottom: spacing.lg,
+    marginBottom: 0,
   },
   calendarCard: {
     backgroundColor: colors.card,

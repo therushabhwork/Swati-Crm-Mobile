@@ -95,7 +95,7 @@ export function SupportRequestWizard() {
       try {
         const response = await apiClient.get('/users/directory');
         const usersList = response.data?.data || [];
-        setOwners(usersList.map((u: any) => ({ label: u.name || u.username, value: u.id || u._id })));
+        setOwners(usersList.map((u: any) => ({ label: u.name || u.username, value: String(u.id || u._id) })));
       } catch (err) {
         console.error('Failed to load owners:', err);
       }

@@ -49,7 +49,9 @@ export default function CustomersScreen() {
   // Dynamically compute category counts
   const categoryCounts = data.reduce((acc, item) => {
     const cat = item.customerCategory || item.category || 'Unknown';
-    acc[cat] = (acc[cat] || 0) + 1;
+    if (cat !== 'Unknown') {
+      acc[cat] = (acc[cat] || 0) + 1;
+    }
     return acc;
   }, {} as Record<string, number>);
 

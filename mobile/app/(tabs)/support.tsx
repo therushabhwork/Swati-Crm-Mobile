@@ -149,7 +149,7 @@ export default function SupportScreen() {
     const custName = item.customerName || 'Unknown';
     const status = item.status || '-';
     const serviceType = item.requestType || '-';
-    const owner = item.ownerName || item.ownerUserId || item.assignedTo || '-';
+    const owner = item.ownerName || item.data?.ownerName || item.ownerUserId || item.assignedTo || '-';
     
     // Dates
     const serviceDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-';

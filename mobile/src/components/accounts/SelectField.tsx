@@ -37,7 +37,7 @@ export function SelectField({
     getOptionLabel(opt).toLowerCase().includes(searchText.toLowerCase())
   );
 
-  const selectedOption = options.find(opt => getOptionValue(opt) === value);
+  const selectedOption = options.find(opt => String(getOptionValue(opt)) === String(value));
   const displayValue = selectedOption ? getOptionLabel(selectedOption) : value;
 
   return (

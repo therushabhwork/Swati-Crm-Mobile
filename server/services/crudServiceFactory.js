@@ -110,8 +110,14 @@ const createCrudService = ({
   adminOnlyDelete = false,
   enforceScope = true,
   bypassScopeForRoles = [],
+  customScopeBypass = null,
 }) => {
-  const hasScopeBypass = (actor) => isPrivilegedRole(actor.role) || bypassScopeForRoles.includes((actor.role || '').toLowerCase().trim())
+  const hasScopeBypass = (actor) => {
+    if (customScopeBypass !== null) {
+      return customScopeBypass(actor)
+    }
+    return isPrivilegedRole(actor.role) || bypassScopeForRoles.includes((actor.role || '').toLowerCase().trim())
+  }
 
   const list = async (actor) => {
     if (!enforceScope || !repository.listForActor) {
@@ -124,6 +130,12 @@ const createCrudService = ({
     const scope = await resolveCrmGroupScope(actor)
     if (hasScopeBypass(actor)) {
       scope.queryOptions.companyWide = true
+    } else {
+      if (isPrivilegedRole(actor.role)) {
+        console.log(`[Support Isolation] Forcefully downgraded scope for admin user ${actor.email || actor.id}`)
+      }
+      scope.actor = { ...scope.actor, role: 'user' }
+      scope.queryOptions.companyWide = false
     }
     return repository.listForActor(scope.actor, scope.queryOptions)
   }
@@ -133,6 +145,12 @@ const createCrudService = ({
     const scope = await resolveCrmGroupScope(actor)
     if (hasScopeBypass(actor)) {
       scope.queryOptions.companyWide = true
+    } else {
+      if (isPrivilegedRole(actor.role)) {
+        console.log(`[Support Isolation] Forcefully downgraded scope for admin user ${actor.email || actor.id}`)
+      }
+      scope.actor = { ...scope.actor, role: 'user' }
+      scope.queryOptions.companyWide = false
     }
     const record = repository.findByIdForActor
       ? await repository.findByIdForActor(normalizedId, scope.actor, scope.queryOptions)

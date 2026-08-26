@@ -78,16 +78,21 @@ export default function SupportDetailsScreen() {
     );
   }
 
-  // Fields: SR Number, Customer Name, Service Type, Date, Owner, Status, Closed On, Closed By, Last Updated
+  const closedOn = data.closedAt || data.data?.closedAt || (data.status?.toLowerCase() === 'closed' && data.updatedAt)
+    ? new Date(data.closedAt || data.data?.closedAt || data.updatedAt).toLocaleDateString()
+    : '-'
+  const closedBy = data.closedBy || data.data?.closedBy || (data.status?.toLowerCase() === 'closed' ? (data.updatedBy || '-') : '-')
+  const ownerName = data.ownerName || data.data?.ownerName || data.ownerUserId || data.assignedTo || '-'
+
   const fields = [
     { label: 'SR Number', value: data.srNumber || data.ticketNo || data.legacyId || '-' },
     { label: 'Customer Name', value: data.customerName || 'Unknown' },
     { label: 'Service Type', value: data.serviceType || '-' },
     { label: 'Service/Request Date', value: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : '-' },
-    { label: 'Owner', value: data.ownerUserId || data.assignedTo || '-' },
+    { label: 'Owner', value: ownerName },
     { label: 'Status', value: data.status || '-' },
-    { label: 'Closed On', value: data.closedAt || (data.status?.toLowerCase() === 'closed' && data.updatedAt) ? new Date(data.closedAt || data.updatedAt).toLocaleDateString() : '-' },
-    { label: 'Closed By', value: data.closedBy || (data.status?.toLowerCase() === 'closed' ? (data.updatedBy || '-') : '-') },
+    { label: 'Closed On', value: closedOn },
+    { label: 'Closed By', value: closedBy },
     { label: 'Last Updated', value: data.updatedAt ? new Date(data.updatedAt).toLocaleDateString() : '-' }
   ];
 

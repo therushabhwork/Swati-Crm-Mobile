@@ -12,6 +12,10 @@ const normalizeSupportRequestRecord = (sr = {}) => {
   const customerNumber = sr.customerNumber || data.customerNumber || sr.customerNo || data.customerNo || ''
   const customerNo = sr.customerNo || data.customerNo || sr.customerNumber || data.customerNumber || ''
 
+  const innerData = data.data && typeof data.data === 'object' ? data.data : {}
+  const closedOn = sr.closedAt || data.closedAt || innerData.closedAt || sr.closedOn || data.closedOn || innerData.closedOn || null
+  const closedBy = sr.closedBy || data.closedBy || innerData.closedBy || null
+
   return {
     ...data,
     ...sr,
@@ -23,6 +27,8 @@ const normalizeSupportRequestRecord = (sr = {}) => {
     priority: sr.priority || data.priority || 'normal',
     status: sr.status || data.status || 'open',
     category: sr.category || data.category || '',
+    closedOn,
+    closedBy,
     customerNumber,
     customerNo,
     customerName: sr.customerName || data.customerName || '',
@@ -55,7 +61,7 @@ export const supportRequestApi = {
 
   async createSupportRequest(payload) {
     const response = await apiClient.post('/support-requests', normalizeSupportRequestPayload(payload))
-    return normalizeSupportRequestRecord(response.data)
+    return normalizeSupportRequestRecord(response)
   },
 
   async updateSupportRequest(id, payload) {
@@ -68,7 +74,7 @@ export const supportRequestApi = {
       } catch (e) { }
     }
     const response = await apiClient.put(`/support-requests/${encodeURIComponent(id)}`, normalizeSupportRequestPayload(finalPayload))
-    return normalizeSupportRequestRecord(response.data)
+    return normalizeSupportRequestRecord(response)
   },
 
   async deleteSupportRequest(id) {

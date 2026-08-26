@@ -64,12 +64,43 @@ const getStats = async (actor) => {
   const commonScope = buildScopeFilter(actor, { scopeUserIds })
   const leadScope = buildScopeFilter(actor, { scopeUserIds, scopeOwnerCodes, includeOwnerCodeScope: true })
 
+  const email = (actor.email || '').toLowerCase().trim()
+  const isSupportBypass = email === 'keval@swatiswitchgears.com' || email.endsWith('@support.com')
+
+  // Forcefully downgrade the actor role to bypass the hardcoded isPrivilegedRole check
+  const supportRequestActor = isSupportBypass ? actor : { ...actor, role: 'user' }
+
+  const twoDaysAgo = new Date()
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
+  const activeSupportRequestFilter = {
+    $or: [
+      { status: { $ne: 'closed' }, 'data.status': { $ne: 'closed' } },
+      {
+        $or: [{ status: 'closed' }, { 'data.status': 'closed' }],
+        $or: [
+          { updatedAt: { $gte: twoDaysAgo } },
+          { createdAt: { $gte: twoDaysAgo } },
+        ]
+      }
+    ]
+  }
+
+  const supportRequestScope = mergeFilters(
+    activeSupportRequestFilter,
+    buildScopedMongoFilter({
+      actor: supportRequestActor,
+      ownerFields: ['ownerUserId', 'assignedTo', 'createdBy', 'owner_user_id', 'assigned_to', 'created_by'],
+      companyWide: isSupportBypass,
+      scopeUserIds: scopeUserIds || [actor.id],
+    })
+  )
+
   const [leads, deals, tasks, customers, supportRequests, quotations, openTasks, reminders] = await Promise.all([
     safeCount(collectionModels.leads, leadScope),
     safeCount(collectionModels.deals, commonScope),
     safeCount(collectionModels.tasks, commonScope),
     safeCount(collectionModels.customers, commonScope),
-    safeCount(collectionModels.supportRequests, commonScope),
+    safeCount(collectionModels.supportRequests, supportRequestScope),
     safeCount(collectionModels.quotations, commonScope),
     safeCount(collectionModels.tasks, mergeFilters({ status: 'open' }, commonScope)),
     safeCount(collectionModels.reminders, commonScope),
