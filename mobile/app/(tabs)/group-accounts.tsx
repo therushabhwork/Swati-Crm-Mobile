@@ -12,6 +12,26 @@ import { SearchModal } from '../../src/components/ui/SearchModal';
 import { StageFilterModal } from '../../src/components/ui/StageFilterModal';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
+import { resolveStage } from '../../src/utils/resolveStage';
+
+const ACCOUNT_STAGES = [
+  { label: 'All', value: 'All' },
+  { label: 'New', value: 'new' },
+  { label: 'Follow Up', value: 'follow_up' },
+  { label: 'Technical Offer', value: 'technical_offer' },
+  { label: 'Priority 1', value: 'priority_1' },
+  { label: 'Commercial Offer', value: 'commercial_offer' },
+  { label: 'Priority 2', value: 'priority_2' },
+  { label: 'Quotation Sent', value: 'quotation_sent' },
+  { label: 'Quote Revision', value: 'quote_revision' },
+  { label: 'Order Received', value: 'order_received' },
+  { label: 'Convert To PO', value: 'convert_to_po' },
+  { label: 'Order Lost', value: 'order_lost' },
+  { label: 'Converted', value: 'converted' },
+  { label: 'Rejected', value: 'rejected' },
+  { label: 'Contracted', value: 'contacted' },
+  { label: 'Closed', value: 'closed' }
+];
 
 export default function GroupAccountsScreen() {
   const [data, setData] = useState<any[]>([]);
@@ -72,7 +92,7 @@ export default function GroupAccountsScreen() {
   const filteredData = data.filter(item => {
     const searchString = `${item.accountName} ${item.name} ${item.companyName} ${item.accountNo}`.toLowerCase();
     const matchesSearch = searchString.includes(searchQuery.toLowerCase());
-    const matchesStage = stageFilter === 'All' || (item.status || item.accountState || item.accountStatus || '').toLowerCase() === stageFilter.toLowerCase();
+    const matchesStage = stageFilter === 'All' || resolveStage(item) === stageFilter;
     return matchesSearch && matchesStage;
   });
 
@@ -140,7 +160,10 @@ export default function GroupAccountsScreen() {
             totalCount={data.length} 
             metrics={summaryMetrics} 
           />
-          <ListControls />
+          <ListControls 
+            filterLabel={ACCOUNT_STAGES.find(s => s.value === stageFilter)?.label || 'All'}
+            onFilterPress={() => setIsFilterVisible(true)}
+          />
           <ResponsiveList
             data={filteredData}
             columns={columns}
@@ -158,7 +181,7 @@ export default function GroupAccountsScreen() {
           <StageFilterModal
             visible={isFilterVisible}
             value={stageFilter}
-            options={['All', 'New', 'Active', 'Pending', 'Draft', 'Follow-up', 'Closed', 'Lost']}
+            options={ACCOUNT_STAGES}
             onChange={setStageFilter}
             onClose={() => setIsFilterVisible(false)}
           />

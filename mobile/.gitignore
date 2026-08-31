@@ -5,5 +5,5 @@
 expo-env.d.ts
 # @end expo-cli
 # Secrets and keys
-mobile/fcm-server-key.json
-mobile/google-services.json
+fcm-server-key.json
+google-services.json
