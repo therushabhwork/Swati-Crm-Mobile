@@ -59,12 +59,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const login = async (credentials: any) => {
-    console.log('[AuthContext] login invoked');
+    console.log('[AuthContext] login invoked with username:', credentials.username);
     try {
+      console.log('[AuthContext] Sending POST to /auth/login...');
       const res = await apiClient.post('/auth/login', {
         ...credentials,
         clientType: 'mobile',
       });
+      console.log('[AuthContext] Raw response received. Status:', res.status);
       if (res.data?.success) {
         console.log('[AuthContext] Login API call successful, updating state');
         setUser(res.data.user);
@@ -78,11 +80,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           router.replace('/(tabs)/dashboard');
         }
       } else {
-        throw new Error('Login failed');
+        console.log('[AuthContext] Login failed: success flag is false in response data', JSON.stringify(res.data));
+        throw new Error('Login failed: Invalid response from server');
       }
     } catch (error: any) {
-      console.log('[AuthContext] Login API call failed:', error.message);
-      throw new Error(error.response?.data?.message || 'Login failed');
+      console.log('[AuthContext] Login API call failed with exception!');
+      console.log('[AuthContext] Exception Stack:', error.stack || 'No stack trace');
+      if (error.response) {
+         console.log('[AuthContext] Exception Response Body:', JSON.stringify(error.response.data));
+      }
+      throw new Error(error.response?.data?.message || error.message || 'Login failed');
     }
   };
 

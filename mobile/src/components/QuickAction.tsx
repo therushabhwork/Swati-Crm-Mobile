@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, StyleSheet, Pressable } from 'react-native';
+import { Text, StyleSheet, Pressable, StyleProp, ViewStyle } from 'react-native';
 import { Feather, FontAwesome5 } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { spacing, radii, shadows } from '../theme/spacing';
@@ -9,43 +9,51 @@ interface QuickActionProps {
   title: string;
   icon: string;
   iconFamily?: 'Feather' | 'FontAwesome5';
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'tertiary';
+  style?: StyleProp<ViewStyle>;
   onPress?: () => void;
 }
 
-export function QuickAction({ title, icon, iconFamily = 'Feather', variant = 'secondary', onPress }: QuickActionProps) {
+export function QuickAction({ title, icon, iconFamily = 'Feather', variant = 'secondary', style, onPress }: QuickActionProps) {
   const isPrimary = variant === 'primary';
+  const isTertiary = variant === 'tertiary';
   
   return (
     <Pressable 
       style={({ pressed }) => [
         styles.button,
-        isPrimary ? styles.primaryButton : styles.secondaryButton,
+        isPrimary ? styles.primaryButton : isTertiary ? styles.tertiaryButton : styles.secondaryButton,
+        style,
         pressed && styles.pressed
       ]}
       onPress={onPress}
     >
-      {iconFamily === 'FontAwesome5' ? (
-        <FontAwesome5 
-          name={icon as any} 
-          size={16} 
-          color={isPrimary ? colors.white : colors.primary} 
-          style={styles.icon}
-        />
-      ) : (
-        <Feather 
-          name={icon as any} 
-          size={16} 
-          color={isPrimary ? colors.white : colors.primary} 
-          style={styles.icon}
-        />
+      {({ pressed }) => (
+        <>
+          {iconFamily === 'FontAwesome5' ? (
+            <FontAwesome5 
+              name={icon as any} 
+              size={16} 
+              color={pressed || isPrimary ? colors.white : isTertiary ? colors.textSecondary : colors.primary} 
+              style={styles.icon}
+            />
+          ) : (
+            <Feather 
+              name={icon as any} 
+              size={16} 
+              color={pressed || isPrimary ? colors.white : isTertiary ? colors.textSecondary : colors.primary} 
+              style={styles.icon}
+            />
+          )}
+          <Text style={[
+            styles.text,
+            isPrimary ? styles.primaryText : isTertiary ? styles.tertiaryText : styles.secondaryText,
+            pressed && styles.primaryText
+          ]}>
+            {title}
+          </Text>
+        </>
       )}
-      <Text style={[
-        styles.text,
-        isPrimary ? styles.primaryText : styles.secondaryText
-      ]}>
-        {title}
-      </Text>
     </Pressable>
   );
 }
@@ -54,6 +62,7 @@ const styles = StyleSheet.create({
   button: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radii.round,
@@ -69,9 +78,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  tertiaryButton: {
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    elevation: 0,
+    shadowOpacity: 0,
+  },
   pressed: {
     transform: [{ scale: 0.96 }],
-    opacity: 0.9,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   icon: {
     marginRight: 4,
@@ -85,6 +103,9 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   secondaryText: {
-    color: colors.textPrimary,
+    color: colors.primaryDark,
+  },
+  tertiaryText: {
+    color: colors.textSecondary,
   },
 });

@@ -9,6 +9,7 @@ import { SummaryWidget } from '../../src/components/ui/SummaryWidget';
 import { ListControls } from '../../src/components/ui/ListControls';
 import { LoadingSkeleton } from '../../src/components/ui/LoadingSkeleton';
 import { SearchModal } from '../../src/components/ui/SearchModal';
+import { StageFilterModal } from '../../src/components/ui/StageFilterModal';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
 
@@ -17,6 +18,9 @@ export default function GroupAccountsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [stageFilter, setStageFilter] = useState('All');
+  const [tempStageFilter, setTempStageFilter] = useState('All');
   const { user } = useAuth();
 
   const fetchData = async () => {
@@ -67,7 +71,9 @@ export default function GroupAccountsScreen() {
 
   const filteredData = data.filter(item => {
     const searchString = `${item.accountName} ${item.name} ${item.companyName} ${item.accountNo}`.toLowerCase();
-    return searchString.includes(searchQuery.toLowerCase());
+    const matchesSearch = searchString.includes(searchQuery.toLowerCase());
+    const matchesStage = stageFilter === 'All' || (item.status || item.accountState || item.accountStatus || '').toLowerCase() === stageFilter.toLowerCase();
+    return matchesSearch && matchesStage;
   });
 
   const renderMobileCard = (item: any) => {
@@ -123,7 +129,7 @@ export default function GroupAccountsScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title="My Group Accounts" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
+      <AppHeader title="My Group Accounts" onSearch={() => setIsSearchVisible(true)} onFilter={() => setIsFilterVisible(true)} />
       
       {isLoading ? (
         <LoadingSkeleton />
@@ -147,7 +153,14 @@ export default function GroupAccountsScreen() {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onClose={() => setIsSearchVisible(false)}
-            placeholder="Search group accounts..."
+            placeholder="Search accounts..."
+          />
+          <StageFilterModal
+            visible={isFilterVisible}
+            value={stageFilter}
+            options={['All', 'New', 'Active', 'Pending', 'Draft', 'Follow-up', 'Closed', 'Lost']}
+            onChange={setStageFilter}
+            onClose={() => setIsFilterVisible(false)}
           />
         </>
       )}

@@ -26,7 +26,7 @@ const allowedOrigins = Array.from(new Set([
 const createSocketServer = (httpServer) => {
   const io = new Server(httpServer, {
     cors: {
-      origin: allowedOrigins,
+      origin: '*', // Allow all origins for mobile app compatibility
       methods: ['GET', 'POST', 'PUT', 'DELETE'],
       credentials: true,
     },

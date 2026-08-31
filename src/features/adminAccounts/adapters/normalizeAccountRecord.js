@@ -85,6 +85,10 @@ const resolveStage = (account) => {
   }
 
   const normalizedStatus = normalizeStageKey(account.status || account.accountStatus || account.accountState)
+  if (stageLookup[normalizedStatus]) {
+    return normalizedStatus
+  }
+
   const statusToStage = {
     pending: 'new',
     active: 'contacted',

@@ -61,7 +61,7 @@ export default function QuotationDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title={`Quotation #${data.quotationNo || data.quotationNumber || data.id || ''}`} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(tabs)/quotations')} />
+      <AppHeader title={`Quotation - ${data.quotationNo || data.quotationNumber || data.id || ''}`} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(tabs)/quotations')} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Information</Text>

@@ -9,6 +9,7 @@ import { SummaryWidget } from '../../src/components/ui/SummaryWidget';
 import { ListControls } from '../../src/components/ui/ListControls';
 import { LoadingSkeleton } from '../../src/components/ui/LoadingSkeleton';
 import { SearchModal } from '../../src/components/ui/SearchModal';
+import { StageFilterModal } from '../../src/components/ui/StageFilterModal';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
 
@@ -17,6 +18,9 @@ export default function LeadsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [stageFilter, setStageFilter] = useState('All');
+  const [tempStageFilter, setTempStageFilter] = useState('All');
   const { user } = useAuth();
 
   const fetchData = async () => {
@@ -80,7 +84,9 @@ export default function LeadsScreen() {
 
   const filteredData = data.filter(item => {
     const searchString = `${item.accountName} ${item.name} ${item.companyName} ${item.accountNo}`.toLowerCase();
-    return searchString.includes(searchQuery.toLowerCase());
+    const matchesSearch = searchString.includes(searchQuery.toLowerCase());
+    const matchesStage = stageFilter === 'All' || (item.status || item.accountState || item.accountStatus || '').toLowerCase() === stageFilter.toLowerCase();
+    return matchesSearch && matchesStage;
   });
 
   const renderMobileCard = (item: any) => {
@@ -101,12 +107,12 @@ export default function LeadsScreen() {
             <Text style={styles.statusText}>{status}</Text>
           </View>
         </View>
-        
+
         <Text style={styles.cardTitle}>{name}</Text>
         <Text style={styles.cardSubtitle}>{project}</Text>
-        
+
         <View style={styles.cardDivider} />
-        
+
         <View style={styles.cardGrid}>
           <View style={styles.cardGridItem}>
             <Text style={styles.cardLabel}>Account Owner</Text>
@@ -125,7 +131,7 @@ export default function LeadsScreen() {
             <Text style={styles.cardValue}>{val}</Text>
           </View>
         </View>
-        
+
         <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => router.push(`/lead-details/${item._id || item.id}`)}>
           <Text style={styles.viewDetailsText}>View details</Text>
           <Feather name="chevron-right" size={16} color="#C62828" />
@@ -136,16 +142,16 @@ export default function LeadsScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title="Accounts" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
-      
+      <AppHeader title="Accounts" onSearch={() => setIsSearchVisible(true)} onFilter={() => setIsFilterVisible(true)} />
+
       {isLoading ? (
         <LoadingSkeleton />
       ) : (
         <>
-          <SummaryWidget 
-            title="Accounts" 
-            totalCount={data.length} 
-            metrics={summaryMetrics} 
+          <SummaryWidget
+            title="Accounts"
+            totalCount={data.length}
+            metrics={summaryMetrics}
           />
           <ListControls />
           <ResponsiveList
@@ -161,6 +167,13 @@ export default function LeadsScreen() {
             onSearchChange={setSearchQuery}
             onClose={() => setIsSearchVisible(false)}
             placeholder="Search accounts..."
+          />
+          <StageFilterModal
+            visible={isFilterVisible}
+            value={stageFilter}
+            options={['All', 'New', 'Active', 'Pending', 'Draft', 'Follow-up', 'Closed', 'Lost']}
+            onChange={setStageFilter}
+            onClose={() => setIsFilterVisible(false)}
           />
         </>
       )}

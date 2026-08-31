@@ -49,8 +49,7 @@ const resolveStoredAccountNumber = (record = {}, index = 0) => {
 export const getAccountsBoardData = (accounts = []) => {
   const records = accounts.map((account, index) =>
     normalizeAccountRecord(account, index, { recordSource: 'live' })
-  ).sort(compareAccountsByNumberAsc)
-    .map((record, index) => ({
+  ).map((record, index) => ({
       ...record,
       originalAccountNumber: record.originalAccountNumber || record.accountNumber,
       accountNumber: resolveStoredAccountNumber(record, index),
@@ -68,13 +67,25 @@ export const getAccountsBoardData = (accounts = []) => {
   }, {})
 
   records.forEach((record) => {
-    if (!countsByStage[record.stage]) {
-      countsByStage[record.stage] = 0
-      rowsByStage[record.stage] = []
+    const addToStage = (targetStage) => {
+      if (!countsByStage[targetStage]) {
+        countsByStage[targetStage] = 0
+        rowsByStage[targetStage] = []
+      }
+      
+      if (!rowsByStage[targetStage].some(r => r.id === record.id)) {
+        countsByStage[targetStage] += 1
+        rowsByStage[targetStage].push(record)
+      }
     }
 
-    countsByStage[record.stage] += 1
-    rowsByStage[record.stage].push(record)
+    // Add to its primary stage
+    addToStage(record.stage)
+
+    // Also display converted records in the 'new' tab so they remain visible
+    if ((record.isConverted || record.stage === 'converted') && record.stage !== 'new') {
+      addToStage('new')
+    }
   })
 
   return {

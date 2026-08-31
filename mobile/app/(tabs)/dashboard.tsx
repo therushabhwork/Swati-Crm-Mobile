@@ -146,7 +146,7 @@ export default function DashboardScreen() {
           />
         </View>
         <View style={styles.headerText}>
-          <Text style={styles.greeting}>Welcome back,</Text>
+          <Text style={styles.greeting}>Welcome,</Text>
           <Text style={styles.name}>{user?.name || 'System Admin'}</Text>
           <Text style={styles.roleSmall}>{user?.role === 'admin' ? 'Admin' : 'User'}</Text>
         </View>
@@ -176,7 +176,7 @@ export default function DashboardScreen() {
       {/* 3. Quick Actions Section */}
       <View style={styles.section}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll} contentContainerStyle={{ paddingRight: 40 }}>
-          <QuickAction title="Add Account" icon="user-plus" variant="primary" onPress={() => router.push('/accounts/new')} />
+          <QuickAction title="Add Account" icon="user-plus" variant="secondary" onPress={() => router.push('/accounts/new')} />
           <QuickAction title="Add Customer" icon="user" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Add Customer')} />
           <QuickAction title="Create Reminder" icon="check-square" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Create Reminder')} />
         </ScrollView>

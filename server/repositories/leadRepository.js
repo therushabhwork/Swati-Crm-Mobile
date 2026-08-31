@@ -86,7 +86,7 @@ const mapLeadRow = (record) => {
 }
 
 const listAllLeads = async () => {
-  const records = await Lead.find({}).sort({ accountNo: 1, legacyId: 1 }).lean()
+  const records = await Lead.find({}).sort({ createdAt: -1, legacyId: -1 }).lean()
   return records.map(mapLeadRow)
 }
 
@@ -110,7 +110,7 @@ const buildLeadScopeFilter = (actor, { companyWide = false, scopeUserIds = null,
 const listLeadsForActor = async (actor, options = {}) => {
   const records = await Lead
     .find(mergeFilters(buildLeadScopeFilter(actor, options), buildAccountSearchFilter(options.filters || {})))
-    .sort({ accountNo: 1, legacyId: 1 })
+    .sort({ createdAt: -1, legacyId: -1 })
     .lean()
 
   return records.map(mapLeadRow)
@@ -119,7 +119,7 @@ const listLeadsForActor = async (actor, options = {}) => {
 const listAssignedLeads = async (userId) => {
   const records = await Lead
     .find({ $or: [{ assignedTo: userId }, { createdBy: userId }] })
-    .sort({ accountNo: 1, legacyId: 1 })
+    .sort({ createdAt: -1, legacyId: -1 })
     .lean()
 
   return records.map(mapLeadRow)
@@ -139,7 +139,7 @@ const listCreatedLeadsForActor = async (actor, filters = {}) => {
       },
       buildAccountSearchFilter(filters)
     ))
-    .sort({ accountNo: 1, legacyId: 1 })
+    .sort({ createdAt: -1, legacyId: -1 })
     .lean()
 
   return records.map(mapLeadRow)

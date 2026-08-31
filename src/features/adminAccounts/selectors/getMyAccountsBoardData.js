@@ -17,13 +17,25 @@ const buildBoardDataFromRecords = (records = []) => {
   }, {})
 
   records.forEach((record) => {
-    if (!rowsByStage[record.stage]) {
-      rowsByStage[record.stage] = []
-      countsByStage[record.stage] = 0
+    const addToStage = (targetStage) => {
+      if (!countsByStage[targetStage]) {
+        countsByStage[targetStage] = 0
+        rowsByStage[targetStage] = []
+      }
+      
+      if (!rowsByStage[targetStage].some(r => r.id === record.id)) {
+        countsByStage[targetStage] += 1
+        rowsByStage[targetStage].push(record)
+      }
     }
 
-    rowsByStage[record.stage].push(record)
-    countsByStage[record.stage] += 1
+    // Add to its primary stage
+    addToStage(record.stage)
+
+    // Also display converted records in the 'new' tab so they remain visible
+    if ((record.isConverted || record.stage === 'converted') && record.stage !== 'new') {
+      addToStage('new')
+    }
   })
 
   return {
@@ -46,6 +58,11 @@ const isOwnedByCurrentUser = (record, user) => {
     const matchingIds = [
       raw.userId,
       raw.createdByUserId,
+      record.convertedBy,
+      raw.assignedTo,
+      raw.ownerUserId,
+      record.assignedUserId,
+      record.ownerId,
     ].map(normalizeCompareValue)
 
     if (matchingIds.includes(userId)) {
@@ -59,6 +76,8 @@ const isOwnedByCurrentUser = (record, user) => {
     record.addedByDisplay,
     raw.addedBy,
     raw.addedByName,
+    record.accountOwner,
+    record.accountOwnerName,
   ]
 
   const userNames = [

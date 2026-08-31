@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { router } from 'expo-router';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, Image, Modal, TouchableOpacity, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, Image, Modal, TouchableOpacity, Pressable, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import apiClient from '../../src/api/client';
 import { useAuth } from '../../src/context/AuthContext';
+import { useSocket } from '../../src/context/SocketContext';
 import { colors } from '../../src/theme/colors';
-import { spacing } from '../../src/theme/spacing';
+import { spacing, shadows } from '../../src/theme/spacing';
 import { typography } from '../../src/theme/typography';
 import { StatCard } from '../../src/components/StatCard';
 import { ActivityItem } from '../../src/components/ActivityItem';
@@ -36,7 +37,12 @@ export default function DashboardScreen() {
   const [profileDropdownVisible, setProfileDropdownVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const { user, logout } = useAuth();
+  const { showNotification } = useSocket();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+
+  // Calculate bento card width to fit 2 items per row with 16dp gap and 20dp outer padding
+  const bentoCardWidth = (width - 40 - 16) / 2;
 
   const getDateLabel = (d: Date | null) => {
     const date = d || new Date();
@@ -144,14 +150,31 @@ export default function DashboardScreen() {
           />
         </View>
         <View style={styles.headerText}>
-          <Text style={styles.greeting}>Welcome back,</Text>
+          <Text style={styles.greeting}>Welcome,</Text>
           <Text style={styles.name}>{user?.name || 'System Admin'}</Text>
           <Text style={styles.roleSmall}>{user?.role === 'admin' ? 'Admin' : 'User'}</Text>
         </View>
         <View style={styles.headerIconsRow}>
-          <View style={styles.headerIcon}>
+          <Pressable 
+            style={styles.headerIcon}
+            onPress={() => {
+              console.log('[DashboardScreen] Triggering test notification toast');
+              showNotification({
+                id: 'test-123',
+                companyId: 1,
+                senderId: 'system',
+                receiverId: user?.id ? String(user.id) : 'admin',
+                message: 'This is a test socket notification!',
+                notificationType: 'info',
+                entityType: 'deal',
+                entityId: '123',
+                isRead: false,
+                createdAt: new Date().toISOString(),
+              });
+            }}
+          >
             <Feather name="bell" size={20} color={colors.textPrimary} />
-          </View>
+          </Pressable>
           <Pressable
             style={[styles.headerIcon, { marginLeft: spacing.sm }]}
             onPress={() => setProfileDropdownVisible(true)}
@@ -160,7 +183,6 @@ export default function DashboardScreen() {
           </Pressable>
         </View>
       </View>
-
 
       {/* 2. Search Area */}
       <View style={styles.searchSection}>
@@ -182,40 +204,91 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      {/* 3. Quick Actions Section */}
+      {/* 3. Quick Actions Section (Slider as requested) */}
       <View style={styles.section}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll} contentContainerStyle={{ paddingRight: 40 }}>
-          <QuickAction title="Add Account" icon="user-plus" variant="primary" onPress={() => router.push('/accounts/new')} />
+          <QuickAction title="Add Account" icon="user-plus" variant="secondary" onPress={() => router.push('/accounts/new')} />
           <QuickAction title="Add Customer" icon="user" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Add Customer')} />
           <QuickAction title="Create Reminder" icon="check-square" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Create Reminder')} />
         </ScrollView>
       </View>
 
-      {/* 4. Unified Grid Section */}
+      {/* 4. Business Overview & Bento Grid */}
       <View style={styles.section}>
-        <View style={styles.grid}>
-          <StatCard title="Accounts" value={isolatedAccountsCount.toString()} icon="user" onPress={() => router.push('/leads')} />
-          <StatCard title="My Group Accounts" value={getMetric('leads')} icon="users" onPress={() => router.push('/group-accounts')} />
-          <StatCard title="Deals" value={getMetric('deals')} icon="handshake" iconFamily="FontAwesome5" onPress={() => router.push('/deals')} />
-          <StatCard title="Customers" value={getMetric('customers')} icon="users" onPress={() => router.push('/customers')} />
-          <StatCard title="Support Requests" value={getMetric('supportRequests')} icon="headphones" onPress={() => router.push('/(admin)/support')} />
-          <StatCard title="Quotations" value={getMetric('quotations')} icon="file-text" onPress={() => router.push('/quotations')} />
+        <Text style={styles.sectionTitle}>Business Overview</Text>
+        
+        {/* Primary Hero KPI */}
+        <StatCard 
+          title="Accounts" 
+          value={isolatedAccountsCount.toString()} 
+          icon="user" 
+          variant="hero"
+          onPress={() => router.push('/leads')} 
+        />
+
+        {/* Bento Grid */}
+        <View style={styles.bentoGrid}>
+          <StatCard 
+            title="My Group Accounts" 
+            value={getMetric('leads')} 
+            icon="users" 
+            iconFamily="FontAwesome5"
+            variant="bento"
+            style={{ width: bentoCardWidth }}
+            onPress={() => router.push('/group-accounts')} 
+          />
+          <StatCard 
+            title="Deals" 
+            value={getMetric('deals')} 
+            icon="handshake" 
+            iconFamily="FontAwesome5" 
+            variant="bento"
+            style={{ width: bentoCardWidth }}
+            onPress={() => router.push('/deals')} 
+          />
+          <StatCard 
+            title="Customers" 
+            value={getMetric('customers')} 
+            icon="users" 
+            variant="bento"
+            style={{ width: bentoCardWidth }}
+            onPress={() => router.push('/customers')} 
+          />
+          <StatCard 
+            title="Support Requests" 
+            value={getMetric('supportRequests')} 
+            icon="headphones" 
+            variant="bento"
+            style={{ width: bentoCardWidth }}
+            onPress={() => router.push('/(admin)/support')} 
+          />
         </View>
+
+        {/* Full-width KPI */}
+        <StatCard 
+          title="Quotations" 
+          value={getMetric('quotations')} 
+          icon="file-text" 
+          variant="full"
+          onPress={() => router.push('/quotations')} 
+        />
       </View>
 
       {/* 5. Date Strip Section */}
+      {/* 5. Date Strip Section */}
       <View style={[styles.section, styles.lastSection]}>
-        <View style={styles.calendarCard}>
+        <Text style={styles.sectionTitle}>Today</Text>
+        <View style={styles.calendarCardNew}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Feather name="calendar" size={16} color={colors.textPrimary} />
-              <Text style={{ marginLeft: 6, fontSize: 14, fontWeight: '600', color: colors.textPrimary }}>
+              <Text style={{ marginLeft: 8, fontSize: 14, fontWeight: '600', color: colors.textPrimary }}>
                 {getDateLabel(selectedDate)}
               </Text>
             </View>
             <TouchableOpacity onPress={() => router.push({ pathname: '/reminders', params: { date: selectedDate?.toISOString() } })} style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ fontSize: 11, color: colors.textSecondary, marginRight: 2 }}>View Calendar</Text>
-              <Feather name="chevron-right" size={12} color={colors.textSecondary} />
+              <Text style={{ fontSize: 13, color: colors.primary, marginRight: 4, fontWeight: '500' }}>View Calendar</Text>
+              <Feather name="chevron-right" size={16} color={colors.primary} />
             </TouchableOpacity>
           </View>
           <ReminderDateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} variant="dashboard" />
@@ -374,25 +447,26 @@ const styles = StyleSheet.create({
   lastSection: {
     marginBottom: 0,
   },
-  calendarCard: {
+  calendarCardNew: {
     backgroundColor: colors.card,
-    borderRadius: 12,
+    borderRadius: 20,
     padding: spacing.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    ...shadows.card,
     shadowOpacity: 0.05,
-    shadowRadius: 8,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
   },
   sectionTitle: {
     ...typography.h3,
     color: colors.textPrimary,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
+    fontSize: 16,
   },
-  grid: {
+  bentoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: '-2%',
+    justifyContent: 'space-between',
   },
   activityGrid: {
     flexDirection: 'row',

@@ -1,6 +1,6 @@
 import { Tabs, Redirect } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { Feather, FontAwesome5 } from '@expo/vector-icons';
 import { colors } from '../../src/theme/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,6 +27,10 @@ export default function TabLayout() {
   // Expo's Tabs bottom height usually defaults to around 49-50 + padding. 
   // We'll set the height dynamically.
   
+  const isAndroid = Platform.OS === 'android';
+  const baseHeight = isAndroid ? 56 : 49;
+  const safeBottom = insets.bottom > 0 ? insets.bottom : (isAndroid ? 24 : 34);
+
   return (
     <Tabs 
       screenOptions={{ 
@@ -34,8 +38,8 @@ export default function TabLayout() {
         tabBarInactiveTintColor: '#666666',
         headerShown: false,
         tabBarStyle: [styles.tabBar, { 
-          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
-          height: 56 + (insets.bottom > 0 ? insets.bottom : 8),
+          paddingBottom: safeBottom,
+          height: baseHeight + safeBottom,
         }],
         tabBarLabelStyle: styles.tabBarLabel,
       }}

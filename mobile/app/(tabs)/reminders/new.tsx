@@ -206,11 +206,18 @@ export default function AddReminderScreen() {
       </ScrollView>
 
       {/* Save Button */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 16 }]}>
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>Save Reminder</Text>
-        </TouchableOpacity>
-      </View>
+      {(() => {
+        const isAndroid = Platform.OS === 'android';
+        const safeBottom = insets.bottom > 0 ? insets.bottom : (isAndroid ? 24 : 34);
+        const footerPadding = safeBottom + 16;
+        return (
+          <View style={[styles.footer, { paddingBottom: footerPadding }]}>
+            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+              <Text style={styles.saveButtonText}>Save Reminder</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      })()}
       </KeyboardAvoidingView>
 
       {showTimePicker && (

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import apiClient from '../../../src/api/client';
 import { AppHeader } from '../../../src/components/ui/AppHeader';
@@ -25,6 +25,36 @@ export default function LeadDetailsScreen() {
     };
     if (id) fetchDetails();
   }, [id]);
+
+  const handleConvertDeal = () => {
+    Alert.alert(
+      'Convert to Deal',
+      'Are you sure you want to convert this Account to a Deal?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Convert', 
+          style: 'default',
+          onPress: async () => {
+            try {
+              setIsLoading(true);
+              const res = await apiClient.post(`/leads/${id}/convert-to-deal`);
+              if (res.data?.success || res.status === 200 || res.status === 201) {
+                Alert.alert('Success', 'Account successfully converted to a Deal!', [
+                  { text: 'OK', onPress: () => router.push('/(tabs)/deals') }
+                ]);
+              }
+            } catch (error: any) {
+              console.log('Error converting deal:', error);
+              Alert.alert('Error', error.response?.data?.message || 'Failed to convert to Deal');
+            } finally {
+              setIsLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   if (isLoading) {
     return (
@@ -81,6 +111,12 @@ export default function LeadDetailsScreen() {
           ))}
           
         </View>
+
+        {(!data.isConverted && !data.dealId && data.status?.toLowerCase() !== 'converted' && data.accountState?.toLowerCase() !== 'converted') && (
+          <TouchableOpacity style={styles.actionBtn} onPress={handleConvertDeal}>
+            <Text style={styles.actionBtnText}>Convert Deal</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </View>
   );
@@ -142,5 +178,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#2d3748',
     fontWeight: '600',
+  },
+  actionBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
+  actionBtnText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
   }
 });
