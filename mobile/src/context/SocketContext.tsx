@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { getAccessToken } from '../storage/authStorage';
@@ -88,13 +89,15 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SocketContext.Provider value={{ socket, isConnected, showNotification }}>
-      {children}
-      {currentNotification && (
-        <NotificationBanner 
-          notification={currentNotification} 
-          onDismiss={handleDismiss} 
-        />
-      )}
+      <View style={{ flex: 1 }}>
+        {children}
+        {currentNotification && (
+          <NotificationBanner 
+            notification={currentNotification} 
+            onDismiss={handleDismiss} 
+          />
+        )}
+      </View>
     </SocketContext.Provider>
   );
 };
