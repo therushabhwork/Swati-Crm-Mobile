@@ -308,7 +308,7 @@ const register = async ({ name, email, password }) => {
   }
 }
 
-const createAdminManagedUser = async ({ name, email, password, companyId = 1, role = 'user', designation, state, city }) => {
+const createAdminManagedUser = async ({ name, email, password, companyId = 1, company = '', role = 'user', designation, state, city }) => {
   const { nameValue, emailValue, passwordValue } = validateUserPayload({ name, email, password })
 
   const existing = await userRepository.findUserByEmail(emailValue)
@@ -335,6 +335,7 @@ const createAdminManagedUser = async ({ name, email, password, companyId = 1, ro
     state,
     city,
     companyId,
+    company,
     status: 'pending',
     isApproved: false,
   })
@@ -582,7 +583,7 @@ const logoutAllSessions = async (userId) => {
   return { success: true }
 }
 
-const updateAdminManagedUser = async (userId, { name, email, password }, actor = {}) => {
+const updateAdminManagedUser = async (userId, { name, email, password, role, designation, state, city, companyId, company }, actor = {}) => {
   const targetUser = await userRepository.findRawUserById(userId)
   if (!targetUser) {
     throw new AppError('User not found.', 404)
@@ -632,6 +633,12 @@ const updateAdminManagedUser = async (userId, { name, email, password }, actor =
     email: emailValue,
     passwordHash,
     assignedPassword,
+    role,
+    designation,
+    state,
+    city,
+    companyId,
+    company,
   })
 
   if (passwordHash) {

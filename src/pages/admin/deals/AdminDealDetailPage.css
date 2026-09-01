@@ -218,12 +218,29 @@
   font-size: 0.95rem;
 }
 
-.admin-deal-detail-actions-item-orange .admin-deal-detail-actions-item-icon { color: #ef8354; }
-.admin-deal-detail-actions-item-slate .admin-deal-detail-actions-item-icon { color: var(--text-primary); }
-.admin-deal-detail-actions-item-blue .admin-deal-detail-actions-item-icon { color: var(--text-primary); }
-.admin-deal-detail-actions-item-blue .admin-deal-detail-actions-item-icon { color: var(--text-primary); }
-.admin-deal-detail-actions-item-danger .admin-deal-detail-actions-item-icon { color: #d94b4b; }
-.admin-deal-detail-actions-item-danger { color: #b73838; }
+.admin-deal-detail-actions-item-orange .admin-deal-detail-actions-item-icon {
+  color: #ef8354;
+}
+
+.admin-deal-detail-actions-item-slate .admin-deal-detail-actions-item-icon {
+  color: var(--text-primary);
+}
+
+.admin-deal-detail-actions-item-blue .admin-deal-detail-actions-item-icon {
+  color: var(--text-primary);
+}
+
+.admin-deal-detail-actions-item-blue .admin-deal-detail-actions-item-icon {
+  color: var(--text-primary);
+}
+
+.admin-deal-detail-actions-item-danger .admin-deal-detail-actions-item-icon {
+  color: #d94b4b;
+}
+
+.admin-deal-detail-actions-item-danger {
+  color: #b73838;
+}
 
 .admin-deal-reminder-form {
   display: grid;
@@ -350,7 +367,7 @@
   gap: 0.55rem;
 }
 
-.admin-deal-reminder-other-time > span {
+.admin-deal-reminder-other-time>span {
   color: var(--text-primary);
 }
 
@@ -423,7 +440,7 @@
   border-radius: 999px;
   appearance: none;
   -webkit-appearance: none;
-  background: var(--surface-app), #d9e1e8 var(--probability-value), #d9e1e8 100%);
+  background: linear-gradient(90deg, var(--surface-app) var(--probability-value), #d9e1e8 var(--probability-value), #d9e1e8 100%);
   cursor: pointer;
 }
 
@@ -551,13 +568,15 @@
   background: var(--surface-card);
   color: var(--text-primary);
   cursor: pointer;
-  opacity: 1;
-  pointer-events: auto;
+  opacity: 0;
+  pointer-events: none;
   transition: opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .admin-deal-detail-info-row:hover .admin-deal-detail-inline-edit,
-.admin-deal-detail-info-row:focus-within .admin-deal-detail-inline-edit {
+.admin-deal-detail-info-row:focus-within .admin-deal-detail-inline-edit,
+.admin-deal-detail-description:hover .admin-deal-detail-inline-edit,
+.admin-deal-detail-description:focus-within .admin-deal-detail-inline-edit {
   opacity: 1;
   pointer-events: auto;
 }

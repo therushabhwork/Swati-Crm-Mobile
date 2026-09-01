@@ -147,35 +147,14 @@ const AddAccountWizard = () => {
       try {
         const users = await userApi.listDirectory();
         const validUsers = Array.isArray(users) ? users : [];
-        const formatUser = (u) => ({ value: u.name || u.username || u.email, label: u.name || u.username || u.email });
+        const formatUser = (u) => ({ value: u.ownerCode || u.name || u.username || u.email, label: u.name || u.username || u.email, userObj: u });
         const sortAlphabetically = (a, b) => String(a.label).localeCompare(String(b.label));
         
-        // Exact list provided by user for SWATI, pre-sorted alphabetically
-        const hardcodedSwatiList = [
-          'Atish Shah',
-          'Bhavesh Prajapati',
-          'Daxesh Rohit',
-          'Hasmukh',
-          'Jagruti Parmar',
-          'Jay Pandya',
-          'Kanubhai Shah',
-          'Keval V Shah',
-          'Krunal Patel',
-          'Monali Pateliya',
-          'Naim Vhora',
-          'Nita Bhavsar',
-          'Rajeshree',
-          'Riya Patel',
-          'Samir Jha',
-          'Samir Sheth',
-          'VAIBHAVI PATEL',
-          'Vaibhav Tirkar'
-        ];
+        setSwatiUsers(validUsers.filter((u) => {
+            const comp = String(u.company || u.companyName || '').toLowerCase();
+            return comp.includes('swati') || u.companyId === 1;
+        }).map(formatUser).sort(sortAlphabetically));
         
-        // Map the hardcoded list directly into the dropdown options for SWATI
-        setSwatiUsers(hardcodedSwatiList.map(name => ({ value: name, label: name })));
-        
-        // Leave LUMOS dynamic and alphabetically sorted
         setLumosUsers(validUsers.filter((u) => {
             const comp = String(u.company || u.companyName || '').toLowerCase();
             return comp.includes('lumos') || u.companyId === 2;
@@ -292,6 +271,10 @@ const AddAccountWizard = () => {
     setSaving(true)
     setValidationNotice([])
 
+    const selectedOwner = activeOwners.find(o => o.value === formData.accountOwner)
+    const finalOwnerName = selectedOwner ? selectedOwner.label : formData.accountOwner
+    const finalOwnerCode = selectedOwner && selectedOwner.userObj ? (selectedOwner.userObj.ownerCode || '') : ''
+
     const payload = {
       name: formData.accountName,
       email: formData.contactEmail,
@@ -300,7 +283,7 @@ const AddAccountWizard = () => {
       status: formData.accountState || 'pending',
       accountState: formData.accountState || 'pending',
       source: formData.accountSource,
-      ownerName: formData.accountOwner,
+      ownerName: finalOwnerName,
       addedBy: user?.name || user?.username || '',
       address: formData.address,
       createdByUserId: user?.id || '',
@@ -309,6 +292,8 @@ const AddAccountWizard = () => {
       department: user?.department || '',
       userEmail: user?.email || '',
       ...formData,
+      accountOwner: finalOwnerName,
+      accountOwnerCode: finalOwnerCode,
       contacts: [
         {
           name: formData.contactPerson,

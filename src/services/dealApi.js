@@ -114,17 +114,35 @@ export const normalizeDealRecord = (deal = {}) => {
   }
 }
 
-const normalizeDealPayload = (deal = {}) => ({
-  ...deal,
-  title: deal.title || deal.name || null,
-  accountId: normalizeOptionalIntegerInput(deal.accountId ?? deal.customerId),
-  amount: normalizeOptionalNumberInput(deal.amount ?? deal.value ?? deal.dealValue),
-  value: normalizeOptionalNumberInput(deal.value ?? deal.amount ?? deal.dealValue),
-  probability: normalizeOptionalIntegerInput(deal.probability),
-  expectedCloseDate: deal.expectedCloseDate || deal.expectedClosureDate || deal.closeDate || null,
-  assignedTo: normalizeOptionalIntegerInput(deal.assignedTo || deal.assignedUserId || deal.ownerUserId),
-  ownerUserId: normalizeOptionalIntegerInput(deal.ownerUserId || deal.ownerId || deal.assignedTo),
-})
+const normalizeDealPayload = (deal = {}) => {
+  const normalized = { ...deal }
+
+  if (deal.title !== undefined || deal.name !== undefined || deal.dealName !== undefined) {
+    normalized.title = deal.title || deal.name || deal.dealName || null
+  }
+  if (deal.accountId !== undefined || deal.customerId !== undefined) {
+    normalized.accountId = normalizeOptionalIntegerInput(deal.accountId ?? deal.customerId)
+  }
+  if (deal.amount !== undefined || deal.value !== undefined || deal.dealValue !== undefined) {
+    const val = normalizeOptionalNumberInput(deal.amount ?? deal.value ?? deal.dealValue)
+    normalized.amount = val
+    normalized.value = val
+  }
+  if (deal.probability !== undefined) {
+    normalized.probability = normalizeOptionalIntegerInput(deal.probability)
+  }
+  if (deal.expectedCloseDate !== undefined || deal.expectedClosureDate !== undefined || deal.closeDate !== undefined) {
+    normalized.expectedCloseDate = deal.expectedCloseDate || deal.expectedClosureDate || deal.closeDate || null
+  }
+  if (deal.assignedTo !== undefined || deal.assignedUserId !== undefined || deal.ownerUserId !== undefined) {
+    normalized.assignedTo = normalizeOptionalIntegerInput(deal.assignedTo || deal.assignedUserId || deal.ownerUserId)
+  }
+  if (deal.ownerUserId !== undefined || deal.ownerId !== undefined) {
+    normalized.ownerUserId = normalizeOptionalIntegerInput(deal.ownerUserId || deal.ownerId || deal.assignedTo)
+  }
+
+  return normalized
+}
 
 export const dealApi = {
   async getDeals(params = {}) {
@@ -144,12 +162,14 @@ export const dealApi = {
 
   async createDeal(payload) {
     const response = await apiClient.post('/deals', normalizeDealPayload(payload))
-    return normalizeDealRecord(response.data)
+    const responseData = response.data?.success ? response.data.data : response.data
+    return normalizeDealRecord(responseData)
   },
 
   async updateDeal(id, payload) {
     const response = await apiClient.put(`/deals/${encodeURIComponent(id)}`, normalizeDealPayload(payload))
-    return normalizeDealRecord(response.data)
+    const responseData = response.data?.success ? response.data.data : response.data
+    return normalizeDealRecord(responseData)
   },
 
   async deleteDeal(id) {

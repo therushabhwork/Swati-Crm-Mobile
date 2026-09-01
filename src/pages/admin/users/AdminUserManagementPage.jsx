@@ -2087,6 +2087,11 @@ const AdminUserManagementPage = () => {
         const updatePayload = {
           name: formData.name,
           email: formData.email,
+          role: formData.role,
+          company: formData.company,
+          designation: formData.designation,
+          state: formData.state,
+          city: formData.city,
         }
 
         if (formData.password.trim()) {

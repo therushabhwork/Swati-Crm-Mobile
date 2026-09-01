@@ -38,6 +38,32 @@ const replaceById = (items, record) => {
   return items.map((entry) => (entry.id === record.id ? record : entry))
 }
 
+const replaceDealRecord = (items, record) => {
+  if (!Array.isArray(items) || !record) return items || []
+  const recordIdStr = String(record.id ?? '')
+  const sourceIdStr = String(record.sourceDealId ?? record.dealId ?? '')
+
+  const matches = (entry) => {
+    if (!entry) return false
+    const entryIdStr = String(entry.id ?? '')
+    const entrySourceIdStr = String(entry.sourceDealId ?? entry.dealId ?? '')
+
+    return (
+      (recordIdStr && entryIdStr === recordIdStr)
+      || (sourceIdStr && entryIdStr === sourceIdStr)
+      || (recordIdStr && entrySourceIdStr === recordIdStr)
+      || (sourceIdStr && entrySourceIdStr === sourceIdStr)
+    )
+  }
+
+  const exists = items.some(matches)
+  if (!exists) {
+    return [record, ...items]
+  }
+
+  return items.map((entry) => (matches(entry) ? { ...entry, ...record } : entry))
+}
+
 const ACCOUNT_FRONTEND_CACHE_PREFIX = 'crm_frontend_accounts'
 const DISMISSED_NOTIFICATIONS_KEY = 'crm_dismissed_notifications'
 
@@ -869,7 +895,8 @@ export const DataProvider = ({ children }) => {
       const updated = await dealApi.updateDeal(id, updates)
       const deal = enrichRealtimeRecord(SOCKET_ENTITY_TYPES.DEAL, updated)
 
-      setDeals((prev) => replaceById(prev, deal))
+      setDeals((prev) => replaceDealRecord(prev, deal))
+      setConvertedDeals((prev) => replaceDealRecord(prev, deal))
 
       return { success: true, data: deal }
     } catch (error) {

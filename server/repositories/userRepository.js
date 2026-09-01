@@ -332,8 +332,31 @@ const updateUserStatus = async (userId, status) => {
   return sanitizeUserRow(record)
 }
 
-const createUser = async ({ username, name, email, passwordHash, assignedPassword = '', role, companyId = 1, status = 'pending', isApproved = false, designation = '', state = '', city = '' }) => {
+const getNextOwnerCode = async (companyId) => {
+  const baseSeries = companyId === 2 ? 2000 : 1000
+  
+  const users = await User.find(
+    { companyId }, 
+    { ownerCode: 1, owner_code: 1 }
+  ).lean()
+  
+  let maxCode = baseSeries
+  users.forEach((user) => {
+    const code = Number(user.ownerCode || user.owner_code)
+    if (!Number.isNaN(code) && code >= baseSeries && code < baseSeries + 1000) {
+      if (code > maxCode) {
+        maxCode = code
+      }
+    }
+  })
+  
+  return String(maxCode + 1)
+}
+
+const createUser = async ({ username, name, email, passwordHash, assignedPassword = '', role, companyId = 1, company = '', status = 'pending', isApproved = false, designation = '', state = '', city = '' }) => {
   const legacyId = await getNextLegacyId('users')
+  const ownerCode = await getNextOwnerCode(companyId)
+
   const record = await User.create({
     legacyId,
     username,
@@ -346,6 +369,8 @@ const createUser = async ({ username, name, email, passwordHash, assignedPasswor
     state,
     city,
     companyId,
+    company,
+    ownerCode,
     status,
     isApproved,
     isOnline: false,
@@ -421,7 +446,7 @@ const upsertMicrosoftUser = async ({
   return sanitizeUserRow(record)
 }
 
-const updateUserDetails = async (userId, { name, email, passwordHash = null, assignedPassword = null }) => {
+const updateUserDetails = async (userId, { name, email, passwordHash = null, assignedPassword = null, role, companyId, company, designation, state, city }) => {
   const updates = { name, email }
   if (passwordHash) {
     updates.passwordHash = passwordHash
@@ -429,6 +454,12 @@ const updateUserDetails = async (userId, { name, email, passwordHash = null, ass
     updates.assignedPassword = assignedPassword || ''
     updates.assigned_password = assignedPassword || ''
   }
+  if (role) updates.role = role
+  if (companyId) updates.companyId = companyId
+  if (company !== undefined) updates.company = company
+  if (designation !== undefined) updates.designation = designation
+  if (state !== undefined) updates.state = state
+  if (city !== undefined) updates.city = city
 
   const record = await User.findOneAndUpdate(byLegacyId(userId), { $set: updates }, { new: true }).lean()
   return sanitizeUserRow(record)

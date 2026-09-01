@@ -122,6 +122,18 @@ const isConvertedAccountPayload = (payload = {}) => (
   )
 )
 
+const isConvertedDealRecord = (deal = {}) => {
+  if (!deal) return false
+  const data = deal.data && typeof deal.data === 'object' ? deal.data : {}
+  return Boolean(
+    isConvertedAccountPayload(deal)
+    || deal.status === 'converted'
+    || deal.stage === 'converted'
+    || data.status === 'converted'
+    || data.stage === 'converted'
+  )
+}
+
 const { isPrivilegedRole } = require('../security/accessScope')
 
 const baseService = createCrudService({
@@ -216,7 +228,7 @@ module.exports = {
     }
 
     const payload = buildPayload(enhancedBody, actor, null)
-    if (isConvertedAccountPayload(payload)) {
+    if (isConvertedDealRecord(payload)) {
       const scope = await resolveCrmGroupScope(actor)
       const existingConvertedDeal = await dealRepository.findConvertedFromAccount(payload.accountId, scope.actor, scope.queryOptions)
       if (existingConvertedDeal) {
@@ -226,7 +238,7 @@ module.exports = {
 
     const createdDeal = await baseService.create(actor, enhancedBody)
 
-    if (isConvertedAccountPayload(createdDeal)) {
+    if (isConvertedDealRecord(createdDeal)) {
       const convertedDeal = await convertedDealRepository.syncFromDeal(createdDeal)
       emitConvertedDealRealtime('created', convertedDeal, actor)
     }
@@ -252,7 +264,7 @@ module.exports = {
     }
     const updatedDeal = await baseService.update(actor, id, enhancedBody)
 
-    if (isConvertedAccountPayload(updatedDeal) || isConvertedAccountPayload(existing)) {
+    if (isConvertedDealRecord(updatedDeal) || isConvertedDealRecord(existing)) {
       const convertedDeal = await convertedDealRepository.syncFromDeal(updatedDeal)
       emitConvertedDealRealtime('updated', convertedDeal, actor)
     }

@@ -614,7 +614,7 @@ const AdminManageDealPage = () => {
     const reminderTitle = `${deal.dealName || deal.name || 'Deal'} reminder`
     const assignedTo = deal.assignedTo || deal.ownerUserId || deal.userId || user?.id || ''
 
-    const result = await updateDeal(deal.id, {
+    const result = await updateDeal(deal.sourceDealId || deal.source_deal_id || deal.id, {
       reminderDate: reminderForm.reminderDate,
       reminderTime,
       reminderMode: reminderForm.reminderMode,
@@ -728,7 +728,7 @@ const AdminManageDealPage = () => {
     }
 
     setIsSaving(true)
-    const result = await updateDeal(deal.id, {
+    const result = await updateDeal(deal.sourceDealId || deal.source_deal_id || deal.id, {
       dealType: nextDealType,
       customerCategory: nextDealType,
       updatedAt: new Date().toISOString(),
@@ -986,7 +986,7 @@ const AdminManageDealPage = () => {
     setIsSaving(true)
     setFormError('')
 
-    const result = await updateDeal(deal.id, updates)
+    const result = await updateDeal(deal.sourceDealId || deal.source_deal_id || deal.id, updates)
 
     setIsSaving(false)
 
@@ -1319,7 +1319,7 @@ const AdminManageDealPage = () => {
     { key: 'poValue', label: 'PO Value', inputType: 'number', min: '0' },
     { key: 'customerReferenceDate', label: 'Customer Ref Date', inputType: 'date' },
     { key: 'projectName', label: 'Project Name', inputType: 'text' },
-    { key: 'projectStatus', label: 'Project Status', inputType: 'select', options: [{value: 'Not Started', label: 'Not Started'}, {value: 'In Progress', label: 'In Progress'}, {value: 'Completed', label: 'Completed'}, {value: 'On Hold', label: 'On Hold'}] },
+    { key: 'projectStatus', label: 'Project Status', inputType: 'select', options: [{ value: 'Not Started', label: 'Not Started' }, { value: 'In Progress', label: 'In Progress' }, { value: 'Completed', label: 'Completed' }, { value: 'On Hold', label: 'On Hold' }] },
     {
       key: 'orderCustomerStatus',
       label: 'Status of Customer as per Order Received',
@@ -1349,308 +1349,308 @@ const AdminManageDealPage = () => {
 
   return (
     <>
-    <div className="admin-manage-deal-page">
-      <div className="admin-manage-deal-shell">
-        <article className="admin-manage-deal-workspace">
-          <header className="admin-manage-deal-header">
-            <div className="admin-manage-deal-header-copy">
-              <div className="admin-manage-deal-eyebrow">Manage Deal</div>
-              <div className="admin-manage-deal-header-meta">
-                <span className="admin-manage-deal-chip">
-                  <span>Deal No.</span>
-                  <strong>{hasDisplayValue(activeDeal.dealNumber) ? activeDeal.dealNumber : '-'}</strong>
-                </span>
-                <span className="admin-manage-deal-chip">
-                  <span>Current Stage</span>
-                  <strong>{currentStageLabel}</strong>
-                </span>
+      <div className="admin-manage-deal-page">
+        <div className="admin-manage-deal-shell">
+          <article className="admin-manage-deal-workspace">
+            <header className="admin-manage-deal-header">
+              <div className="admin-manage-deal-header-copy">
+                <div className="admin-manage-deal-eyebrow">Manage Deal</div>
+                <div className="admin-manage-deal-header-meta">
+                  <span className="admin-manage-deal-chip">
+                    <span>Deal No.</span>
+                    <strong>{hasDisplayValue(activeDeal.dealNumber) ? activeDeal.dealNumber : '-'}</strong>
+                  </span>
+                  <span className="admin-manage-deal-chip">
+                    <span>Current Stage</span>
+                    <strong>{currentStageLabel}</strong>
+                  </span>
+                </div>
               </div>
-            </div>
 
-            <div className="admin-manage-deal-header-actions">
-              {deal.linkedAccountId ? (
+              <div className="admin-manage-deal-header-actions">
+                {deal.linkedAccountId ? (
+                  <button
+                    type="button"
+                    className="admin-manage-deal-icon-button"
+                    onClick={handleOpenLinkedAccount}
+                    aria-label="Open linked account"
+                    title="Open linked account"
+                  >
+                    <FaLink />
+                  </button>
+                ) : null}
+
                 <button
                   type="button"
                   className="admin-manage-deal-icon-button"
-                  onClick={handleOpenLinkedAccount}
-                  aria-label="Open linked account"
-                  title="Open linked account"
+                  onClick={handleSendMail}
+                  aria-label="Send deal email"
+                  title="Send deal email"
                 >
-                  <FaLink />
-                </button>
-              ) : null}
-
-              <button
-                type="button"
-                className="admin-manage-deal-icon-button"
-                onClick={handleSendMail}
-                aria-label="Send deal email"
-                title="Send deal email"
-              >
-                <FaEnvelope />
-              </button>
-
-              {isEditing ? (
-                <>
-                  <Button type="button" variant="outline" onClick={handleCancelEditing} disabled={isSaving}>
-                    <FaBan />
-                    <span>Cancel</span>
-                  </Button>
-                  <Button type="button" onClick={handleSave} disabled={isSaving}>
-                    <FaSave />
-                    <span>{isSaving ? 'Saving...' : 'Save'}</span>
-                  </Button>
-                </>
-              ) : null}
-
-              <div className="admin-manage-deal-actions-menu" ref={actionsMenuRef}>
-                <button
-                  type="button"
-                  className="admin-manage-deal-actions-trigger"
-                  onClick={() => setIsActionsMenuOpen((value) => !value)}
-                  aria-haspopup="menu"
-                  aria-expanded={isActionsMenuOpen}
-                >
-                  <span>Actions</span>
-                  <FaCaretDown />
+                  <FaEnvelope />
                 </button>
 
-                {isActionsMenuOpen ? (
-                  <div className="admin-manage-deal-actions-popup" role="menu">
-                    {actionsMenuItems.map((item) => (
-                      <button
-                        key={item.key}
-                        type="button"
-                        role="menuitem"
-                        className={`admin-manage-deal-actions-item admin-manage-deal-actions-item-${item.accent}`}
-                        onClick={() => handleActionsItemClick(item)}
+                {isEditing ? (
+                  <>
+                    <Button type="button" variant="outline" onClick={handleCancelEditing} disabled={isSaving}>
+                      <FaBan />
+                      <span>Cancel</span>
+                    </Button>
+                    <Button type="button" onClick={handleSave} disabled={isSaving}>
+                      <FaSave />
+                      <span>{isSaving ? 'Saving...' : 'Save'}</span>
+                    </Button>
+                  </>
+                ) : null}
+
+                <div className="admin-manage-deal-actions-menu" ref={actionsMenuRef}>
+                  <button
+                    type="button"
+                    className="admin-manage-deal-actions-trigger"
+                    onClick={() => setIsActionsMenuOpen((value) => !value)}
+                    aria-haspopup="menu"
+                    aria-expanded={isActionsMenuOpen}
+                  >
+                    <span>Actions</span>
+                    <FaCaretDown />
+                  </button>
+
+                  {isActionsMenuOpen ? (
+                    <div className="admin-manage-deal-actions-popup" role="menu">
+                      {actionsMenuItems.map((item) => (
+                        <button
+                          key={item.key}
+                          type="button"
+                          role="menuitem"
+                          className={`admin-manage-deal-actions-item admin-manage-deal-actions-item-${item.accent}`}
+                          onClick={() => handleActionsItemClick(item)}
+                        >
+                          <span className="admin-manage-deal-actions-item-icon">{item.icon}</span>
+                          <span>{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+
+                <button type="button" className="admin-manage-deal-close" onClick={handleClose} aria-label="Close manage deal page">
+                  <FaTimes />
+                </button>
+              </div>
+            </header>
+
+            {formError ? (
+              <div className="admin-manage-deal-error">
+                {formError}
+              </div>
+            ) : null}
+
+            <section className="admin-manage-deal-metrics">
+              {metricFields.map((field) => (
+                <div key={field.key} className="admin-manage-deal-metric-card">
+                  <div className="admin-manage-deal-metric-label">{field.label}</div>
+                  <div className="admin-manage-deal-metric-value">
+                    {isEditing || editingFieldKey === field.key ? (
+                      renderFieldInput(field)
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {renderFieldValue(field)}
+                        {!isEditing && editingFieldKey !== field.key ? (
+                          <button
+                            type="button"
+                            className="admin-manage-deal-metric-edit"
+                            onClick={() => handleStartFieldEditing(field.key)}
+                            aria-label={`Edit ${field.label}`}
+                            title={`Edit ${field.label}`}
+                            style={{ position: 'relative', display: 'inline-flex', padding: 0, margin: 0, color: 'var(--text-secondary)' }}
+                          >
+                            <FaEdit />
+                          </button>
+                        ) : null}
+                      </div>
+                    )}
+                    {editingFieldKey === field.key ? (
+                      <div className="admin-manage-deal-inline-edit-actions">
+                        <button type="button" onClick={handleCancelEditing} disabled={isSaving}>Cancel</button>
+                        <button type="button" onClick={handleSave} disabled={isSaving}>{isSaving ? 'Saving...' : 'Save'}</button>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </section>
+
+            <section className="admin-manage-deal-panel admin-manage-deal-panel-timeline">
+              <div className="admin-manage-deal-panel-header">
+                <div>
+                  <h2>Deal Summary Timeline</h2>
+                  <p>Track the current stage progress for this deal.</p>
+                </div>
+
+                {isEditing ? (
+                  <div className="admin-manage-deal-stage-editor">
+                    <label>
+                      <span>Stage</span>
+                      <select
+                        value={formState.dealStage}
+                        onChange={(event) => handleFieldChange('dealStage', event.target.value)}
                       >
-                        <span className="admin-manage-deal-actions-item-icon">{item.icon}</span>
-                        <span>{item.label}</span>
-                      </button>
-                    ))}
+                        {stageOptions.map((option) => (
+                          <option key={`stage-${option.value}`} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                   </div>
                 ) : null}
               </div>
 
-              <button type="button" className="admin-manage-deal-close" onClick={handleClose} aria-label="Close manage deal page">
-                <FaTimes />
-              </button>
-            </div>
-          </header>
-
-          {formError ? (
-            <div className="admin-manage-deal-error">
-              {formError}
-            </div>
-          ) : null}
-
-          <section className="admin-manage-deal-metrics">
-            {metricFields.map((field) => (
-              <div key={field.key} className="admin-manage-deal-metric-card">
-                <div className="admin-manage-deal-metric-label">{field.label}</div>
-                <div className="admin-manage-deal-metric-value">
-                  {isEditing || editingFieldKey === field.key ? (
-                    renderFieldInput(field)
-                  ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {renderFieldValue(field)}
-                      {!isEditing && editingFieldKey !== field.key ? (
-                        <button
-                          type="button"
-                          className="admin-manage-deal-metric-edit"
-                          onClick={() => handleStartFieldEditing(field.key)}
-                          aria-label={`Edit ${field.label}`}
-                          title={`Edit ${field.label}`}
-                          style={{ position: 'relative', display: 'inline-flex', padding: 0, margin: 0, color: 'var(--text-secondary)' }}
-                        >
-                          <FaEdit />
-                        </button>
-                      ) : null}
+              <div className="admin-manage-deal-timeline">
+                {timelineSteps.map((step, index) => (
+                  <React.Fragment key={step.key}>
+                    <div className={`admin-manage-deal-timeline-step ${step.active ? 'admin-manage-deal-timeline-step-active' : ''}`}>
+                      <div className="admin-manage-deal-timeline-dot" />
+                      <div className="admin-manage-deal-timeline-copy">
+                        <strong>{step.label}</strong>
+                        <span>{step.actor || '-'}</span>
+                        <time>{step.timestamp ? formatDateTimeValue(step.timestamp) : '-'}</time>
+                      </div>
                     </div>
-                  )}
-                  {editingFieldKey === field.key ? (
-                    <div className="admin-manage-deal-inline-edit-actions">
-                      <button type="button" onClick={handleCancelEditing} disabled={isSaving}>Cancel</button>
-                      <button type="button" onClick={handleSave} disabled={isSaving}>{isSaving ? 'Saving...' : 'Save'}</button>
-                    </div>
-                  ) : null}
-                </div>
+                    {index < timelineSteps.length - 1 ? (
+                      <div className="admin-manage-deal-timeline-connector" aria-hidden="true" />
+                    ) : null}
+                  </React.Fragment>
+                ))}
               </div>
-            ))}
-          </section>
+            </section>
 
-          <section className="admin-manage-deal-panel admin-manage-deal-panel-timeline">
-            <div className="admin-manage-deal-panel-header">
-              <div>
-                <h2>Deal Summary Timeline</h2>
-                <p>Track the current stage progress for this deal.</p>
-              </div>
-
-              {isEditing ? (
-                <div className="admin-manage-deal-stage-editor">
-                  <label>
-                    <span>Stage</span>
-                    <select
-                      value={formState.dealStage}
-                      onChange={(event) => handleFieldChange('dealStage', event.target.value)}
-                    >
-                      {stageOptions.map((option) => (
-                        <option key={`stage-${option.value}`} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              ) : null}
+            <div className="admin-manage-deal-fields-grid" style={{ paddingTop: '1rem', paddingBottom: '1rem' }}>
+              {[...customerFields, ...otherFields].map(renderDataField)}
             </div>
+          </article>
+        </div>
+      </div>
+      <Modal
+        isOpen={isReminderOpen}
+        onClose={handleCloseReminder}
+        title="Add Reminder"
+        size="large"
+      >
+        <form className="admin-manage-deal-reminder-form" onSubmit={handleSaveReminder}>
+          <div className="admin-manage-deal-reminder-heading">
+            <span>Add Reminder</span>
+            <strong>{activeDeal?.dealName || activeDeal?.dealNumber || 'Deal'}</strong>
+            <small>{activeDeal?.dealNumber || ''}</small>
+          </div>
 
-            <div className="admin-manage-deal-timeline">
-              {timelineSteps.map((step, index) => (
-                <React.Fragment key={step.key}>
-                  <div className={`admin-manage-deal-timeline-step ${step.active ? 'admin-manage-deal-timeline-step-active' : ''}`}>
-                    <div className="admin-manage-deal-timeline-dot" />
-                    <div className="admin-manage-deal-timeline-copy">
-                      <strong>{step.label}</strong>
-                      <span>{step.actor || '-'}</span>
-                      <time>{step.timestamp ? formatDateTimeValue(step.timestamp) : '-'}</time>
-                    </div>
-                  </div>
-                  {index < timelineSteps.length - 1 ? (
-                    <div className="admin-manage-deal-timeline-connector" aria-hidden="true" />
-                  ) : null}
-                </React.Fragment>
+          <div className="admin-manage-deal-reminder-grid">
+            <label className="admin-manage-deal-reminder-field">
+              <span>Reminder Date</span>
+              <input
+                type="date"
+                value={reminderForm.reminderDate}
+                onChange={(event) => setReminderForm((currentValue) => ({ ...currentValue, reminderDate: event.target.value }))}
+                required
+              />
+            </label>
+            <label className="admin-manage-deal-reminder-field">
+              <span>Reminder Mode</span>
+              <select
+                value={reminderForm.reminderMode}
+                onChange={(event) => setReminderForm((currentValue) => ({ ...currentValue, reminderMode: event.target.value }))}
+              >
+                {REMINDER_MODE_OPTIONS.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="admin-manage-deal-reminder-times">
+            <span>Reminder Time</span>
+            <div className="admin-manage-deal-reminder-time-list">
+              {REMINDER_TIME_OPTIONS.map((time) => (
+                <button
+                  key={time}
+                  type="button"
+                  className={`admin-manage-deal-reminder-time${reminderForm.reminderTime === time ? ' admin-manage-deal-reminder-time-active' : ''}`}
+                  onClick={() => setReminderForm((currentValue) => ({ ...currentValue, reminderTime: time }))}
+                >
+                  {time}
+                </button>
               ))}
             </div>
-          </section>
-
-          <div className="admin-manage-deal-fields-grid" style={{ paddingTop: '1rem', paddingBottom: '1rem' }}>
-            {[...customerFields, ...otherFields].map(renderDataField)}
+            <label className="admin-manage-deal-reminder-field admin-manage-deal-reminder-field-full">
+              <span>Other</span>
+              <input
+                type="time"
+                value={reminderForm.reminderTime}
+                onChange={(event) => setReminderForm((currentValue) => ({ ...currentValue, reminderTime: event.target.value }))}
+              />
+            </label>
           </div>
-        </article>
-      </div>
-    </div>
-    <Modal
-      isOpen={isReminderOpen}
-      onClose={handleCloseReminder}
-      title="Add Reminder"
-      size="large"
-    >
-      <form className="admin-manage-deal-reminder-form" onSubmit={handleSaveReminder}>
-        <div className="admin-manage-deal-reminder-heading">
-          <span>Add Reminder</span>
-          <strong>{activeDeal?.dealName || activeDeal?.dealNumber || 'Deal'}</strong>
-          <small>{activeDeal?.dealNumber || ''}</small>
-        </div>
 
-        <div className="admin-manage-deal-reminder-grid">
-          <label className="admin-manage-deal-reminder-field">
-            <span>Reminder Date</span>
-            <input
-              type="date"
-              value={reminderForm.reminderDate}
-              onChange={(event) => setReminderForm((currentValue) => ({ ...currentValue, reminderDate: event.target.value }))}
-              required
+          <label className="admin-manage-deal-reminder-field admin-manage-deal-reminder-field-full">
+            <span>Reminder Note</span>
+            <textarea
+              rows={4}
+              value={reminderForm.reminderNote}
+              onChange={(event) => setReminderForm((currentValue) => ({ ...currentValue, reminderNote: event.target.value }))}
+              placeholder="Add reminder note here..."
             />
           </label>
-          <label className="admin-manage-deal-reminder-field">
-            <span>Reminder Mode</span>
-            <select
-              value={reminderForm.reminderMode}
-              onChange={(event) => setReminderForm((currentValue) => ({ ...currentValue, reminderMode: event.target.value }))}
-            >
-              {REMINDER_MODE_OPTIONS.map((option) => (
-                <option key={option} value={option}>{option}</option>
+
+          <label className="admin-manage-deal-reminder-task-link">
+            <input
+              type="checkbox"
+              checked={reminderForm.createTask}
+              onChange={(event) => setReminderForm((currentValue) => ({ ...currentValue, createTask: event.target.checked }))}
+            />
+            <span>
+              <FaClipboardList />
+              Also add to Task List
+            </span>
+          </label>
+
+          <div className="admin-manage-deal-reminder-actions">
+            <Button type="button" variant="outline" onClick={handleCloseReminder} disabled={isSavingReminder}>
+              Close
+            </Button>
+            <Button type="submit" disabled={isSavingReminder}>
+              {isSavingReminder ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+      <Modal
+        isOpen={isChangeTypeOpen}
+        onClose={handleCloseChangeType}
+        title="Change Type"
+        size="small"
+      >
+        <form className="admin-manage-deal-change-type-form" onSubmit={handleSaveDealType}>
+          <label className="admin-manage-deal-change-type-field">
+            <span>Deal Type</span>
+            <select value={changeTypeValue} onChange={(event) => setChangeTypeValue(event.target.value)}>
+              <option value="">Select deal type</option>
+              {DEAL_TYPE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
               ))}
             </select>
           </label>
-        </div>
-
-        <div className="admin-manage-deal-reminder-times">
-          <span>Reminder Time</span>
-          <div className="admin-manage-deal-reminder-time-list">
-            {REMINDER_TIME_OPTIONS.map((time) => (
-              <button
-                key={time}
-                type="button"
-                className={`admin-manage-deal-reminder-time${reminderForm.reminderTime === time ? ' admin-manage-deal-reminder-time-active' : ''}`}
-                onClick={() => setReminderForm((currentValue) => ({ ...currentValue, reminderTime: time }))}
-              >
-                {time}
-              </button>
-            ))}
+          <div className="admin-manage-deal-change-type-actions">
+            <Button type="button" variant="outline" onClick={handleCloseChangeType} disabled={isSaving}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save Type'}
+            </Button>
           </div>
-          <label className="admin-manage-deal-reminder-field admin-manage-deal-reminder-field-full">
-            <span>Other</span>
-            <input
-              type="time"
-              value={reminderForm.reminderTime}
-              onChange={(event) => setReminderForm((currentValue) => ({ ...currentValue, reminderTime: event.target.value }))}
-            />
-          </label>
-        </div>
-
-        <label className="admin-manage-deal-reminder-field admin-manage-deal-reminder-field-full">
-          <span>Reminder Note</span>
-          <textarea
-            rows={4}
-            value={reminderForm.reminderNote}
-            onChange={(event) => setReminderForm((currentValue) => ({ ...currentValue, reminderNote: event.target.value }))}
-            placeholder="Add reminder note here..."
-          />
-        </label>
-
-        <label className="admin-manage-deal-reminder-task-link">
-          <input
-            type="checkbox"
-            checked={reminderForm.createTask}
-            onChange={(event) => setReminderForm((currentValue) => ({ ...currentValue, createTask: event.target.checked }))}
-          />
-          <span>
-            <FaClipboardList />
-            Also add to Task List
-          </span>
-        </label>
-
-        <div className="admin-manage-deal-reminder-actions">
-          <Button type="button" variant="outline" onClick={handleCloseReminder} disabled={isSavingReminder}>
-            Close
-          </Button>
-          <Button type="submit" disabled={isSavingReminder}>
-            {isSavingReminder ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
-    <Modal
-      isOpen={isChangeTypeOpen}
-      onClose={handleCloseChangeType}
-      title="Change Type"
-      size="small"
-    >
-      <form className="admin-manage-deal-change-type-form" onSubmit={handleSaveDealType}>
-        <label className="admin-manage-deal-change-type-field">
-          <span>Deal Type</span>
-          <select value={changeTypeValue} onChange={(event) => setChangeTypeValue(event.target.value)}>
-            <option value="">Select deal type</option>
-            {DEAL_TYPE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="admin-manage-deal-change-type-actions">
-          <Button type="button" variant="outline" onClick={handleCloseChangeType} disabled={isSaving}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Save Type'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
+        </form>
+      </Modal>
     </>
   )
 }
