@@ -18,8 +18,8 @@ export const userApi = {
     return unwrapData(response, [])
   },
 
-  async listDirectory() {
-    const response = await apiClient.get('/users/directory')
+  async listDirectory(params = {}) {
+    const response = await apiClient.get('/users/directory', { params })
     return unwrapData(response, [])
   },
 

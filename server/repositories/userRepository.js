@@ -147,6 +147,8 @@ const listUserDirectory = async (companyId = null) => {
       $or: [
         { role: { $in: ['admin', 'super_admin'] } },
         { status: 'approved' },
+        { isApproved: true },
+        { is_approved: true },
       ],
     })
     .sort({ role: 1, name: 1 })

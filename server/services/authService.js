@@ -589,13 +589,6 @@ const updateAdminManagedUser = async (userId, { name, email, password, role, des
     throw new AppError('User not found.', 404)
   }
 
-  if (
-    actor?.companyId
-    && targetUser.company_id
-    && Number(actor.companyId) !== Number(targetUser.company_id)
-  ) {
-    throw new AppError('User not found.', 404)
-  }
 
   const kevalCanManageTarget = canKevalManageTargetPassword(actor, targetUser)
   // Admin modification restriction removed

@@ -20,16 +20,25 @@ export const compareAccountsByNumberAsc = (left = {}, right = {}) => {
 
 const resolveAccountOwnerSeriesNumber = (record = {}) => {
   const ownerCode = record.accountOwnerCode
-    || record.ownerCode
     || record.raw?.accountOwnerCode
-    || record.raw?.ownerCode
     || record.raw?.formData?.accountOwnerCode
     || record.raw?.formData?.ownerCode
+    || record.ownerCode
+    || record.raw?.ownerCode
 
   return String(ownerCode || '').trim()
 }
 
 const resolveStoredAccountNumber = (record = {}, index = 0) => {
+  const ownerCode = record.accountOwnerCode
+    || record.raw?.accountOwnerCode
+    || record.raw?.formData?.accountOwnerCode
+    || record.raw?.formData?.ownerCode
+
+  if (ownerCode) {
+    return String(ownerCode).trim()
+  }
+
   const storedValue = record.originalAccountNumber
     || record.accountNumber
     || record.accountNo

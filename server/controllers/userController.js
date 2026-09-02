@@ -72,7 +72,7 @@ const deleteUser = async (req, res, next) => {
     }
 
     const target = await userRepository.findUserById(userId)
-    if (!target || target.companyId !== req.user.companyId) {
+    if (!target) {
       throw new AppError('User not found.', 404)
     }
 
@@ -99,8 +99,8 @@ const listUsers = async (req, res, next) => {
   try {
     const { status } = req.query || {}
     let users = status
-      ? await userRepository.listUsersByStatus(status, req.user.companyId)
-      : await userRepository.listAllUsers(req.user.companyId)
+      ? await userRepository.listUsersByStatus(status)
+      : await userRepository.listAllUsers()
       
     // Attach Outlook connection status
     const integrationService = require('../services/integrationService')
@@ -124,7 +124,7 @@ const listUsers = async (req, res, next) => {
 
 const listPendingUsers = async (req, res, next) => {
   try {
-    const users = await userRepository.listUsersByStatus('pending', req.user.companyId)
+    const users = await userRepository.listUsersByStatus('pending')
     res.json({
       success: true,
       data: users,
@@ -136,7 +136,7 @@ const listPendingUsers = async (req, res, next) => {
 
 const listOnlineUsers = async (req, res, next) => {
   try {
-    const users = await userRepository.listOnlineUsers(req.user.companyId)
+    const users = await userRepository.listOnlineUsers()
     res.json({
       success: true,
       data: users,
@@ -148,7 +148,21 @@ const listOnlineUsers = async (req, res, next) => {
 
 const listUserDirectory = async (req, res, next) => {
   try {
-    const users = await userRepository.listUserDirectory(req.user.companyId)
+    const { company } = req.query;
+    let users = await userRepository.listUserDirectory()
+    
+    if (company) {
+       const target = String(company).toLowerCase().trim();
+       users = users.filter((u) => {
+          const compStr = String(u.company || u.companyName || '').toLowerCase().trim();
+          const emailStr = String(u.email || '').toLowerCase().trim();
+          if (target === 'lumos') {
+            return compStr.includes('lumos') || Number(u.companyId) === 2 || emailStr.includes('lumos');
+          }
+          return compStr.includes('swati') || Number(u.companyId) === 1 || emailStr.includes('swati');
+       });
+    }
+
     res.json({
       success: true,
       data: users,
@@ -166,7 +180,7 @@ const changeUserStatus = (nextStatus) => async (req, res, next) => {
     }
 
     const target = await userRepository.findUserById(userId)
-    if (!target || target.companyId !== req.user.companyId) {
+    if (!target) {
       throw new AppError('User not found.', 404)
     }
 

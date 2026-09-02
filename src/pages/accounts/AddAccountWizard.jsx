@@ -145,28 +145,54 @@ const AddAccountWizard = () => {
   React.useEffect(() => {
     const loadOwners = async () => {
       try {
-        const users = await userApi.listDirectory();
-        const validUsers = Array.isArray(users) ? users : [];
-        const formatUser = (u) => ({ value: u.ownerCode || u.name || u.username || u.email, label: u.name || u.username || u.email, userObj: u });
+        let swatiRaw = [];
+        let lumosRaw = [];
+
+        try {
+          swatiRaw = await userApi.listDirectory({ company: 'swati', _t: Date.now() });
+          lumosRaw = await userApi.listDirectory({ company: 'lumos', _t: Date.now() });
+        } catch (apiErr) {
+          console.error('[DEBUG] API fetch failed:', apiErr);
+        }
+
+        const formatUser = (u) => {
+          const nameStr = String(u.name || u.username || u.email || u.ownerCode || '').trim();
+          return { value: nameStr, label: nameStr, userObj: u };
+        };
         const sortAlphabetically = (a, b) => String(a.label).localeCompare(String(b.label));
+
+        let swatiValid = Array.isArray(swatiRaw) ? swatiRaw : [];
+        let lumosValid = Array.isArray(lumosRaw) ? lumosRaw : [];
+
+        if (lumosValid.length === 0) {
+          try {
+            const allUsers = await userApi.listDirectory({ _t: Date.now() });
+            if (Array.isArray(allUsers)) {
+              lumosValid = allUsers.filter((u) => {
+                const compStr = String(u.company || u.companyName || '').toLowerCase().trim();
+                const emailStr = String(u.email || '').toLowerCase().trim();
+                return compStr.includes('lumos') || Number(u.companyId) === 2 || emailStr.includes('lumos');
+              });
+            }
+          } catch (e) {
+            console.error('[DEBUG] Fallback directory fetch failed:', e);
+          }
+        }
+
+        console.log('[DEBUG] Lumos owners loaded:', lumosValid);
+        setSwatiUsers(swatiValid.map(formatUser).sort(sortAlphabetically));
+        setLumosUsers(lumosValid.map(formatUser).sort(sortAlphabetically));
         
-        setSwatiUsers(validUsers.filter((u) => {
-            const comp = String(u.company || u.companyName || '').toLowerCase();
-            return comp.includes('swati') || u.companyId === 1;
-        }).map(formatUser).sort(sortAlphabetically));
-        
-        setLumosUsers(validUsers.filter((u) => {
-            const comp = String(u.company || u.companyName || '').toLowerCase();
-            return comp.includes('lumos') || u.companyId === 2;
-        }).map(formatUser).sort(sortAlphabetically));
       } catch (err) {
         console.error('Failed to load owners:', err);
       }
-    }
-    loadOwners()
-  }, [])
+    };
 
-  const activeOwners = formData.accountCategory === 'LUMOS' ? lumosUsers : formData.accountCategory === 'SWATI' ? swatiUsers : []
+    loadOwners();
+  }, []);
+
+  const categoryUpper = String(formData.accountCategory || '').toUpperCase().trim()
+  const activeOwners = categoryUpper === 'LUMOS' ? lumosUsers : categoryUpper === 'SWATI' ? swatiUsers : []
 
   const isAdmin = useMemo(() => location.pathname.startsWith('/admin'), [location.pathname])
   const backPath = isAdmin ? '/admin/accounts/my-accounts' : '/accounts/my-group-accounts'
@@ -397,7 +423,7 @@ const AddAccountWizard = () => {
             <div className="add-account-landscape-field-grid add-account-landscape-field-grid-two">
               <div className="add-account-landscape-field-column">
                 {renderFieldGroup(
-                  fieldGroups.basicLeft.map(f => f.name === 'accountOwner' ? { ...f, options: activeOwners } : f), 
+                  fieldGroups.basicLeft.map(f => f.name === 'accountOwner' ? { ...f, options: activeOwners } : f),
                   {
                     layout: 'inline',
                     rowClassName: '',

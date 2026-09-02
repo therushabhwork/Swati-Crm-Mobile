@@ -45,6 +45,18 @@ const runWindowsServiceStart = (service) => run('powershell.exe', [
   service,
 ])
 
+const runWindowsServiceStop = (service) => run('powershell.exe', [
+  '-NoProfile',
+  '-ExecutionPolicy',
+  'Bypass',
+  '-File',
+  manageRuntimeScript,
+  '-Action',
+  'stop',
+  '-Service',
+  service,
+])
+
 const printWindowsSummary = () => {
   console.log('')
   console.log('========================================')
@@ -298,7 +310,7 @@ const attachWindowsLogViewer = async ({ includeFrontend }) => {
   console.log('========================================')
   console.log(' Live logs attached')
   console.log('========================================')
-  console.log('Press Ctrl+C to close this log view. Services keep running; use stop.bat to stop them.')
+  console.log('Press Ctrl+C to stop services and exit.')
   console.log('')
 
   files.forEach(({ label, filePath, isError = false }) => {
@@ -311,9 +323,12 @@ const attachWindowsLogViewer = async ({ includeFrontend }) => {
     ...files.map(createLogTailer),
     attachDatabaseAuditViewer(),
   ]
-  process.once('SIGINT', () => {
+  process.once('SIGINT', async () => {
     cleanupTailers.forEach((cleanup) => cleanup())
-    console.log('\nLog view closed. Services are still running.')
+    console.log('\nStopping backend and frontend services...')
+    await runWindowsServiceStop('backend').catch(() => {})
+    await runWindowsServiceStop('frontend').catch(() => {})
+    console.log('Services stopped.')
     process.exit(0)
   })
 

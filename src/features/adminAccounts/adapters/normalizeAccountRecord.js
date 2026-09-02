@@ -120,18 +120,23 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
   const accountOwner = getCanonicalCrmUserName(rawAccountOwner) || titleize(rawAccountOwner)
   const accountOwnerCode = String(
     account.accountOwnerCode
-    || account.ownerCode
     || account.raw?.accountOwnerCode
-    || account.raw?.ownerCode
     || account.raw?.formData?.accountOwnerCode
     || account.raw?.formData?.ownerCode
+    || account.formData?.accountOwnerCode
+    || account.formData?.ownerCode
     || getCrmOwnerCode(accountOwner)
+    || account.ownerCode
+    || account.raw?.ownerCode
     || ''
   ).trim()
   const rawAccNo = account.accountNumber || account.accountNo || account.account_no || account.raw?.accountNumber || account.raw?.accountNo || account.raw?.account_no || '';
-  const accountNumber = (accountOwnerCode && rawAccNo && !rawAccNo.startsWith(accountOwnerCode)) 
-    ? `${accountOwnerCode}-${rawAccNo}` 
-    : rawAccNo || accountOwnerCode || '';
+  const isRawAccNoPureNumber = /^\d+$/.test(rawAccNo);
+  const accountNumber = accountOwnerCode && (!rawAccNo || isRawAccNoPureNumber)
+    ? accountOwnerCode
+    : (accountOwnerCode && rawAccNo && !rawAccNo.startsWith(accountOwnerCode))
+      ? `${accountOwnerCode}-${rawAccNo}`
+      : rawAccNo || accountOwnerCode || '';
   const accountOwnerDisplay = accountOwner
   const status = titleize(account.status || account.accountStatus || account.accountState || stageMeta.label)
   const reasonForLost =
