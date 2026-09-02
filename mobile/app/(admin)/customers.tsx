@@ -10,9 +10,11 @@ import { ListControls } from '../../src/components/ui/ListControls';
 import { LoadingSkeleton } from '../../src/components/ui/LoadingSkeleton';
 import { SearchModal } from '../../src/components/ui/SearchModal';
 import { colors } from '../../src/theme/colors';
+import { buildUserLookupMap, normalizeCustomerItem, resetSeenLegacyIds } from '../../src/utils/customerNormalizer';
 
 export default function CustomersScreen() {
   const [data, setData] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -20,9 +22,19 @@ export default function CustomersScreen() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const res = await apiClient.get('/customers');
+      resetSeenLegacyIds();
+      const [res, usersRes] = await Promise.all([
+        apiClient.get('/customers'),
+        apiClient.get('/users/directory').catch(() => ({ data: { success: false, data: [] } }))
+      ]);
+      const dir = usersRes.data?.success ? (usersRes.data.data || []) : [];
+      if (usersRes.data?.success) {
+        setUsers(dir);
+      }
       if (res.data?.success) {
-        setData(res.data.data || []);
+        const rawList = res.data.data || [];
+        const userMap = buildUserLookupMap(dir);
+        setData(rawList.map((item: any) => normalizeCustomerItem(item, userMap)));
       }
     } catch (error) {
       console.log('Error fetching customers:', error);
@@ -36,13 +48,13 @@ export default function CustomersScreen() {
   }, []);
 
   const columns = [
-    { id: 'customerNumber', header: 'Customer Number', accessor: (item: any) => item.customerNo || item.id || '-', width: 130 },
-    { id: 'customerName', header: 'Customer Name', accessor: (item: any) => item.customerName || item.name || '-', width: 150 },
+    { id: 'customerNumber', header: 'Customer Number', accessor: (item: any) => item.displayCustomerNumber || '-', width: 130 },
+    { id: 'customerName', header: 'Customer Name', accessor: (item: any) => item.displayName || '-', width: 150 },
     { id: 'addedDate', header: 'Added Date', accessor: (item: any) => item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-', width: 100 },
     { id: 'email', header: 'Email', accessor: (item: any) => item.email || '-', width: 180 },
     { id: 'phone', header: 'Phone', accessor: (item: any) => item.phone || '-', width: 120 },
     { id: 'customerCategory', header: 'Customer Category', accessor: (item: any) => item.customerCategory || item.category || '-', width: 130 },
-    { id: 'customerOwner', header: 'Customer Owner', accessor: (item: any) => item.customerOwner || item.ownerUserId || '-', width: 120 },
+    { id: 'customerOwner', header: 'Customer Owner', accessor: (item: any) => item.displayCustomerOwner || '-', width: 120 },
     { id: 'customerStatus', header: 'Customer Status', accessor: (item: any) => item.customerStatus || item.status || '-', width: 100 }
   ];
 
@@ -61,16 +73,16 @@ export default function CustomersScreen() {
   }));
 
   const filteredData = data.filter(item => {
-    const searchString = `${item.customerName} ${item.name} ${item.customerNo}`.toLowerCase();
+    const searchString = `${item.displayName || ''} ${item.displayCustomerNumber || ''} ${item.customerNo || ''}`.toLowerCase();
     return searchString.includes(searchQuery.toLowerCase());
   });
 
   const renderMobileCard = (item: any) => {
-    const custNo = item.customerNo || item.id || '-';
-    const name = item.customerName || item.name || '-';
+    const custNo = item.displayCustomerNumber || '-';
+    const name = item.displayName || '-';
     const status = item.customerStatus || item.status || '-';
     const category = item.customerCategory || item.category || '-';
-    const owner = item.customerOwner || item.ownerUserId || '-';
+    const owner = item.displayCustomerOwner || '-';
     const addedDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-';
     const phone = item.phone || '-';
     const email = item.email || '-';
@@ -114,7 +126,7 @@ export default function CustomersScreen() {
           </View>
         </View>
         
-        <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => router.push(`/customer-details/${item._id || item.id}`)}>
+        <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => router.push(`/customer/${item.legacyId || item.id || item._id}`)}>
           <Text style={styles.viewDetailsText}>View Customer</Text>
           <Feather name="chevron-right" size={16} color="#C62828" />
         </TouchableOpacity>
@@ -140,7 +152,7 @@ export default function CustomersScreen() {
             data={filteredData}
             columns={columns}
             keyExtractor={(item: any) => item._id || item.id}
-            onRowPress={(item: any) => router.push(`/customer-details/${item._id || item.id}`)}
+            onRowPress={(item: any) => router.push(`/customer/${item.legacyId || item.id || item._id}`)}
             renderMobileCard={renderMobileCard}
           />
           <SearchModal

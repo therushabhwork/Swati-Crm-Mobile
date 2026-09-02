@@ -98,6 +98,7 @@ export default function TabLayout() {
       <Tabs.Screen name="reminders/new" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="quotation-details/[id]" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="accounts/new" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen name="customers/new" options={{ href: null, tabBarStyle: { display: 'none' } }} />
     </Tabs>
   );
 }

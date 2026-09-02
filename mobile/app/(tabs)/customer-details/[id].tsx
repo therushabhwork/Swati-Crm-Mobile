@@ -5,17 +5,28 @@ import apiClient from '../../../src/api/client';
 import { AppHeader } from '../../../src/components/ui/AppHeader';
 import { colors } from '../../../src/theme/colors';
 
+import { buildUserLookupMap, normalizeCustomerItem } from '../../../src/utils/customerNormalizer';
+
 export default function CustomerDetailsScreen() {
   const { id, fromSearch } = useLocalSearchParams();
   const [data, setData] = useState<any>(null);
+  const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        const res = await apiClient.get(`/customers/${id}`);
-        if (res.data?.success) {
-          setData(res.data.data);
+        const [res, usersRes] = await Promise.all([
+          apiClient.get(`/customers/${id}`),
+          apiClient.get('/users/directory').catch(() => ({ data: { success: false, data: [] } }))
+        ]);
+        const dir = usersRes.data?.success ? (usersRes.data.data || []) : [];
+        if (usersRes.data?.success) {
+          setUsers(dir);
+        }
+        if (res.data?.success && res.data.data) {
+          const userMap = buildUserLookupMap(dir);
+          setData(normalizeCustomerItem(res.data.data, userMap));
         }
       } catch (error) {
         console.log('Error fetching customer details:', error);
@@ -50,13 +61,13 @@ export default function CustomerDetailsScreen() {
 
   // Fields: Customer Number, Customer Name, Added Date, Email, Phone, Customer Category, Customer Owner, Customer Status
   const fields = [
-    { label: 'Customer Number', value: data.customerNo || data.id || '-' },
+    { label: 'Customer Number', value: data.displayCustomerNumber || '-' },
     { label: 'Customer Name', value: data.customerName || data.name || '-' },
     { label: 'Added Date', value: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : '-' },
     { label: 'Email', value: data.email || '-' },
     { label: 'Phone', value: data.phone || '-' },
     { label: 'Customer Category', value: data.customerCategory || data.category || '-' },
-    { label: 'Customer Owner', value: data.customerOwner || data.ownerUserId || '-' },
+    { label: 'Customer Owner', value: data.displayCustomerOwner || '-' },
     { label: 'Customer Status', value: data.customerStatus || data.status || '-' }
   ];
 

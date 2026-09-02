@@ -53,7 +53,13 @@ if (!zod) {
     }),
   }
 
-  const idParam = z.object({ id: z.string().regex(/^\d+$/).transform(Number) })
+  const idParam = z.object({
+    id: z.string()
+      .refine((val) => /^\d+$/.test(val) || /^[a-f\d]{24}$/i.test(val), {
+        message: 'Invalid ID format (must be numeric or 24-char hex ObjectId)',
+      })
+      .transform((val) => (/^\d+$/.test(val) ? Number(val) : val)),
+  })
 
   const numericInput = z.preprocess((val) => {
     if (val === null || val === undefined) return null
