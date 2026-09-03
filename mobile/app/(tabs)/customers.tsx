@@ -127,7 +127,7 @@ export default function CustomersScreen() {
           </View>
         </View>
         
-        <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => router.push(`/customer/${item.legacyId || item.id || item._id}`)}>
+        <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => router.push(`/customer-details/${item.legacyId || item.id || item._id}`)}>
           <Text style={styles.viewDetailsText}>View Details</Text>
           <Feather name="chevron-right" size={16} color="#C62828" />
         </TouchableOpacity>
@@ -153,7 +153,7 @@ export default function CustomersScreen() {
             data={filteredData}
             columns={columns}
             keyExtractor={(item: any) => item._id || item.id}
-            onRowPress={(item: any) => router.push(`/customer/${item.legacyId || item.id || item._id}`)}
+            onRowPress={(item: any) => router.push(`/customer-details/${item.legacyId || item.id || item._id}`)}
             renderMobileCard={renderMobileCard}
           />
           <SearchModal

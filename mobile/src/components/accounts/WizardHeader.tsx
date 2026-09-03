@@ -2,11 +2,11 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../../theme/colors';
 
-export function WizardHeader({ currentStep }: { currentStep: number }) {
+export function WizardHeader({ currentStep, totalSteps = 4 }: { currentStep: number; totalSteps?: number }) {
   return (
     <View style={styles.container}>
       <View style={styles.row}>
-        {[1, 2, 3, 4].map((step, index) => {
+        {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step, index) => {
           const isActive = step <= currentStep;
           const isCompleted = step < currentStep;
 
@@ -22,7 +22,7 @@ export function WizardHeader({ currentStep }: { currentStep: number }) {
                 )}
               </View>
 
-              {index < 3 && (
+              {index < totalSteps - 1 && (
                 <View style={[styles.line, isActive && styles.activeLine]} />
               )}
             </React.Fragment>
@@ -34,7 +34,7 @@ export function WizardHeader({ currentStep }: { currentStep: number }) {
         <View
           style={[
             styles.progress,
-            { width: `${currentStep * 25}%` },
+            { width: `${(currentStep / totalSteps) * 100}%` },
           ]}
         />
       </View>

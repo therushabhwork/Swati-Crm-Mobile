@@ -162,7 +162,10 @@ export default function DealsScreen() {
             totalCount={data.length} 
             metrics={summaryMetrics} 
           />
-          <ListControls />
+          <ListControls 
+            onAddPress={() => router.push('/deals/new')} 
+            addLabel="Add Deal" 
+          />
           <ResponsiveList
             data={filteredData}
             columns={columns}

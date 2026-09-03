@@ -15,6 +15,7 @@ interface SelectFieldProps {
   error?: string;
   placeholder?: string;
   renderTrigger?: (onPress: () => void, value: string) => React.ReactNode;
+  containerStyle?: any;
 }
 
 export function SelectField({
@@ -26,6 +27,7 @@ export function SelectField({
   error,
   placeholder,
   renderTrigger,
+  containerStyle,
 }: SelectFieldProps) {
   const [visible, setVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -42,11 +44,13 @@ export function SelectField({
 
   return (
     <>
-      <View style={styles.container}>
-        <Text style={styles.label}>
-          {label}
-          {required && <Text style={styles.required}> *</Text>}
-        </Text>
+      <View style={[styles.container, containerStyle]}>
+        {!!label && (
+          <Text style={styles.label}>
+            {label}
+            {required && <Text style={styles.required}> *</Text>}
+          </Text>
+        )}
 
         {renderTrigger ? (
           renderTrigger(() => setVisible(true), value)

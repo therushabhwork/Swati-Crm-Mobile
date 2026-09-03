@@ -1,35 +1,79 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, BackHandler } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import apiClient from '../../../src/api/client';
 import { AppHeader } from '../../../src/components/ui/AppHeader';
 import { colors } from '../../../src/theme/colors';
 
+import { buildUserLookupMap, normalizeCustomerItem } from '../../../src/utils/customerNormalizer';
+
+const formatCustomerNumber = (num: string) => {
+  if (!num || num === '-') return '-';
+  if (num.startsWith('SSC')) return num;
+  
+  const match = num.match(/\d+/);
+  if (match) {
+    const digits = match[0].padStart(6, '0');
+    return `SSC${digits}`;
+  }
+  return num;
+};
+
 export default function CustomerDetailsScreen() {
   const { id, fromSearch } = useLocalSearchParams();
   const [data, setData] = useState<any>(null);
+  const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDetails = async () => {
+    const fetchCustomer = async () => {
       try {
-        const res = await apiClient.get(`/customers/${id}`);
-        if (res.data?.success) {
-          setData(res.data.data);
+        const [res, usersRes] = await Promise.all([
+          apiClient.get(`/customers/${id}`),
+          apiClient.get('/users/directory').catch(() => ({ data: { success: false, data: [] } }))
+        ]);
+        const dir = usersRes.data?.success ? (usersRes.data.data || []) : [];
+        if (usersRes.data?.success) {
+          setUsers(dir);
+        }
+        if (res.data?.success && res.data.data) {
+          const userMap = buildUserLookupMap(dir);
+          setData(normalizeCustomerItem(res.data.data, userMap));
         }
       } catch (error) {
-        console.log('Error fetching customer details:', error);
+        console.error('Error fetching customer details:', error);
       } finally {
         setIsLoading(false);
       }
     };
-    if (id) fetchDetails();
+    if (id) fetchCustomer();
   }, [id]);
+
+  const handleBack = () => {
+    if (fromSearch === 'true' && router.canGoBack()) {
+      router.back();
+    } else {
+      router.push('/(admin)/customers');
+    }
+  };
+
+  useEffect(() => {
+    const onBackPress = () => {
+      handleBack();
+      return true; // Prevent default back behavior
+    };
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+    return () => {
+      subscription.remove();
+    };
+  }, [fromSearch]);
 
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <AppHeader title="Customer Details" showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/customers')} />
+        <AppHeader title="Customer Details" showBack onBack={handleBack} />
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -40,7 +84,7 @@ export default function CustomerDetailsScreen() {
   if (!data) {
     return (
       <View style={styles.centerContainer}>
-        <AppHeader title="Customer Details" showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/customers')} />
+        <AppHeader title="Customer Details" showBack onBack={handleBack} />
         <View style={styles.loaderContainer}>
           <Text style={styles.errorText}>Customer not found.</Text>
         </View>
@@ -50,19 +94,19 @@ export default function CustomerDetailsScreen() {
 
   // Fields: Customer Number, Customer Name, Added Date, Email, Phone, Customer Category, Customer Owner, Customer Status
   const fields = [
-    { label: 'Customer Number', value: data.customerNo || data.id || '-' },
-    { label: 'Customer Name', value: data.customerName || data.name || '-' },
+    { label: 'Customer Number', value: formatCustomerNumber(data.displayCustomerNumber || data.customerNo || data.id) || '-' },
+    { label: 'Customer Name', value: data.customerName || data.name || data.displayName || '-' },
     { label: 'Added Date', value: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : '-' },
     { label: 'Email', value: data.email || '-' },
     { label: 'Phone', value: data.phone || '-' },
     { label: 'Customer Category', value: data.customerCategory || data.category || '-' },
-    { label: 'Customer Owner', value: data.customerOwner || data.ownerUserId || '-' },
+    { label: 'Customer Owner', value: data.displayCustomerOwner || '-' },
     { label: 'Customer Status', value: data.customerStatus || data.status || '-' }
   ];
 
   return (
     <View style={styles.container}>
-      <AppHeader title={data.customerName || data.name || "Customer Details"} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/customers')} />
+      <AppHeader title={data.customerName || data.name || data.displayName || "Customer Details"} showBack onBack={handleBack} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Information</Text>

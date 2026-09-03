@@ -1,19 +1,44 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { useLocalSearchParams, router } from 'expo-router';
 import apiClient from '../../src/api/client';
+import { AppHeader } from '../../src/components/ui/AppHeader';
+import { colors } from '../../src/theme/colors';
+
+import { buildUserLookupMap, normalizeCustomerItem } from '../../src/utils/customerNormalizer';
+
+const formatCustomerNumber = (num: string) => {
+  if (!num || num === '-') return '-';
+  if (num.startsWith('SSC')) return num;
+  
+  const match = num.match(/\d+/);
+  if (match) {
+    const digits = match[0].padStart(6, '0');
+    return `SSC${digits}`;
+  }
+  return num;
+};
 
 export default function CustomerDetailScreen() {
-  const { id } = useLocalSearchParams();
-  const [customer, setCustomer] = useState<any>(null);
+  const { id, fromSearch } = useLocalSearchParams();
+  const [data, setData] = useState<any>(null);
+  const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchCustomer = async () => {
       try {
-        const response = await apiClient.get(`/customers/${id}`);
-        if (response.data?.success) {
-          setCustomer(response.data.data);
+        const [res, usersRes] = await Promise.all([
+          apiClient.get(`/customers/${id}`),
+          apiClient.get('/users/directory').catch(() => ({ data: { success: false, data: [] } }))
+        ]);
+        const dir = usersRes.data?.success ? (usersRes.data.data || []) : [];
+        if (usersRes.data?.success) {
+          setUsers(dir);
+        }
+        if (res.data?.success && res.data.data) {
+          const userMap = buildUserLookupMap(dir);
+          setData(normalizeCustomerItem(res.data.data, userMap));
         }
       } catch (error) {
         console.error('Error fetching customer details:', error);
@@ -24,98 +49,120 @@ export default function CustomerDetailScreen() {
     if (id) fetchCustomer();
   }, [id]);
 
+  const handleBack = () => {
+    router.back();
+  };
+
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#C62828" />
+        <AppHeader title="Customer Details" showBack onBack={handleBack} />
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       </View>
     );
   }
 
-  if (!customer) {
+  if (!data) {
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>Customer not found.</Text>
+        <AppHeader title="Customer Details" showBack onBack={handleBack} />
+        <View style={styles.loaderContainer}>
+          <Text style={styles.errorText}>Customer not found.</Text>
+        </View>
       </View>
     );
   }
 
+  // Fields: Customer Number, Customer Name, Added Date, Email, Phone, Customer Category, Customer Owner, Customer Status
+  const fields = [
+    { label: 'Customer Number', value: formatCustomerNumber(data.displayCustomerNumber || data.customerNo || data.id) || '-' },
+    { label: 'Customer Name', value: data.customerName || data.name || data.displayName || '-' },
+    { label: 'Added Date', value: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : '-' },
+    { label: 'Email', value: data.email || '-' },
+    { label: 'Phone', value: data.phone || '-' },
+    { label: 'Customer Category', value: data.customerCategory || data.category || '-' },
+    { label: 'Customer Owner', value: data.displayCustomerOwner || '-' },
+    { label: 'Customer Status', value: data.customerStatus || data.status || '-' }
+  ];
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>{customer.name || customer.company_name || 'Unknown'}</Text>
-        
-        <View style={styles.row}>
-          <Text style={styles.label}>Email:</Text>
-          <Text style={styles.value}>{customer.email || 'N/A'}</Text>
+    <View style={styles.container}>
+      <AppHeader title={data.customerName || data.name || data.displayName || "Customer Details"} showBack onBack={handleBack} />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Information</Text>
+          <View style={styles.divider} />
+          
+          {fields.map((field, idx) => (
+            <View key={idx} style={styles.row}>
+              <Text style={styles.label}>{field.label}</Text>
+              <Text style={styles.value}>{field.value}</Text>
+            </View>
+          ))}
+          
         </View>
-        
-        <View style={styles.row}>
-          <Text style={styles.label}>Phone:</Text>
-          <Text style={styles.value}>{customer.phone || 'N/A'}</Text>
-        </View>
-        
-        <View style={styles.row}>
-          <Text style={styles.label}>Status:</Text>
-          <Text style={styles.value}>{customer.status || 'Active'}</Text>
-        </View>
-        
-        <View style={styles.row}>
-          <Text style={styles.label}>Address:</Text>
-          <Text style={styles.value}>{customer.address || customer.billing_address || 'N/A'}</Text>
-        </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fa',
-    padding: 16,
+    backgroundColor: '#f7fafc',
   },
   centerContainer: {
+    flex: 1,
+    backgroundColor: '#f7fafc',
+  },
+  loaderContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  errorText: {
+    fontSize: 16,
+    color: '#718096',
+  },
+  scrollContent: {
+    padding: 16,
+  },
   card: {
     backgroundColor: '#ffffff',
-    padding: 20,
     borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
-  title: {
-    fontSize: 24,
+  cardTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#2d3748',
-    marginBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-    paddingBottom: 8,
+    marginBottom: 12,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#edf2f7',
+    marginBottom: 12,
   },
   row: {
     flexDirection: 'row',
-    marginBottom: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f7fafc',
   },
   label: {
-    width: 80,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#4a5568',
+    flex: 1,
+    fontSize: 14,
+    color: '#718096',
+    fontWeight: '500',
   },
   value: {
-    flex: 1,
-    fontSize: 16,
+    flex: 1.5,
+    fontSize: 14,
     color: '#2d3748',
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#e53e3e',
+    fontWeight: '600',
   }
 });

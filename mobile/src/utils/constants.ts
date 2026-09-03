@@ -92,3 +92,28 @@ export const SUPPORT_REQUEST_TYPE_OPTIONS = [
   'Retrofitting Job - Old to New',
   'Short Material',
 ];
+
+export const DEAL_TYPE_OPTIONS = ['LUMOS', 'SWATI', 'PURCHASE ENQUIRY', 'TENDER ENQUIRY'];
+
+export const DEAL_SOURCE_OPTIONS = ['LUMOS', 'SWATI', 'PURCHASE ENQUIRY', 'TENDER ENQUIRY'];
+
+export const DEAL_VALUE_CURRENCIES = ['INR', 'USD', 'AED', 'NZ$', 'CAD', 'SEK', 'SGD', 'AUD', 'JPY', 'Euro', 'GBP', 'QAR', 'SAR', 'OMR'];
+
+export const DEAL_LIFECYCLE_STATUS_OPTIONS = [
+  'Order Received',
+  'Convert To PO',
+  'Order Lost',
+  'Rejected',
+  'Contracted',
+];
+
+export const CUSTOMER_QUOTATION_STATUS_OPTIONS = [
+  'Pending',
+  'Sent',
+  'Revised',
+  'Won',
+  'Lost',
+];
+
+export const DEAL_STATUS_OPTIONS = ['new', 'open', 'won', 'lost'];
+export const DEAL_STAGE_OPTIONS = ['Discovery', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
