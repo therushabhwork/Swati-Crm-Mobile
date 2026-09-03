@@ -4,7 +4,8 @@ import { useLocalSearchParams, router } from 'expo-router';
 import apiClient from '../../../src/api/client';
 import { AppHeader } from '../../../src/components/ui/AppHeader';
 import { colors } from '../../../src/theme/colors';
-import { getCrmOwnerCode } from '../../../src/utils/crmUserDirectory';
+import { getCrmOwnerCode, getCrmOwnerDisplay } from '../../../src/utils/crmUserDirectory';
+import { buildUserLookupMap } from '../../../src/utils/customerNormalizer';
 
 export default function TaskDetailsScreen() {
   const { id, fromSearch } = useLocalSearchParams();
@@ -69,18 +70,32 @@ export default function TaskDetailsScreen() {
     );
   }
 
-  const assignedUser = users.find(u => (u.id || u._id) === data.ownerUserId);
-  const assignedEmail = assignedUser?.email || data.assignedTo || data.ownerUserId || '-';
+  const dataPayload = data.data && typeof data.data === 'object' ? data.data : {};
+  const mergedData = { ...data, ...dataPayload };
+
+  const rawAssignee = mergedData.assignedTo || mergedData.assignedToName || mergedData.ownerUserId || mergedData.createdBy;
+  const userMap = buildUserLookupMap(users);
+  const key = String(rawAssignee || '').trim().toLowerCase();
+  const emailPrefix = key.includes('@') ? key.split('@')[0] : key;
+
+  const assignedName = 
+    userMap.get(key) || 
+    userMap.get(emailPrefix) || 
+    userMap.get(String(rawAssignee)) || 
+    getCrmOwnerDisplay(rawAssignee) || 
+    getCrmOwnerDisplay(emailPrefix) || 
+    mergedData.assignedToName || 
+    (rawAssignee ? String(rawAssignee) : '-');
   
   const rawOwner = account?.accountOwner || account?.ownerName || '';
   const ownerCode = getCrmOwnerCode(rawOwner) || account?.accountOwnerCode || '-';
 
   const fields = [
-    { label: 'Title', value: data.title || data.taskName || 'Unknown' },
-    { label: 'Status', value: data.status || '-' },
-    { label: 'Due Date', value: (data.reminderDate || data.dueDate) ? new Date(data.reminderDate || data.dueDate).toLocaleDateString() : '-' },
-    { label: 'Description', value: data.description || '-' },
-    { label: 'Assigned To', value: assignedEmail },
+    { label: 'Title', value: mergedData.title || mergedData.taskName || 'Unknown' },
+    { label: 'Status', value: mergedData.status || '-' },
+    { label: 'Due Date', value: (mergedData.reminderDate || mergedData.dueDate) ? new Date(mergedData.reminderDate || mergedData.dueDate).toLocaleDateString() : '-' },
+    { label: 'Description', value: mergedData.description || '-' },
+    { label: 'Assigned To', value: assignedName },
     { label: 'Account', value: ownerCode !== '-' ? ownerCode : (account?.accountName || account?.name || account?.companyName || '-') }
   ];
 

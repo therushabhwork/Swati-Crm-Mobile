@@ -16,8 +16,18 @@ export const buildUserLookupMap = (usersDirectory: any[] = []): Map<string, stri
     if (u.id !== undefined && u.id !== null) map.set(String(u.id), name);
     if (u._id !== undefined && u._id !== null) map.set(String(u._id), name);
     if (u.ownerCode) map.set(String(u.ownerCode), name);
-    if (u.email) map.set(String(u.email).toLowerCase(), name);
-    if (u.username) map.set(String(u.username).toLowerCase(), name);
+    if (u.email) {
+      const trimmedEmail = String(u.email).toLowerCase().trim();
+      map.set(trimmedEmail, name);
+      const prefix = trimmedEmail.split('@')[0];
+      if (prefix) map.set(prefix, name);
+    }
+    if (u.username) {
+      const trimmedUsername = String(u.username).toLowerCase().trim();
+      map.set(trimmedUsername, name);
+      const prefix = trimmedUsername.split('@')[0];
+      if (prefix) map.set(prefix, name);
+    }
   });
   return map;
 };

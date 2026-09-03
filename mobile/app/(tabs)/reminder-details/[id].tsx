@@ -73,10 +73,19 @@ export default function TaskDetailsScreen() {
   const dataPayload = data.data && typeof data.data === 'object' ? data.data : {};
   const mergedData = { ...data, ...dataPayload };
 
-  const rawAssignee = mergedData.assignedTo || mergedData.ownerUserId || mergedData.createdBy;
+  const rawAssignee = mergedData.assignedTo || mergedData.assignedToName || mergedData.ownerUserId || mergedData.createdBy;
   const userMap = buildUserLookupMap(users);
   const key = String(rawAssignee || '').trim().toLowerCase();
-  const assignedName = userMap.get(key) || userMap.get(String(rawAssignee)) || mergedData.assignedToName || getCrmOwnerDisplay(rawAssignee) || (rawAssignee ? String(rawAssignee) : '-');
+  const emailPrefix = key.includes('@') ? key.split('@')[0] : key;
+
+  const assignedName = 
+    userMap.get(key) || 
+    userMap.get(emailPrefix) || 
+    userMap.get(String(rawAssignee)) || 
+    getCrmOwnerDisplay(rawAssignee) || 
+    getCrmOwnerDisplay(emailPrefix) || 
+    mergedData.assignedToName || 
+    (rawAssignee ? String(rawAssignee) : '-');
   
   const rawOwner = account?.accountOwner || account?.ownerName || '';
   const ownerCode = getCrmOwnerCode(rawOwner) || account?.accountOwnerCode || '-';

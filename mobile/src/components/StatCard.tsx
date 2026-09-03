@@ -1,9 +1,28 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, StyleProp, ViewStyle } from 'react-native';
 import { Feather, FontAwesome5 } from '@expo/vector-icons';
-import { colors } from '../theme/colors';
-import { spacing, radii, shadows } from '../theme/spacing';
-import { typography } from '../theme/typography';
+import { LinearGradient } from 'expo-linear-gradient';
+
+interface MetricColorTheme {
+  primary: string;
+  light: string;
+  gradient: [string, string, string, string];
+}
+
+const ACCOUNTS_THEME: MetricColorTheme = {
+  primary: '#DC2626',
+  light: '#FEF2F2',
+  gradient: ['#FFFFFF', '#FEF2F2', '#FEE2E2', '#FECACA'],
+};
+
+const METRIC_THEMES: Record<string, MetricColorTheme> = {
+  'Accounts': ACCOUNTS_THEME,
+  'My Group Accounts': ACCOUNTS_THEME,
+  'Deals': ACCOUNTS_THEME,
+  'Customers': ACCOUNTS_THEME,
+  'Support Requests': ACCOUNTS_THEME,
+  'Quotations': ACCOUNTS_THEME,
+};
 
 interface StatCardProps {
   title: string;
@@ -13,186 +32,199 @@ interface StatCardProps {
   variant?: 'hero' | 'bento' | 'full';
   style?: StyleProp<ViewStyle>;
   onPress?: () => void;
+  primaryColor?: string;
+  lightColor?: string;
+  gradientColors?: [string, string, string, string];
 }
 
-export function StatCard({ title, value, icon, iconFamily = 'Feather', variant = 'bento', style, onPress }: StatCardProps) {
+export function StatCard({
+  title,
+  value,
+  icon,
+  iconFamily = 'Feather',
+  variant = 'bento',
+  style,
+  onPress,
+  primaryColor,
+  lightColor,
+  gradientColors,
+}: StatCardProps) {
+  const defaultTheme = METRIC_THEMES[title] || {
+    primary: '#DC2626',
+    light: '#FEF2F2',
+    gradient: ['#FFFFFF', '#FEF2F2', '#FEE2E2', '#FECACA'],
+  };
+
+  const themePrimary = primaryColor || defaultTheme.primary;
+  const themeLight = lightColor || defaultTheme.light;
+  const themeGradient = gradientColors || defaultTheme.gradient;
+
   const isHero = variant === 'hero';
   const isFull = variant === 'full';
 
   return (
     <Pressable
       style={({ pressed }) => [
-        styles.card,
+        styles.cardWrapper,
         isHero && styles.heroCardWrapper,
-        isFull && styles.fullCard,
+        isFull && styles.fullCardWrapper,
         style,
-        pressed && styles.cardPressed
+        pressed && styles.cardPressed,
       ]}
       onPress={onPress}
     >
-      {isFull ? (
-        <View style={styles.fullCardContent}>
-          <View style={styles.fullCardLeft}>
-            <Text style={styles.fullCardValue}>{value}</Text>
-            <Text style={styles.fullCardTitle}>{title}</Text>
-          </View>
-          <View style={styles.iconContainerFull}>
-            <Feather name="arrow-right" size={16} color={colors.primary} />
-          </View>
-        </View>
-      ) : isHero ? (
-        <View style={styles.heroCardContent}>
-          <View style={styles.iconContainerHero}>
-            {iconFamily === 'FontAwesome5' ? (
-              <FontAwesome5 name={icon as any} size={20} color={colors.primary} />
-            ) : (
-              <Feather name={icon as any} size={20} color={colors.primary} />
-            )}
-          </View>
-          <Text style={styles.titleHero}>{title}</Text>
-          <Text style={styles.valueHero}>{value}</Text>
-          <View style={styles.heroArrow}>
-            <Feather name="chevron-right" size={16} color={colors.primary} />
-          </View>
-        </View>
-      ) : (
-        <>
-          <View style={[styles.iconContainer, isHero && styles.iconContainerHero]}>
-            {iconFamily === 'FontAwesome5' ? (
-              <FontAwesome5 name={icon as any} size={20} color={colors.primary} />
-            ) : (
-              <Feather name={icon as any} size={20} color={colors.primary} />
-            )}
-          </View>
-          <Text style={[styles.title, isHero && styles.titleHero]}>{title}</Text>
-          <Text style={[styles.value, isHero && styles.valueHero]}>{value}</Text>
-          {isHero && (
-            <View style={styles.heroArrow}>
-              <Feather name="arrow-right" size={16} color={colors.textSecondary} />
+      <LinearGradient
+        colors={themeGradient}
+        locations={[0, 0.45, 0.75, 1.0]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.cardGradient}
+      >
+        {isFull ? (
+          <View style={styles.fullContainer}>
+            <View style={styles.fullLeft}>
+              <Text style={[styles.fullValue, { color: themePrimary }]}>{value}</Text>
+              <Text style={styles.fullTitle}>{title}</Text>
             </View>
-          )}
-        </>
-      )}
+            <View style={[styles.iconContainer, { backgroundColor: themeLight }]}>
+              <Feather name="chevron-right" size={16} color={themePrimary} />
+            </View>
+          </View>
+        ) : isHero ? (
+          <View style={styles.heroContainer}>
+            <View style={styles.heroHeader}>
+              <View style={[styles.iconContainer, { backgroundColor: themeLight }]}>
+                {iconFamily === 'FontAwesome5' ? (
+                  <FontAwesome5 name={icon as any} size={20} color={themePrimary} />
+                ) : (
+                  <Feather name={icon as any} size={20} color={themePrimary} />
+                )}
+              </View>
+              <Feather name="chevron-right" size={18} color={themePrimary} style={{ opacity: 0.8 }} />
+            </View>
+            <Text style={styles.heroTitle}>{title}</Text>
+            <Text style={[styles.heroValue, { color: themePrimary }]}>{value}</Text>
+          </View>
+        ) : (
+          <View style={styles.bentoContainer}>
+            <View style={[styles.iconContainer, { backgroundColor: themeLight }]}>
+              {iconFamily === 'FontAwesome5' ? (
+                <FontAwesome5 name={icon as any} size={18} color={themePrimary} />
+              ) : (
+                <Feather name={icon as any} size={18} color={themePrimary} />
+              )}
+            </View>
+            <Text style={styles.bentoTitle} numberOfLines={2}>{title}</Text>
+            <View style={styles.bentoFooter}>
+              <Text style={[styles.bentoValue, { color: themePrimary }]}>{value}</Text>
+              <Feather name="chevron-right" size={16} color={themePrimary} style={{ opacity: 0.8 }} />
+            </View>
+          </View>
+        )}
+      </LinearGradient>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: 20,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.md,
-    alignItems: 'center', // Center by default for bento
-    ...shadows.card,
-    shadowOpacity: 0.05,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.03)',
-  },
-  heroCardWrapper: {
-    width: '100%',
-    paddingVertical: 0,
-    paddingHorizontal: 0,
+  cardWrapper: {
+    backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    marginBottom: spacing.md,
-    ...shadows.card,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
+    marginBottom: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
+    shadowRadius: 6,
     elevation: 2,
     overflow: 'hidden',
   },
-  heroCardContent: {
-    flex: 1,
+  heroCardWrapper: {
     width: '100%',
-    padding: 20,
-    minHeight: 150,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    backgroundColor: colors.card,
+    marginBottom: 12,
   },
-  fullCard: {
+  fullCardWrapper: {
     width: '100%',
-    paddingVertical: 20,
-    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  cardGradient: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 18,
   },
   cardPressed: {
-    transform: [{ scale: 1.02 }],
-    opacity: 0.9,
-    backgroundColor: colors.primaryLight,
+    transform: [{ scale: 1.015 }],
+    opacity: 0.92,
   },
   iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: radii.round,
-    backgroundColor: colors.primaryLight,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  iconContainerHero: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
+  bentoContainer: {
+    flex: 1,
+    justifyContent: 'space-between',
+    minHeight: 120,
   },
-  title: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    fontSize: 11,
-    marginBottom: 2,
-    textAlign: 'center',
-  },
-  titleHero: {
-    ...typography.caption,
-    fontSize: 14,
+  bentoTitle: {
+    fontSize: 13,
     fontWeight: '500',
-    color: colors.textSecondary,
-    textAlign: 'left',
-    marginBottom: 2,
+    color: '#374151',
+    marginBottom: 12,
+    lineHeight: 18,
   },
-  value: {
-    ...typography.h3,
-    color: colors.primaryDark,
-    textAlign: 'center',
-  },
-  valueHero: {
-    ...typography.h3,
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: colors.primaryDark,
-    textAlign: 'left',
-  },
-  heroArrow: {
-    position: 'absolute',
-    right: 20,
-    top: '50%',
-    marginTop: -8,
-  },
-  fullCardContent: {
+  bentoFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: 'auto',
   },
-  fullCardLeft: {
+  bentoValue: {
+    fontSize: 26,
+    fontWeight: '700',
+  },
+  heroContainer: {
+    minHeight: 120,
+    justifyContent: 'center',
+  },
+  heroHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  heroTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#4B5563',
+    marginBottom: 4,
+  },
+  heroValue: {
+    fontSize: 32,
+    fontWeight: '700',
+  },
+  fullContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  fullLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  fullCardValue: {
-    ...typography.h3,
-    color: colors.primaryDark,
-    fontSize: 20,
+  fullValue: {
+    fontSize: 22,
+    fontWeight: '700',
     marginRight: 12,
   },
-  fullCardTitle: {
-    ...typography.subtitle,
-    color: colors.textPrimary,
-  },
-  iconContainerFull: {
-    justifyContent: 'center',
-    alignItems: 'center',
+  fullTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
   },
 });

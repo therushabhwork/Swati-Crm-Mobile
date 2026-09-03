@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    ...typography.body1,
+    ...typography.body,
     color: colors.textPrimary,
   },
   titleContainer: {
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   subTitle: {
-    ...typography.body2,
+    ...typography.body,
     color: colors.textSecondary,
   },
   divider: {
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   sectionTitle: {
-    ...typography.subtitle1,
+    ...typography.subtitle,
     color: colors.white,
     fontWeight: '700',
   },
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   emptyText: {
-    ...typography.body2,
+    ...typography.body,
     color: colors.textSecondary,
   },
   loadingContainer: {
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    ...typography.body1,
+    ...typography.body,
     color: colors.textSecondary,
     marginTop: spacing.md,
     textAlign: 'center',

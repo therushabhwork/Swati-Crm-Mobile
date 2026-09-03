@@ -57,13 +57,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background, // Slightly different shade for header
   },
   title: {
-    ...typography.subtitle1,
+    ...typography.subtitle,
     color: colors.primary, // Red accent for titles
     fontWeight: '700',
     marginBottom: 4,
   },
   subtitle: {
-    ...typography.body2,
+    ...typography.body,
     color: colors.textPrimary,
     fontWeight: '500',
     marginBottom: 2,
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     width: 80,
   },
   fieldValue: {
-    ...typography.body2,
+    ...typography.body,
     color: colors.textPrimary,
     flex: 1,
   },

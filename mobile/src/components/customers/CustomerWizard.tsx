@@ -19,9 +19,10 @@ import { format } from 'date-fns';
 import { CustomerForm } from '../../types/customer';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
-import { Alert } from 'react-native';
+import { Alert, BackHandler } from 'react-native';
 import { router } from 'expo-router';
 import apiClient from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import {
   ACCOUNT_CATEGORY_OPTIONS,
   REMINDER_MODE_OPTIONS,
@@ -35,9 +36,48 @@ const formatDateLocal = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
-export function CustomerWizard() {
-  const insets = useSafeAreaInsets();
-  const [step, setStep] = useState(1);
+export interface CustomerWizardRef {
+  stepBack: () => boolean;
+}
+
+export const CustomerWizard = React.forwardRef<CustomerWizardRef, { onNavigateBack?: () => void; onStepChange?: (step: number) => void }>(
+  ({ onNavigateBack, onStepChange }, ref) => {
+    const { user } = useAuth();
+    const insets = useSafeAreaInsets();
+    const [step, setStep] = useState(1);
+
+    React.useImperativeHandle(ref, () => ({
+      stepBack: () => {
+        if (step > 1) {
+          setStep((prev) => prev - 1);
+          return true;
+        }
+        return false;
+      },
+    }));
+
+    React.useEffect(() => {
+      if (onStepChange) {
+        onStepChange(step);
+      }
+    }, [step, onStepChange]);
+
+    React.useEffect(() => {
+      const onBackPress = () => {
+        if (step > 1) {
+          setStep((prev) => prev - 1);
+          return true;
+        }
+        if (onNavigateBack) {
+          onNavigateBack();
+          return true;
+        }
+        return false;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [step, onNavigateBack]);
   const [form, setForm] = useState<CustomerForm>({
     customerName: '',
     customerCategory: '',
@@ -108,13 +148,17 @@ export function CustomerWizard() {
       console.log('[3. Resolved Owner Code]:', ownerCode);
       console.log('[4. Resolved Owner Display]:', ownerDisplay);
 
+      const actorUserId = user?.id || (user as any)?._id || (user as any)?.userId || '';
+      const actorUserName = user?.name || user?.username || user?.email || '';
+
       const payload = {
         ...data,
         name: data.customerName,
         customerName: data.customerName,
-        phone: data.contactMobile,
-        email: data.contactEmail,
-        address: data.address,
+        company: data.customerName,
+        phone: data.contactMobile || (data as any).contactPhone || '',
+        email: data.contactEmail || '',
+        address: data.address || '',
         customerCategory: data.customerCategory,
         customerOwner: selectedOwner,
         customerOwnerName: selectedOwner,
@@ -122,17 +166,25 @@ export function CustomerWizard() {
         customerOwnerDisplay: ownerDisplay,
         ownerCode: ownerCode,
         assignedTo: selectedOwner,
-        status: 'New',
+        ownerUserId: actorUserId,
+        assignedUserId: actorUserId,
+        userId: actorUserId,
+        createdBy: actorUserId,
+        addedBy: actorUserName,
+        addedByName: user?.name || actorUserName,
+        ownerName: selectedOwner,
+        assignedToName: selectedOwner,
+        status: 'active',
         customerStatus: 'New',
         formType: 'customer',
         contacts: [
           {
             id: 'primary-contact',
             contactPerson: data.contactPerson,
-            phone: data.contactMobile,
-            mobile: data.contactMobile,
-            email: data.contactEmail,
-            designation: data.contactDesignation,
+            phone: data.contactMobile || (data as any).contactPhone || '',
+            mobile: data.contactMobile || (data as any).contactPhone || '',
+            email: data.contactEmail || '',
+            designation: data.contactDesignation || '',
           }
         ]
       };
@@ -173,7 +225,18 @@ export function CustomerWizard() {
       console.log('==================== [MOBILE CUSTOMER CREATION END] ======================');
 
       Alert.alert('Success', 'Successfully Created Customer', [
-        { text: 'OK', onPress: () => router.back() }
+        { 
+          text: 'OK', 
+          onPress: () => {
+            if (onNavigateBack) {
+              onNavigateBack();
+            } else if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace('/(tabs)/customers');
+            }
+          } 
+        }
       ]);
     } catch (err: any) {
       console.error('Submit error:', err);
@@ -375,6 +438,7 @@ export function CustomerWizard() {
     </KeyboardAvoidingView>
   );
 }
+);
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (

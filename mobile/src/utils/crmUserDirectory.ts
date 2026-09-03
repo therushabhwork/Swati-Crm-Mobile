@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 // @ts-nocheck
 const toSlug = (value) => String(value || '')
   .trim()
@@ -16,25 +16,25 @@ export const normalizeCrmUserName = (value) => stripOwnerCodePrefix(value)
   .replace(/\s+/g, ' ')
 
 const CRM_DIRECTORY_USERS = [
-  { ownerCode: '1001', name: 'Atish Shah', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: [] },
-  { ownerCode: '1002', name: 'Hasmukh Chauhan', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: [] },
-  { ownerCode: '1003', name: 'Jagruti Parmar', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['Jagurti Parmar'] },
-  { ownerCode: '1004', name: 'Jay Pandya', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: [] },
-  { ownerCode: '1005', name: 'Kanubhai Shah', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['Kanu Shah'] },
-  { ownerCode: '1006', name: 'Keval V Shah', role: 'admin', userGroup: 'Back Office', userType: 'Manager', aliases: [] },
+  { ownerCode: '1001', name: 'Atish Shah', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['automation.sales@swatiswitchgears.com', 'automation.sales'] },
+  { ownerCode: '1002', name: 'Hasmukh Chauhan', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['hasmukh@swatiswitchgears.com'] },
+  { ownerCode: '1003', name: 'Jagruti Parmar', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['Jagurti Parmar', 'sales.brd2@swatiswitchgears.com', 'sales.brd2'] },
+  { ownerCode: '1004', name: 'Jay Pandya', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['sales2@swatiswitchgears.com', 'sales2'] },
+  { ownerCode: '1005', name: 'Kanubhai Shah', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['Kanu Shah', 'kss@swatiswitchgears.com'] },
+  { ownerCode: '1006', name: 'Keval V Shah', role: 'admin', userGroup: 'Back Office', userType: 'Manager', aliases: ['keval@swatiswitchgears.com'] },
   { ownerCode: '1017', name: 'Kuldeep Nayi', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: [] },
-  { ownerCode: '1007', name: 'Krunal Patel', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['Krunal patel'] },
-  { ownerCode: '1008', name: 'Monali Pataliya', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: [] },
-  { ownerCode: '1015', name: 'Naim Vhora', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['Naim Vohra', 'Naim Vora'] },
-  { ownerCode: '1009', name: 'Nita Bhavsar', role: 'admin', userGroup: 'Back Office', userType: 'Manager', aliases: [] },
+  { ownerCode: '1007', name: 'Krunal Patel', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['Krunal patel', 'mkt.brd@swatiswitchgears.com'] },
+  { ownerCode: '1008', name: 'Monali Pataliya', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['sales.brd4@swatiswitchgears.com', 'sales.brd4'] },
+  { ownerCode: '1015', name: 'Naim Vhora', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['Naim Vohra', 'Naim Vora', 'sales1@swatiswitchgears.com', 'sales1'] },
+  { ownerCode: '1009', name: 'Nita Bhavsar', role: 'admin', userGroup: 'Back Office', userType: 'Manager', aliases: ['mkt@swatiswitchgears.com'] },
   { ownerCode: '1016', name: 'Prasenjit Sahana', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: [] },
-  { ownerCode: '1010', name: 'Rajeshree Parmar', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: [] },
-  { ownerCode: '1011', name: 'Samir Jha', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: [] },
+  { ownerCode: '1010', name: 'Rajeshree Parmar', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['sales.brd1@swatiswitchgears.com', 'sales.brd1@swatiswtichgears.com', 'sales.brd1'] },
+  { ownerCode: '1011', name: 'Samir Jha', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['samir@swatiswitchgears.com'] },
   { ownerCode: '1012', name: 'Support Swati', role: 'user', userGroup: 'Field Staff', userType: 'Support Executive', aliases: [] },
-  { ownerCode: '1013', name: 'Tajammul Solkar', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['Tajamul Rafique Solkar', 'Tajamul Solkar'] },
-  { ownerCode: '1014', name: 'Vaibhavi Patel', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: [] },
-  { ownerCode: '1018', name: 'Bhavesh Prajapati', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: [] },
-  { ownerCode: '1019', name: 'Samir Seth', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: [] },
+  { ownerCode: '1013', name: 'Tajammul Solkar', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['Tajamul Rafique Solkar', 'Tajamul Solkar', 'Sales.mumbai@swatiswitchgears.com'] },
+  { ownerCode: '1014', name: 'Vaibhavi Patel', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['sales.ahd@swatiswitchgears.com'] },
+  { ownerCode: '1018', name: 'Bhavesh Prajapati', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['sales.brd5@swatiswitchgears.com', 'sales.brd5'] },
+  { ownerCode: '1019', name: 'Samir Seth', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['samirsheth@swatiswitchgears.com'] },
 ]
 
 export const CRM_OWNER_DIRECTORY = CRM_DIRECTORY_USERS.map((user) => ({
@@ -59,8 +59,11 @@ export const getCrmOwnerRecord = (value) => {
     return null
   }
 
+  const emailPrefix = trimmedValue.includes('@') ? trimmedValue.split('@')[0] : ''
+
   return CRM_OWNER_RECORDS_BY_CODE.get(trimmedValue)
     || CRM_OWNER_RECORDS_BY_NAME.get(normalizeCrmUserName(trimmedValue))
+    || (emailPrefix ? CRM_OWNER_RECORDS_BY_NAME.get(normalizeCrmUserName(emailPrefix)) : null)
     || null
 }
 

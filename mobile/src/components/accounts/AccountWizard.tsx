@@ -16,7 +16,7 @@ import { DateField } from './DateField';
 import { AccountForm } from '../../types/account';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
-import { Alert } from 'react-native';
+import { Alert, BackHandler } from 'react-native';
 import { router } from 'expo-router';
 import apiClient from '../../api/client';
 import {
@@ -34,9 +34,47 @@ const formatDateLocal = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
-export function AccountWizard() {
-  const insets = useSafeAreaInsets();
-  const [step, setStep] = useState(1);
+export interface AccountWizardRef {
+  stepBack: () => boolean;
+}
+
+export const AccountWizard = React.forwardRef<AccountWizardRef, { onNavigateBack?: () => void; onStepChange?: (step: number) => void }>(
+  ({ onNavigateBack, onStepChange }, ref) => {
+    const insets = useSafeAreaInsets();
+    const [step, setStep] = useState(1);
+
+    React.useImperativeHandle(ref, () => ({
+      stepBack: () => {
+        if (step > 1) {
+          setStep((prev) => prev - 1);
+          return true;
+        }
+        return false;
+      },
+    }));
+
+    React.useEffect(() => {
+      if (onStepChange) {
+        onStepChange(step);
+      }
+    }, [step, onStepChange]);
+
+    React.useEffect(() => {
+      const onBackPress = () => {
+        if (step > 1) {
+          setStep((prev) => prev - 1);
+          return true;
+        }
+        if (onNavigateBack) {
+          onNavigateBack();
+          return true;
+        }
+        return false;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [step, onNavigateBack]);
   const [form, setForm] = useState<AccountForm>({
     accountName: '',
     accountCategory: '',
@@ -129,7 +167,18 @@ export function AccountWizard() {
       }
 
       Alert.alert('Success', 'Successfully Created Account', [
-        { text: 'OK', onPress: () => router.back() }
+        { 
+          text: 'OK', 
+          onPress: () => {
+            if (onNavigateBack) {
+              onNavigateBack();
+            } else if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace('/(tabs)/leads');
+            }
+          } 
+        }
       ]);
     } catch (err) {
       console.error('Submit error:', err);
@@ -358,10 +407,11 @@ export function AccountWizard() {
             onPress={handleNext}
           />
         </View>
-      </View>
-    </KeyboardAvoidingView>
-  );
-}
+        </View>
+      </KeyboardAvoidingView>
+    );
+  }
+);
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
