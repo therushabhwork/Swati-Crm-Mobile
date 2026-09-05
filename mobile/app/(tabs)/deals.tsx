@@ -81,8 +81,8 @@ export default function DealsScreen() {
     const jobNo = item.jobNo || '-';
     
     // Status color
-    let statusColor = '#C62828';
-    let statusBg = '#FDECEC';
+    let statusColor = '#33447D';
+    let statusBg = '#E8EBF2';
     const s = status.toLowerCase();
     if (s === 'won') { statusColor = '#38a169'; statusBg = '#f0fff4'; }
     else if (s === 'lost') { statusColor = '#e53e3e'; statusBg = '#fff5f5'; }
@@ -143,7 +143,7 @@ export default function DealsScreen() {
         
         <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => router.push(`/deal-details/${item._id || item.id}`)}>
           <Text style={styles.viewDetailsText}>View Details</Text>
-          <Feather name="chevron-right" size={16} color="#C62828" />
+          <Feather name="chevron-right" size={16} color="#33447D" />
         </TouchableOpacity>
       </View>
     );
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   viewDetailsText: {
-    color: '#C62828',
+    color: '#33447D',
     fontSize: 14,
     fontWeight: '500',
     marginRight: 4,

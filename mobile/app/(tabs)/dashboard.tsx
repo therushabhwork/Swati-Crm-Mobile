@@ -14,6 +14,7 @@ import { ActivityItem } from '../../src/components/ActivityItem';
 import { QuickAction } from '../../src/components/QuickAction';
 import { SearchBar } from '../../src/components/SearchBar';
 import { ReminderDateSelector } from '../../src/components/reminders/ReminderDateSelector';
+import { DealsHeroCard, DealItem } from '../../src/components/deals/DealsHeroCard';
 import { format, isToday, isTomorrow, isYesterday } from 'date-fns';
 
 interface DashboardMetrics {
@@ -31,6 +32,7 @@ interface DashboardMetrics {
 export default function DashboardScreen() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [isolatedAccountsCount, setIsolatedAccountsCount] = useState<number | string>('-');
+  const [dealsList, setDealsList] = useState<DealItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,7 +57,19 @@ export default function DashboardScreen() {
   useEffect(() => {
     fetchDashboardData();
     fetchIsolatedAccountsCount();
+    fetchDealsData();
   }, [user]);
+
+  const fetchDealsData = async () => {
+    try {
+      const res = await apiClient.get('/deals');
+      if (res.data?.success) {
+        setDealsList(res.data.data || []);
+      }
+    } catch (error: any) {
+      console.log('[DashboardScreen] Error fetching deals data:', error.message);
+    }
+  };
 
   const fetchIsolatedAccountsCount = async () => {
     if (!user) return;
@@ -100,7 +114,8 @@ export default function DashboardScreen() {
     setRefreshing(true);
     await Promise.all([
       fetchDashboardData(),
-      fetchIsolatedAccountsCount()
+      fetchIsolatedAccountsCount(),
+      fetchDealsData()
     ]);
     setRefreshing(false);
     console.log('[DashboardScreen] Manual refresh completed');
@@ -121,10 +136,10 @@ export default function DashboardScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
+    <View style={{ flex: 1, backgroundColor: colors.bgDashboard, paddingTop: insets.top }}>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={{ paddingBottom: insets.bottom }}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 12) + 8 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
@@ -209,25 +224,24 @@ export default function DashboardScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll} contentContainerStyle={{ paddingRight: 40 }}>
           <QuickAction title="Add Account" icon="user-plus" variant="secondary" onPress={() => router.push('/accounts/new')} />
           <QuickAction title="Add Customer" icon="user" variant="secondary" onPress={() => router.push('/customers/new' as any)} />
-          <QuickAction title="Create Reminder" icon="check-square" variant="secondary" onPress={() => console.log('[DashboardScreen] QuickAction clicked: Create Reminder')} />
+          <QuickAction title="Create Reminder" icon="check-square" variant="secondary" onPress={() => router.push({ pathname: '/reminders/new', params: { date: selectedDate?.toISOString() } })} />
         </ScrollView>
       </View>
 
-      {/* 4. Business Overview & Bento Grid */}
+      {/* 4. Business Overview Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Business Overview</Text>
-        
-        {/* Primary Hero KPI */}
-        <StatCard 
-          title="Accounts" 
-          value={isolatedAccountsCount.toString()} 
-          icon="user" 
-          variant="hero"
-          onPress={() => router.push('/leads')} 
-        />
 
-        {/* Bento Grid */}
+        {/* Top 2 Cards: Accounts & My Group Accounts */}
         <View style={styles.bentoGrid}>
+          <StatCard 
+            title="Accounts" 
+            value={isolatedAccountsCount.toString()} 
+            icon="user" 
+            variant="bento"
+            style={{ width: bentoCardWidth }}
+            onPress={() => router.push('/leads')} 
+          />
           <StatCard 
             title="My Group Accounts" 
             value={getMetric('leads')} 
@@ -237,15 +251,19 @@ export default function DashboardScreen() {
             style={{ width: bentoCardWidth }}
             onPress={() => router.push('/group-accounts')} 
           />
-          <StatCard 
-            title="Deals" 
-            value={getMetric('deals')} 
-            icon="handshake" 
-            iconFamily="FontAwesome5" 
-            variant="bento"
-            style={{ width: bentoCardWidth }}
-            onPress={() => router.push('/deals')} 
+        </View>
+
+        {/* Deals Hero Analytics Card */}
+        <View style={{ marginTop: 12, marginBottom: 16 }}>
+          <DealsHeroCard
+            deals={dealsList}
+            dealsCountOverride={getMetric('deals')}
+            onPress={() => router.push('/deals')}
           />
+        </View>
+
+        {/* Bottom 2 Cards: Customers & Quotations */}
+        <View style={styles.bentoGrid}>
           <StatCard 
             title="Customers" 
             value={getMetric('customers')} 
@@ -255,28 +273,18 @@ export default function DashboardScreen() {
             onPress={() => router.push('/customers')} 
           />
           <StatCard 
-            title="Support Requests" 
-            value={getMetric('supportRequests')} 
-            icon="headphones" 
+            title="Quotations" 
+            value={getMetric('quotations')} 
+            icon="file-text" 
             variant="bento"
             style={{ width: bentoCardWidth }}
-            onPress={() => router.push('/(tabs)/support')} 
+            onPress={() => router.push('/quotations')} 
           />
         </View>
-
-        {/* Full-width KPI */}
-        <StatCard 
-          title="Quotations" 
-          value={getMetric('quotations')} 
-          icon="file-text" 
-          variant="full"
-          onPress={() => router.push('/quotations')} 
-        />
       </View>
 
       {/* 5. Date Strip Section */}
-      {/* 5. Date Strip Section */}
-      <View style={[styles.section, styles.lastSection]}>
+      <View style={styles.section}>
         <Text style={styles.sectionTitle}>Today</Text>
         <View style={styles.calendarCardNew}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md }}>
@@ -293,6 +301,26 @@ export default function DashboardScreen() {
           </View>
           <ReminderDateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} variant="dashboard" />
         </View>
+      </View>
+
+      {/* 6. CRM Support Button */}
+      <View style={[styles.section, styles.lastSection, { marginTop: spacing.xs, marginBottom: spacing.xs }]}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.supportButton,
+            pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] }
+          ]}
+          onPress={() => router.push('/support')}
+        >
+          <View style={styles.supportIconCircle}>
+            <Feather name="headphones" size={20} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={styles.supportTitle}>CRM Support</Text>
+            <Text style={styles.supportSubtitle}>Get help or open a support ticket</Text>
+          </View>
+          <Feather name="chevron-right" size={20} color={colors.textSecondary} />
+        </Pressable>
       </View>
 
       {/* Profile Dropdown Modal */}
@@ -334,13 +362,13 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.bgDashboard,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: colors.bgDashboard,
   },
   header: {
     flexDirection: 'row',
@@ -455,7 +483,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     elevation: 2,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.03)',
+    borderColor: colors.border,
+  },
+  overviewHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+  },
+  periodBadge: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
+  },
+  periodBadgeText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#6B7280',
   },
   sectionTitle: {
     ...typography.h3,
@@ -521,6 +568,40 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginLeft: spacing.sm,
     fontWeight: '500',
+  },
+  supportButton: {
+    backgroundColor: colors.card,
+    borderRadius: 28,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.textPrimary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  supportIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  supportTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  supportSubtitle: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: colors.textSecondary,
+    marginTop: 1,
   },
 });
 

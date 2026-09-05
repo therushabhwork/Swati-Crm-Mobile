@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   totalValue: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#C62828',
+    color: '#33447D',
   },
   metricsContainer: {
     flexDirection: 'row',

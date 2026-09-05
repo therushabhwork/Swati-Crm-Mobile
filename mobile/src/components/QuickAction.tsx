@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   secondaryButton: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.primaryLight,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   secondaryText: {
-    color: colors.primaryDark,
+    color: colors.primary,
   },
   tertiaryText: {
     color: colors.textSecondary,

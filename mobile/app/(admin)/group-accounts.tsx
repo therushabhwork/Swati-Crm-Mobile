@@ -141,7 +141,7 @@ export default function GroupAccountsScreen() {
         
         <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => router.push(`/lead-details/${item._id || item.id}`)}>
           <Text style={styles.viewDetailsText}>View details</Text>
-          <Feather name="chevron-right" size={16} color="#C62828" />
+          <Feather name="chevron-right" size={16} color="#33447D" />
         </TouchableOpacity>
       </View>
     );
@@ -216,13 +216,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   statusBadge: {
-    backgroundColor: '#FDECEC',
+    backgroundColor: '#E8EBF2',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
   },
   statusText: {
-    color: '#C62828',
+    color: '#33447D',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   viewDetailsText: {
-    color: '#C62828',
+    color: '#33447D',
     fontSize: 14,
     fontWeight: '500',
     marginRight: 4,

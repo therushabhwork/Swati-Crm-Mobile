@@ -77,7 +77,7 @@ export default function QuotationsScreen() {
     const s = status.toLowerCase();
     if (s === 'approved') { statusColor = '#38a169'; statusBg = '#f0fff4'; }
     else if (s === 'rejected') { statusColor = '#e53e3e'; statusBg = '#fff5f5'; }
-    else if (s === 'sent') { statusColor = '#C62828'; statusBg = '#FDECEC'; }
+    else if (s === 'sent') { statusColor = '#33447D'; statusBg = '#E8EBF2'; }
 
     return (
       <View style={styles.card}>
@@ -111,7 +111,7 @@ export default function QuotationsScreen() {
         
         <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => router.push(`/quotation-details/${item._id || item.id}`)}>
           <Text style={styles.viewDetailsText}>View Details</Text>
-          <Feather name="chevron-right" size={16} color="#C62828" />
+          <Feather name="chevron-right" size={16} color="#33447D" />
         </TouchableOpacity>
       </View>
     );
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   viewDetailsText: {
-    color: '#C62828',
+    color: '#33447D',
     fontSize: 14,
     fontWeight: '500',
     marginRight: 4,

@@ -1,27 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, StyleProp, ViewStyle } from 'react-native';
 import { Feather, FontAwesome5 } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { colors } from '../theme/colors';
 
-interface MetricColorTheme {
-  primary: string;
-  light: string;
-  gradient: [string, string, string, string];
+interface PastelTheme {
+  bg: string;
+  accent: string;
+  badgeBg: string;
+  subtext: string;
 }
 
-const ACCOUNTS_THEME: MetricColorTheme = {
-  primary: '#DC2626',
-  light: '#FEF2F2',
-  gradient: ['#FFFFFF', '#FEF2F2', '#FEE2E2', '#FECACA'],
-};
-
-const METRIC_THEMES: Record<string, MetricColorTheme> = {
-  'Accounts': ACCOUNTS_THEME,
-  'My Group Accounts': ACCOUNTS_THEME,
-  'Deals': ACCOUNTS_THEME,
-  'Customers': ACCOUNTS_THEME,
-  'Support Requests': ACCOUNTS_THEME,
-  'Quotations': ACCOUNTS_THEME,
+const PASTEL_THEMES: Record<string, PastelTheme> = {
+  'Accounts': colors.pastel.accounts,
+  'My Group Accounts': colors.pastel.groupAccounts,
+  'Deals': colors.pastel.deals,
+  'Customers': colors.pastel.customers,
+  'Support Requests': colors.pastel.supportRequests,
+  'Quotations': colors.pastel.quotations,
 };
 
 interface StatCardProps {
@@ -29,12 +24,13 @@ interface StatCardProps {
   value: string | number;
   icon: string;
   iconFamily?: 'Feather' | 'FontAwesome5';
-  variant?: 'hero' | 'bento' | 'full';
+  variant?: 'hero' | 'bento' | 'full' | 'overview-hero';
   style?: StyleProp<ViewStyle>;
   onPress?: () => void;
   primaryColor?: string;
   lightColor?: string;
-  gradientColors?: [string, string, string, string];
+  isPrimaryCard?: boolean;
+  suffix?: string;
 }
 
 export function StatCard({
@@ -47,184 +43,313 @@ export function StatCard({
   onPress,
   primaryColor,
   lightColor,
-  gradientColors,
+  isPrimaryCard = false,
+  suffix = '',
 }: StatCardProps) {
-  const defaultTheme = METRIC_THEMES[title] || {
-    primary: '#DC2626',
-    light: '#FEF2F2',
-    gradient: ['#FFFFFF', '#FEF2F2', '#FEE2E2', '#FECACA'],
-  };
+  const [showExact, setShowExact] = useState(false);
 
-  const themePrimary = primaryColor || defaultTheme.primary;
-  const themeLight = lightColor || defaultTheme.light;
-  const themeGradient = gradientColors || defaultTheme.gradient;
+  const theme = PASTEL_THEMES[title] || {
+    bg: lightColor || '#F3F4F6',
+    accent: primaryColor || '#1F2937',
+    badgeBg: '#FFFFFF',
+    subtext: '#6B7280',
+  };
 
   const isHero = variant === 'hero';
   const isFull = variant === 'full';
+  const isOverview = variant === 'overview-hero';
+
+  const cardBg = colors.card;
+  const textColor = theme.accent;
+  const titleColor = colors.textPrimary;
+  const iconColor = theme.accent;
+  const badgeBgColor = theme.bg;
+
+  // Calculate rounded milestone (e.g. 38 -> 30, 22 -> 20)
+  const numVal = typeof value === 'number' ? value : parseInt(String(value), 10);
+  const hasRoundedVal = !isNaN(numVal) && numVal >= 10;
+  const milestoneVal = hasRoundedVal ? Math.floor(numVal / 10) * 10 : value;
+
+  const displayedNumber = isOverview ? (showExact ? value : milestoneVal) : value;
+  const currentSuffix = isOverview ? (showExact ? '' : (suffix || '+')) : suffix;
+
+  const subLabel = title === 'Deals' ? 'Total Deals' : title === 'Customers' ? 'Total Customers' : `Total ${title}`;
+
+  const handlePress = () => {
+    if (isOverview) {
+      setShowExact(prev => !prev);
+    }
+    if (onPress) {
+      onPress();
+    }
+  };
 
   return (
     <Pressable
       style={({ pressed }) => [
         styles.cardWrapper,
+        { backgroundColor: cardBg },
         isHero && styles.heroCardWrapper,
         isFull && styles.fullCardWrapper,
+        isOverview && styles.overviewCardWrapper,
         style,
         pressed && styles.cardPressed,
       ]}
-      onPress={onPress}
+      onPress={handlePress}
     >
-      <LinearGradient
-        colors={themeGradient}
-        locations={[0, 0.45, 0.75, 1.0]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.cardGradient}
-      >
-        {isFull ? (
-          <View style={styles.fullContainer}>
-            <View style={styles.fullLeft}>
-              <Text style={[styles.fullValue, { color: themePrimary }]}>{value}</Text>
-              <Text style={styles.fullTitle}>{title}</Text>
-            </View>
-            <View style={[styles.iconContainer, { backgroundColor: themeLight }]}>
-              <Feather name="chevron-right" size={16} color={themePrimary} />
-            </View>
-          </View>
-        ) : isHero ? (
-          <View style={styles.heroContainer}>
-            <View style={styles.heroHeader}>
-              <View style={[styles.iconContainer, { backgroundColor: themeLight }]}>
-                {iconFamily === 'FontAwesome5' ? (
-                  <FontAwesome5 name={icon as any} size={20} color={themePrimary} />
-                ) : (
-                  <Feather name={icon as any} size={20} color={themePrimary} />
-                )}
-              </View>
-              <Feather name="chevron-right" size={18} color={themePrimary} style={{ opacity: 0.8 }} />
-            </View>
-            <Text style={styles.heroTitle}>{title}</Text>
-            <Text style={[styles.heroValue, { color: themePrimary }]}>{value}</Text>
-          </View>
-        ) : (
-          <View style={styles.bentoContainer}>
-            <View style={[styles.iconContainer, { backgroundColor: themeLight }]}>
+      {isFull ? (
+        <View style={styles.fullContainer}>
+          <View style={styles.fullLeft}>
+            <View style={[styles.iconBadge, { backgroundColor: badgeBgColor }]}>
               {iconFamily === 'FontAwesome5' ? (
-                <FontAwesome5 name={icon as any} size={18} color={themePrimary} />
+                <FontAwesome5 name={icon as any} size={15} color={iconColor} />
               ) : (
-                <Feather name={icon as any} size={18} color={themePrimary} />
+                <Feather name={icon as any} size={15} color={iconColor} />
               )}
             </View>
-            <Text style={styles.bentoTitle} numberOfLines={2}>{title}</Text>
-            <View style={styles.bentoFooter}>
-              <Text style={[styles.bentoValue, { color: themePrimary }]}>{value}</Text>
-              <Feather name="chevron-right" size={16} color={themePrimary} style={{ opacity: 0.8 }} />
+            <View style={{ marginLeft: 10 }}>
+              <Text style={[styles.fullTitle, { color: titleColor }]}>{title}</Text>
+              <Text style={styles.subtext}>Active Overview</Text>
             </View>
           </View>
-        )}
-      </LinearGradient>
+          <View style={styles.fullRight}>
+            <View style={styles.valueRow}>
+              <Text style={[styles.fullValue, { color: textColor }]}>{displayedNumber}</Text>
+              {currentSuffix ? <Text style={[styles.suffixText, { color: textColor }]}>{currentSuffix}</Text> : null}
+            </View>
+            <Feather name="arrow-up-right" size={16} color={textColor} style={{ marginLeft: 6, opacity: 0.7 }} />
+          </View>
+        </View>
+      ) : isOverview ? (
+        <View style={styles.overviewContainer}>
+          <View style={styles.topRow}>
+            <View style={[styles.iconBadge, { backgroundColor: badgeBgColor }]}>
+              {iconFamily === 'FontAwesome5' ? (
+                <FontAwesome5 name={icon as any} size={15} color={iconColor} />
+              ) : (
+                <Feather name={icon as any} size={15} color={iconColor} />
+              )}
+            </View>
+            <Text style={[styles.overviewTitle, { color: titleColor }]}>{title}</Text>
+          </View>
+          <View style={styles.overviewBody}>
+            <View style={styles.valueRow}>
+              <Text style={[styles.overviewValue, { color: textColor }]}>{displayedNumber}</Text>
+              {currentSuffix ? <Text style={[styles.suffixTextSmall, { color: textColor }]}>{currentSuffix}</Text> : null}
+            </View>
+            {showExact && <Text style={styles.exactSubtext}>{subLabel}</Text>}
+          </View>
+        </View>
+      ) : isHero ? (
+        <View style={styles.heroContainer}>
+          <View style={styles.topRow}>
+            <View style={[styles.iconBadge, { backgroundColor: badgeBgColor }]}>
+              {iconFamily === 'FontAwesome5' ? (
+                <FontAwesome5 name={icon as any} size={18} color={iconColor} />
+              ) : (
+                <Feather name={icon as any} size={18} color={iconColor} />
+              )}
+            </View>
+            <View style={styles.actionArrowCircle}>
+              <Feather name="arrow-up-right" size={16} color={textColor} />
+            </View>
+          </View>
+          <View style={styles.heroContent}>
+            <View style={styles.valueRow}>
+              <Text style={[styles.heroValue, { color: textColor }]}>{displayedNumber}</Text>
+              {currentSuffix ? <Text style={[styles.suffixTextHero, { color: textColor }]}>{currentSuffix}</Text> : null}
+            </View>
+            <Text style={[styles.heroTitle, { color: titleColor }]}>{title}</Text>
+            <Text style={styles.subtext}>Total Active CRM Accounts</Text>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.bentoContainer}>
+          <View style={styles.topRow}>
+            <View style={[styles.iconBadge, { backgroundColor: badgeBgColor }]}>
+              {iconFamily === 'FontAwesome5' ? (
+                <FontAwesome5 name={icon as any} size={15} color={iconColor} />
+              ) : (
+                <Feather name={icon as any} size={15} color={iconColor} />
+              )}
+            </View>
+            <Feather name="arrow-up-right" size={14} color={textColor} style={{ opacity: 0.6 }} />
+          </View>
+          <View style={styles.bentoBody}>
+            <Text style={[styles.bentoTitle, { color: titleColor }]} numberOfLines={1}>{title}</Text>
+            <View style={styles.valueRow}>
+              <Text style={[styles.bentoValue, { color: textColor }]}>{value}</Text>
+              {suffix ? <Text style={[styles.suffixTextSmall, { color: textColor }]}>{suffix}</Text> : null}
+            </View>
+          </View>
+        </View>
+      )}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   cardWrapper: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.05)',
+    borderColor: colors.border,
     marginBottom: 12,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
+    padding: 14,
+    shadowColor: colors.textPrimary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
     elevation: 2,
-    overflow: 'hidden',
   },
   heroCardWrapper: {
     width: '100%',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   fullCardWrapper: {
     width: '100%',
-    marginBottom: 12,
+    marginBottom: 14,
   },
-  cardGradient: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 18,
+  overviewCardWrapper: {
+    padding: 14,
+    marginBottom: 0,
+    borderRadius: 20,
+  },
+  overviewContainer: {
+    justifyContent: 'space-between',
+    minHeight: 90,
+  },
+  overviewTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  overviewBody: {
+    marginTop: 6,
+  },
+  overviewValue: {
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  valueRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  suffixText: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginLeft: 2,
+  },
+  suffixTextSmall: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginLeft: 2,
+  },
+  suffixTextHero: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginLeft: 3,
+  },
+  exactSubtext: {
+    fontSize: 11,
+    color: colors.success,
+    fontWeight: '600',
+    marginTop: 2,
   },
   cardPressed: {
-    transform: [{ scale: 1.015 }],
-    opacity: 0.92,
+    transform: [{ scale: 0.985 }],
+    opacity: 0.95,
   },
-  iconContainer: {
+  iconBadge: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  bentoContainer: {
-    flex: 1,
-    justifyContent: 'space-between',
-    minHeight: 120,
+  actionArrowCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  bentoTitle: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 12,
-    lineHeight: 18,
-  },
-  bentoFooter: {
+  topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 'auto',
-  },
-  bentoValue: {
-    fontSize: 26,
-    fontWeight: '700',
+    marginBottom: 10,
   },
   heroContainer: {
-    minHeight: 120,
-    justifyContent: 'center',
-  },
-  heroHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    minHeight: 110,
   },
-  heroTitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#4B5563',
-    marginBottom: 4,
+  heroContent: {
+    marginTop: 4,
   },
   heroValue: {
-    fontSize: 32,
+    fontSize: 34,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    marginBottom: 2,
+  },
+  heroTitle: {
+    fontSize: 15,
     fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  subtext: {
+    fontSize: 11,
+    fontWeight: '400',
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  bentoContainer: {
+    minHeight: 94,
+    justifyContent: 'space-between',
+  },
+  bentoBody: {
+    marginTop: 'auto',
+  },
+  bentoTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginBottom: 2,
+    lineHeight: 16,
+  },
+  bentoValue: {
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
   fullContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   fullLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  fullValue: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginRight: 12,
+  fullRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   fullTitle: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  fullValue: {
+    fontSize: 24,
+    fontWeight: '800',
   },
 });

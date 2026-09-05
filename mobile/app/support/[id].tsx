@@ -54,7 +54,7 @@ export default function SupportDetailScreen() {
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#C62828" />
+        <ActivityIndicator size="large" color="#33447D" />
       </View>
     );
   }
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#C62828',
+    borderLeftColor: '#33447D',
   },
   replyMeta: {
     fontSize: 12,
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   sendButton: {
-    backgroundColor: '#C62828',
+    backgroundColor: '#33447D',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,

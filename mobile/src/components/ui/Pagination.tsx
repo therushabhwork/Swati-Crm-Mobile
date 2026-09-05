@@ -54,7 +54,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         disabled={currentPage === 1}
         accessibilityLabel="Previous Page"
       >
-        <Feather name="chevron-left" size={16} color={currentPage === 1 ? '#9CA3AF' : '#C62828'} />
+        <Feather name="chevron-left" size={16} color={currentPage === 1 ? colors.textMuted : colors.primary} />
       </TouchableOpacity>
 
       <View style={styles.pagesContainer}>
@@ -83,7 +83,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         disabled={currentPage === totalPages}
         accessibilityLabel="Next Page"
       >
-        <Feather name="chevron-right" size={16} color={currentPage === totalPages ? '#9CA3AF' : '#C62828'} />
+        <Feather name="chevron-right" size={16} color={currentPage === totalPages ? colors.textMuted : colors.primary} />
       </TouchableOpacity>
 
       {/* Last Button */}
@@ -120,23 +120,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   navButton: {
-    backgroundColor: '#FFEBEE',
+    backgroundColor: colors.primaryLight,
   },
   pageButton: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.background,
     marginHorizontal: 4,
   },
   activePageButton: {
-    backgroundColor: '#C62828',
+    backgroundColor: colors.primary,
   },
   navText: {
-    color: '#C62828',
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
     marginHorizontal: 4,
   },
   pageText: {
-    color: '#4B5563',
+    color: colors.textSecondary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -144,10 +144,10 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   disabledButton: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.background,
   },
   disabledText: {
-    color: '#9CA3AF',
+    color: colors.textMuted,
   },
   ellipsisContainer: {
     height: 36,
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   ellipsisText: {
-    color: '#6B7280',
+    color: colors.textSecondary,
     fontSize: 14,
     fontWeight: '600',
   },

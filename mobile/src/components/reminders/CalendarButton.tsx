@@ -11,7 +11,7 @@ interface CalendarButtonProps {
 export const CalendarButton: React.FC<CalendarButtonProps> = ({ onPress, isActive, style }) => {
   return (
     <TouchableOpacity style={[styles.button, isActive ? styles.activeButton : styles.inactiveButton, style]} onPress={onPress}>
-      <Feather name="calendar" size={20} color={isActive ? "#FFFFFF" : "#C62828"} />
+      <Feather name="calendar" size={20} color={isActive ? "#FFFFFF" : "#33447D"} />
     </TouchableOpacity>
   );
 };
@@ -26,8 +26,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   activeButton: {
-    backgroundColor: '#C62828',
-    borderColor: '#C62828',
+    backgroundColor: '#33447D',
+    borderColor: '#33447D',
   },
   inactiveButton: {
     backgroundColor: '#FFFFFF',

@@ -162,7 +162,7 @@ export default function SupportScreen() {
     let statusBg = '#feebc8';
     const s = status.toLowerCase();
     if (s === 'closed' || s === 'resolved') { statusColor = '#38a169'; statusBg = '#f0fff4'; }
-    else if (s === 'in progress') { statusColor = '#C62828'; statusBg = '#FDECEC'; }
+    else if (s === 'in progress') { statusColor = '#33447D'; statusBg = '#E8EBF2'; }
     else if (s === 'escalated') { statusColor = '#e53e3e'; statusBg = '#fff5f5'; }
 
     return (
@@ -226,7 +226,7 @@ export default function SupportScreen() {
         {!isSupportUser && (
           <View style={styles.viewDetailsBtn}>
             <Text style={styles.viewDetailsText}>View Request</Text>
-            <Feather name="chevron-right" size={16} color="#C62828" />
+            <Feather name="chevron-right" size={16} color="#33447D" />
           </View>
         )}
       </TouchableOpacity>
@@ -314,9 +314,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   segmentActive: {
-    backgroundColor: '#C62828',
+    backgroundColor: '#33447D',
     borderWidth: 1,
-    borderColor: '#C62828',
+    borderColor: '#33447D',
   },
   segmentText: {
     fontSize: 14,
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   viewDetailsText: {
-    color: '#C62828',
+    color: '#33447D',
     fontSize: 14,
     fontWeight: '500',
     marginRight: 4,

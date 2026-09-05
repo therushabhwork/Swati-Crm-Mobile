@@ -53,8 +53,8 @@ export default function MoreScreen() {
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.card}>
             <TouchableOpacity style={styles.menuItem} onPress={logout}>
-              <Feather name="log-out" size={20} color={colors.error} />
-              <Text style={[styles.menuLabel, { color: colors.error }]}>Logout</Text>
+              <Feather name="log-out" size={20} color={colors.primary} />
+              <Text style={[styles.menuLabel, { color: colors.primary }]}>Logout</Text>
             </TouchableOpacity>
           </View>
         </View>

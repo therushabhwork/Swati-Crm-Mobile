@@ -128,7 +128,7 @@ export default function CustomersScreen() {
         
         <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => router.push(`/customer-details/${item.legacyId || item.id || item._id}`)}>
           <Text style={styles.viewDetailsText}>View Customer</Text>
-          <Feather name="chevron-right" size={16} color="#C62828" />
+          <Feather name="chevron-right" size={16} color="#33447D" />
         </TouchableOpacity>
       </View>
     );
@@ -193,13 +193,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   statusBadge: {
-    backgroundColor: '#FDECEC',
+    backgroundColor: '#E8EBF2',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
   },
   statusText: {
-    color: '#C62828',
+    color: '#33447D',
     fontSize: 12,
     fontWeight: '600',
   },
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   viewDetailsText: {
-    color: '#C62828',
+    color: '#33447D',
     fontSize: 14,
     fontWeight: '500',
     marginRight: 4,

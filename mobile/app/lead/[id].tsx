@@ -27,7 +27,7 @@ export default function LeadDetailScreen() {
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#C62828" />
+        <ActivityIndicator size="large" color="#33447D" />
       </View>
     );
   }
