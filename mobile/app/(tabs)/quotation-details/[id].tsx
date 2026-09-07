@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import apiClient from '../../../src/api/client';
 import { AppHeader } from '../../../src/components/ui/AppHeader';
 import { colors } from '../../../src/theme/colors';
 
 export default function QuotationDetailsScreen() {
   const { id, fromSearch } = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -48,33 +50,71 @@ export default function QuotationDetailsScreen() {
     );
   }
 
-  // Fields: Quotation Number, Quotation Owner, Quotation Date, Company Name, Amount, Status, Project Name
-  const fields = [
-    { label: 'Quotation Number', value: data.quotationNo || data.quotationNumber || data.id || '-' },
-    { label: 'Quotation Owner', value: data.quotationOwner || data.ownerUserId || '-' },
-    { label: 'Quotation Date', value: data.quotationDate || data.createdAt ? new Date(data.quotationDate || data.createdAt).toLocaleDateString() : '-' },
-    { label: 'Company Name', value: data.companyName || data.customerName || '-' },
-    { label: 'Amount', value: data.amount ? `₹${data.amount.toLocaleString()}` : data.total ? `₹${data.total.toLocaleString()}` : '-' },
-    { label: 'Status', value: data.status || '-' },
-    { label: 'Project Name', value: data.projectName || data.project || '-' }
+  const sections = [
+    {
+      title: 'Quotation details',
+      data: [
+        { label: 'Quotation Number', value: data.quotationNo || data.quotationNumber || data.id || '-' },
+        { label: 'Quotation Owner', value: data.quotationOwner || data.ownerUserId || '-' },
+        { label: 'Quotation Date', value: data.quotationDate || data.createdAt ? new Date(data.quotationDate || data.createdAt).toLocaleDateString() : '-' },
+        { label: 'Company Name', value: data.companyName || data.customerName || '-' },
+        { label: 'Project Name', value: data.projectName || data.project || '-' }
+      ]
+    },
+    {
+      title: 'Status',
+      data: [
+        { label: 'Status', value: data.status || '-' },
+      ]
+    },
+    {
+      title: 'Commercial',
+      data: [
+        { label: 'Amount', value: data.amount ? `₹${data.amount.toLocaleString()}` : data.total ? `₹${data.total.toLocaleString()}` : '-' },
+      ]
+    }
   ];
 
+  const getStatusColor = (value: string) => {
+    const lowerValue = value?.toString().toLowerCase();
+    if (lowerValue === 'pending') return colors.warning || '#F59E0B';
+    if (lowerValue === 'converted' || lowerValue === 'approved') return colors.success || '#16A34A';
+    return '#2d3748';
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <AppHeader title={`Quotation - ${data.quotationNo || data.quotationNumber || data.id || ''}`} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(tabs)/quotations')} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Information</Text>
-          <View style={styles.divider} />
-          
-          {fields.map((field, idx) => (
-            <View key={idx} style={styles.row}>
-              <Text style={styles.label}>{field.label}</Text>
-              <Text style={styles.value}>{field.value}</Text>
-            </View>
-          ))}
-          
-        </View>
+        {sections.map((section, sIdx) => (
+          <View key={sIdx} style={[styles.card, sIdx < sections.length - 1 && { marginBottom: 16 }]}>
+            <Text style={styles.cardTitle}>{section.title}</Text>
+            <View style={styles.divider} />
+            
+            {section.data.map((field, idx) => {
+              const isStatusSection = section.title === 'Status';
+              const isPrimarySection = section.title.toLowerCase().includes('details');
+              const valueStyle = isStatusSection 
+                ? [styles.value, { color: getStatusColor(field.value) }]
+                : styles.value;
+                
+              const rowStyle = isPrimarySection 
+                ? [styles.row, { flexDirection: 'column', alignItems: 'flex-start' }, idx === section.data.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }]
+                : [styles.row, idx === section.data.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }];
+                
+              const labelStyle = isPrimarySection
+                ? [styles.label, { marginBottom: 4 }]
+                : styles.label;
+
+              return (
+                <View key={idx} style={rowStyle as any}>
+                  <Text style={labelStyle}>{field.label}</Text>
+                  <Text style={valueStyle}>{field.value}</Text>
+                </View>
+              );
+            })}
+          </View>
+        ))}
       </ScrollView>
     </View>
   );

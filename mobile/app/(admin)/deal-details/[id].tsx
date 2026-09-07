@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import apiClient from '../../../src/api/client';
 import { AppHeader } from '../../../src/components/ui/AppHeader';
 import { colors } from '../../../src/theme/colors';
 
 export default function DealDetailsScreen() {
   const { id, fromSearch } = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -48,38 +50,78 @@ export default function DealDetailsScreen() {
     );
   }
 
-  // Fields: Deal No Deal Name  Deal Date   Deal Owner   Deal Type  Deal Status   Project Name   Deal Value   Convert PO   PO Value  Job No. Lost Order Reason
-  const fields = [
-    { label: 'Deal No', value: data.dealNo || data.id || '-' },
-    { label: 'Deal Name', value: data.dealName || data.name || '-' },
-    { label: 'Deal Date', value: data.dealDate || data.createdAt ? new Date(data.dealDate || data.createdAt).toLocaleDateString() : '-' },
-    { label: 'Deal Owner', value: data.dealOwner || data.ownerUserId || '-' },
-    { label: 'Deal Type', value: data.dealType || data.type || '-' },
-    { label: 'Deal Status', value: data.dealStatus || data.status || '-' },
-    { label: 'Project Name', value: data.projectName || data.project || '-' },
-    { label: 'Deal Value', value: data.dealValue ? `₹${data.dealValue.toLocaleString()}` : '-' },
-    { label: 'Convert PO', value: data.convertPo ? 'Yes' : 'No' },
-    { label: 'PO Value', value: data.poValue ? `₹${data.poValue.toLocaleString()}` : '-' },
-    { label: 'Job No.', value: data.jobNo || '-' },
-    { label: 'Lost Order Reason', value: data.lostOrderReason || '-' }
+  const sections = [
+    {
+      title: 'Deal details',
+      data: [
+        { label: 'Deal No', value: data.dealNo || data.id || '-' },
+        { label: 'Deal Name', value: data.dealName || data.name || '-' },
+        { label: 'Deal Date', value: data.dealDate || data.createdAt ? new Date(data.dealDate || data.createdAt).toLocaleDateString() : '-' },
+        { label: 'Deal Owner', value: data.dealOwner || data.ownerUserId || '-' },
+        { label: 'Deal Type', value: data.dealType || data.type || '-' },
+        { label: 'Project Name', value: data.projectName || data.project || '-' }
+      ]
+    },
+    {
+      title: 'Status',
+      data: [
+        { label: 'Deal Status', value: data.dealStatus || data.status || '-' },
+        { label: 'Lost Order Reason', value: data.lostOrderReason || '-' }
+      ]
+    },
+    {
+      title: 'Commercial',
+      data: [
+        { label: 'Deal Value', value: data.dealValue ? `₹${data.dealValue.toLocaleString()}` : '-' },
+        { label: 'Convert PO', value: data.convertPo ? 'Yes' : 'No' },
+        { label: 'PO Value', value: data.poValue ? `₹${data.poValue.toLocaleString()}` : '-' },
+        { label: 'Job No.', value: data.jobNo || '-' },
+      ]
+    }
   ];
 
+  const getStatusColor = (value: string) => {
+    const lowerValue = value?.toString().toLowerCase();
+    if (lowerValue === 'pending') return colors.warning || '#F59E0B';
+    if (lowerValue === 'converted' || lowerValue === 'won') return colors.success || '#16A34A';
+    if (lowerValue === 'lost') return '#E53E3E';
+    return '#2d3748';
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <AppHeader title={data.dealName || data.name || "Deal Details"} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/deals')} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Information</Text>
-          <View style={styles.divider} />
-          
-          {fields.map((field, idx) => (
-            <View key={idx} style={styles.row}>
-              <Text style={styles.label}>{field.label}</Text>
-              <Text style={styles.value}>{field.value}</Text>
-            </View>
-          ))}
-          
-        </View>
+        {sections.map((section, sIdx) => (
+          <View key={sIdx} style={[styles.card, sIdx < sections.length - 1 && { marginBottom: 16 }]}>
+            <Text style={styles.cardTitle}>{section.title}</Text>
+            <View style={styles.divider} />
+            
+            {section.data.map((field, idx) => {
+              const isStatusSection = section.title === 'Status';
+              const isPrimarySection = section.title.toLowerCase().includes('details');
+              
+              const valueStyle = isStatusSection && field.label.includes('Status')
+                ? [styles.value, { color: getStatusColor(field.value) }]
+                : styles.value;
+                
+              const rowStyle = isPrimarySection 
+                ? [styles.row, { flexDirection: 'column', alignItems: 'flex-start' }, idx === section.data.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }]
+                : [styles.row, idx === section.data.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }];
+                
+              const labelStyle = isPrimarySection
+                ? [styles.label, { marginBottom: 4 }]
+                : styles.label;
+
+              return (
+                <View key={idx} style={rowStyle as any}>
+                  <Text style={labelStyle}>{field.label}</Text>
+                  <Text style={valueStyle}>{field.value}</Text>
+                </View>
+              );
+            })}
+          </View>
+        ))}
       </ScrollView>
     </View>
   );

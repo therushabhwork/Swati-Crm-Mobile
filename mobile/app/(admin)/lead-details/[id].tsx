@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import apiClient from '../../../src/api/client';
 import { AppHeader } from '../../../src/components/ui/AppHeader';
 import { colors } from '../../../src/theme/colors';
 
 export default function LeadDetailsScreen() {
   const { id, fromSearch } = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -77,39 +79,74 @@ export default function LeadDetailsScreen() {
     );
   }
 
-  // Fields: Account No., Account Name, Project Name, Account Owner, Account Date, Account Category, Account Status, Account State, Phone, Email, Contact Person, PO Value, Job No
-  const fields = [
-    { label: 'Account No.', value: data.accountNo || data.leadNo || data.id || '-' },
-    { label: 'Account Name', value: data.accountName || data.name || data.companyName || '-' },
-    { label: 'Project Name', value: data.projectName || data.project || '-' },
-    { label: 'Account Owner', value: data.accountOwner || data.ownerUserId || '-' },
-    { label: 'Account Date', value: data.accountDate || data.createdAt ? new Date(data.accountDate || data.createdAt).toLocaleDateString() : '-' },
-    { label: 'Account Category', value: data.accountCategory || data.category || '-' },
-    { label: 'Account Status', value: data.accountStatus || data.status || '-' },
-    { label: 'Account State', value: data.accountState || data.state || '-' },
-    { label: 'Phone', value: data.phone || '-' },
-    { label: 'Email', value: data.email || '-' },
-    { label: 'Contact Person', value: data.contactPerson || data.contactName || '-' },
-    { label: 'PO Value', value: data.poValue ? `₹${data.poValue.toLocaleString()}` : '-' },
-    { label: 'Job No', value: data.jobNo || '-' }
+  // Grouped Fields
+  const sections = [
+    {
+      title: 'Account details',
+      data: [
+        { label: 'Account No.', value: data.accountNo || data.leadNo || data.id || '-' },
+        { label: 'Account Name', value: data.accountName || data.name || data.companyName || '-' },
+        { label: 'Project Name', value: data.projectName || data.project || '-' },
+        { label: 'Account Owner', value: data.accountOwner || data.ownerUserId || '-' },
+        { label: 'Account Date', value: data.accountDate || data.createdAt ? new Date(data.accountDate || data.createdAt).toLocaleDateString() : '-' },
+        { label: 'Account Category', value: data.accountCategory || data.category || '-' },
+      ]
+    },
+    {
+      title: 'Status',
+      data: [
+        { label: 'Account Status', value: data.accountStatus || data.status || '-' },
+        { label: 'Account State', value: data.accountState || data.state || '-' },
+      ]
+    },
+    {
+      title: 'Contact',
+      data: [
+        { label: 'Phone', value: data.phone || '-' },
+        { label: 'Email', value: data.email || '-' },
+        { label: 'Contact Person', value: data.contactPerson || data.contactName || '-' },
+      ]
+    },
+    {
+      title: 'Commercial',
+      data: [
+        { label: 'PO Value', value: data.poValue ? `₹${data.poValue.toLocaleString()}` : '-' },
+        { label: 'Job No', value: data.jobNo || '-' }
+      ]
+    }
   ];
 
+  const getStatusColor = (value: string) => {
+    const lowerValue = value?.toString().toLowerCase();
+    if (lowerValue === 'pending') return colors.warning || '#F59E0B';
+    if (lowerValue === 'converted') return colors.success || '#16A34A';
+    return '#2d3748';
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <AppHeader title={data.accountName || data.name || "Account Details"} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/leads')} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Information</Text>
-          <View style={styles.divider} />
-          
-          {fields.map((field, idx) => (
-            <View key={idx} style={styles.row}>
-              <Text style={styles.label}>{field.label}</Text>
-              <Text style={styles.value}>{field.value}</Text>
-            </View>
-          ))}
-          
-        </View>
+        {sections.map((section, sIdx) => (
+          <View key={sIdx} style={[styles.card, sIdx < sections.length - 1 && { marginBottom: 16 }]}>
+            <Text style={styles.cardTitle}>{section.title}</Text>
+            <View style={styles.divider} />
+            
+            {section.data.map((field, idx) => {
+              const isStatusSection = section.title === 'Status';
+              const valueStyle = isStatusSection 
+                ? [styles.value, { color: getStatusColor(field.value) }]
+                : styles.value;
+                
+              return (
+                <View key={idx} style={[styles.row, idx === section.data.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }]}>
+                  <Text style={styles.label}>{field.label}</Text>
+                  <Text style={valueStyle}>{field.value}</Text>
+                </View>
+              );
+            })}
+          </View>
+        ))}
 
         {(!data.isConverted && !data.dealId && data.status?.toLowerCase() !== 'converted' && data.accountState?.toLowerCase() !== 'converted') && (
           <TouchableOpacity style={styles.actionBtn} onPress={handleConvertDeal}>

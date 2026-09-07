@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, BackHandler } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import apiClient from '../../../src/api/client';
 import { AppHeader } from '../../../src/components/ui/AppHeader';
 import { colors } from '../../../src/theme/colors';
@@ -21,6 +22,7 @@ const formatCustomerNumber = (num: string) => {
 
 export default function CustomerDetailsScreen() {
   const { id, fromSearch } = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
   const [data, setData] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,33 +94,72 @@ export default function CustomerDetailsScreen() {
     );
   }
 
-  const fields = [
-    { label: 'Customer Number', value: formatCustomerNumber(data.displayCustomerNumber || data.customerNo || data.id) || '-' },
-    { label: 'Customer Name', value: data.customerName || data.name || data.displayName || '-' },
-    { label: 'Added Date', value: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : '-' },
-    { label: 'Email', value: data.email || '-' },
-    { label: 'Phone', value: data.phone || '-' },
-    { label: 'Customer Category', value: data.customerCategory || data.category || '-' },
-    { label: 'Customer Owner', value: data.displayCustomerOwner || '-' },
-    { label: 'Customer Status', value: data.customerStatus || data.status || '-' }
+  const sections = [
+    {
+      title: 'Customer details',
+      data: [
+        { label: 'Customer Number', value: formatCustomerNumber(data.displayCustomerNumber || data.customerNo || data.id) || '-' },
+        { label: 'Customer Name', value: data.customerName || data.name || data.displayName || '-' },
+        { label: 'Customer Owner', value: data.displayCustomerOwner || '-' },
+        { label: 'Customer Category', value: data.customerCategory || data.category || '-' },
+        { label: 'Added Date', value: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : '-' },
+      ]
+    },
+    {
+      title: 'Status',
+      data: [
+        { label: 'Customer Status', value: data.customerStatus || data.status || '-' }
+      ]
+    },
+    {
+      title: 'Contact',
+      data: [
+        { label: 'Phone', value: data.phone || '-' },
+        { label: 'Email', value: data.email || '-' },
+      ]
+    }
   ];
 
+  const getStatusColor = (value: string) => {
+    const lowerValue = value?.toString().toLowerCase();
+    if (lowerValue === 'pending') return colors.warning || '#F59E0B';
+    if (lowerValue === 'converted') return colors.success || '#16A34A';
+    return '#2d3748';
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <AppHeader title={data.customerName || data.name || data.displayName || "Customer Details"} showBack onBack={handleBack} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Information</Text>
-          <View style={styles.divider} />
+        {sections.map((section, sIdx) => (
+          <View key={sIdx} style={[styles.card, sIdx < sections.length - 1 && { marginBottom: 16 }]}>
+            <Text style={styles.cardTitle}>{section.title}</Text>
+            <View style={styles.divider} />
+            
+            {section.data.map((field, idx) => {
+              const isStatusSection = section.title === 'Status';
+              const isPrimarySection = section.title.toLowerCase().includes('details');
+              const valueStyle = isStatusSection 
+                ? [styles.value, { color: getStatusColor(field.value) }]
+                : styles.value;
+                
+              const rowStyle = isPrimarySection 
+                ? [styles.row, { flexDirection: 'column', alignItems: 'flex-start' }, idx === section.data.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }]
+                : [styles.row, idx === section.data.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }];
+                
+              const labelStyle = isPrimarySection
+                ? [styles.label, { marginBottom: 4 }]
+                : styles.label;
 
-          {fields.map((field, idx) => (
-            <View key={idx} style={styles.row}>
-              <Text style={styles.label}>{field.label}</Text>
-              <Text style={styles.value}>{field.value}</Text>
-            </View>
-          ))}
-
-        </View>
+              return (
+                <View key={idx} style={rowStyle as any}>
+                  <Text style={labelStyle}>{field.label}</Text>
+                  <Text style={valueStyle}>{field.value}</Text>
+                </View>
+              );
+            })}
+          </View>
+        ))}
       </ScrollView>
     </View>
   );

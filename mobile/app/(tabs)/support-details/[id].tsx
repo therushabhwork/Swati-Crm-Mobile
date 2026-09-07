@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import apiClient from '../../../src/api/client';
 import { AppHeader } from '../../../src/components/ui/AppHeader';
 import { useAuth } from '../../../src/context/AuthContext';
@@ -8,6 +9,7 @@ import { colors } from '../../../src/theme/colors';
 
 export default function SupportDetailsScreen() {
   const { id, fromSearch } = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -84,34 +86,68 @@ export default function SupportDetailsScreen() {
   const closedBy = data.closedBy || data.data?.closedBy || (data.status?.toLowerCase() === 'closed' ? (data.updatedBy || '-') : '-')
   const ownerName = data.ownerName || data.data?.ownerName || data.ownerUserId || data.assignedTo || '-'
 
-  const fields = [
-    { label: 'SR Number', value: data.srNumber || data.ticketNo || data.legacyId || '-' },
-    { label: 'Customer Name', value: data.customerName || 'Unknown' },
-    { label: 'Service Type', value: data.serviceType || '-' },
-    { label: 'Service/Request Date', value: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : '-' },
-    { label: 'Owner', value: ownerName },
-    { label: 'Status', value: data.status || '-' },
-    { label: 'Closed On', value: closedOn },
-    { label: 'Closed By', value: closedBy },
-    { label: 'Last Updated', value: data.updatedAt ? new Date(data.updatedAt).toLocaleDateString() : '-' }
+  const sections = [
+    {
+      title: 'Support details',
+      data: [
+        { label: 'SR Number', value: data.srNumber || data.ticketNo || data.legacyId || '-' },
+        { label: 'Customer Name', value: data.customerName || 'Unknown' },
+        { label: 'Service Type', value: data.serviceType || '-' },
+        { label: 'Service/Request Date', value: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : '-' },
+        { label: 'Owner', value: ownerName },
+      ]
+    },
+    {
+      title: 'Status',
+      data: [
+        { label: 'Status', value: data.status || '-' },
+        { label: 'Closed On', value: closedOn },
+        { label: 'Closed By', value: closedBy },
+        { label: 'Last Updated', value: data.updatedAt ? new Date(data.updatedAt).toLocaleDateString() : '-' }
+      ]
+    }
   ];
 
+  const getStatusColor = (value: string) => {
+    const lowerValue = value?.toString().toLowerCase();
+    if (lowerValue === 'pending' || lowerValue === 'open') return colors.warning || '#F59E0B';
+    if (lowerValue === 'resolved' || lowerValue === 'closed' || lowerValue === 'converted') return colors.success || '#16A34A';
+    return '#2d3748';
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <AppHeader title="Support Request" showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(tabs)/support')} />
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Information</Text>
-          <View style={styles.divider} />
-          
-          {fields.map((field, idx) => (
-            <View key={idx} style={styles.row}>
-              <Text style={styles.label}>{field.label}</Text>
-              <Text style={styles.value}>{field.value}</Text>
-            </View>
-          ))}
-          
-        </View>
+        {sections.map((section, sIdx) => (
+          <View key={sIdx} style={[styles.card, sIdx < sections.length - 1 && { marginBottom: 16 }]}>
+            <Text style={styles.cardTitle}>{section.title}</Text>
+            <View style={styles.divider} />
+            
+            {section.data.map((field, idx) => {
+              const isStatusSection = section.title === 'Status';
+              const isPrimarySection = section.title.toLowerCase().includes('details');
+              const valueStyle = isStatusSection && (field.label === 'Status' || field.label === 'Customer Status' || field.label === 'Account Status')
+                ? [styles.value, { color: getStatusColor(field.value) }]
+                : styles.value;
+                
+              const rowStyle = isPrimarySection 
+                ? [styles.row, { flexDirection: 'column', alignItems: 'flex-start' }, idx === section.data.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }]
+                : [styles.row, idx === section.data.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }];
+                
+              const labelStyle = isPrimarySection
+                ? [styles.label, { marginBottom: 4 }]
+                : styles.label;
+
+              return (
+                <View key={idx} style={rowStyle as any}>
+                  <Text style={labelStyle}>{field.label}</Text>
+                  <Text style={valueStyle}>{field.value}</Text>
+                </View>
+              );
+            })}
+          </View>
+        ))}
         
         {isSupportUser && (data.status?.toLowerCase() !== 'closed' && data.status?.toLowerCase() !== 'resolved') && (
           <TouchableOpacity style={styles.closeBtn} onPress={handleCloseRequest}>
