@@ -46,6 +46,7 @@ import { exportExcelWorkbook } from '../../../utils/excelExport'
 import CustomerBulkActionDialog from './CustomerBulkActionDialog'
 import CustomerDetailsDrawer from './CustomerDetailsDrawer'
 import './AdminCustomersPage.css'
+import { matchesSectionSearch } from '../../../utils/sectionSearch'
 
 const steps = [
   { key: 'details', label: 'Customer Details' },
@@ -1172,6 +1173,12 @@ const AdminCustomersPage = ({
   }, [filterDraft.field, searchRows])
   const filteredRows = useMemo(() => (
     searchRows.filter((row) => {
+      const globalQuery = new URLSearchParams(location.search).get('query')
+      if (!matchesSectionSearch(row, [
+        'customerNumber', 'customerName', 'email', 'phone', 'addedDate',
+        'customerOwner', 'customerCategory', 'customerStatus', 'customerType', 'latestRemark',
+      ], globalQuery)) return false
+
       const matchesColumnFilters = searchColumns.every((column) => {
         const filterValue = normalizeSearchValue(filters[column.key])
         if (!filterValue) return true
@@ -1186,7 +1193,7 @@ const AdminCustomersPage = ({
         return rule.not ? !matchesRule : matchesRule
       })
     })
-  ), [filterRules, filters, searchRows])
+  ), [filterRules, filters, location.search, searchRows])
   const orderedRows = useMemo(() => {
     if (orderRules.length === 0) {
       return [...filteredRows].sort((left, right) => (

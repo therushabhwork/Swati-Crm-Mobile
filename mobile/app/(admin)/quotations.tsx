@@ -8,7 +8,8 @@ import { ResponsiveList } from '../../src/components/ui/ResponsiveList';
 import { SummaryWidget } from '../../src/components/ui/SummaryWidget';
 import { ListControls } from '../../src/components/ui/ListControls';
 import { LoadingSkeleton } from '../../src/components/ui/LoadingSkeleton';
-import { SearchModal } from '../../src/components/ui/SearchModal';
+import { InlineSearchBar } from '../../src/components/ui/InlineSearchBar';
+import { ResultsHeader } from '../../src/components/ui/ResultsHeader';
 import { colors } from '../../src/theme/colors';
 
 export default function QuotationsScreen() {
@@ -58,7 +59,16 @@ export default function QuotationsScreen() {
   ];
 
   const filteredData = data.filter(item => {
-    const searchString = `${item.quotationNo} ${item.quotationNumber} ${item.companyName} ${item.customerName}`.toLowerCase();
+    if (!searchQuery) return true;
+    const searchString = `
+      ${item.quotationNo || item.quotationNumber || item.id || ''}
+      ${item.quotationOwner || item.ownerUserId || ''}
+      ${item.quotationDate || item.createdAt || ''}
+      ${item.companyName || item.customerName || ''}
+      ${item.amount || item.total || ''}
+      ${item.status || ''}
+      ${item.projectName || item.project || ''}
+    `.toLowerCase();
     return searchString.includes(searchQuery.toLowerCase());
   });
 
@@ -119,31 +129,41 @@ export default function QuotationsScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title="Quotations" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
+      {isSearchVisible ? (
+        <InlineSearchBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onClose={() => {
+            setIsSearchVisible(false);
+            setSearchQuery('');
+          }}
+          placeholder="Search quotations..."
+        />
+      ) : (
+        <AppHeader title="Quotations" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
+      )}
       
       {isLoading ? (
         <LoadingSkeleton />
       ) : (
         <>
-          <SummaryWidget 
-            title="Quotations" 
-            totalCount={data.length} 
-            metrics={summaryMetrics} 
-          />
-          <ListControls />
+          {isSearchVisible ? (
+            <ResultsHeader count={filteredData.length} />
+          ) : (
+            <SummaryWidget 
+              title="Quotations" 
+              totalCount={data.length} 
+              metrics={summaryMetrics} 
+            />
+          )}
+          
+          {!isSearchVisible && <ListControls />}
           <ResponsiveList
             data={filteredData}
             columns={columns}
             keyExtractor={(item: any) => item._id || item.id}
             onRowPress={(item: any) => router.push(`/quotation-details/${item._id || item.id}`)}
             renderMobileCard={renderMobileCard}
-          />
-          <SearchModal
-            visible={isSearchVisible}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onClose={() => setIsSearchVisible(false)}
-            placeholder="Search quotations..."
           />
         </>
       )}

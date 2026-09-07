@@ -8,7 +8,8 @@ import { ResponsiveList } from '../../src/components/ui/ResponsiveList';
 import { SummaryWidget } from '../../src/components/ui/SummaryWidget';
 import { ListControls } from '../../src/components/ui/ListControls';
 import { LoadingSkeleton } from '../../src/components/ui/LoadingSkeleton';
-import { SearchModal } from '../../src/components/ui/SearchModal';
+import { InlineSearchBar } from '../../src/components/ui/InlineSearchBar';
+import { ResultsHeader } from '../../src/components/ui/ResultsHeader';
 import { colors } from '../../src/theme/colors';
 import { buildUserLookupMap, normalizeCustomerItem, resetSeenLegacyIds } from '../../src/utils/customerNormalizer';
 
@@ -73,7 +74,19 @@ export default function CustomersScreen() {
   }));
 
   const filteredData = data.filter(item => {
-    const searchString = `${item.displayName || ''} ${item.displayCustomerNumber || ''} ${item.customerNo || ''}`.toLowerCase();
+    if (!searchQuery) return true;
+    const searchString = `
+      ${item.displayCustomerNumber || item.customerNo || ''}
+      ${item.displayName || item.name || ''}
+      ${item.email || ''}
+      ${item.phone || ''}
+      ${item.createdAt || ''}
+      ${item.displayCustomerOwner || item.ownerUserId || ''}
+      ${item.customerCategory || item.category || ''}
+      ${item.customerStatus || item.status || ''}
+      ${item.customerType || item.type || ''}
+      ${item.latestRemark || item.remark || ''}
+    `.toLowerCase();
     return searchString.includes(searchQuery.toLowerCase());
   });
 
@@ -136,31 +149,41 @@ export default function CustomersScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title="Customers" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
+      {isSearchVisible ? (
+        <InlineSearchBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onClose={() => {
+            setIsSearchVisible(false);
+            setSearchQuery('');
+          }}
+          placeholder="Search customers..."
+        />
+      ) : (
+        <AppHeader title="Customers" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
+      )}
       
       {isLoading ? (
         <LoadingSkeleton />
       ) : (
         <>
-          <SummaryWidget 
-            title="Customers" 
-            totalCount={data.length} 
-            metrics={summaryMetrics} 
-          />
-          <ListControls />
+          {isSearchVisible ? (
+            <ResultsHeader count={filteredData.length} />
+          ) : (
+            <SummaryWidget 
+              title="Customers" 
+              totalCount={data.length} 
+              metrics={summaryMetrics} 
+            />
+          )}
+          
+          {!isSearchVisible && <ListControls />}
           <ResponsiveList
             data={filteredData}
             columns={columns}
             keyExtractor={(item: any) => item._id || item.id}
             onRowPress={(item: any) => router.push(`/customer-details/${item.legacyId || item.id || item._id}`)}
             renderMobileCard={renderMobileCard}
-          />
-          <SearchModal
-            visible={isSearchVisible}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onClose={() => setIsSearchVisible(false)}
-            placeholder="Search customers..."
           />
         </>
       )}

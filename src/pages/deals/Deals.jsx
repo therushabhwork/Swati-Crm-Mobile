@@ -1437,13 +1437,24 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
   }, [dashboardDealDrilldown, scopedDeals])
 
   const searchKeys = [
+    'dealNumber',
+    'dealNo',
     'id',
     'name',
-    'dealNumber',
+    'dealName',
+    'dealDate',
     'dealOwner',
     'dealType',
+    'status',
+    'dealStatus',
     'jobNo',
     'projectName',
+    'dealValue',
+    'convertToPo',
+    'convertPO',
+    'poValue',
+    'lostOrderReason',
+    'reasonForLostOrder',
     'city',
     'customerName',
     'customerNumber',
@@ -1458,6 +1469,13 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
   ]
 
   const { searchTerm, setSearchTerm, filteredItems: searchedDeals } = useSearch(drilldownScopedDeals, searchKeys)
+
+  useEffect(() => {
+    const query = new URLSearchParams(location.search).get('query') || ''
+    if (normalizeSearchValue(query) !== normalizeSearchValue(searchTerm)) {
+      setSearchTerm(query)
+    }
+  }, [location.search, searchTerm, setSearchTerm])
 
   useEffect(() => {
     const dealLookup = location.state?.quotationDealLookup

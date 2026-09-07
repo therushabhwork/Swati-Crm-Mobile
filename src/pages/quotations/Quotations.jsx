@@ -50,6 +50,7 @@ import { exportExcelWorkbook, exportCsvWorkbook } from '../../utils/excelExport'
 import { formatCurrency, formatDate, generateId } from '../../utils/helpers'
 import './Quotations.css'
 import '../admin/quotations/AdminQuotationsPage.css'
+import { matchesSectionSearch } from '../../utils/sectionSearch'
 
 const ACCOUNT_LIST_PAGE_SIZE = 8
 const QUOTATION_PAGE_SIZE = 10
@@ -594,6 +595,7 @@ const Quotations = ({ autoOpen = false }) => {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [isOtherProductModalOpen, setIsOtherProductModalOpen] = useState(false)
   const [isOtherServiceModalOpen, setIsOtherServiceModalOpen] = useState(false)
+  const globalSearchQuery = searchParams.get('query') || ''
 
   const handleAddModalLineItem = (item) => {
     setQuotationForm(prev => {
@@ -717,6 +719,9 @@ const Quotations = ({ autoOpen = false }) => {
   const filteredQuotationRows = useMemo(() => (
     quotationRows
       .filter((row) => row.quotationScope === activeTab)
+      .filter((row) => matchesSectionSearch(row, [
+        'num', 'owner', 'date', 'company', 'amountLabel', 'statusLabel', 'project',
+      ], globalSearchQuery))
       .filter((row) => {
         if (profileFilter === 'swati') return row.raw.profileKey === 'swati-switch'
         if (profileFilter === 'lumos') return row.raw.profileKey === 'lumos-building' || row.raw.profileKey === 'lumos'
@@ -753,7 +758,7 @@ const Quotations = ({ autoOpen = false }) => {
         const compareValue = String(leftValue || '').localeCompare(String(rightValue || ''), undefined, { sensitivity: 'base' })
         return direction === 'asc' ? compareValue : compareValue * -1
       })
-  ), [activeTab, profileFilter, quotationFilters, quotationLayout.addOrderBy, quotationLayout.showLatestQuotations, quotationRows, quotationSort])
+  ), [activeTab, globalSearchQuery, profileFilter, quotationFilters, quotationLayout.addOrderBy, quotationLayout.showLatestQuotations, quotationRows, quotationSort])
 
   const quotationTotalPages = useMemo(
     () => Math.max(1, Math.ceil(filteredQuotationRows.length / QUOTATION_PAGE_SIZE)),

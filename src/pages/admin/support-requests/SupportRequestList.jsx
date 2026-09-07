@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useData } from '../../../context/DataContext'
 import SupportRequestTable from './SupportRequestTable'
 import './SupportRequestAdmin.css'
+import { matchesSectionSearch } from '../../../utils/sectionSearch'
 
 const AddSupportRequestPanel = React.lazy(() => import('./AddSupportRequest'))
 
@@ -35,6 +37,7 @@ const SupportRequestList = ({
   closedOnly = false,
 }) => {
   const { supportRequests } = useData()
+  const location = useLocation()
   const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false)
 
   const sortedRequests = useMemo(() => (
@@ -45,10 +48,18 @@ const SupportRequestList = ({
   ), [supportRequests])
 
   const visibleRequests = useMemo(() => (
-    closedOnly
+    (closedOnly
       ? sortedRequests.filter((supportRequest) => isClosedSupportRequest(supportRequest))
-      : sortedRequests
-  ), [closedOnly, sortedRequests])
+      : sortedRequests).filter((supportRequest) => matchesSectionSearch(supportRequest, [
+        'srNumber',
+        'customerName',
+        'requestType',
+        (row) => row.serviceDate || row.srDate || row.requestDate,
+        'ownerName',
+        'status',
+        (row) => row.lastUpdated || row.updatedAt,
+      ], new URLSearchParams(location.search).get('query')))
+  ), [closedOnly, location.search, sortedRequests])
 
   return (
     <div className="support-ticket-page">

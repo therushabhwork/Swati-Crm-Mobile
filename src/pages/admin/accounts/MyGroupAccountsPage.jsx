@@ -34,6 +34,7 @@ import { getCityForUser } from '../../../features/adminAccounts/config/cityFilte
 import { ACCOUNT_OWNER_OPTIONS } from '../../../features/accounts/config/accountDropdownOptions';
 import { getCrmOwnerCode } from '../../../features/users/crmUserDirectory';
 import './MyGroupAccounts.css'
+import { matchesSectionSearch } from '../../../utils/sectionSearch'
 
 const DEFAULT_ROWS_PER_PAGE = 10
 const SIX_ROW_ACCOUNT_VARIANTS = new Set(['viewAll', 'myAccounts', 'searchAccount'])
@@ -748,6 +749,11 @@ const activeStageParam = searchParams.get('stage')
   }, [appliedConvertedFilterEnabled, appliedConvertedFilterRules, supportsAdvancedFilter])
   const filteredRows = useMemo(
     () => boardRows
+      .filter((row) => matchesSectionSearch(row, [
+        'accountNumber', 'accountNo', 'name', 'accountName', 'projectName',
+        'accountOwner', 'accountDate', 'accountCategory', 'status', 'accountStatus',
+        'accountState', 'phone', 'email', 'contactPerson', 'poValue', 'jobNo',
+      ], searchParams.get('query')))
       .filter((row) => matchesColumnFilters(row, filters, filterColumnDefinitions))
       .filter(matchesConvertedFilterRules)
       .filter((row) => {
@@ -765,6 +771,11 @@ const activeStageParam = searchParams.get('stage')
   )
   const filteredAllStageRows = useMemo(
     () => convertedBoardRecords
+      .filter((row) => matchesSectionSearch(row, [
+        'accountNumber', 'accountNo', 'name', 'accountName', 'projectName',
+        'accountOwner', 'accountDate', 'accountCategory', 'status', 'accountStatus',
+        'accountState', 'phone', 'email', 'contactPerson', 'poValue', 'jobNo',
+      ], searchParams.get('query')))
       .filter((row) => matchesColumnFilters(row, filters, filterColumnDefinitions))
       .filter(matchesConvertedFilterRules)
       .filter((row) => {

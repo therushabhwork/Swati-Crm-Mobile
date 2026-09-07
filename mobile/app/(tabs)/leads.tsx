@@ -8,7 +8,8 @@ import { ResponsiveList } from '../../src/components/ui/ResponsiveList';
 import { SummaryWidget } from '../../src/components/ui/SummaryWidget';
 import { ListControls } from '../../src/components/ui/ListControls';
 import { LoadingSkeleton } from '../../src/components/ui/LoadingSkeleton';
-import { SearchModal } from '../../src/components/ui/SearchModal';
+import { InlineSearchBar } from '../../src/components/ui/InlineSearchBar';
+import { ResultsHeader } from '../../src/components/ui/ResultsHeader';
 import { StageFilterModal } from '../../src/components/ui/StageFilterModal';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
@@ -103,7 +104,24 @@ export default function LeadsScreen() {
   ];
 
   const filteredData = data.filter(item => {
-    const searchString = `${item.accountName} ${item.name} ${item.companyName} ${item.accountNo}`.toLowerCase();
+    if (!searchQuery) {
+      return stageFilter === 'All' || resolveStage(item) === stageFilter;
+    }
+    const searchString = `
+      ${item.accountNo || item.leadNo || item.id || ''}
+      ${item.accountName || item.name || item.companyName || ''}
+      ${item.projectName || item.project || ''}
+      ${item.accountOwner || item.ownerUserId || ''}
+      ${item.accountDate || item.createdAt || ''}
+      ${item.accountCategory || item.category || ''}
+      ${item.accountStatus || item.status || ''}
+      ${item.accountState || item.state || ''}
+      ${item.phone || ''}
+      ${item.email || ''}
+      ${item.contactPerson || item.contactName || ''}
+      ${item.poValue || ''}
+      ${item.jobNo || ''}
+    `.toLowerCase();
     const matchesSearch = searchString.includes(searchQuery.toLowerCase());
     const matchesStage = stageFilter === 'All' || resolveStage(item) === stageFilter;
     return matchesSearch && matchesStage;
@@ -162,34 +180,46 @@ export default function LeadsScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title="Accounts" onSearch={() => setIsSearchVisible(true)} onFilter={() => setIsFilterVisible(true)} />
+      {isSearchVisible ? (
+        <InlineSearchBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onClose={() => {
+            setIsSearchVisible(false);
+            setSearchQuery('');
+          }}
+          placeholder="Search accounts..."
+        />
+      ) : (
+        <AppHeader title="Accounts" onSearch={() => setIsSearchVisible(true)} onFilter={() => setIsFilterVisible(true)} />
+      )}
 
       {isLoading ? (
         <LoadingSkeleton />
       ) : (
         <>
-          <SummaryWidget
-            title="Accounts"
-            totalCount={data.length}
-            metrics={summaryMetrics}
-          />
-          <ListControls 
-            filterLabel={ACCOUNT_STAGES.find(s => s.value === stageFilter)?.label || 'All'}
-            onFilterPress={() => setIsFilterVisible(true)}
-          />
+          {isSearchVisible ? (
+            <ResultsHeader count={filteredData.length} />
+          ) : (
+            <SummaryWidget
+              title="Accounts"
+              totalCount={data.length}
+              metrics={summaryMetrics}
+            />
+          )}
+          
+          {!isSearchVisible && (
+            <ListControls 
+              filterLabel={ACCOUNT_STAGES.find(s => s.value === stageFilter)?.label || 'All'}
+              onFilterPress={() => setIsFilterVisible(true)}
+            />
+          )}
           <ResponsiveList
             data={filteredData}
             columns={columns}
             keyExtractor={(item: any) => item._id || item.id}
             onRowPress={(item: any) => router.push(`/lead-details/${item._id || item.id}`)}
             renderMobileCard={renderMobileCard}
-          />
-          <SearchModal
-            visible={isSearchVisible}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onClose={() => setIsSearchVisible(false)}
-            placeholder="Search accounts..."
           />
           <StageFilterModal
             visible={isFilterVisible}

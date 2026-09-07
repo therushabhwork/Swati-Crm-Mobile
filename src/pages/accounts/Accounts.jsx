@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useState, useMemo } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useModal, useSearch, useFilter } from '../../hooks'
 import Card from '../../components/common/Card'
@@ -15,11 +15,13 @@ import { formatDate, getStatusColor } from '../../utils/helpers'
 import { ACCOUNT_STATUS, INDUSTRIES, LEAD_SOURCES } from '../../utils/constants'
 import { getAccountCategoryLogo } from '../../features/accounts/config/accountCategoryLogo'
 import './Accounts.css'
+import { normalizeSectionSearchValue } from '../../utils/sectionSearch'
 
 const Accounts = ({ isAdmin = false }) => {
   const { accounts, createAccount, updateAccount, deleteAccount, addNotification } = useData()
   const { isOpen, data, open, close } = useModal()
   const navigate = useNavigate()
+  const location = useLocation()
   const [remarkAccount, setRemarkAccount] = useState(null)
   const [isSavingRemark, setIsSavingRemark] = useState(false)
 
@@ -44,8 +46,19 @@ const Accounts = ({ isAdmin = false }) => {
 
   const { searchTerm, setSearchTerm, filteredItems: searchedAccounts } = useSearch(
     userAccounts,
-    ['name', 'email', 'industry', 'id']
+    [
+      'accountNumber', 'accountNo', 'id', 'name', 'accountName', 'projectName',
+      'accountOwner', 'accountDate', 'accountCategory', 'status', 'accountStatus',
+      'accountState', 'phone', 'email', 'contactPerson', 'poValue', 'jobNo',
+    ]
   )
+
+  useEffect(() => {
+    const query = new URLSearchParams(location.search).get('query') || ''
+    if (normalizeSectionSearchValue(query) !== normalizeSectionSearchValue(searchTerm)) {
+      setSearchTerm(query)
+    }
+  }, [location.search, searchTerm, setSearchTerm])
 
   const { filters, filteredItems, setFilter } = useFilter(searchedAccounts, {
     status: 'all',

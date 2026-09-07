@@ -8,7 +8,8 @@ import { ResponsiveList } from '../../src/components/ui/ResponsiveList';
 import { SummaryWidget } from '../../src/components/ui/SummaryWidget';
 import { ListControls } from '../../src/components/ui/ListControls';
 import { LoadingSkeleton } from '../../src/components/ui/LoadingSkeleton';
-import { SearchModal } from '../../src/components/ui/SearchModal';
+import { InlineSearchBar } from '../../src/components/ui/InlineSearchBar';
+import { ResultsHeader } from '../../src/components/ui/ResultsHeader';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
 
@@ -139,8 +140,18 @@ export default function SupportScreen() {
     if (isClosedTab && !isClosedStatus) return false;
     if (!isClosedTab && isClosedStatus) return false;
     
+    if (!searchQuery) return true;
+    
     // Check Search logic
-    const searchString = `${item.customerName} ${item.srNumber} ${item.ticketNo}`.toLowerCase();
+    const searchString = `
+      ${item.srNumber || item.legacyId || item.id || item.ticketNo || ''}
+      ${item.customerName || ''}
+      ${item.requestType || ''}
+      ${item.createdAt || ''}
+      ${item.ownerName || item.data?.ownerName || item.ownerUserId || item.assignedTo || ''}
+      ${item.status || ''}
+      ${item.updatedAt || ''}
+    `.toLowerCase();
     return searchString.includes(searchQuery.toLowerCase());
   });
 
@@ -235,7 +246,19 @@ export default function SupportScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title="Support Requests" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
+      {isSearchVisible ? (
+        <InlineSearchBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onClose={() => {
+            setIsSearchVisible(false);
+            setSearchQuery('');
+          }}
+          placeholder="Search requests..."
+        />
+      ) : (
+        <AppHeader title="Support Requests" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
+      )}
       
       <View style={styles.segmentContainer}>
         <TouchableOpacity 
@@ -256,35 +279,34 @@ export default function SupportScreen() {
         <LoadingSkeleton />
       ) : (
         <>
-          {!isClosedTab && (
-            <SummaryWidget 
-              title="Open Requests" 
-              totalCount={data.filter(d => {
-                const s = (d.status || '').toLowerCase();
-                return s !== 'closed' && s !== 'resolved';
-              }).length} 
-              metrics={summaryMetrics} 
+          {isSearchVisible ? (
+            <ResultsHeader count={filteredData.length} />
+          ) : (
+            !isClosedTab && (
+              <SummaryWidget 
+                title="Open Requests" 
+                totalCount={data.filter(d => {
+                  const s = (d.status || '').toLowerCase();
+                  return s !== 'closed' && s !== 'resolved';
+                }).length} 
+                metrics={summaryMetrics} 
+              />
+            )
+          )}
+          
+          {!isSearchVisible && (
+            <ListControls 
+              onSearch={setSearchQuery} 
+              onAddPress={() => router.push('/(admin)/support/new')}
+              addLabel="Add SR"
             />
           )}
-          <ListControls 
-            onSearch={setSearchQuery} 
-            onAddPress={() => router.push('/(admin)/support/new')}
-            addLabel="Add SR"
-          />
           <ResponsiveList
             data={filteredData}
             columns={isClosedTab ? closedColumns : openColumns}
             keyExtractor={(item: any) => item._id || item.id}
             onRowPress={(item: any) => router.push(`/support-details/${item._id || item.id}`)}
             renderMobileCard={renderMobileCard}
-          />
-          
-          <SearchModal
-            visible={isSearchVisible}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onClose={() => setIsSearchVisible(false)}
-            placeholder="Search requests..."
           />
         </>
       )}

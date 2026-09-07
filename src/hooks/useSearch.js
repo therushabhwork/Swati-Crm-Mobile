@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useDebounce } from './useDebounce'
+import { getSectionSearchValues, normalizeSectionSearchValue } from '../utils/sectionSearch'
 
 export const useSearch = (items, searchKeys = []) => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -8,12 +9,12 @@ export const useSearch = (items, searchKeys = []) => {
   const filteredItems = useMemo(() => {
     if (!debouncedSearchTerm.trim()) return items
 
-    const lowerSearchTerm = debouncedSearchTerm.toLowerCase()
+    const lowerSearchTerm = normalizeSectionSearchValue(debouncedSearchTerm)
 
     return items.filter(item => {
       return searchKeys.some(key => {
-        const value = key.split('.').reduce((obj, k) => obj?.[k], item)
-        return value?.toString().toLowerCase().includes(lowerSearchTerm)
+        return getSectionSearchValues(item, key)
+          .some((value) => normalizeSectionSearchValue(value).includes(lowerSearchTerm))
       })
     })
   }, [items, debouncedSearchTerm, searchKeys])

@@ -30,6 +30,10 @@ import { useTheme } from '../../context/ThemeContext'
 import { getAdminReminders } from '../../features/adminReminders/getAdminReminders'
 import { getAdminReminderStates, subscribeAdminReminderStates } from '../../features/adminReminders/reminderStorage'
 import { getAdminBookmarks, saveAdminBookmarks, subscribeAdminBookmarks } from '../../features/adminBookmarks/adminBookmarkStorage'
+import { buildAdminAccountDrawerUrl } from '../../features/adminAccounts/utils/accountNavigation'
+import { buildAdminDealDetailUrl } from '../../features/adminDeals/config/adminDealViews'
+import { customerService } from '../../services/customerService'
+import { matchesSectionSearch, normalizeSectionSearchValue } from '../../utils/sectionSearch'
 import { APP_NAME, getDashboardRoute } from '../../utils/constants'
 import swatiLogo from '../../assets/swati-logo.png'
 import AdminMessagesModal from './AdminMessagesModal'
@@ -85,6 +89,7 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
     accounts,
     deals,
     supportRequests,
+    quotations,
     tasks,
     reminders: mongoReminders,
     messages,
@@ -120,6 +125,96 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
   const salesDashboardRoute = '/admin/sales-dashboard'
   const legacySalesDashboardRoute = '/admin/monitoring?view=salesDashboard'
   const myCrmRoute = '/admin/monitoring?view=myCrm'
+
+  const searchSections = useMemo(() => {
+    const query = normalizeSectionSearchValue(searchTerm)
+    if (!query) return []
+
+    const customers = customerService.getCustomers()
+    const makeResult = (section, record, title, subtitle, route) => ({
+      id: `${section}-${record?.id || record?._id || title}`,
+      section,
+      title: title || 'Untitled record',
+      subtitle: subtitle || '',
+      route,
+    })
+
+    const accountResults = (accounts || [])
+      .filter((account) => matchesSectionSearch(account, [
+        'accountNumber', 'accountName', 'projectName', 'accountOwner', 'accountDate',
+        'accountCategory', 'accountStatus', 'accountState', 'phone', 'email',
+        'contactPerson', 'poValue', 'jobNo',
+      ], query))
+      .map((account) => makeResult(
+        'Accounts',
+        account,
+        account.accountName || account.name || account.customerName || account.accountNumber,
+        account.projectName || account.accountOwner || account.email || '',
+        buildAdminAccountDrawerUrl(new URLSearchParams(), account.id || account._id),
+      ))
+
+    const dealResults = (deals || [])
+      .filter((deal) => matchesSectionSearch(deal, [
+        'dealNumber', 'dealName', 'dealDate', 'dealOwner', 'dealType', 'dealStatus',
+        'projectName', 'dealValue', 'convertToPo', 'poValue', 'jobNo', 'lostOrderReason',
+      ], query))
+      .map((deal) => makeResult(
+        'Deals',
+        deal,
+        deal.dealNumber || deal.name || deal.dealName,
+        deal.name || deal.projectName || deal.dealOwner || deal.status || '',
+        isAdmin
+          ? buildAdminDealDetailUrl(deal.id || deal._id)
+          : `/deals/view/${encodeURIComponent(deal.id || deal._id)}`,
+      ))
+
+    const customerResults = (customers || [])
+      .filter((customer) => matchesSectionSearch(customer, [
+        'customerNumber', 'customerName', 'email', 'phone', 'addedDate', 'customerOwner',
+        'customerCategory', 'customerStatus', 'customerType', 'latestRemark',
+      ], query))
+      .map((customer) => makeResult(
+        'Customers',
+        customer,
+        customer.customerName || customer.name || customer.customerNumber,
+        customer.customerNumber || customer.email || customer.phone || '',
+        `${isAdmin ? '/admin' : ''}/customers/view/${encodeURIComponent(customer.id || customer._id)}`,
+      ))
+
+    const quotationResults = (quotations || [])
+      .filter((quotation) => matchesSectionSearch(quotation, [
+        'quotationNumber', 'quotationOwner', 'quotationDate', 'companyName', 'amount', 'status', 'projectName',
+      ], query))
+      .map((quotation) => makeResult(
+        'Quotations',
+        quotation,
+        quotation.quotationNumber || quotation.quoteNumber || quotation.id,
+        quotation.companyName || quotation.projectName || quotation.status || '',
+        `${isAdmin ? '/admin/quotation-manager/view' : '/quotations'}?view=${encodeURIComponent(quotation.id || quotation._id)}`,
+      ))
+
+    const supportResults = (supportRequests || [])
+      .filter((request) => matchesSectionSearch(request, [
+        'srNumber', 'customerName', 'requestType', 'serviceDate', 'ownerName', 'status', 'lastUpdated',
+      ], query))
+      .map((request) => makeResult(
+        'Support Requests',
+        request,
+        request.srNumber || request.id,
+        request.customerName || request.requestType || request.status || '',
+        `${isAdmin ? '/admin' : ''}/support-requests/details/${encodeURIComponent(request.id || request._id)}`,
+      ))
+
+    return [
+      { label: 'Accounts', results: accountResults },
+      { label: 'Deals', results: dealResults },
+      { label: 'Customers', results: customerResults },
+      { label: 'Quotations', results: quotationResults },
+      { label: 'Support Requests', results: supportResults },
+    ]
+  }, [accounts, deals, isAdmin, quotations, searchTerm, supportRequests])
+
+  const totalSearchResults = searchSections.reduce((total, section) => total + section.results.length, 0)
 
   useEffect(() => subscribeAdminReminderStates(setReminderStatesById), [])
   useEffect(() => {
@@ -217,17 +312,24 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
   }
 
   const handleOpenSearchPanel = () => {
-    if (!isAdmin) {
-      closeHeaderPanels()
-      navigate('/support-requests/search')
-      return
-    }
-
     setMenuOpen(false)
     setReminderPanelOpen(false)
     setQuickAddOpen(false)
     setMessagePanelOpen(false)
     setSearchPanelOpen((previous) => !previous)
+  }
+
+  const getSectionSearchRoute = () => {
+    const path = location.pathname
+    const prefix = isAdmin ? '/admin' : ''
+
+    if (path.includes('/accounts')) return path
+    if (path.includes('/customers')) return path.includes('/search') ? path : `${prefix}/customers/search`
+    if (path.includes('/deals')) return path.includes('/view') || path.includes('/search') ? path : `${prefix}/deals/view`
+    if (path.includes('/quotations')) return `${prefix}/quotations`
+    if (path.includes('/support-requests')) return path.includes('/list') ? path : `${prefix}/support-requests/list`
+
+    return isAdmin ? '/admin/search' : '/support-requests/search'
   }
 
   const handleOpenMessagePanel = () => {
@@ -256,16 +358,23 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
   const handleOpenAdvancedSearch = () => {
     const trimmedSearchTerm = searchTerm.trim()
     closeHeaderPanels()
-    if (isAdmin) {
-      navigate(trimmedSearchTerm ? `/admin/search?query=${encodeURIComponent(trimmedSearchTerm)}` : '/admin/search')
-      return
-    }
-
-    navigate(trimmedSearchTerm ? `/support-requests/search?query=${encodeURIComponent(trimmedSearchTerm)}` : '/support-requests/search')
+    const route = getSectionSearchRoute()
+    const separator = route.includes('?') ? '&' : '?'
+    navigate(trimmedSearchTerm ? `${route}${separator}query=${encodeURIComponent(trimmedSearchTerm)}` : route)
   }
 
   const handleQuickSearch = () => {
     handleOpenAdvancedSearch()
+  }
+
+  const handleOpenSearchResult = (result) => {
+    closeHeaderPanels()
+    navigate(result.route, {
+      state: {
+        fromSearch: true,
+        searchQuery: searchTerm,
+      },
+    })
   }
 
   const handleOpenSendMessage = () => {
@@ -388,7 +497,7 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
                 <FaSearch />
               </button>
 
-              {isAdmin && searchPanelOpen && (
+              {searchPanelOpen && (
                 <div className="hdr-popover-panel hdr-search-panel">
                   <div className="hdr-search-input-row">
                     <div className="hdr-search-input-wrap">
@@ -406,6 +515,39 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
                       <span>Search</span>
                     </button>
                   </div>
+
+                  {searchTerm.trim() ? (
+                    <div className="hdr-search-results" aria-live="polite">
+                      <div className="hdr-search-results-summary">
+                        Search Results <span>{totalSearchResults}</span>
+                      </div>
+
+                      {searchSections.map((section) => (
+                        <section key={section.label} className="hdr-search-results-section">
+                          <div className="hdr-search-results-heading">
+                            <span>{section.label}</span>
+                            <strong>{section.results.length}</strong>
+                          </div>
+
+                          {section.results.slice(0, 5).map((result) => (
+                            <button
+                              key={result.id}
+                              type="button"
+                              className="hdr-search-result"
+                              onClick={() => handleOpenSearchResult(result)}
+                            >
+                              <span className="hdr-search-result-title">{result.title}</span>
+                              {result.subtitle ? <span className="hdr-search-result-meta">{result.subtitle}</span> : null}
+                            </button>
+                          ))}
+                        </section>
+                      ))}
+
+                      {totalSearchResults === 0 ? (
+                        <p className="hdr-search-results-empty">No matching records found.</p>
+                      ) : null}
+                    </div>
+                  ) : null}
 
                   <button
                     type="button"

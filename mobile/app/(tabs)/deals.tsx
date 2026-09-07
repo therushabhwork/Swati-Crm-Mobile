@@ -8,7 +8,8 @@ import { ResponsiveList } from '../../src/components/ui/ResponsiveList';
 import { SummaryWidget } from '../../src/components/ui/SummaryWidget';
 import { ListControls } from '../../src/components/ui/ListControls';
 import { LoadingSkeleton } from '../../src/components/ui/LoadingSkeleton';
-import { SearchModal } from '../../src/components/ui/SearchModal';
+import { InlineSearchBar } from '../../src/components/ui/InlineSearchBar';
+import { ResultsHeader } from '../../src/components/ui/ResultsHeader';
 import { colors } from '../../src/theme/colors';
 
 export default function DealsScreen() {
@@ -63,7 +64,27 @@ export default function DealsScreen() {
   ];
 
   const filteredData = data.filter(item => {
-    const searchString = `${item.dealName} ${item.name} ${item.dealNo}`.toLowerCase();
+    if (!searchQuery) return true;
+    const searchString = `
+      ${item.dealNo || ''}
+      ${item.id || ''}
+      ${item.dealName || ''}
+      ${item.name || ''}
+      ${item.dealDate || ''}
+      ${item.createdAt || ''}
+      ${item.dealOwner || ''}
+      ${item.ownerUserId || ''}
+      ${item.dealType || ''}
+      ${item.type || ''}
+      ${item.dealStatus || ''}
+      ${item.status || ''}
+      ${item.projectName || ''}
+      ${item.project || ''}
+      ${item.dealValue || ''}
+      ${item.poValue || ''}
+      ${item.jobNo || ''}
+      ${item.lostOrderReason || ''}
+    `.toLowerCase();
     return searchString.includes(searchQuery.toLowerCase());
   });
 
@@ -151,34 +172,46 @@ export default function DealsScreen() {
 
   return (
     <View style={styles.container}>
-      <AppHeader title="Deals" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
+      {isSearchVisible ? (
+        <InlineSearchBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onClose={() => {
+            setIsSearchVisible(false);
+            setSearchQuery('');
+          }}
+          placeholder="Search deals..."
+        />
+      ) : (
+        <AppHeader title="Deals" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
+      )}
       
       {isLoading ? (
         <LoadingSkeleton />
       ) : (
         <>
-          <SummaryWidget 
-            title="Deals" 
-            totalCount={data.length} 
-            metrics={summaryMetrics} 
-          />
-          <ListControls 
-            onAddPress={() => router.push('/deals/new')} 
-            addLabel="Add Deal" 
-          />
+          {isSearchVisible ? (
+            <ResultsHeader count={filteredData.length} />
+          ) : (
+            <SummaryWidget 
+              title="Deals" 
+              totalCount={data.length} 
+              metrics={summaryMetrics} 
+            />
+          )}
+          
+          {!isSearchVisible && (
+            <ListControls 
+              onAddPress={() => router.push('/deals/new')} 
+              addLabel="Add Deal" 
+            />
+          )}
           <ResponsiveList
             data={filteredData}
             columns={columns}
             keyExtractor={(item: any) => item._id || item.id}
             onRowPress={(item: any) => router.push(`/deal-details/${item._id || item.id}`)}
             renderMobileCard={renderMobileCard}
-          />
-          <SearchModal
-            visible={isSearchVisible}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onClose={() => setIsSearchVisible(false)}
-            placeholder="Search deals..."
           />
         </>
       )}
