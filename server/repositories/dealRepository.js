@@ -10,6 +10,7 @@ const baseRepository = createCrudRepository({
 
 const Deal = getMongoModel('deals')
 const Lead = getMongoModel('leads')
+const visibleFilter = { frontendDeleted: { $ne: true } }
 
 const normalizeDealCityForFilter = (value) => {
   const normalizedValue = String(value || '').trim().toLowerCase()
@@ -159,6 +160,7 @@ const listWithFilters = async (actor, filters = {}, { companyWide = false, scope
       scopeUserIds,
     }),
     buildSearchFilter(filters.search ?? filters.q),
+    visibleFilter,
     ownerUserId === null ? {} : { ownerUserId },
     stage ? { stage } : {},
     ownerName ? { $or: [{ 'data.ownerName': ownerName }, { 'data.dealOwner': ownerName }, { ownerName }] } : {},
@@ -186,7 +188,7 @@ const listWithFilters = async (actor, filters = {}, { companyWide = false, scope
 }
 
 const findById = async (id) => {
-  const record = await Deal.findOne(byLegacyId(id)).lean()
+  const record = await Deal.findOne(mergeFilters(byLegacyId(id), visibleFilter)).lean()
   return normalizeMappedDeal(record)
 }
 
@@ -198,7 +200,8 @@ const findByIdForActor = async (id, actor, { companyWide = false, scopeUserIds =
       ownerFields: ['ownerUserId', 'assignedTo', 'createdBy', 'owner_user_id', 'assigned_to', 'created_by'],
       companyWide,
       scopeUserIds,
-    })
+    }),
+    visibleFilter
   )
 
   const record = await Deal.findOne(filter).lean()
@@ -228,7 +231,8 @@ const findConvertedFromAccount = async (accountId, actor, { companyWide = false,
       ownerFields: ['ownerUserId', 'assignedTo', 'createdBy', 'owner_user_id', 'assigned_to', 'created_by'],
       companyWide,
       scopeUserIds,
-    })
+    }),
+    visibleFilter
   )
 
   const record = await Deal.findOne(filter).sort({ createdAt: -1, legacyId: -1 }).lean()
@@ -248,6 +252,7 @@ const findDuplicate = async ({ title, accountId = null, customerName = null } = 
     accountId: normalizedAccountId,
     customerName: new RegExp(`^${String(customerName || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
     ...(normalizedCompanyId === null ? {} : { companyId: normalizedCompanyId }),
+    frontendDeleted: { $ne: true },
   }
 
   const normalizedExcludeId = toNumberOrNull(excludeId)
@@ -263,7 +268,7 @@ const findDuplicate = async ({ title, accountId = null, customerName = null } = 
 
 const getNextDealSequence = async (companyId = null) => {
   const normalizedCompanyId = toNumberOrNull(companyId)
-  const records = await Deal.find(normalizedCompanyId === null ? {} : { companyId: normalizedCompanyId })
+  const records = await Deal.find(mergeFilters(normalizedCompanyId === null ? {} : { companyId: normalizedCompanyId }, visibleFilter))
     .select({ dealNumber: 1, data: 1 })
     .lean()
 

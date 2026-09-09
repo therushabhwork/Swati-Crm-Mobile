@@ -176,4 +176,9 @@ export const dealApi = {
     const response = await apiClient.delete(`/deals/${encodeURIComponent(id)}`)
     return response.data
   },
+
+  async frontendDeleteDeal(id) {
+    const response = await apiClient.patch(`/deals/${encodeURIComponent(id)}/frontend-delete`)
+    return response.data
+  },
 }

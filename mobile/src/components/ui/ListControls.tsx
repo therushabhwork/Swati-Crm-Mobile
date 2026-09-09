@@ -73,8 +73,8 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   addButton: {
-    backgroundColor: '#33447D',
-    borderColor: '#33447D',
+    backgroundColor: '#1650C8',
+    borderColor: '#1650C8',
   },
   addButtonText: {
     fontSize: 13,

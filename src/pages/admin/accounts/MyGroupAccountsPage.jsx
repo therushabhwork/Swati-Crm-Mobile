@@ -15,7 +15,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { userApi } from '../../../services/userApi';
 import { getAdminAccountsBoardView } from '../../../features/adminAccounts/config/accountBoardViews'
 import { getAccountBoardColumns, getColumnTextValue } from '../../../features/adminAccounts/config/accountBoardColumns'
-import { USER_ACCOUNT_ROW_ACTIONS, USER_ACCOUNT_DRAWER_ACTIONS } from '../../../features/adminAccounts/config/accountActions'
+import { ACCOUNT_ROW_ACTIONS, ACCOUNT_DRAWER_ACTIONS, USER_ACCOUNT_ROW_ACTIONS, USER_ACCOUNT_DRAWER_ACTIONS } from '../../../features/adminAccounts/config/accountActions'
 import { DEFAULT_ACCOUNT_STAGE } from '../../../features/adminAccounts/config/accountStages'
 import { getAccountById } from '../../../features/adminAccounts/selectors/getAccountById'
 import { getAccountsBoardData } from '../../../features/adminAccounts/selectors/getAccountsBoardData'
@@ -540,7 +540,7 @@ const MyGroupAccountsPage = ({ variantKey = 'myGroup' }) => {
   const navigate = useNavigate()
   const location = useLocation()
   const addAccountPath = location.pathname.startsWith('/admin') ? '/admin/accounts/new' : '/accounts/new'
-  const { accounts, convertedDeals, loading, refreshData, addNotification, updateAccount, convertAccountToDeal } = useData()
+  const { accounts, convertedDeals, loading, refreshData, addNotification, updateAccount, deleteAccount, convertAccountToDeal } = useData()
   const { user } = useAuth()
   const [dbMongoUsers, setDbMongoUsers] = useState([]);
   useEffect(() => {
@@ -1007,8 +1007,10 @@ const activeStageParam = searchParams.get('stage')
     return filteredColumns
   }, [availableUsers, columns, convertedColumnDefinitions, isConvertedAccountsView, user, useRowOwnerCodeAsAccountNumber, visibleColumnKeys, variantKey, dbMongoUsers])
   const rowActionsEnabled = isAdminPortal ? view.rowActionMenuEnabled : true
-  const rowActions = isAdminPortal ? view.rowActions : USER_ACCOUNT_ROW_ACTIONS
-  const drawerActions = isAdminPortal ? undefined : USER_ACCOUNT_DRAWER_ACTIONS
+  const rowActions = useMemo(() => (
+    isAdminPortal ? (view.rowActions || ACCOUNT_ROW_ACTIONS) : USER_ACCOUNT_ROW_ACTIONS
+  ), [isAdminPortal, view.rowActions])
+  const drawerActions = isAdminPortal ? ACCOUNT_DRAWER_ACTIONS : USER_ACCOUNT_DRAWER_ACTIONS
 
   const handleOpenAccount = (row) => {
     updateUrlState({ accountId: row.id })
@@ -1062,6 +1064,21 @@ const activeStageParam = searchParams.get('stage')
     }
 
     navigate('/deals/search', { state: { editDealId: dealId } })
+  }
+
+  const handleDeleteAccount = async (row) => {
+    if (!row?.id) return
+    const confirmed = window.confirm('Are you sure you want to delete this Account?')
+    if (!confirmed) return
+
+    const result = await deleteAccount(row.id)
+    if (!result.success) {
+      addNotification('error', 'Delete failed', result.message || 'Unable to delete account.')
+      return
+    }
+
+    updateUrlState({ accountId: null }, true)
+    addNotification('success', 'Account deleted', 'Account was removed from the list.')
   }
 
   const handleDrawerClose = () => {
@@ -1456,6 +1473,7 @@ const activeStageParam = searchParams.get('stage')
           serialOffset={pageStart}
           onConvertToDeal={handleConvertToDeal}
           onViewDeal={handleViewLinkedDeal}
+          onDeleteAccount={handleDeleteAccount}
         />
 
         <AccountsBoardPagination
@@ -1475,6 +1493,7 @@ const activeStageParam = searchParams.get('stage')
         boardStateQuery={boardStateQuery}
         onSaveAccount={handleSaveAccountDetails}
         onRefresh={refreshData}
+        onDeleteAccount={handleDeleteAccount}
         canEdit={user?.role === 'admin' || selectedAccount?.recordSource === 'live'}
         actionItems={drawerActions}
         hiddenFieldKeys={variantKey === 'myGroup' ? ['accountState'] : []}

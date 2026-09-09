@@ -111,4 +111,9 @@ export const quotationApi = {
     const response = await apiClient.delete(`/quotations/${encodeURIComponent(id)}`)
     return response.data
   },
+
+  async frontendDeleteQuotation(id) {
+    const response = await apiClient.patch(`/quotations/${encodeURIComponent(id)}/frontend-delete`)
+    return response.data
+  },
 }

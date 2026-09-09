@@ -90,7 +90,12 @@ export default function CustomersScreen() {
     return searchString.includes(searchQuery.toLowerCase());
   });
 
+  const handleDelete = (id: string) => {
+    setData(prev => prev.filter((d: any) => (d._id || d.id) !== id));
+  };
+
   const renderMobileCard = (item: any) => {
+    const itemId = item._id || item.id;
     const custNo = item.displayCustomerNumber || '-';
     const name = item.displayName || '-';
     const status = item.customerStatus || item.status || '-';
@@ -104,8 +109,13 @@ export default function CustomersScreen() {
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardId}>{custNo}</Text>
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>{status}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.statusBadge}>
+              <Text style={styles.statusText}>{status}</Text>
+            </View>
+            <TouchableOpacity onPress={() => handleDelete(itemId)} style={{ padding: 4, marginLeft: 4 }}>
+              <Feather name="trash-2" size={14} color="#DC2626" />
+            </TouchableOpacity>
           </View>
         </View>
         
@@ -140,8 +150,8 @@ export default function CustomersScreen() {
         </View>
         
         <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => router.push(`/customer-details/${item.legacyId || item.id || item._id}`)}>
-          <Text style={styles.viewDetailsText}>View Customer</Text>
-          <Feather name="chevron-right" size={16} color="#33447D" />
+          <Text style={styles.viewDetailsText}>View Details</Text>
+          <Feather name="chevron-right" size={16} color="#1650C8" />
         </TouchableOpacity>
       </View>
     );
@@ -160,7 +170,7 @@ export default function CustomersScreen() {
           placeholder="Search customers..."
         />
       ) : (
-        <AppHeader title="Customers" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
+        <AppHeader title="Customers" onSearch={() => setIsSearchVisible(true)} />
       )}
       
       {isLoading ? (
@@ -280,7 +290,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   viewDetailsText: {
-    color: '#33447D',
+    color: '#1650C8',
     fontSize: 14,
     fontWeight: '500',
     marginRight: 4,

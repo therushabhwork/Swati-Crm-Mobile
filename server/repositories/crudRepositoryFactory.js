@@ -35,9 +35,10 @@ const createCrudRepository = ({
   ].filter(Boolean)))
 
   const map = (document) => mapMongoDocument(document)
+  const visibleFilter = { frontendDeleted: { $ne: true } }
 
   const listAll = async () => {
-    const records = await Model.find({}).sort(defaultSort).lean()
+    const records = await Model.find(visibleFilter).sort(defaultSort).lean()
     return records.map(map)
   }
 
@@ -47,12 +48,12 @@ const createCrudRepository = ({
       ownerFields: scopedOwnerColumns,
       companyWide: false,
     })
-    const records = await Model.find(filter).sort(defaultSort).lean()
+    const records = await Model.find(mergeFilters(filter, visibleFilter)).sort(defaultSort).lean()
     return records.map(map)
   }
 
   const findById = async (id) => {
-    const record = await Model.findOne(byLegacyId(id)).lean()
+    const record = await Model.findOne(mergeFilters(byLegacyId(id), visibleFilter)).lean()
     return map(record)
   }
 
@@ -64,7 +65,7 @@ const createCrudRepository = ({
       companyWide,
       scopeUserIds,
     })
-    const records = await Model.find(filter).sort(defaultSort).lean()
+    const records = await Model.find(mergeFilters(filter, visibleFilter)).sort(defaultSort).lean()
     return records.map(map)
   }
 
@@ -77,7 +78,8 @@ const createCrudRepository = ({
         ownerFields: scopedOwnerColumns,
         companyWide,
         scopeUserIds,
-      })
+      }),
+      visibleFilter
     )
     const record = await Model.findOne(filter).lean()
     return map(record)
@@ -107,6 +109,22 @@ const createCrudRepository = ({
     return record ? { id: record.legacyId ?? record.id } : null
   }
 
+  const frontendDelete = async (id, actor = {}) => {
+    const deletedAt = new Date().toISOString()
+    const record = await Model.findOneAndUpdate(
+      byLegacyId(id),
+      {
+        $set: {
+          frontendDeleted: true,
+          frontendDeletedAt: deletedAt,
+          frontendDeletedBy: actor?.id || null,
+        },
+      },
+      { new: true }
+    ).lean()
+    return map(record)
+  }
+
   return {
     listAll,
     listForUser,
@@ -116,6 +134,7 @@ const createCrudRepository = ({
     create,
     update,
     remove,
+    frontendDelete,
     map,
     table: collectionName,
     model: Model,

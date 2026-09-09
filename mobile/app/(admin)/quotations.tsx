@@ -72,7 +72,12 @@ export default function QuotationsScreen() {
     return searchString.includes(searchQuery.toLowerCase());
   });
 
+  const handleDelete = (id: string) => {
+    setData(prev => prev.filter((d: any) => (d._id || d.id) !== id));
+  };
+
   const renderMobileCard = (item: any) => {
+    const itemId = item._id || item.id;
     const qtNo = item.quotationNo || item.quotationNumber || item.id || '-';
     const company = item.companyName || item.customerName || '-';
     const project = item.projectName || item.project || '-';
@@ -87,14 +92,19 @@ export default function QuotationsScreen() {
     const s = status.toLowerCase();
     if (s === 'approved') { statusColor = '#38a169'; statusBg = '#f0fff4'; }
     else if (s === 'rejected') { statusColor = '#e53e3e'; statusBg = '#fff5f5'; }
-    else if (s === 'sent') { statusColor = '#33447D'; statusBg = '#E8EBF2'; }
+    else if (s === 'sent') { statusColor = '#1650C8'; statusBg = '#E8EBF2'; }
 
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardId}>{qtNo}</Text>
-          <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
-            <Text style={[styles.statusText, { color: statusColor }]}>{status}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
+              <Text style={[styles.statusText, { color: statusColor }]}>{status}</Text>
+            </View>
+            <TouchableOpacity onPress={() => handleDelete(itemId)} style={{ padding: 4, marginLeft: 4 }}>
+              <Feather name="trash-2" size={14} color="#DC2626" />
+            </TouchableOpacity>
           </View>
         </View>
         
@@ -121,7 +131,7 @@ export default function QuotationsScreen() {
         
         <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => router.push(`/quotation-details/${item._id || item.id}`)}>
           <Text style={styles.viewDetailsText}>View Quotation</Text>
-          <Feather name="chevron-right" size={16} color="#33447D" />
+          <Feather name="chevron-right" size={16} color="#1650C8" />
         </TouchableOpacity>
       </View>
     );
@@ -257,7 +267,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   viewDetailsText: {
-    color: '#33447D',
+    color: '#1650C8',
     fontSize: 14,
     fontWeight: '500',
     marginRight: 4,

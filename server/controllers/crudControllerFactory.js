@@ -34,12 +34,20 @@ const createCrudController = (service) => {
     } catch (error) { next(error) }
   }
 
+  const frontendDelete = async (req, res, next) => {
+    try {
+      const data = await service.frontendDelete(req.user, req.params.id)
+      res.json({ success: true, data })
+    } catch (error) { next(error) }
+  }
+
   return {
     list,
     getById,
     create,
     update,
     remove,
+    frontendDelete,
     validation: service.validation || {},
   }
 }

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, BackHandler } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, BackHandler, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import apiClient from '../../../src/api/client';
 import { AppHeader } from '../../../src/components/ui/AppHeader';
+import { EditableDetailRow } from '../../../src/components/ui/EditableDetailRow';
 import { colors } from '../../../src/theme/colors';
 
 import { buildUserLookupMap, normalizeCustomerItem } from '../../../src/utils/customerNormalizer';
@@ -50,6 +51,18 @@ export default function CustomerDetailsScreen() {
     };
     if (id) fetchCustomer();
   }, [id]);
+
+  const handleFieldSave = async (fieldKey: string, newValue: string) => {
+    try {
+      const res = await apiClient.put(`/customers/${id}`, { [fieldKey]: newValue });
+      if (res.data?.success) {
+        setData((prev: any) => ({ ...prev, [fieldKey]: newValue }));
+      }
+    } catch (error: any) {
+      console.error('Error updating customer field:', error);
+      Alert.alert('Error', error.response?.data?.message || 'Failed to update field');
+    }
+  };
 
   const handleBack = () => {
     if (fromSearch === 'true' && router.canGoBack()) {
@@ -99,23 +112,23 @@ export default function CustomerDetailsScreen() {
       title: 'Customer details',
       data: [
         { label: 'Customer Number', value: formatCustomerNumber(data.displayCustomerNumber || data.customerNo || data.id) || '-' },
-        { label: 'Customer Name', value: data.customerName || data.name || data.displayName || '-' },
+        { label: 'Customer Name', value: data.customerName || data.name || data.displayName || '-', fieldKey: data.customerName !== undefined ? 'customerName' : 'name' },
         { label: 'Customer Owner', value: data.displayCustomerOwner || '-' },
-        { label: 'Customer Category', value: data.customerCategory || data.category || '-' },
+        { label: 'Customer Category', value: data.customerCategory || data.category || '-', fieldKey: data.customerCategory !== undefined ? 'customerCategory' : 'category' },
         { label: 'Added Date', value: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : '-' },
       ]
     },
     {
       title: 'Status',
       data: [
-        { label: 'Customer Status', value: data.customerStatus || data.status || '-' }
+        { label: 'Customer Status', value: data.customerStatus || data.status || '-', fieldKey: data.customerStatus !== undefined ? 'customerStatus' : 'status' }
       ]
     },
     {
       title: 'Contact',
       data: [
-        { label: 'Phone', value: data.phone || '-' },
-        { label: 'Email', value: data.email || '-' },
+        { label: 'Phone', value: data.phone || '-', fieldKey: 'phone' },
+        { label: 'Email', value: data.email || '-', fieldKey: 'email' },
       ]
     }
   ];
@@ -128,40 +141,51 @@ export default function CustomerDetailsScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      <AppHeader title={data.customerName || data.name || data.displayName || "Customer Details"} showBack onBack={handleBack} />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {sections.map((section, sIdx) => (
-          <View key={sIdx} style={[styles.card, sIdx < sections.length - 1 && { marginBottom: 16 }]}>
-            <Text style={styles.cardTitle}>{section.title}</Text>
-            <View style={styles.divider} />
-            
-            {section.data.map((field, idx) => {
-              const isStatusSection = section.title === 'Status';
-              const isPrimarySection = section.title.toLowerCase().includes('details');
-              const valueStyle = isStatusSection 
-                ? [styles.value, { color: getStatusColor(field.value) }]
-                : styles.value;
-                
-              const rowStyle = isPrimarySection 
-                ? [styles.row, { flexDirection: 'column', alignItems: 'flex-start' }, idx === section.data.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }]
-                : [styles.row, idx === section.data.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }];
-                
-              const labelStyle = isPrimarySection
-                ? [styles.label, { marginBottom: 4 }]
-                : styles.label;
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+        <AppHeader title={data.customerName || data.name || data.displayName || "Customer Details"} showBack onBack={handleBack} />
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {sections.map((section, sIdx) => (
+            <View key={sIdx} style={[styles.card, sIdx < sections.length - 1 ? { marginBottom: 16 } : undefined]}>
+              <Text style={styles.cardTitle}>{section.title}</Text>
+              <View style={styles.divider} />
+              
+              {section.data.map((field: any, idx) => {
+                const isStatusSection = section.title === 'Status';
+                const isPrimarySection = section.title.toLowerCase().includes('details');
+                const valueStyle = isStatusSection 
+                  ? [styles.value, { color: getStatusColor(field.value as string) }]
+                  : styles.value;
+                  
+                const rowStyle = isPrimarySection 
+                  ? [styles.row, { flexDirection: 'column', alignItems: 'flex-start' }, idx === section.data.length - 1 ? { borderBottomWidth: 0, paddingBottom: 0 } : undefined]
+                  : [styles.row, idx === section.data.length - 1 ? { borderBottomWidth: 0, paddingBottom: 0 } : undefined];
+                  
+                const labelStyle = isPrimarySection
+                  ? [styles.label, { marginBottom: 4 }]
+                  : styles.label;
 
-              return (
-                <View key={idx} style={rowStyle as any}>
-                  <Text style={labelStyle}>{field.label}</Text>
-                  <Text style={valueStyle}>{field.value}</Text>
-                </View>
-              );
-            })}
-          </View>
-        ))}
-      </ScrollView>
-    </View>
+                return (
+                  <EditableDetailRow
+                    key={idx}
+                    label={field.label}
+                    value={field.value}
+                    fieldKey={field.fieldKey}
+                    fieldType={field.fieldType}
+                    onSave={handleFieldSave}
+                    isEditable={!!field.fieldKey}
+                    isStatusSection={isStatusSection}
+                    valueStyle={valueStyle}
+                    rowStyle={rowStyle}
+                    labelStyle={labelStyle}
+                  />
+                );
+              })}
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 

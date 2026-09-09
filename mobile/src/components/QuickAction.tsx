@@ -10,19 +10,40 @@ interface QuickActionProps {
   icon: string;
   iconFamily?: 'Feather' | 'FontAwesome5';
   variant?: 'primary' | 'secondary' | 'tertiary';
+  isActive?: boolean;
   style?: StyleProp<ViewStyle>;
   onPress?: () => void;
 }
 
-export function QuickAction({ title, icon, iconFamily = 'Feather', variant = 'secondary', style, onPress }: QuickActionProps) {
+export function QuickAction({ title, icon, iconFamily = 'Feather', variant = 'secondary', isActive = true, style, onPress }: QuickActionProps) {
   const isPrimary = variant === 'primary';
   const isTertiary = variant === 'tertiary';
   
+  const buttonBgStyle = isPrimary
+    ? styles.primaryButton
+    : isTertiary
+    ? styles.tertiaryButton
+    : isActive
+    ? styles.secondaryButtonActive
+    : styles.secondaryButtonInactive;
+
+  const iconColor = isPrimary
+    ? '#FFFDF9'
+    : isTertiary
+    ? colors.textSecondary
+    : colors.sliderButtonBorder;
+
+  const textColor = isPrimary
+    ? '#FFFDF9'
+    : isTertiary
+    ? colors.textSecondary
+    : colors.sliderButtonBorder;
+
   return (
     <Pressable 
       style={({ pressed }) => [
         styles.button,
-        isPrimary ? styles.primaryButton : isTertiary ? styles.tertiaryButton : styles.secondaryButton,
+        buttonBgStyle,
         style,
         pressed && styles.pressed
       ]}
@@ -33,22 +54,21 @@ export function QuickAction({ title, icon, iconFamily = 'Feather', variant = 'se
           {iconFamily === 'FontAwesome5' ? (
             <FontAwesome5 
               name={icon as any} 
-              size={16} 
-              color={pressed || isPrimary ? colors.white : isTertiary ? colors.textSecondary : colors.primary} 
+              size={13} 
+              color={pressed && !isPrimary ? colors.sliderButtonBorder : iconColor} 
               style={styles.icon}
             />
           ) : (
             <Feather 
               name={icon as any} 
-              size={16} 
-              color={pressed || isPrimary ? colors.white : isTertiary ? colors.textSecondary : colors.primary} 
+              size={13} 
+              color={pressed && !isPrimary ? colors.sliderButtonBorder : iconColor} 
               style={styles.icon}
             />
           )}
           <Text style={[
             styles.text,
-            isPrimary ? styles.primaryText : isTertiary ? styles.tertiaryText : styles.secondaryText,
-            pressed && styles.primaryText
+            { color: textColor },
           ]}>
             {title}
           </Text>
@@ -64,19 +84,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: radii.round,
-    marginRight: spacing.sm,
-    ...shadows.card,
-    elevation: 1,
+    marginRight: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
   },
   primaryButton: {
     backgroundColor: colors.primary,
   },
-  secondaryButton: {
-    backgroundColor: colors.primaryLight,
-    borderWidth: 1,
-    borderColor: colors.border,
+  secondaryButtonActive: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 0,
+  },
+  secondaryButtonInactive: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 0,
   },
   tertiaryButton: {
     backgroundColor: colors.background,
@@ -88,8 +116,7 @@ const styles = StyleSheet.create({
   },
   pressed: {
     transform: [{ scale: 0.96 }],
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    opacity: 0.9,
   },
   icon: {
     marginRight: 4,
@@ -98,14 +125,5 @@ const styles = StyleSheet.create({
     ...typography.caption,
     fontWeight: '600',
     fontSize: 11,
-  },
-  primaryText: {
-    color: colors.white,
-  },
-  secondaryText: {
-    color: colors.primary,
-  },
-  tertiaryText: {
-    color: colors.textSecondary,
   },
 });

@@ -17,6 +17,7 @@ import {
   FaSearchPlus,
   FaSort,
   FaTimes,
+  FaTrash,
   FaUpload,
   FaUserFriends,
 } from 'react-icons/fa'
@@ -30,6 +31,7 @@ import { useAuth } from '../../../context/AuthContext'
 import { exportExcelWorkbook, exportCsvWorkbook } from '../../../utils/excelExport'
 import { formatCurrency } from '../../../utils/helpers'
 import { customViewApi } from '../../../services/customViewApi'
+import { quotationApi } from '../../../services/quotationApi'
 import { ExcelExportActionButton, ExcelExportMenuButton } from '../../../components/common/ExcelExportButton'
 import './AdminQuotationsPage.css'
 
@@ -1327,7 +1329,7 @@ export function StatusBadge({ status }) {
   )
 }
 
-export function ModalShell({ title, onClose, size = '', children, footer }) {
+export function ModalShell({ title, onClose, onDelete, size = '', children, footer }) {
   useEffect(() => {
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
@@ -1344,9 +1346,16 @@ export function ModalShell({ title, onClose, size = '', children, footer }) {
       <div className={`aqp-modal ${size}`.trim()} role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
         <div className="aqp-modal-header">
           <span className="aqp-modal-title">{title}</span>
-          <button type="button" className="aqp-modal-close" onClick={onClose} aria-label="Close">
-            <FaTimes />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {onDelete ? (
+              <button type="button" className="aqp-modal-close" onClick={onDelete} aria-label="Delete" title="Delete">
+                <FaTrash />
+              </button>
+            ) : null}
+            <button type="button" className="aqp-modal-close" onClick={onClose} aria-label="Close">
+              <FaTimes />
+            </button>
+          </div>
         </div>
         <div className="aqp-modal-body">{children}</div>
         {footer ? <div className="aqp-modal-footer">{footer}</div> : null}
@@ -1725,7 +1734,9 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
     accounts,
     createQuotation,
     updateQuotation,
+    deleteQuotation,
     addNotification,
+    loadQuotations,
   } = useData()
 
   // Access control: admins by default; user portal can opt in with safe routes.
@@ -2103,6 +2114,26 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
     }
   }
 
+  const handleDeleteQuotation = async (doc) => {
+    const q = doc || viewDocument
+    if (!q?.id) return
+    const confirmed = window.confirm(`Delete Quotation\n\nAre you sure you want to delete quotation "${q.quotationNumber || q.quoteNumber || q.id}"?`)
+    if (!confirmed) return
+
+    try {
+      if (deleteQuotation) {
+        await deleteQuotation(q.id)
+      } else {
+        await quotationApi.deleteQuotation(q.id)
+      }
+      addNotification?.('success', 'Quotation deleted', 'Quotation deleted successfully.')
+      closeQuotationView()
+      loadQuotations?.()
+    } catch (error) {
+      addNotification?.('error', 'Delete failed', error?.response?.data?.message || error?.message || 'Failed to delete quotation.')
+    }
+  }
+
   useEffect(() => {
     if (!viewQuotationId) {
       if (viewRowFromUrl) {
@@ -2452,6 +2483,21 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
 
     if (actionKey === 'account') {
       setAccountRow(row)
+    }
+  }
+
+  const handleDeleteViewedQuotation = async () => {
+    if (!viewRow?.id) return
+    const confirmed = window.confirm('Are you sure you want to delete this Quotation?')
+    if (!confirmed) return
+
+    try {
+      await quotationApi.frontendDeleteQuotation(viewRow.id)
+      closeQuotationView()
+      addNotification('success', 'Quotation deleted', 'Quotation was removed from the list.')
+      await refreshData()
+    } catch (error) {
+      addNotification('error', 'Delete failed', error?.response?.data?.message || error?.message || 'Unable to delete quotation.')
     }
   }
 
@@ -3138,10 +3184,15 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
         <ModalShell
           title={`View Quotation - ${viewDocument.quotationNumber}`}
           onClose={closeQuotationView}
+          onDelete={() => handleDeleteQuotation(viewDocument)}
           size="aqp-modal--xl"
         >
           <div className="aqp-view-top-actions">
             <div className="aqp-modal-footer-group">
+              <button type="button" className="aqp-btn aqp-btn--gray" onClick={handleDeleteViewedQuotation} aria-label="Delete quotation">
+                <FaTrash className="aqp-btn-icon" />
+                Delete
+              </button>
               <button type="button" className="aqp-btn aqp-btn--gray" onClick={closeQuotationView}>
                 Close
               </button>

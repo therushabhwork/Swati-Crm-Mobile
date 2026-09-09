@@ -131,8 +131,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   selectedCard: {
-    backgroundColor: colors.primary,
-    shadowColor: colors.primary,
+    backgroundColor: '#1650C8',
+    shadowColor: '#1650C8',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -148,8 +148,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   selectedCardDashboard: {
-    backgroundColor: colors.primary,
-    shadowColor: colors.primary,
+    backgroundColor: '#1650C8',
+    shadowColor: '#1650C8',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,

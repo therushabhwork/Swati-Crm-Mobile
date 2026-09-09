@@ -38,6 +38,7 @@ export default function DashboardScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [profileDropdownVisible, setProfileDropdownVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [activeQuickActionIndex, setActiveQuickActionIndex] = useState<number>(0);
   const { user, logout } = useAuth();
   const { showNotification } = useSocket();
   const insets = useSafeAreaInsets();
@@ -188,13 +189,13 @@ export default function DashboardScreen() {
               });
             }}
           >
-            <Feather name="bell" size={20} color={colors.textPrimary} />
+            <Feather name="bell" size={20} color={colors.dashboardIconColor} />
           </Pressable>
           <Pressable
             style={[styles.headerIcon, { marginLeft: spacing.sm }]}
             onPress={() => setProfileDropdownVisible(true)}
           >
-            <Feather name="user" size={20} color={colors.textPrimary} />
+            <Feather name="user" size={20} color={colors.dashboardIconColor} />
           </Pressable>
         </View>
       </View>
@@ -220,16 +221,43 @@ export default function DashboardScreen() {
       </View>
 
       {/* 3. Quick Actions Section (Slider as requested) */}
-      <View style={styles.section}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll} contentContainerStyle={{ paddingRight: 40 }}>
-          <QuickAction title="Add Account" icon="user-plus" variant="secondary" onPress={() => router.push('/accounts/new')} />
+      <View style={[styles.section, styles.sliderSection]}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          style={styles.horizontalScroll} 
+          contentContainerStyle={{ paddingRight: 40, paddingVertical: 2 }}
+        >
+          <QuickAction 
+            title="Add Account" 
+            icon="user-plus" 
+            variant="primary" 
+            isActive={activeQuickActionIndex === 0}
+            onPress={() => {
+              setActiveQuickActionIndex(0);
+              router.push('/accounts/new');
+            }} 
+          />
           <QuickAction
             title="Add Customer"
             icon="user"
             variant="secondary"
-            onPress={() => router.push('/customers/new' as any)}
+            isActive={activeQuickActionIndex === 1}
+            onPress={() => {
+              setActiveQuickActionIndex(1);
+              router.push('/customers/new' as any);
+            }}
           />
-          <QuickAction title="Create Reminder" icon="check-square" variant="secondary" onPress={() => router.push({ pathname: '/reminders/new', params: { date: selectedDate?.toISOString() } })} />
+          <QuickAction 
+            title="Create Reminder" 
+            icon="check-square" 
+            variant="secondary" 
+            isActive={activeQuickActionIndex === 2}
+            onPress={() => {
+              setActiveQuickActionIndex(2);
+              router.push({ pathname: '/reminders/new', params: { date: selectedDate?.toISOString() } });
+            }} 
+          />
         </ScrollView>
       </View>
 
@@ -294,14 +322,14 @@ export default function DashboardScreen() {
         <View style={styles.calendarCardNew}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Feather name="calendar" size={16} color={colors.textPrimary} />
+              <Feather name="calendar" size={16} color={colors.dashboardIconColor} />
               <Text style={{ marginLeft: 8, fontSize: 14, fontWeight: '600', color: colors.textPrimary }}>
                 {getDateLabel(selectedDate)}
               </Text>
             </View>
             <TouchableOpacity onPress={() => router.push({ pathname: '/reminders', params: { date: selectedDate?.toISOString() } })} style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ fontSize: 13, color: colors.primary, marginRight: 4, fontWeight: '500' }}>View Calendar</Text>
-              <Feather name="chevron-right" size={16} color={colors.primary} />
+              <Text style={{ fontSize: 13, color: colors.dashboardIconColor, marginRight: 4, fontWeight: '500' }}>View Calendar</Text>
+              <Feather name="chevron-right" size={16} color={colors.dashboardIconColor} />
             </TouchableOpacity>
           </View>
           <ReminderDateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} variant="dashboard" />
@@ -318,13 +346,13 @@ export default function DashboardScreen() {
           onPress={() => router.push('/support')}
         >
           <View style={styles.supportIconCircle}>
-            <Feather name="headphones" size={20} color={colors.primary} />
+            <Feather name="headphones" size={20} color={colors.dashboardIconColor} />
           </View>
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Text style={styles.supportTitle}>CRM Support</Text>
             <Text style={styles.supportSubtitle}>Get help or open a support ticket</Text>
           </View>
-          <Feather name="chevron-right" size={20} color={colors.textSecondary} />
+          <Feather name="chevron-right" size={20} color={colors.dashboardIconColor} />
         </Pressable>
       </View>
 
@@ -353,7 +381,7 @@ export default function DashboardScreen() {
                 logout();
               }}
             >
-              <Feather name="log-out" size={18} color={colors.primary} />
+              <Feather name="log-out" size={18} color={colors.dashboardIconColor} />
               <Text style={styles.dropdownItemText}>Logout</Text>
             </TouchableOpacity>
           </View>
@@ -526,6 +554,10 @@ const styles = StyleSheet.create({
     marginHorizontal: '-2%',
   },
   horizontalScroll: {
+  },
+  sliderSection: {
+    marginTop: -4,
+    marginBottom: 4,
   },
   modalOverlay: {
     flex: 1,

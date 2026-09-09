@@ -118,7 +118,7 @@ export const DealsHeroCard = React.memo<DealsHeroCardProps>(({ deals, dealsCount
       {/* 1. Header Row */}
       <View style={styles.headerRow}>
         <View style={styles.titleRow}>
-          <Feather name="trending-up" size={16} color={colors.primary} style={{ marginRight: 6 }} />
+          <Feather name="trending-up" size={16} color={colors.dealCardText} style={{ marginRight: 6 }} />
           <Text style={styles.cardTitle}>Deals</Text>
         </View>
         <View style={styles.badgeContainer}>
@@ -143,7 +143,7 @@ export const DealsHeroCard = React.memo<DealsHeroCardProps>(({ deals, dealsCount
                     styles.barFill,
                     {
                       height: `${heightPct}%`,
-                      backgroundColor: idx === 5 ? colors.primary : 'rgba(51, 68, 125, 0.45)',
+                      backgroundColor: idx === 5 ? colors.dealCardText : 'rgba(255, 253, 249, 0.65)',
                     },
                   ]}
                 />
@@ -187,11 +187,11 @@ export const DealsHeroCard = React.memo<DealsHeroCardProps>(({ deals, dealsCount
 
 const styles = StyleSheet.create({
   cardContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.dealCardBg,
     borderRadius: 20,
     padding: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255, 253, 249, 0.2)',
     shadowColor: colors.textPrimary,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.05,
@@ -216,20 +216,20 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: colors.dealCardText,
   },
   badgeContainer: {
-    backgroundColor: colors.background,
+    backgroundColor: 'rgba(255, 253, 249, 0.15)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255, 253, 249, 0.3)',
   },
   badgeText: {
     fontSize: 11,
     fontWeight: '500',
-    color: colors.textSecondary,
+    color: colors.dealCardText,
   },
   middleSection: {
     flexDirection: 'row',
@@ -244,13 +244,13 @@ const styles = StyleSheet.create({
   heroValue: {
     fontSize: 26,
     fontWeight: '800',
-    color: colors.textPrimary,
+    color: colors.dealCardText,
     letterSpacing: -0.5,
   },
   valueLabel: {
     fontSize: 12,
     fontWeight: '500',
-    color: colors.textSecondary,
+    color: 'rgba(255, 253, 249, 0.8)',
     marginTop: 2,
   },
   sparklineContainer: {
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   barTrack: {
     width: 12,
     height: '100%',
-    backgroundColor: colors.primaryLight,
+    backgroundColor: 'rgba(255, 253, 249, 0.25)',
     borderRadius: 4,
     justifyContent: 'flex-end',
     overflow: 'hidden',
@@ -284,11 +284,11 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 9,
     fontWeight: '500',
-    color: colors.textMuted,
+    color: 'rgba(255, 253, 249, 0.7)',
   },
   divider: {
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: 'rgba(255, 253, 249, 0.25)',
     marginVertical: 10,
   },
   bottomRow: {
@@ -303,17 +303,17 @@ const styles = StyleSheet.create({
   metricValue: {
     fontSize: 15,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: colors.dealCardText,
   },
   metricLabel: {
     fontSize: 11,
     fontWeight: '500',
-    color: colors.textSecondary,
+    color: 'rgba(255, 253, 249, 0.8)',
     marginTop: 1,
   },
   metricSeparator: {
     width: 1,
     height: 22,
-    backgroundColor: colors.border,
+    backgroundColor: 'rgba(255, 253, 249, 0.25)',
   },
 });

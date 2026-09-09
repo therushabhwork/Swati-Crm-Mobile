@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import apiClient from '../../../src/api/client';
 import { AppHeader } from '../../../src/components/ui/AppHeader';
+import { EditableDetailRow } from '../../../src/components/ui/EditableDetailRow';
 import { colors } from '../../../src/theme/colors';
+
+import { formatDealNo } from '../../../src/utils/formatters';
 
 export default function DealDetailsScreen() {
   const { id, fromSearch } = useLocalSearchParams();
@@ -27,6 +30,18 @@ export default function DealDetailsScreen() {
     };
     if (id) fetchDetails();
   }, [id]);
+
+  const handleFieldSave = async (fieldKey: string, newValue: string) => {
+    try {
+      const res = await apiClient.put(`/deals/${id}`, { [fieldKey]: newValue });
+      if (res.data?.success) {
+        setData((prev: any) => ({ ...prev, [fieldKey]: newValue }));
+      }
+    } catch (error: any) {
+      console.log('Error updating deal field:', error);
+      Alert.alert('Error', error.response?.data?.message || 'Failed to update field');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -54,28 +69,28 @@ export default function DealDetailsScreen() {
     {
       title: 'Deal details',
       data: [
-        { label: 'Deal No', value: data.dealNo || data.id || '-' },
-        { label: 'Deal Name', value: data.dealName || data.name || '-' },
-        { label: 'Deal Date', value: data.dealDate || data.createdAt ? new Date(data.dealDate || data.createdAt).toLocaleDateString() : '-' },
-        { label: 'Deal Owner', value: data.dealOwner || data.ownerUserId || '-' },
-        { label: 'Deal Type', value: data.dealType || data.type || '-' },
-        { label: 'Project Name', value: data.projectName || data.project || '-' }
+        { label: 'Deal No', value: formatDealNo(data.dealNo || data.id) },
+        { label: 'Deal Name', value: data.dealName || data.name || '-', fieldKey: data.dealName !== undefined ? 'dealName' : 'name' },
+        { label: 'Deal Date', value: (data.dealDate || data.createdAt) ? new Date(data.dealDate || data.createdAt).toLocaleDateString() : '-', fieldKey: data.dealDate !== undefined ? 'dealDate' : 'createdAt', fieldType: 'date' as const },
+        { label: 'Deal Owner', value: data.dealOwner || data.ownerUserId || '-', fieldKey: data.dealOwner !== undefined ? 'dealOwner' : 'ownerUserId' },
+        { label: 'Deal Type', value: data.dealType || data.type || '-', fieldKey: data.dealType !== undefined ? 'dealType' : 'type' },
+        { label: 'Project Name', value: data.projectName || data.project || '-', fieldKey: data.projectName !== undefined ? 'projectName' : 'project' }
       ]
     },
     {
       title: 'Status',
       data: [
-        { label: 'Deal Status', value: data.dealStatus || data.status || '-' },
-        { label: 'Lost Order Reason', value: data.lostOrderReason || '-' }
+        { label: 'Deal Status', value: data.dealStatus || data.status || '-', fieldKey: data.dealStatus !== undefined ? 'dealStatus' : 'status' },
+        { label: 'Lost Order Reason', value: data.lostOrderReason || '-', fieldKey: 'lostOrderReason' }
       ]
     },
     {
       title: 'Commercial',
       data: [
-        { label: 'Deal Value', value: data.dealValue ? `₹${data.dealValue.toLocaleString()}` : '-' },
-        { label: 'Convert PO', value: data.convertPo ? 'Yes' : 'No' },
-        { label: 'PO Value', value: data.poValue ? `₹${data.poValue.toLocaleString()}` : '-' },
-        { label: 'Job No.', value: data.jobNo || '-' },
+        { label: 'Deal Value', value: data.dealValue || '-', fieldKey: 'dealValue' },
+        { label: 'Convert PO', value: data.convertPo ? 'Yes' : 'No', fieldKey: 'convertPo' },
+        { label: 'PO Value', value: data.poValue || '-', fieldKey: 'poValue' },
+        { label: 'Job No.', value: data.jobNo || '-', fieldKey: 'jobNo' },
       ]
     }
   ];
@@ -89,41 +104,52 @@ export default function DealDetailsScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      <AppHeader title={data.dealName || data.name || "Deal Details"} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/deals')} />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {sections.map((section, sIdx) => (
-          <View key={sIdx} style={[styles.card, sIdx < sections.length - 1 && { marginBottom: 16 }]}>
-            <Text style={styles.cardTitle}>{section.title}</Text>
-            <View style={styles.divider} />
-            
-            {section.data.map((field, idx) => {
-              const isStatusSection = section.title === 'Status';
-              const isPrimarySection = section.title.toLowerCase().includes('details');
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+        <AppHeader title={data.dealName || data.name || "Deal Details"} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/deals')} />
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {sections.map((section, sIdx) => (
+            <View key={sIdx} style={[styles.card, sIdx < sections.length - 1 ? { marginBottom: 16 } : undefined]}>
+              <Text style={styles.cardTitle}>{section.title}</Text>
+              <View style={styles.divider} />
               
-              const valueStyle = isStatusSection && field.label.includes('Status')
-                ? [styles.value, { color: getStatusColor(field.value) }]
-                : styles.value;
+              {section.data.map((field: any, idx) => {
+                const isStatusSection = section.title === 'Status';
+                const isPrimarySection = section.title.toLowerCase().includes('details');
                 
-              const rowStyle = isPrimarySection 
-                ? [styles.row, { flexDirection: 'column', alignItems: 'flex-start' }, idx === section.data.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }]
-                : [styles.row, idx === section.data.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }];
-                
-              const labelStyle = isPrimarySection
-                ? [styles.label, { marginBottom: 4 }]
-                : styles.label;
+                const valueStyle = isStatusSection && field.label.includes('Status')
+                  ? [styles.value, { color: getStatusColor(field.value as string) }]
+                  : styles.value;
+                  
+                const rowStyle = isPrimarySection 
+                  ? [styles.row, { flexDirection: 'column', alignItems: 'flex-start' }, idx === section.data.length - 1 ? { borderBottomWidth: 0, paddingBottom: 0 } : undefined]
+                  : [styles.row, idx === section.data.length - 1 ? { borderBottomWidth: 0, paddingBottom: 0 } : undefined];
+                  
+                const labelStyle = isPrimarySection
+                  ? [styles.label, { marginBottom: 4 }]
+                  : styles.label;
 
-              return (
-                <View key={idx} style={rowStyle as any}>
-                  <Text style={labelStyle}>{field.label}</Text>
-                  <Text style={valueStyle}>{field.value}</Text>
-                </View>
-              );
-            })}
-          </View>
-        ))}
-      </ScrollView>
-    </View>
+                return (
+                  <EditableDetailRow
+                    key={idx}
+                    label={field.label}
+                    value={field.value}
+                    fieldKey={field.fieldKey}
+                    fieldType={field.fieldType}
+                    onSave={handleFieldSave}
+                    isEditable={!!field.fieldKey}
+                    isStatusSection={isStatusSection}
+                    valueStyle={valueStyle}
+                    rowStyle={rowStyle}
+                    labelStyle={labelStyle}
+                  />
+                );
+              })}
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 

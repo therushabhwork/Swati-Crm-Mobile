@@ -197,7 +197,22 @@ const createCrudService = ({
     return { id: existing.id }
   }
 
-  return { list, get, create, update, remove }
+  const frontendDelete = async (actor, id) => {
+    const existing = await get(actor, id)
+    const record = await repository.frontendDelete(normalizeId(id, entityLabel), actor)
+    if (!record) throw new AppError(`${entityLabel} not found.`, 404)
+    emitEntity(entityType, 'updated', record, actor)
+    auditLog.record({
+      actor,
+      action: 'frontend-delete',
+      entityType,
+      entityId: existing?.id,
+      changes: { before: existing, after: record },
+    })
+    return { id: existing.id }
+  }
+
+  return { list, get, create, update, remove, frontendDelete }
 }
 
 module.exports = {

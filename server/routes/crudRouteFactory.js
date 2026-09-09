@@ -11,6 +11,7 @@ const createCrudRouter = (controller, { extraRoutes } = {}) => {
   if (typeof extraRoutes === 'function') {
     extraRoutes(router)
   }
+  router.patch('/:id/frontend-delete', validate({ params: idParam }), controller.frontendDelete)
   router.get('/:id', validate({ params: idParam }), controller.getById)
   router.post('/', validate({ body: validation.create }), controller.create)
   router.put('/:id', validate({ params: idParam, body: validation.update }), controller.update)

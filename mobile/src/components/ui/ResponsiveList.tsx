@@ -17,6 +17,7 @@ export type ResponsiveListProps<T> = {
   serverCurrentPage?: number;
   serverTotalPages?: number;
   onServerPageChange?: (page: number) => void;
+  forceCardView?: boolean;
 };
 
 export function ResponsiveList<T>({
@@ -32,9 +33,10 @@ export function ResponsiveList<T>({
   serverCurrentPage = 1,
   serverTotalPages = 1,
   onServerPageChange,
+  forceCardView = true,
 }: ResponsiveListProps<T>) {
   const { width } = useWindowDimensions();
-  const isDesktop = width >= 768; // standard tablet/desktop breakpoint
+  const isDesktop = !forceCardView && width >= 1024; // Only switch to table view on wide desktop web if forceCardView is false
 
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 3;
@@ -52,13 +54,10 @@ export function ResponsiveList<T>({
   
   const displayCurrentPage = serverSidePagination ? serverCurrentPage : currentPage;
 
-  // Only paginate on mobile
-  const paginatedData = isDesktop 
-    ? data 
-    : (serverSidePagination 
-        ? data // Backend already sliced the data
-        : data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-      );
+  // Paginate items for card view
+  const paginatedData = serverSidePagination 
+    ? data // Backend already sliced the data
+    : data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const flatListRef = React.useRef<FlatList>(null);
 

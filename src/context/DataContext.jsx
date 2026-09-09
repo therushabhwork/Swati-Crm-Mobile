@@ -788,7 +788,7 @@ export const DataProvider = ({ children }) => {
     try {
       await refreshAccountStorageStatus()
       const previousRecord = accounts.find((entry) => entry.id === id) || null
-      await leadApi.deleteLead(id)
+      await leadApi.frontendDeleteLead(id)
 
       setFrontendAccounts((prev) => prev.filter((entry) => entry.id !== id))
 

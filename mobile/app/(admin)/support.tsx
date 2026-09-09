@@ -237,7 +237,7 @@ export default function SupportScreen() {
         {!isSupportUser && (
           <View style={styles.viewDetailsBtn}>
             <Text style={styles.viewDetailsText}>View Request</Text>
-            <Feather name="chevron-right" size={16} color="#33447D" />
+            <Feather name="chevron-right" size={16} color="#1650C8" />
           </View>
         )}
       </TouchableOpacity>
@@ -257,7 +257,7 @@ export default function SupportScreen() {
           placeholder="Search requests..."
         />
       ) : (
-        <AppHeader title="Support Requests" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
+        <AppHeader title="Support Requests" onSearch={() => setIsSearchVisible(true)} />
       )}
       
       <View style={styles.segmentContainer}>
@@ -336,9 +336,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   segmentActive: {
-    backgroundColor: '#33447D',
+    backgroundColor: '#1650C8',
     borderWidth: 1,
-    borderColor: '#33447D',
+    borderColor: '#1650C8',
   },
   segmentText: {
     fontSize: 14,
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   viewDetailsText: {
-    color: '#33447D',
+    color: '#1650C8',
     fontSize: 14,
     fontWeight: '500',
     marginRight: 4,

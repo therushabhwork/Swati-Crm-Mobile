@@ -409,6 +409,44 @@ const deleteLead = async (actor, leadId) => {
   return existingLead
 }
 
+const frontendDeleteLead = async (actor, leadId) => {
+  const existingLead = await getLeadById(actor, leadId, { includeGroupScope: false })
+  const updatedLead = await leadRepository.frontendDeleteLead(normalizeLeadId(leadId), actor)
+
+  if (!updatedLead) {
+    throw new AppError('Lead not found.', 404)
+  }
+
+  const socketServer = getSocketServer()
+  if (socketServer) {
+    socketServer.emitToAdmins(SOCKET_EVENTS.LEAD_UPDATED, {
+      action: 'updated',
+      record: updatedLead,
+      previousRecord: existingLead,
+    })
+    socketServer.emitToAdmins(SOCKET_EVENTS.DASHBOARD_UPDATE, {
+      entityType: 'lead',
+      action: 'updated',
+      recordId: updatedLead.id,
+      record: updatedLead,
+      companyId: actor.companyId,
+    })
+    if (updatedLead.assignedTo) {
+      socketServer.emitToUser(updatedLead.assignedTo, SOCKET_EVENTS.LEAD_UPDATED, {
+        action: 'updated',
+        record: updatedLead,
+        previousRecord: existingLead,
+      })
+    }
+    socketServer.pushActivity('lead-frontend-delete', actor, {
+      leadId: updatedLead.id,
+      assignedUserId: updatedLead.assignedTo,
+    })
+  }
+
+  return { id: existingLead.id }
+}
+
 const updateLead = async (actor, leadId, payload) => {
   const existingLead = await getLeadById(actor, leadId, { includeGroupScope: false })
 
@@ -637,6 +675,7 @@ module.exports = {
   createLead,
   updateLead,
   deleteLead,
+  frontendDeleteLead,
   convertLeadToDeal,
   bulkAddRemark,
   bulkReassign,

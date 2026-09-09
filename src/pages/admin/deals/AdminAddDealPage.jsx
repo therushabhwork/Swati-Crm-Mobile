@@ -601,7 +601,6 @@ const AdminAddDealPage = ({
 
       if (!formData.dealName.trim()) nextErrors.dealName = 'Please provide Deal Name.'
       if (!formData.description.trim()) nextErrors.description = 'Please provide Description.'
-      if (!formData.dealType.trim()) nextErrors.dealType = 'Please select Deal Type.'
       if (!formData.dealSource.trim()) nextErrors.dealSource = 'Please select Deal Source.'
       if (!formData.dealOwner.trim()) nextErrors.dealOwner = 'Please select Deal Owner.'
       if (!formData.expectedClosureDate) {
@@ -913,7 +912,6 @@ const AdminAddDealPage = ({
           </div>
 
           <div className="admin-add-deal-detail-col">
-            {renderSelectField('deal-type', 'Deal Type', 'dealType', DEAL_TYPE_OPTIONS, { required: true })}
             {renderSelectField('deal-source', 'Deal Source', 'dealSource', DEAL_SOURCE_OPTIONS, { required: true })}
             {renderSelectField('deal-owner', 'Deal Owner', 'dealOwner', ACCOUNT_OWNER_OPTIONS, { required: true })}
             {renderTextareaField('deal-address', 'Address', 'address', { rows: 2 })}

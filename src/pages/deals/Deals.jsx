@@ -44,6 +44,7 @@ import { getAccountCategoryLogo } from '../../features/accounts/config/accountCa
 import { getCrmOwnerDisplay, normalizeCrmUserName } from '../../features/users/crmUserDirectory'
 import { authService } from '../../services/authService'
 import { customerService } from '../../services/customerService'
+import { dealApi } from '../../services/dealApi'
 import { reminderApi } from '../../services/reminderApi'
 import { calendarApi } from '../../services/calendarApi'
 import { exportCsvWorkbook, exportExcelWorkbook } from '../../utils/excelExport'
@@ -3491,6 +3492,20 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
     }
   }
 
+  const handleFrontendDeleteDeal = async (deal) => {
+    if (!deal?.id) return
+    const confirmed = window.confirm('Are you sure you want to delete this Deal?')
+    if (!confirmed) return
+
+    try {
+      await dealApi.frontendDeleteDeal(deal.id)
+      addNotification('success', 'Deal deleted', 'Deal was removed from the list.')
+      await refreshData()
+    } catch (error) {
+      addNotification('error', 'Delete failed', error?.response?.data?.message || error?.message || 'Unable to delete deal.')
+    }
+  }
+
   const handleDeleteDeal = async () => {
     const activeDeal = boardActionModal.deal
 
@@ -3673,6 +3688,10 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
               <button type="button" className="deals-board-card-action-item" onClick={() => handleOpenDealActionPage('re-assign-deal', activeDeal)} disabled={isConvertedDeal}>
                 <FaUser />
                 <span>Re-Assign Deal</span>
+              </button>
+              <button type="button" className="deals-board-card-action-item deals-board-card-action-item-danger" onClick={() => handleFrontendDeleteDeal(activeDeal)} disabled={isConvertedDeal}>
+                <FaTrash />
+                <span>Delete Deal</span>
               </button>
             </div>
           ),

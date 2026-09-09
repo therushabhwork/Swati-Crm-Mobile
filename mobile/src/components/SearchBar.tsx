@@ -15,7 +15,7 @@ interface SearchBarProps {
 export function SearchBar({ placeholder = 'Search...', value, onChangeText, onSubmitEditing }: SearchBarProps) {
   return (
     <View style={styles.container}>
-      <Feather name="search" size={18} color={colors.textSecondary} style={styles.icon} />
+      <Feather name="search" size={18} color={colors.dashboardIconColor} style={styles.icon} />
       <TextInput
         style={styles.input}
         placeholder={placeholder}

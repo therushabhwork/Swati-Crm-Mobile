@@ -60,6 +60,18 @@ const deleteLead = async (req, res, next) => {
   }
 }
 
+const frontendDeleteLead = async (req, res, next) => {
+  try {
+    const removed = await leadService.frontendDeleteLead(req.user, req.params.id)
+    res.json({
+      success: true,
+      data: removed,
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
 const convertLeadToDeal = async (req, res, next) => {
   try {
     const result = await leadService.convertLeadToDeal(req.user, req.params.id)
@@ -102,6 +114,7 @@ module.exports = {
   createLead,
   updateLead,
   deleteLead,
+  frontendDeleteLead,
   convertLeadToDeal,
   bulkAddRemark,
   bulkReassign,

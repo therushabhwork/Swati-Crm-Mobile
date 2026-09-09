@@ -8,6 +8,7 @@ import { spacing, radii } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 import { useGlobalData, matchesQuery } from './useGlobalData';
 import { SearchResultCard } from './SearchResultCard';
+import { formatDealNo } from '../../utils/formatters';
 
 // Helpers from web logic
 const buildAccountContacts = (account: any) => {
@@ -268,7 +269,7 @@ export function GlobalSearchScreen({ basePath }: { basePath: string }) {
             {/* 5. Deals */}
             {renderSection('Deals', dealRows, (d) => (
               <SearchResultCard
-                title={`Deal #${d.dealNo || d.dealNumber || '-'}`}
+                title={`Deal #${formatDealNo(d.dealNo || d.dealNumber || d.id)}`}
                 subtitle={d.dealName || d.name || '-'}
                 description={d.projectName || '-'}
                 fields={[

@@ -8,6 +8,7 @@ const baseRepository = createCrudRepository({
 })
 
 const Lead = getMongoModel('leads')
+const visibleFilter = { frontendDeleted: { $ne: true } }
 
 const escapeRegExp = (value) => String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
@@ -86,7 +87,7 @@ const mapLeadRow = (record) => {
 }
 
 const listAllLeads = async () => {
-  const records = await Lead.find({}).sort({ createdAt: -1, legacyId: -1 }).lean()
+  const records = await Lead.find(visibleFilter).sort({ accountNo: 1, legacyId: 1 }).lean()
   return records.map(mapLeadRow)
 }
 
@@ -109,8 +110,8 @@ const buildLeadScopeFilter = (actor, { companyWide = false, scopeUserIds = null,
 
 const listLeadsForActor = async (actor, options = {}) => {
   const records = await Lead
-    .find(mergeFilters(buildLeadScopeFilter(actor, options), buildAccountSearchFilter(options.filters || {})))
-    .sort({ createdAt: -1, legacyId: -1 })
+    .find(mergeFilters(buildLeadScopeFilter(actor, options), buildAccountSearchFilter(options.filters || {}), visibleFilter))
+    .sort({ accountNo: 1, legacyId: 1 })
     .lean()
 
   return records.map(mapLeadRow)
@@ -118,8 +119,8 @@ const listLeadsForActor = async (actor, options = {}) => {
 
 const listAssignedLeads = async (userId) => {
   const records = await Lead
-    .find({ $or: [{ assignedTo: userId }, { createdBy: userId }] })
-    .sort({ createdAt: -1, legacyId: -1 })
+    .find(mergeFilters({ $or: [{ assignedTo: userId }, { createdBy: userId }] }, visibleFilter))
+    .sort({ accountNo: 1, legacyId: 1 })
     .lean()
 
   return records.map(mapLeadRow)
@@ -137,21 +138,22 @@ const listCreatedLeadsForActor = async (actor, filters = {}) => {
           { 'formData.createdByUserId': actor.id },
         ],
       },
-      buildAccountSearchFilter(filters)
+      buildAccountSearchFilter(filters),
+      visibleFilter
     ))
-    .sort({ createdAt: -1, legacyId: -1 })
+    .sort({ accountNo: 1, legacyId: 1 })
     .lean()
 
   return records.map(mapLeadRow)
 }
 
 const findLeadById = async (leadId) => {
-  const record = await Lead.findOne(byLegacyId(leadId)).lean()
+  const record = await Lead.findOne(mergeFilters(byLegacyId(leadId), visibleFilter)).lean()
   return mapLeadRow(record)
 }
 
 const findLeadByIdForActor = async (leadId, actor, options = {}) => {
-  const record = await Lead.findOne(mergeFilters(byLegacyId(leadId), buildLeadScopeFilter(actor, options))).lean()
+  const record = await Lead.findOne(mergeFilters(byLegacyId(leadId), buildLeadScopeFilter(actor, options), visibleFilter)).lean()
   return mapLeadRow(record)
 }
 
@@ -183,6 +185,22 @@ const deleteLead = async (leadId) => {
   return Boolean(result)
 }
 
+const frontendDeleteLead = async (leadId, actor = {}) => {
+  const deletedAt = new Date().toISOString()
+  const record = await Lead.findOneAndUpdate(
+    byLegacyId(leadId),
+    {
+      $set: {
+        frontendDeleted: true,
+        frontendDeletedAt: deletedAt,
+        frontendDeletedBy: actor?.id || null,
+      },
+    },
+    { new: true }
+  ).lean()
+  return mapLeadRow(record)
+}
+
 module.exports = {
   listAllLeads,
   listLeadsForActor,
@@ -193,5 +211,6 @@ module.exports = {
   createLead,
   updateLead,
   deleteLead,
+  frontendDeleteLead,
   mapLeadRow,
 }

@@ -1,9 +1,11 @@
+import React from 'react';
 import { Tabs, Redirect } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
-import { View, ActivityIndicator, StyleSheet, Platform } from 'react-native';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Feather, FontAwesome5 } from '@expo/vector-icons';
 import { colors } from '../../src/theme/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Platform } from 'react-native';
 
 export default function TabLayout() {
   const { user, isLoading } = useAuth();
@@ -17,24 +19,14 @@ export default function TabLayout() {
     );
   }
 
-  // Adjust for admin/user paths if needed. 
-  // We'll remove the redirect here if it's admin so both layouts can be similar,
-  // but let's keep the existing logic. We will replace this during runtime depending on the folder.
-  // Actually, wait, let's keep the redirect logic dynamic.
-  
-
-  // paddingBottom = bottomNavigationHeight(56) + systemNavigationInset + visualSpacing(8)
-  // Expo's Tabs bottom height usually defaults to around 49-50 + padding. 
-  // We'll set the height dynamically.
-  
   const isAndroid = Platform.OS === 'android';
   const baseHeight = isAndroid ? 56 : 49;
-  const safeBottom = insets.bottom > 0 ? insets.bottom : (isAndroid ? 24 : 34);
+  const safeBottom = Math.max(insets.bottom, isAndroid ? 48 : 34);
 
   return (
     <Tabs 
       screenOptions={{ 
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor: '#1650C8',
         tabBarInactiveTintColor: colors.textSecondary,
         headerShown: false,
         tabBarStyle: [styles.tabBar, { 

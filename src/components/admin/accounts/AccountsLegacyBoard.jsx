@@ -41,6 +41,7 @@ const AccountsLegacyBoard = ({
   showSerialNumber = true,
   onConvertToDeal,
   onViewDeal,
+  onDeleteAccount,
 }) => {
   const navigate = useNavigate()
   const [openMenuId, setOpenMenuId] = useState(null)
@@ -76,6 +77,11 @@ const AccountsLegacyBoard = ({
 
   const handleMenuAction = (action, row) => {
     closeRowMenu()
+
+    if (action.behavior === 'deleteAccount' || action.key === 'delete-account') {
+      onDeleteAccount?.(row)
+      return
+    }
 
     if (action.behavior === 'convertToDeal' || action.key === 'converted-deal') {
       onConvertToDeal?.(row)

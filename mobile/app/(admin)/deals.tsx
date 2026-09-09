@@ -11,6 +11,7 @@ import { LoadingSkeleton } from '../../src/components/ui/LoadingSkeleton';
 import { InlineSearchBar } from '../../src/components/ui/InlineSearchBar';
 import { ResultsHeader } from '../../src/components/ui/ResultsHeader';
 import { colors } from '../../src/theme/colors';
+import { formatDealNo } from '../../src/utils/formatters';
 
 export default function DealsScreen() {
   const [data, setData] = useState<any[]>([]);
@@ -37,7 +38,7 @@ export default function DealsScreen() {
   }, []);
 
   const columns = [
-    { id: 'dealNo', header: 'Deal No', accessor: (item: any) => item.dealNo || item.id || '-', width: 100 },
+    { id: 'dealNo', header: 'Deal No', accessor: (item: any) => formatDealNo(item.dealNo || item.id), width: 100 },
     { id: 'dealName', header: 'Deal Name', accessor: (item: any) => item.dealName || item.name || '-', width: 150 },
     { id: 'dealDate', header: 'Deal Date', accessor: (item: any) => item.dealDate || item.createdAt ? new Date(item.dealDate || item.createdAt).toLocaleDateString() : '-', width: 100 },
     { id: 'dealOwner', header: 'Deal Owner', accessor: (item: any) => item.dealOwner || item.ownerUserId || '-', width: 120 },
@@ -88,8 +89,13 @@ export default function DealsScreen() {
     return searchString.includes(searchQuery.toLowerCase());
   });
 
+  const handleDelete = (id: string) => {
+    setData(prev => prev.filter((d: any) => (d._id || d.id) !== id));
+  };
+
   const renderMobileCard = (item: any) => {
-    const dealNo = item.dealNo || item.id || '-';
+    const itemId = item._id || item.id;
+    const dealNo = formatDealNo(item.dealNo || item.id);
     const name = item.dealName || item.name || '-';
     const status = item.dealStatus || item.status || '-';
     const project = item.projectName || item.project || '-';
@@ -112,8 +118,13 @@ export default function DealsScreen() {
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardId}>{dealNo}</Text>
-          <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
-            <Text style={[styles.statusText, { color: statusColor }]}>{status}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={[styles.statusBadge, { backgroundColor: statusBg, marginRight: 8 }]}>
+              <Text style={[styles.statusText, { color: statusColor }]}>{status}</Text>
+            </View>
+            <TouchableOpacity onPress={() => handleDelete(itemId)} style={{ padding: 4 }}>
+              <Feather name="trash-2" size={14} color="#DC2626" />
+            </TouchableOpacity>
           </View>
         </View>
         
@@ -183,7 +194,7 @@ export default function DealsScreen() {
           placeholder="Search deals..."
         />
       ) : (
-        <AppHeader title="Deals" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
+        <AppHeader title="Deals" onSearch={() => setIsSearchVisible(true)} />
       )}
       
       {isLoading ? (
@@ -222,7 +233,7 @@ export default function DealsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f7fafc',
+    backgroundColor: colors.background,
   },
   card: {
     backgroundColor: '#ffffff',

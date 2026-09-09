@@ -4,6 +4,7 @@ const { getCrmOwnerRecord } = require('../features/crmUserDirectory')
 const { isPrivilegedRole } = require('../security/accessScope')
 
 const repository = createCrudRepository({ table: 'customers', jsonbColumns: ['data'] })
+const visibleFilter = { frontendDeleted: { $ne: true } }
 
 const uniqueValues = (values = []) => Array.from(new Set(
   values
@@ -78,13 +79,13 @@ const dedupeById = (records = []) => {
 
 repository.listForActor = async (actor, queryOptions = {}) => {
   const scopedRecords = await repository.model
-    .find(buildScopedMongoFilter({
+    .find(mergeFilters(buildScopedMongoFilter({
       actor,
       companyField: 'company_id',
       ownerFields: ['ownerUserId', 'owner_user_id', 'assigned_to', 'created_by'],
       companyWide: queryOptions.companyWide,
       scopeUserIds: queryOptions.scopeUserIds,
-    }))
+    }), visibleFilter))
     .sort({ updatedAt: -1, legacyId: -1 })
     .lean()
 
@@ -98,7 +99,7 @@ repository.listForActor = async (actor, queryOptions = {}) => {
   }
 
   const ownerTextRecords = await repository.model
-    .find(mergeFilters(buildCompanyFilter(actor, queryOptions), ownerTextFilter))
+    .find(mergeFilters(buildCompanyFilter(actor, queryOptions), ownerTextFilter, visibleFilter))
     .sort({ updatedAt: -1, legacyId: -1 })
     .lean()
 

@@ -97,6 +97,16 @@ const actionConfig = [
     heading: 'Manage Account',
     description: 'Open the account management workspace for the selected account.',
   },
+  {
+    key: 'delete-account',
+    order: 10,
+    label: 'Delete Account',
+    route: '',
+    placeholderTitle: 'Delete Account',
+    heading: 'Delete Account',
+    description: 'Delete the selected account.',
+    behavior: 'deleteAccount',
+  },
 ]
 
 export const ACCOUNT_ACTIONS = [...actionConfig].sort((left, right) => left.order - right.order)
@@ -113,6 +123,7 @@ const userAccountActionKeys = [
   'converted-deal',
   'view-linked-deal',
   'manage-account',
+  'delete-account',
 ]
 
 

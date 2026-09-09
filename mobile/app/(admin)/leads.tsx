@@ -127,7 +127,12 @@ export default function LeadsScreen() {
     return matchesSearch && matchesStage;
   });
 
+  const handleDelete = (id: string) => {
+    setData(prev => prev.filter((d: any) => (d._id || d.id) !== id));
+  };
+
   const renderMobileCard = (item: any) => {
+    const itemId = item._id || item.id;
     const accNo = item.accountNo || item.leadNo || item.id || '-';
     const name = item.accountName || item.name || item.companyName || '-';
     const status = item.accountStatus || item.status || '-';
@@ -141,8 +146,13 @@ export default function LeadsScreen() {
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardId}>{accNo}</Text>
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>{status}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.statusBadge}>
+              <Text style={styles.statusText}>{status}</Text>
+            </View>
+            <TouchableOpacity onPress={() => handleDelete(itemId)} style={{ padding: 4, marginLeft: 4 }}>
+              <Feather name="trash-2" size={14} color="#DC2626" />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -172,7 +182,7 @@ export default function LeadsScreen() {
 
         <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => router.push(`/lead-details/${item._id || item.id}`)}>
           <Text style={styles.viewDetailsText}>View details</Text>
-          <Feather name="chevron-right" size={16} color="#33447D" />
+          <Feather name="chevron-right" size={16} color="#1650C8" />
         </TouchableOpacity>
       </View>
     );
@@ -310,7 +320,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   viewDetailsText: {
-    color: '#33447D',
+    color: '#1650C8',
     fontSize: 14,
     fontWeight: '500',
     marginRight: 4,

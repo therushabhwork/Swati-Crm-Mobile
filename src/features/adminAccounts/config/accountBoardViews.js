@@ -40,7 +40,7 @@ export const ADMIN_ACCOUNTS_BOARD_VIEWS = {
     exportButtonLabel: 'Export CSV',
     defaultStage: 'new',
     showStageTabs: true,
-    rowActionMenuEnabled: false,
+    rowActionMenuEnabled: true,
     showExportButton: true,
     titlebarActions: {
       showBulk: true,
@@ -59,7 +59,7 @@ export const ADMIN_ACCOUNTS_BOARD_VIEWS = {
     exportButtonLabel: 'Export CSV',
     defaultStage: 'new',
     showStageTabs: true,
-    rowActionMenuEnabled: false,
+    rowActionMenuEnabled: true,
     showAddAccountButton: false,
     showRefreshButton: false,
     showExportButton: false,
@@ -86,7 +86,7 @@ export const ADMIN_ACCOUNTS_BOARD_VIEWS = {
     showStageTabs: false,
     showRefreshButton: false,
     showExportButton: false,
-    rowActionMenuEnabled: false,
+    rowActionMenuEnabled: true,
     rowActions: [
       ACCOUNT_ACTION_MAP['view-account'],
       ACCOUNT_ACTION_MAP['converted-deal'],

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import apiClient from '../../../src/api/client';
 import { AppHeader } from '../../../src/components/ui/AppHeader';
+import { EditableDetailRow } from '../../../src/components/ui/EditableDetailRow';
 import { colors } from '../../../src/theme/colors';
 
 export default function QuotationDetailsScreen() {
@@ -27,6 +28,18 @@ export default function QuotationDetailsScreen() {
     };
     if (id) fetchDetails();
   }, [id]);
+
+  const handleFieldSave = async (fieldKey: string, newValue: string) => {
+    try {
+      const res = await apiClient.put(`/quotations/${id}`, { [fieldKey]: newValue });
+      if (res.data?.success) {
+        setData((prev: any) => ({ ...prev, [fieldKey]: newValue }));
+      }
+    } catch (error: any) {
+      console.log('Error updating quotation field:', error);
+      Alert.alert('Error', error.response?.data?.message || 'Failed to update field');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -55,16 +68,16 @@ export default function QuotationDetailsScreen() {
       title: 'Quotation details',
       data: [
         { label: 'Quotation Number', value: data.quotationNo || data.quotationNumber || data.id || '-' },
-        { label: 'Quotation Owner', value: data.quotationOwner || data.ownerUserId || '-' },
-        { label: 'Quotation Date', value: data.quotationDate || data.createdAt ? new Date(data.quotationDate || data.createdAt).toLocaleDateString() : '-' },
-        { label: 'Company Name', value: data.companyName || data.customerName || '-' },
-        { label: 'Project Name', value: data.projectName || data.project || '-' }
+        { label: 'Quotation Owner', value: data.quotationOwner || data.ownerUserId || '-', fieldKey: data.quotationOwner !== undefined ? 'quotationOwner' : 'ownerUserId' },
+        { label: 'Quotation Date', value: (data.quotationDate || data.createdAt) ? new Date(data.quotationDate || data.createdAt).toLocaleDateString() : '-', fieldKey: data.quotationDate !== undefined ? 'quotationDate' : 'createdAt', fieldType: 'date' as const },
+        { label: 'Company Name', value: data.companyName || data.customerName || '-', fieldKey: data.companyName !== undefined ? 'companyName' : 'customerName' },
+        { label: 'Project Name', value: data.projectName || data.project || '-', fieldKey: data.projectName !== undefined ? 'projectName' : 'project' }
       ]
     },
     {
       title: 'Status',
       data: [
-        { label: 'Status', value: data.status || '-' },
+        { label: 'Status', value: data.status || '-', fieldKey: 'status' },
       ]
     },
     {
@@ -83,40 +96,51 @@ export default function QuotationDetailsScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      <AppHeader title={`Quotation - ${data.quotationNo || data.quotationNumber || data.id || ''}`} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/quotations')} />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {sections.map((section, sIdx) => (
-          <View key={sIdx} style={[styles.card, sIdx < sections.length - 1 && { marginBottom: 16 }]}>
-            <Text style={styles.cardTitle}>{section.title}</Text>
-            <View style={styles.divider} />
-            
-            {section.data.map((field, idx) => {
-              const isStatusSection = section.title === 'Status';
-              const isPrimarySection = section.title.toLowerCase().includes('details');
-              const valueStyle = isStatusSection 
-                ? [styles.value, { color: getStatusColor(field.value) }]
-                : styles.value;
-                
-              const rowStyle = isPrimarySection 
-                ? [styles.row, { flexDirection: 'column', alignItems: 'flex-start' }, idx === section.data.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }]
-                : [styles.row, idx === section.data.length - 1 && { borderBottomWidth: 0, paddingBottom: 0 }];
-                
-              const labelStyle = isPrimarySection
-                ? [styles.label, { marginBottom: 4 }]
-                : styles.label;
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+        <AppHeader title={`Quotation - ${data.quotationNo || data.quotationNumber || data.id || ''}`} showBack onBack={() => fromSearch === 'true' && router.canGoBack() ? router.back() : router.push('/(admin)/quotations')} />
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {sections.map((section, sIdx) => (
+            <View key={sIdx} style={[styles.card, sIdx < sections.length - 1 ? { marginBottom: 16 } : undefined]}>
+              <Text style={styles.cardTitle}>{section.title}</Text>
+              <View style={styles.divider} />
+              
+              {section.data.map((field: any, idx) => {
+                const isStatusSection = section.title === 'Status';
+                const isPrimarySection = section.title.toLowerCase().includes('details');
+                const valueStyle = isStatusSection 
+                  ? [styles.value, { color: getStatusColor(field.value as string) }]
+                  : styles.value;
+                  
+                const rowStyle = isPrimarySection 
+                  ? [styles.row, { flexDirection: 'column', alignItems: 'flex-start' }, idx === section.data.length - 1 ? { borderBottomWidth: 0, paddingBottom: 0 } : undefined]
+                  : [styles.row, idx === section.data.length - 1 ? { borderBottomWidth: 0, paddingBottom: 0 } : undefined];
+                  
+                const labelStyle = isPrimarySection
+                  ? [styles.label, { marginBottom: 4 }]
+                  : styles.label;
 
-              return (
-                <View key={idx} style={rowStyle as any}>
-                  <Text style={labelStyle}>{field.label}</Text>
-                  <Text style={valueStyle}>{field.value}</Text>
-                </View>
-              );
-            })}
-          </View>
-        ))}
-      </ScrollView>
-    </View>
+                return (
+                  <EditableDetailRow
+                    key={idx}
+                    label={field.label}
+                    value={field.value}
+                    fieldKey={field.fieldKey}
+                    fieldType={field.fieldType}
+                    onSave={handleFieldSave}
+                    isEditable={!!field.fieldKey}
+                    isStatusSection={isStatusSection}
+                    valueStyle={valueStyle}
+                    rowStyle={rowStyle}
+                    labelStyle={labelStyle}
+                  />
+                );
+              })}
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 

@@ -8,6 +8,7 @@ const router = express.Router()
 
 router.use(requireAuth)
 router.get('/', quotationController.list)
+router.patch('/:id/frontend-delete', validate({ params: idParam }), quotationController.frontendDelete)
 router.get('/:id', validate({ params: idParam }), quotationController.getById)
 router.post('/', validate({ body: quotation }), quotationController.create)
 router.put('/:id', validate({ params: idParam, body: quotation }), quotationController.update)

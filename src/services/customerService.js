@@ -182,6 +182,20 @@ class CustomerService {
     notifySubscribers()
     return savedCustomer
   }
+
+  async deleteCustomer(customerId) {
+    await apiClient.delete(`/customers/${encodeURIComponent(customerId)}`)
+    customerCache = customerCache.filter((entry) => String(entry.id) !== String(customerId))
+    notifySubscribers()
+  }
+
+  async frontendDeleteCustomer(id) {
+    const response = await apiClient.patch(`/customers/${encodeURIComponent(id)}/frontend-delete`)
+    const deletedId = String(response?.data?.id || id)
+    customerCache = customerCache.filter((entry) => String(entry.id) !== deletedId)
+    notifySubscribers()
+    return response?.data
+  }
 }
 
 export const customerService = new CustomerService()

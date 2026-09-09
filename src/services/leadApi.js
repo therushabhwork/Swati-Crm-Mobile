@@ -68,6 +68,11 @@ export const leadApi = {
     return getPayload(response)
   },
 
+  async frontendDeleteLead(id) {
+    const response = await apiClient.patch(`/leads/${encodeURIComponent(id)}/frontend-delete`)
+    return getPayload(response)
+  },
+
   async convertToDeal(id) {
     const response = await apiClient.post(`/leads/${encodeURIComponent(id)}/convert-to-deal`)
     const payload = getPayload(response) || {}

@@ -8,6 +8,7 @@ import {
   FaFileAlt,
   FaRegStickyNote,
   FaRegSun,
+  FaTrash,
 } from 'react-icons/fa'
 import {
   FiChevronDown,
@@ -297,6 +298,7 @@ const AccountDetailsDrawer = ({
   boardStateQuery,
   onSaveAccount,
   onRefresh,
+  onDeleteAccount,
   canEdit = false,
   actionItems = ACCOUNT_DRAWER_ACTIONS,
   hiddenFieldKeys = [],
@@ -534,6 +536,13 @@ const AccountDetailsDrawer = ({
                               if (convertedDeal) {
                                 handleOpenConvertedDeal(convertedDeal)
                               }
+                            }
+                            return
+                          }
+
+                          if (action.key === 'delete-account') {
+                            if (typeof onDeleteAccount === 'function') {
+                              onDeleteAccount(account)
                             }
                             return
                           }

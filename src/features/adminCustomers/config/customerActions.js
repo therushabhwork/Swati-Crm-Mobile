@@ -7,6 +7,7 @@ export const CUSTOMER_ACTIONS = [
   { key: 'send-mail', label: 'Send Mail', behavior: 'nav' },
   { key: 'generate-quotation', label: 'Generate Quotation', behavior: 'nav', isWizard: true },
   { key: 'manage-customer', label: 'Manage Customer', behavior: 'manage' },
+  { key: 'delete-customer', label: 'Delete Customer', behavior: 'deleteCustomer' },
   { key: 'bulk-upload-customers', label: 'Bulk Upload', behavior: 'wizard', isWizard: true },
 ]
 

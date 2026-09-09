@@ -62,7 +62,7 @@ export function StatCard({
   const cardBg = colors.card;
   const textColor = theme.accent;
   const titleColor = colors.textPrimary;
-  const iconColor = theme.accent;
+  const iconColor = colors.dashboardIconColor;
   const badgeBgColor = theme.bg;
 
   // Calculate rounded milestone (e.g. 38 -> 30, 22 -> 20)

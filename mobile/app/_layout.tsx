@@ -16,7 +16,7 @@ export default function RootLayout() {
       <AuthProvider>
         <SocketProvider>
           <PushNotificationManager />
-          <StatusBar style="dark" backgroundColor="#F9FAFB" />
+          <StatusBar style="dark" />
           <Slot />
         </SocketProvider>
       </AuthProvider>

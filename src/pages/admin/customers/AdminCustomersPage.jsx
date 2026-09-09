@@ -116,6 +116,7 @@ const CUSTOMER_GRID_ACTION_KEYS = [
   're-assign-customer',
   'send-mail',
   'manage-customer',
+  'delete-customer',
 ]
 
 
@@ -1320,6 +1321,23 @@ const AdminCustomersPage = ({
     const actionReturnTo = variantKey === 'manage'
       ? currentManageReturnUrl(customerId)
       : currentGridUrl
+
+    if (action.behavior === 'deleteCustomer' || action.key === 'delete-customer' || action.behavior === 'delete') {
+      const targetCustomer = customers.find((c) => String(c.id) === String(customerId))
+      const displayName = targetCustomer?.customerName || targetCustomer?.name || targetCustomer?.customerNumber || 'customer'
+      const confirmed = window.confirm(`Delete Customer\n\nAre you sure you want to delete customer "${displayName}"?`)
+      if (!confirmed) return
+
+      customerService.frontendDeleteCustomer(customerId)
+        .then(() => {
+          setSelectedCustomerIds((currentValue) => currentValue.filter((entry) => String(entry) !== String(customerId)))
+          addNotification?.('success', 'Customer deleted', 'Customer was removed from the list.')
+        })
+        .catch((error) => {
+          addNotification?.('error', 'Delete failed', error?.response?.data?.message || error?.message || 'Failed to delete customer.')
+        })
+      return
+    }
 
     if (action.behavior === 'view') {
       navigate(buildViewUrl(customerId, actionReturnTo), {
