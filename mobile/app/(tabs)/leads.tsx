@@ -226,10 +226,7 @@ export default function LeadsScreen() {
           )}
           
           {!isSearchVisible && (
-            <ListControls 
-              filterLabel={ACCOUNT_STAGES.find(s => s.value === stageFilter)?.label || 'All'}
-              onFilterPress={() => setIsFilterVisible(true)}
-            />
+            <ListControls />
           )}
           <ResponsiveList
             data={filteredData}

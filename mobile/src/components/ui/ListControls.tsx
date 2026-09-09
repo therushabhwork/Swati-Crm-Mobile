@@ -11,6 +11,7 @@ export type ListControlsProps = {
   sortLabel?: string;
   onAddPress?: () => void;
   addLabel?: string;
+  variant?: 'default' | 'slider';
 };
 
 export const ListControls: React.FC<ListControlsProps> = ({
@@ -21,19 +22,36 @@ export const ListControls: React.FC<ListControlsProps> = ({
   filterLabel = 'All',
   onAddPress,
   addLabel = 'Add',
+  variant = 'default',
 }) => {
+  if (!onFilterPress && !onAddPress) {
+    return null;
+  }
+
+  const isSlider = variant === 'slider';
+
   return (
     <View style={styles.container}>
       <View style={styles.actionsContainer}>
-        <TouchableOpacity style={styles.actionButton} onPress={onFilterPress}>
-          <Text style={styles.actionLabel}>Filter: </Text>
-          <Text style={styles.actionValue}>{filterLabel}</Text>
-          <Feather name="chevron-down" size={16} color="#718096" />
-        </TouchableOpacity>
+        {onFilterPress && (
+          <TouchableOpacity style={styles.actionButton} onPress={onFilterPress}>
+            <Text style={styles.actionLabel}>Filter: </Text>
+            <Text style={styles.actionValue}>{filterLabel}</Text>
+            <Feather name="chevron-down" size={16} color="#718096" />
+          </TouchableOpacity>
+        )}
         {onAddPress && (
-          <TouchableOpacity style={[styles.actionButton, styles.addButton]} onPress={onAddPress}>
-            <Feather name="plus" size={16} color="#ffffff" style={{ marginRight: 4 }} />
-            <Text style={styles.addButtonText}>{addLabel}</Text>
+          <TouchableOpacity 
+            style={[
+              styles.actionButton, 
+              styles.addButton, 
+              isSlider && styles.sliderAddButton,
+              !onFilterPress && { width: '100%', marginHorizontal: 0 }
+            ]} 
+            onPress={onAddPress}
+          >
+            <Feather name="plus" size={16} color={isSlider ? '#1650C8' : '#ffffff'} style={{ marginRight: 4 }} />
+            <Text style={[styles.addButtonText, isSlider && styles.sliderAddButtonText]}>{addLabel}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -79,6 +97,22 @@ const styles = StyleSheet.create({
   addButtonText: {
     fontSize: 13,
     color: '#ffffff',
+    fontWeight: '600',
+  },
+  sliderAddButton: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 0,
+    borderRadius: 20,
+    paddingVertical: 9,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  sliderAddButtonText: {
+    color: '#1650C8',
+    fontSize: 13,
     fontWeight: '600',
   }
 });

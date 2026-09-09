@@ -150,7 +150,7 @@ export default function QuotationsScreen() {
           placeholder="Search quotations..."
         />
       ) : (
-        <AppHeader title="Quotations" onSearch={() => setIsSearchVisible(true)} onFilter={() => {}} />
+        <AppHeader title="Quotations" onSearch={() => setIsSearchVisible(true)} />
       )}
       
       {isLoading ? (

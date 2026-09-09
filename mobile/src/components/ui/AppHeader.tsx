@@ -49,14 +49,14 @@ export const AppHeader = ({ title, showBack = false, onSearch, onFilter, onMore,
         </View>
 
         <View style={styles.rightSection}>
+          {onFilter && (
+            <Pressable onPress={onFilter} style={styles.iconButton}>
+              <Feather name="sliders" size={20} color={colors.primary} />
+            </Pressable>
+          )}
           {onSearch && (
             <Pressable onPress={onSearch} style={styles.iconButton}>
               <Feather name="search" size={22} color={colors.primary} />
-            </Pressable>
-          )}
-          {onFilter && (
-            <Pressable onPress={onFilter} style={styles.iconButton}>
-              <Feather name="filter" size={22} color={colors.primary} />
             </Pressable>
           )}
           {onMore && (

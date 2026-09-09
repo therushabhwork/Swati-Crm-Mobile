@@ -215,6 +215,7 @@ export default function DealsScreen() {
             <ListControls 
               onAddPress={() => router.push('/deals/new')} 
               addLabel="Add Deal" 
+              variant="slider"
             />
           )}
           <ResponsiveList
