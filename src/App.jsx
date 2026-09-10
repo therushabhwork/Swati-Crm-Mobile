@@ -121,6 +121,26 @@ const SalesDashboard = React.lazy(() => import('./pages/admin/SalesDashboard'))
 const SummaryReportsPage = React.lazy(() => import('./pages/admin/reports/SummaryReportsPage'))
 const TeamViewPage = React.lazy(() => import('./pages/admin/team-view/TeamViewPage'))
 
+const LandingPage = React.lazy(() => import('./pages/landing/LandingPage'))
+const PrivacyPolicyPage = React.lazy(() => import('./pages/legal/PrivacyPolicyPage'))
+const TermsPage = React.lazy(() => import('./pages/legal/TermsPage'))
+const AccountDeletionPage = React.lazy(() => import('./pages/legal/AccountDeletionPage'))
+
+const RootRouteHandler = () => {
+  const { user, loading } = useAuth()
+  if (loading) {
+    return <Spinner fullScreen text="Loading..." />
+  }
+  if (!user) {
+    return <LandingPage />
+  }
+  return (
+    <ProtectedRoute allowedRoles={['user', 'manager', 'engineer', 'sales']}>
+      <Layout />
+    </ProtectedRoute>
+  )
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -130,6 +150,10 @@ function App() {
             <AuditTrailReporter />
             <React.Suspense fallback={<Spinner fullScreen text="Loading page..." />}>
               <Routes>
+              <Route path="/landing" element={<LandingPage />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+              <Route path="/terms-and-conditions" element={<TermsPage />} />
+              <Route path="/account-deletion" element={<AccountDeletionPage />} />
               <Route
                 path="/login"
                 element={(
@@ -157,9 +181,7 @@ function App() {
               <Route
                 path="/"
                 element={(
-                  <ProtectedRoute allowedRoles={['user', 'manager', 'engineer', 'sales']}>
-                    <Layout />
-                  </ProtectedRoute>
+                  <RootRouteHandler />
                 )}
               >
                 <Route index element={<Navigate to={DASHBOARD_ROUTES.user} replace />} />
