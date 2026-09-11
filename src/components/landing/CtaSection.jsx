@@ -12,7 +12,7 @@ export default function CtaSection() {
           </p>
           <div className="lp-hero-ctas">
             <Link to="/register" className="lp-btn lp-btn-white">Create Account →</Link>
-            <Link to="/login" className="lp-btn lp-btn-outline-white">Login →</Link>
+            <Link to="/login" className="lp-btn lp-btn-outline-white cta-login-btn">Login →</Link>
           </div>
         </div>
       </div>

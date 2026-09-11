@@ -562,11 +562,12 @@
   background: #ffffff;
   border: 1px solid var(--lp-border);
   border-radius: var(--lp-radius-md);
-  padding: 0.9rem 1.15rem;
+  padding: 1.2rem 1.5rem;
   display: flex;
   flex-direction: column;
   box-shadow: var(--lp-shadow-sm);
   transition: transform 0.2s ease, border-color 0.2s ease;
+  min-height: 150px;
 }
 
 .lp-security-compact-card:hover {
@@ -592,6 +593,26 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.25rem;
+}
+
+/* Large screens: single row horizontal layout */
+@media (min-width: 992px) {
+  .lp-grid-2 {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 1.5rem;
+    overflow-x: auto;
+  }
+}
+
+/* Small screens: 2x2 grid */
+@media (max-width: 768px) {
+  .lp-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
 }
 
 .lp-grid-3 {
@@ -884,4 +905,21 @@
   .lp-hero-ctas { flex-direction: column; width: 100%; }
   .lp-btn { width: 100%; }
   .lp-legal-content { padding: 1.5rem; }
+}
+/* Navbar brand hover and CRM color */
+.lp-brand-name {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+.lp-brand-name:hover {
+  transform: scale(1.1);
+}
+.crm {
+  color: #ff0000;
+}
+
+/* CTA login button hover for footer-top CTA */
+.cta-login-btn:hover {
+  color: #ffffff;
+  text-decoration: none;
 }

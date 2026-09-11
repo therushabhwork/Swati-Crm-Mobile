@@ -11,7 +11,7 @@ export default function LandingFooter() {
             <div className="lp-brand" style={{ marginBottom: '1.25rem' }}>
               <img src={swatiLogo} alt="Swati Logo" className="lp-brand-logo" />
               <div className="lp-brand-text">
-                <span className="lp-brand-name" style={{ color: '#ffffff' }}>SwatiCRM</span>
+                <span className="lp-brand-name" style={{ color: '#ffffff' }}>Swati<span className="crm">CRM</span></span>
               </div>
             </div>
             <p style={{ fontSize: '0.9rem', lineHeight: '1.6', maxWidth: '320px', color: '#94a3b8' }}>

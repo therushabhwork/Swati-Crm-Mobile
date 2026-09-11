@@ -23,7 +23,9 @@ export default function LandingNavbar() {
         <Link to="/" className="lp-brand">
           <img src={swatiLogo} alt="SwatiCRM Logo" className="lp-brand-logo" />
           <div className="lp-brand-text">
-            <span className="lp-brand-name">SwatiCRM</span>
+            <span className="lp-brand-name">
+            Swati<span className="crm">CRM</span>
+          </span>
           </div>
         </Link>
 
