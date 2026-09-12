@@ -9,6 +9,9 @@ const router = express.Router()
 
 router.use(requireAuth)
 
+router.get('/me/legal-acceptance', userController.getLegalAcceptance)
+router.post('/me/legal-acceptance', userController.acceptLegal)
+
 router.get('/designations', userController.getDistinctDesignations)
 router.get('/directory', userController.listUserDirectory)
 router.post('/', requireAdmin, userController.createUser)

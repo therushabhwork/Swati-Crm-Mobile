@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
+import { BlurView } from 'expo-blur'
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../auth/AuthContext'
 
 const LoginScreen = () => {
@@ -21,46 +23,68 @@ const LoginScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>CRM Login</Text>
-      <TextInput
-        style={styles.input}
-        value={username}
-        onChangeText={setUsername}
-        placeholder="Email or username"
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Password"
-        secureTextEntry
-      />
-      <View style={styles.roleRow}>
-        {['user', 'admin'].map((nextRole) => (
-          <TouchableOpacity
-            key={nextRole}
-            style={[styles.roleButton, role === nextRole && styles.roleButtonActive]}
-            onPress={() => setRole(nextRole)}
-          >
-            <Text style={[styles.roleText, role === nextRole && styles.roleTextActive]}>{nextRole}</Text>
+    <LinearGradient colors={['#e0eaff', '#ffffff']} style={styles.page}>
+      <BlurView style={styles.glass} intensity={80} tint="default">
+        <View style={styles.container}>
+          <Text style={styles.title}>CRM Login</Text>
+          <TextInput
+            style={styles.input}
+            value={username}
+            onChangeText={setUsername}
+            placeholder="Email or username"
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={styles.input}
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Password"
+            secureTextEntry
+          />
+          <View style={styles.roleRow}>
+            {['user', 'admin'].map((nextRole) => (
+              <TouchableOpacity
+                key={nextRole}
+                style={[styles.roleButton, role === nextRole && styles.roleButtonActive]}
+                onPress={() => setRole(nextRole)}
+              >
+                <Text style={[styles.roleText, role === nextRole && styles.roleTextActive]}>{nextRole}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity style={styles.primaryButton} onPress={handleLogin} disabled={submitting}>
+            <Text style={styles.primaryText}>{submitting ? 'Signing in...' : 'Login'}</Text>
           </TouchableOpacity>
-        ))}
-      </View>
-      <TouchableOpacity style={styles.primaryButton} onPress={handleLogin} disabled={submitting}>
-        <Text style={styles.primaryText}>{submitting ? 'Signing in...' : 'Login'}</Text>
-      </TouchableOpacity>
-    </View>
+        </View>
+      </BlurView>
+    </LinearGradient>
   )
 }
 
 const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
     padding: 20,
     gap: 12,
+  },
+  glass: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 12,
+    margin: 16,
+    overflow: 'hidden',
+    // fallback for older RN versions
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   title: {
     color: '#1f3652',

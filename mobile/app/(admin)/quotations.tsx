@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { router, useLocalSearchParams } from 'expo-router';
+import { BackHandler } from 'react-native';
 import apiClient from '../../src/api/client';
 import { AppHeader } from '../../src/components/ui/AppHeader';
 import { ResponsiveList } from '../../src/components/ui/ResponsiveList';
@@ -13,6 +14,7 @@ import { ResultsHeader } from '../../src/components/ui/ResultsHeader';
 import { colors } from '../../src/theme/colors';
 
 export default function QuotationsScreen() {
+  const { from } = useLocalSearchParams();
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,6 +37,17 @@ export default function QuotationsScreen() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (from === 'more') {
+      const onBackPress = () => {
+        router.push('/(admin)/more' as any);
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }
+  }, [from]);
 
   const columns = [
     { id: 'quotationNumber', header: 'Quotation Number', accessor: (item: any) => item.quotationNo || item.quotationNumber || item.id || '-', width: 140 },
@@ -150,7 +163,16 @@ export default function QuotationsScreen() {
           placeholder="Search quotations..."
         />
       ) : (
-        <AppHeader title="Quotations" onSearch={() => setIsSearchVisible(true)} />
+        <AppHeader 
+          title="Quotations" 
+          onSearch={() => setIsSearchVisible(true)}
+          showBack={from === 'more'}
+          onBack={() => {
+            if (from === 'more') {
+              router.push('/(admin)/more' as any);
+            }
+          }}
+        />
       )}
       
       {isLoading ? (

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Image, Pressable, ScrollView } from 'react-native';
 import { useAuth } from '../src/context/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { colors } from '../src/theme/colors';
+import { Linking } from 'react-native';
+import { LEGAL_URLS } from '../config/legal';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
@@ -24,7 +26,7 @@ export default function LoginScreen() {
       Alert.alert('Error', 'Please enter username and password');
       return;
     }
-    
+
     setIsSubmitting(true);
     console.log('[LoginScreen] Attempting to login via useAuth...');
     try {
@@ -41,71 +43,71 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <View style={styles.formContainer}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }} showsVerticalScrollIndicator={false}>
+          <View style={styles.formContainer}>
           <View style={styles.logoContainer}>
-            <Image 
+            <Image
               source={
-                username.toLowerCase().includes('@lumossolution.com') 
-                  ? require('../assets/images/lumos-logo.png') 
+                username.toLowerCase().includes('@lumossolution.com')
+                  ? require('../assets/images/lumos-logo.png')
                   : require('../assets/images/logo.png')
-              } 
+              }
               style={
                 username.toLowerCase().includes('@lumossolution.com')
                   ? styles.lumosLogo
                   : styles.logo
-              } 
+              }
             />
           </View>
           <Text style={styles.title}>Sales CRM</Text>
           <Text style={styles.subtitle}>Sign in to your account</Text>
-          
+
+          <TextInput
+            style={styles.input}
+            placeholder="Username or Email"
+            placeholderTextColor={colors.textSecondary}
+            value={username}
+            onChangeText={(text) => {
+              setUsername(text);
+              console.log('[LoginScreen] username changed to length:', text.length);
+            }}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            editable={!isSubmitting}
+          />
+
+          <View style={styles.passwordContainer}>
             <TextInput
-              style={styles.input}
-              placeholder="Username or Email"
+              style={styles.passwordInput}
+              placeholder="Password"
               placeholderTextColor={colors.textSecondary}
-              value={username}
+              value={password}
               onChangeText={(text) => {
-                setUsername(text);
-                console.log('[LoginScreen] username changed to length:', text.length);
+                setPassword(text);
               }}
               autoCapitalize="none"
               autoCorrect={false}
-              keyboardType="email-address"
+              secureTextEntry={!showPassword}
               editable={!isSubmitting}
             />
-            
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                placeholder="Password"
-                placeholderTextColor={colors.textSecondary}
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                }}
-                autoCapitalize="none"
-                autoCorrect={false}
-                secureTextEntry={!showPassword}
-                editable={!isSubmitting}
+            <TouchableOpacity
+              style={styles.eyeIconContainer}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Feather
+                name={showPassword ? 'eye' : 'eye-off'}
+                size={20}
+                color={colors.textSecondary}
               />
-              <TouchableOpacity 
-                style={styles.eyeIconContainer}
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Feather 
-                  name={showPassword ? 'eye' : 'eye-off'} 
-                  size={20} 
-                  color={colors.textSecondary} 
-                />
-              </TouchableOpacity>
-            </View>
-          
-          <TouchableOpacity 
-            style={styles.button} 
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            style={styles.button}
             onPress={handleLogin}
             disabled={isSubmitting}
           >
@@ -115,7 +117,21 @@ export default function LoginScreen() {
               <Text style={styles.buttonText}>Log In</Text>
             )}
           </TouchableOpacity>
+          
+          <View style={styles.legalNotice}>
+            <Text style={styles.legalText}>
+              By continuing, you acknowledge our{' '}
+            </Text>
+            <Pressable onPress={() => Linking.openURL(LEGAL_URLS.privacyPolicy)}>
+              <Text style={styles.link}>Privacy Policy</Text>
+            </Pressable>
+            <Text style={styles.legalText}> and </Text>
+            <Pressable onPress={() => Linking.openURL(LEGAL_URLS.termsAndConditions)}>
+              <Text style={styles.link}>Terms & Conditions</Text>
+            </Pressable>
+          </View>
         </View>
+      </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -215,5 +231,21 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  legalNotice: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
+  legalText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  link: {
+    fontSize: 12,
+    color: colors.primary,
+    textDecorationLine: 'underline',
   },
 });

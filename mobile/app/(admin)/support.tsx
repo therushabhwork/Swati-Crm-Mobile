@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
-import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { router, useLocalSearchParams } from 'expo-router';
+import { BackHandler } from 'react-native';
 import apiClient from '../../src/api/client';
 import { AppHeader } from '../../src/components/ui/AppHeader';
 import { ResponsiveList } from '../../src/components/ui/ResponsiveList';
@@ -32,7 +33,8 @@ const normalizeSupportRequestRecord = (sr: any = {}) => {
   };
 };
 
-export default function SupportScreen() {
+export default function SupportRequestsScreen() {
+  const { from } = useLocalSearchParams();
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isClosedTab, setIsClosedTab] = useState(false);
@@ -82,6 +84,17 @@ export default function SupportScreen() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (from === 'more') {
+      const onBackPress = () => {
+        router.push('/(admin)/more' as any);
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }
+  }, [from]);
 
   const openColumns = [
     { id: 'srNumber', header: 'SR Number', accessor: (item: any) => item.srNumber || '-', width: 100 },
@@ -257,7 +270,16 @@ export default function SupportScreen() {
           placeholder="Search requests..."
         />
       ) : (
-        <AppHeader title="Support Requests" onSearch={() => setIsSearchVisible(true)} />
+        <AppHeader 
+          title="Support Requests" 
+          onSearch={() => setIsSearchVisible(true)}
+          showBack={from === 'more'}
+          onBack={() => {
+            if (from === 'more') {
+              router.push('/(admin)/more' as any);
+            }
+          }}
+        />
       )}
       
       <View style={styles.segmentContainer}>
@@ -299,6 +321,7 @@ export default function SupportScreen() {
               onSearch={setSearchQuery} 
               onAddPress={() => router.push('/(admin)/support/new')}
               addLabel="Add SR"
+              variant="slider"
             />
           )}
           <ResponsiveList

@@ -209,8 +209,34 @@ const getDistinctDesignations = async (req, res, next) => {
   }
 }
 
+const getLegalAcceptance = async (req, res, next) => {
+  try {
+    const { getMongoModel } = require('../models/mongoModels');
+    const User = getMongoModel('users');
+    const userId = req.user?.id;
+    const user = await User.findOne({ legacyId: userId }).lean();
+    res.json({ success: true, accepted: Boolean(user?.legal_accepted) });
+  } catch (error) {
+    next(error);
+  }
+}
+
+const acceptLegal = async (req, res, next) => {
+  try {
+    const { getMongoModel } = require('../models/mongoModels');
+    const User = getMongoModel('users');
+    const userId = req.user?.id;
+    await User.updateOne({ legacyId: userId }, { $set: { legal_accepted: true } });
+    res.json({ success: true, message: 'Legal agreements accepted.' });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getDistinctDesignations,
+  getLegalAcceptance,
+  acceptLegal,
   createUser,
   updateUser,
   deleteUser,

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, TextInput } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { BackHandler } from 'react-native';
 import apiClient from '../../src/api/client';
 import { AppHeader } from '../../src/components/ui/AppHeader';
 import { LoadingSkeleton } from '../../src/components/ui/LoadingSkeleton';
@@ -25,6 +26,7 @@ export default function TasksScreen() {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState('');
   const params = useLocalSearchParams();
+  const { from } = params;
 
   useEffect(() => {
     if (params.date && typeof params.date === 'string') {
@@ -65,6 +67,17 @@ export default function TasksScreen() {
       fetchData(true);
     }, [])
   );
+
+  useEffect(() => {
+    if (from === 'more') {
+      const onBackPress = () => {
+        router.push('/(tabs)/more' as any);
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }
+  }, [from]);
 
   const filteredData = data.filter(item => {
     const searchString = `${item.title} ${item.taskName}`.toLowerCase();
@@ -110,6 +123,12 @@ export default function TasksScreen() {
       <AppHeader 
         title="Reminders" 
         onSearch={() => setIsSearchVisible(true)}
+        showBack={from === 'more'}
+        onBack={() => {
+          if (from === 'more') {
+            router.push('/(tabs)/more' as any);
+          }
+        }}
         rightContent={
           <TouchableOpacity onPress={() => setIsCalendarVisible(true)} style={{ marginLeft: 8 }}>
             <Feather name="calendar" size={20} color={colors.primary} />
