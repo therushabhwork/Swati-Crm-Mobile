@@ -1,5 +1,5 @@
 import { authService } from './authService'
-import { CRM_FILTER_USERS, getCrmOwnerRecord, normalizeCrmUserName } from '../features/users/crmUserDirectory'
+import { getCrmFilterUsers, getCrmOwnerRecord, normalizeCrmUserName } from '../features/users/crmUserDirectory'
 
 const normalizeValue = (value) =>
   String(value || '')
@@ -58,7 +58,7 @@ const collectCandidateNames = (record = {}) => unique([
 const resolveLinkedUserScope = (user = {}) => {
   const ownerRecord = getCrmOwnerRecord(user.ownerCode || user.owner_code || user.name || user.username)
   const linkedUsers = ownerRecord?.userGroup
-    ? CRM_FILTER_USERS.filter((entry) => entry.userGroup === ownerRecord.userGroup)
+    ? getCrmFilterUsers().filter((entry) => entry.userGroup === ownerRecord.userGroup)
     : []
 
   return {

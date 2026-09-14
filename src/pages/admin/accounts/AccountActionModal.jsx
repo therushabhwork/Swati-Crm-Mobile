@@ -6,7 +6,7 @@ import { remarkApi } from '../../../services/remarkApi'
 import { reminderApi } from '../../../services/reminderApi'
 import { calendarApi } from '../../../services/calendarApi'
 import { ACCOUNT_ACTION_MAP } from '../../../features/adminAccounts/config/accountActions'
-import { getAccountOwnerOptionLabel, getCachedAccountOwnerOptions, loadAccountOwnerOptions } from '../../../features/adminAccounts/utils/accountOwnerOptions'
+import { getAccountOwnerOptionLabel, getCachedAccountOwnerOptions, loadAccountOwnerOptions, filterAccountOwnerOptionsByVertical } from '../../../features/adminAccounts/utils/accountOwnerOptions'
 import {
   ACCOUNT_ORDER_STATUS_OPTIONS,
   ACCOUNT_QUOTATION_STATUS_OPTIONS,
@@ -207,6 +207,8 @@ const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
         ownerName,
         ownerId: owner?.id || account.raw?.ownerId || null,
         assignedUserId: owner?.id || account.raw?.assignedUserId || null,
+        accountOwnerCode: owner?.ownerCode || '',
+        company: owner?.company || owner?.companyName || account.accountCategory || '',
       }
     } else if (actionKey === 'add-document') {
       if (!documentName.trim()) {
@@ -253,7 +255,7 @@ const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
     if (actionKey === 'add-reminder') {
       const remindAt = `${reminderDate}T${reminderTime || '09:00'}:00`
       const reminderTitle = `${account.name || 'Account'} reminder`
-      const assignedTo = account.raw?.assignedTo || account.raw?.ownerUserId || account.raw?.createdBy || null
+      const assignedTo = account.raw?.assignedTo || account.raw?.ownerUserId || account.accountOwner || account.raw?.createdBy || null
 
       await Promise.allSettled([
         reminderApi.createReminder({
@@ -391,10 +393,10 @@ const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
       return (
         <div className="admin-accounts-action-form-grid">
           <label className="admin-accounts-bulk-field admin-accounts-action-field-full">
-            Account Owner
-            <select value={ownerName} onChange={(event) => setOwnerName(event.target.value)}>
-              {ownerOptions.map((owner) => <option key={owner.id} value={owner.name}>{getAccountOwnerOptionLabel(owner)}</option>)}
-            </select>
+              Account Owner
+              <select value={ownerName} onChange={(event) => setOwnerName(event.target.value)}>
+                {filterAccountOwnerOptionsByVertical(ownerOptions, account.accountCategory).map((owner) => <option key={owner.id} value={owner.name}>{getAccountOwnerOptionLabel(owner)}</option>)}
+              </select>
           </label>
         </div>
       )

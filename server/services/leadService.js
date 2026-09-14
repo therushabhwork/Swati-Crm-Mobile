@@ -49,7 +49,8 @@ const emitConvertedDealRealtime = (action, convertedDeal, actor) => {
 
 const resolveAssignedUser = async (payload = {}, actor) => {
   if (payload.assignedTo) {
-    return userRepository.findUserById(payload.assignedTo)
+    const userById = await userRepository.findUserById(payload.assignedTo)
+    if (userById) return userById
   }
 
   const ownerName = normalizeOwnerNameInput(payload.accountOwner || payload.ownerName || '')
@@ -73,7 +74,7 @@ const resolveAccountScope = async (actor, { includeGroupScope = true } = {}) => 
     }
   }
 
-  const scopeOwnerCodes = getCrmGroupOwnerCodesForUser(actor)
+  const scopeOwnerCodes = await getCrmGroupOwnerCodesForUser(actor)
   const groupUsers = scopeOwnerCodes.length
     ? await userRepository.findUsersByOwnerCodes(scopeOwnerCodes, actor.companyId)
     : []
@@ -123,7 +124,7 @@ const buildLeadPayload = async (payload = {}, actor, existingLead = null) => {
     || existingLead?.accountOwnerCode
     || existingLead?.ownerCode
   )
-  const ownerRecord = getCrmOwnerRecord(
+  const ownerRecord = await getCrmOwnerRecord(
     requestedOwnerCode
     || sanitizedPayload.accountOwner
     || sanitizedPayload.ownerName
@@ -209,9 +210,7 @@ const emitLeadRealtime = async ({ action, lead, actor, assignedUserId, previousL
     action,
   })
 
-  const notificationRecipients = isPrivilegedRole(actor.role)
-    ? [assignedUserId].filter(Boolean)
-    : []
+  const notificationRecipients = [assignedUserId].filter((id) => Boolean(id) && id !== actor.id)
 
   if (action === 'created') {
     socketServer.emitToAdmins(SOCKET_EVENTS.CREATE_LEAD, lead)

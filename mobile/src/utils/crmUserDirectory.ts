@@ -15,43 +15,74 @@ export const normalizeCrmUserName = (value) => stripOwnerCodePrefix(value)
   .toLowerCase()
   .replace(/\s+/g, ' ')
 
-const CRM_DIRECTORY_USERS = [
-  { ownerCode: '1001', name: 'Atish Shah', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['automation.sales@swatiswitchgears.com', 'automation.sales'] },
-  { ownerCode: '1002', name: 'Hasmukh Chauhan', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['hasmukh@swatiswitchgears.com'] },
-  { ownerCode: '1003', name: 'Jagruti Parmar', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['Jagurti Parmar', 'sales.brd2@swatiswitchgears.com', 'sales.brd2'] },
-  { ownerCode: '1004', name: 'Jay Pandya', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['sales2@swatiswitchgears.com', 'sales2'] },
-  { ownerCode: '1005', name: 'Kanubhai Shah', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['Kanu Shah', 'kss@swatiswitchgears.com'] },
-  { ownerCode: '1006', name: 'Keval V Shah', role: 'admin', userGroup: 'Back Office', userType: 'Manager', aliases: ['keval@swatiswitchgears.com'] },
-  { ownerCode: '1017', name: 'Kuldeep Nayi', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: [] },
-  { ownerCode: '1007', name: 'Krunal Patel', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['Krunal patel', 'mkt.brd@swatiswitchgears.com'] },
-  { ownerCode: '1008', name: 'Monali Pataliya', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['sales.brd4@swatiswitchgears.com', 'sales.brd4'] },
-  { ownerCode: '1015', name: 'Naim Vhora', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['Naim Vohra', 'Naim Vora', 'sales1@swatiswitchgears.com', 'sales1'] },
-  { ownerCode: '1009', name: 'Nita Bhavsar', role: 'admin', userGroup: 'Back Office', userType: 'Manager', aliases: ['mkt@swatiswitchgears.com'] },
-  { ownerCode: '1016', name: 'Prasenjit Sahana', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: [] },
-  { ownerCode: '1010', name: 'Rajeshree Parmar', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['sales.brd1@swatiswitchgears.com', 'sales.brd1@swatiswtichgears.com', 'sales.brd1'] },
-  { ownerCode: '1011', name: 'Samir Jha', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['samir@swatiswitchgears.com'] },
-  { ownerCode: '1012', name: 'Support Swati', role: 'user', userGroup: 'Field Staff', userType: 'Support Executive', aliases: [] },
-  { ownerCode: '1013', name: 'Tajammul Solkar', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['Tajamul Rafique Solkar', 'Tajamul Solkar', 'Sales.mumbai@swatiswitchgears.com'] },
-  { ownerCode: '1014', name: 'Vaibhavi Patel', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['sales.ahd@swatiswitchgears.com'] },
-  { ownerCode: '1018', name: 'Bhavesh Prajapati', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['sales.brd5@swatiswitchgears.com', 'sales.brd5'] },
-  { ownerCode: '1019', name: 'Samir Seth', role: 'user', userGroup: 'Back Office', userType: 'Sales Executive', aliases: ['samirsheth@swatiswitchgears.com'] },
-]
+import { userApi } from '../api/userApi'
 
-export const CRM_OWNER_DIRECTORY = CRM_DIRECTORY_USERS.map((user) => ({
-  ...user,
-  ownerDisplayName: user.name,
-}))
+let CRM_DIRECTORY_USERS = []
+let CRM_OWNER_DIRECTORY = []
+let CRM_OWNER_RECORDS_BY_CODE = new Map()
+let CRM_OWNER_RECORDS_BY_NAME = new Map()
+let CRM_OWNER_LABELS = []
+let CRM_OWNER_OPTIONS = []
+let CRM_FILTER_USERS = []
 
-const CRM_OWNER_RECORDS_BY_CODE = new Map(
-  CRM_OWNER_DIRECTORY.map((user) => [user.ownerCode, user])
-)
+export const loadCrmDirectory = async (token) => {
+  try {
+    const data = await userApi.listDirectory(token)
+    // ensure data is array
+    const users = Array.isArray(data) ? data : (data.data || [])
+    
+    CRM_DIRECTORY_USERS = users.map((user) => ({
+      ...user,
+      ownerCode: String(user.ownerCode || user.id || ''),
+      name: user.name || user.username || '',
+      role: user.role || 'user',
+      userGroup: user.userGroup || 'Back Office',
+      userType: user.userType || 'Sales Executive',
+      aliases: user.aliases || [],
+    })).filter(u => Boolean(u.ownerCode) && Boolean(u.name))
 
-const CRM_OWNER_RECORDS_BY_NAME = new Map(
-  CRM_OWNER_DIRECTORY.flatMap((user) => [
-    [normalizeCrmUserName(user.name), user],
-    ...user.aliases.map((alias) => [normalizeCrmUserName(alias), user]),
-  ])
-)
+    CRM_OWNER_DIRECTORY = CRM_DIRECTORY_USERS.map((user) => ({
+      ...user,
+      ownerDisplayName: user.name,
+    }))
+
+    CRM_OWNER_RECORDS_BY_CODE = new Map(
+      CRM_OWNER_DIRECTORY.map((user) => [user.ownerCode, user])
+    )
+
+    CRM_OWNER_RECORDS_BY_NAME = new Map(
+      CRM_OWNER_DIRECTORY.flatMap((user) => [
+        [normalizeCrmUserName(user.name), user],
+        ...user.aliases.map((alias) => [normalizeCrmUserName(alias), user]),
+      ])
+    )
+
+    CRM_OWNER_LABELS = CRM_OWNER_DIRECTORY.map((user) => user.name)
+
+    CRM_OWNER_OPTIONS = CRM_OWNER_DIRECTORY.map((user) => ({
+      value: user.name,
+      label: user.ownerDisplayName,
+      ownerCode: user.ownerCode,
+      ownerName: user.name,
+    }))
+
+    CRM_FILTER_USERS = CRM_OWNER_DIRECTORY.map((user) => ({
+      id: `crm-${toSlug(user.name)}`,
+      username: toSlug(user.name),
+      name: user.name,
+      ownerCode: user.ownerCode,
+      ownerDisplayName: user.ownerDisplayName,
+      email: user.email || '',
+      role: user.role,
+      status: 'approved',
+      isApproved: true,
+      userGroup: user.userGroup,
+      userType: user.userType,
+    }))
+  } catch (error) {
+    console.error('Failed to load CRM directory', error)
+  }
+}
 
 export const getCrmOwnerRecord = (value) => {
   const trimmedValue = String(value || '').trim()
@@ -87,46 +118,23 @@ export const getCrmOwnerDisplay = (value, fallbackValue = '') => {
 }
 
 export const isSameCrmOwner = (leftValue, rightValue) => {
-  // When both values resolve to a known CRM owner (by code, name, or alias),
-  // compare on the canonical owner code so that a code ("1006"), a name
-  // ("Keval V Shah"), and a code-prefixed name ("1006 - Keval V Shah") all
-  // match the same person.
   const leftRecord = getCrmOwnerRecord(leftValue)
   const rightRecord = getCrmOwnerRecord(rightValue)
   if (leftRecord && rightRecord) {
     return leftRecord.ownerCode === rightRecord.ownerCode
   }
 
-  // Fall back to normalized-name comparison for owners outside the directory
-  // (e.g. ad-hoc users like "parth").
   const leftNormalizedValue = normalizeCrmUserName(leftValue)
   const rightNormalizedValue = normalizeCrmUserName(rightValue)
 
   return Boolean(leftNormalizedValue) && leftNormalizedValue === rightNormalizedValue
 }
 
-export const CRM_OWNER_LABELS = CRM_OWNER_DIRECTORY.map((user) => user.name)
+export const getCrmOwnerLabels = () => CRM_OWNER_LABELS
 
-export const CRM_OWNER_OPTIONS = CRM_OWNER_DIRECTORY.map((user) => ({
-  value: user.name,
-  label: user.ownerDisplayName,
-  ownerCode: user.ownerCode,
-  ownerName: user.name,
-}))
+export const getCrmOwnerOptions = () => CRM_OWNER_OPTIONS
 
-export const CRM_FILTER_USERS = CRM_OWNER_DIRECTORY.map((user) => ({
-  id: `crm-${toSlug(user.name)}`,
-  username: toSlug(user.name),
-  name: user.name,
-  ownerCode: user.ownerCode,
-  ownerDisplayName: user.ownerDisplayName,
-  email: '',
-  role: user.role,
-  status: 'approved',
-  isApproved: true,
-  userGroup: user.userGroup,
-  userType: user.userType,
-}))
+export const getCrmFilterUsers = () => CRM_FILTER_USERS
 
 export const isHiddenFilterUser = (user = {}) => {
   const searchable = [

@@ -87,7 +87,7 @@ import Tasks from './pages/tasks/Tasks'
 import UserDashboardPage from './pages/user/UserDashboardPage'
 import UserRemindersPage from './pages/user/UserRemindersPage'
 import UserDataManagerPage from './pages/user/UserDataManagerPage'
-import { ACCOUNT_OWNER_OPTIONS } from './features/accounts/config/accountDropdownOptions'
+import { getCrmOwnerOptions } from './features/users/crmUserDirectory'
 import { DASHBOARD_ROUTES } from './utils/constants'
 
 const LAUNCHPAD_ALLOWED_EMAILS = new Set([
@@ -198,11 +198,11 @@ function App() {
                 <Route path="accounts/no-follow-leads" element={<MyGroupAccountsPage variantKey="noFollowLeads" />} />
                 <Route path="accounts/actions/:actionKey" element={<AccountActionPlaceholderPage />} />
                 <Route path="customers" element={<Navigate to="/customers/search" replace />} />
-                <Route path="customers/add" element={<AdminCustomersPage variantKey="add" basePath="/customers" showActionMenu={false} ownerOptionsOverride={ACCOUNT_OWNER_OPTIONS} />} />
-                <Route path="customers/search" element={<AdminCustomersPage variantKey="search" basePath="/customers" ownerOptionsOverride={ACCOUNT_OWNER_OPTIONS} />} />
-                <Route path="customers/my-customers" element={<AdminCustomersPage variantKey="myCustomers" basePath="/customers" ownerOptionsOverride={ACCOUNT_OWNER_OPTIONS} />} />
-                <Route path="customers/view/:customerId" element={<AdminCustomersPage variantKey="view" basePath="/customers" ownerOptionsOverride={ACCOUNT_OWNER_OPTIONS} />} />
-                <Route path="customers/manage/:customerId" element={<AdminCustomersPage variantKey="manage" basePath="/customers" ownerOptionsOverride={ACCOUNT_OWNER_OPTIONS} />} />
+                <Route path="customers/add" element={<AdminCustomersPage variantKey="add" basePath="/customers" showActionMenu={false} ownerOptionsOverride={getCrmOwnerOptions()} />} />
+                <Route path="customers/search" element={<AdminCustomersPage variantKey="search" basePath="/customers" ownerOptionsOverride={getCrmOwnerOptions()} />} />
+                <Route path="customers/my-customers" element={<AdminCustomersPage variantKey="myCustomers" basePath="/customers" ownerOptionsOverride={getCrmOwnerOptions()} />} />
+                <Route path="customers/view/:customerId" element={<AdminCustomersPage variantKey="view" basePath="/customers" ownerOptionsOverride={getCrmOwnerOptions()} />} />
+                <Route path="customers/manage/:customerId" element={<AdminCustomersPage variantKey="manage" basePath="/customers" ownerOptionsOverride={getCrmOwnerOptions()} />} />
                 <Route path="deals" element={<Navigate to="/deals/view" replace />} />
                 <Route path="deals/add" element={<AdminAddDealPage basePath="/deals" customerBasePath="/customers" />} />
                 <Route path="deals/search" element={<Deals variantKey="search" />} />

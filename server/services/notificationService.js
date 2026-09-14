@@ -66,20 +66,28 @@ const notifyUsers = async ({ senderId, receiverIds, message, companyId, notifica
     for (const rid of uniqueReceiverIds) {
       const num = Number(rid)
       if (!isNaN(num)) {
+        console.log(`[NOTIFICATION-DIAG] Receiver ${rid} parsed as Numeric ID: ${num}`)
         resolvedNumericIds.push(num)
       } else if (typeof rid === 'string' && rid.length === 24) {
+        console.log(`[NOTIFICATION-DIAG] Receiver ${rid} identified as MongoDB ObjectId. Looking up legacy ID in users collection...`)
         // It's a Mongoose ObjectId. We must translate it to the legacyId!
         try {
           const userRec = await userRepository.findRawUserById(rid)
           if (userRec && userRec.id) {
+            console.log(`[NOTIFICATION-DIAG] SUCCESS: MongoDB user ${rid} resolves to Legacy ID ${userRec.id}`)
             resolvedNumericIds.push(Number(userRec.id))
+          } else {
+            console.warn(`[NOTIFICATION-DIAG] FAILED: User found but missing legacy 'id' field for ObjectId ${rid}`)
           }
         } catch (e) {
-          console.warn(`[NOTIFICATION] Failed to resolve legacyId for user ${rid}`)
+          console.warn(`[NOTIFICATION-DIAG] ERROR: Failed to query MongoDB users collection for ${rid}`, e.message)
         }
+      } else {
+         console.warn(`[NOTIFICATION-DIAG] UNKNOWN ID FORMAT for receiver: ${rid}`)
       }
     }
     
+    console.log(`[NOTIFICATION-DIAG] Querying user_devices collection for legacy IDs: [${resolvedNumericIds.join(', ')}]`)
     const devices = await userDeviceRepository.getActiveDevicesForUsers(resolvedNumericIds)
     const messages = []
 
@@ -93,22 +101,25 @@ const notifyUsers = async ({ senderId, receiverIds, message, companyId, notifica
 
       console.log(`[NOTIFICATION] Platform: ${device.platform || 'android'}`)
       console.log(`[NOTIFICATION] Push token found for user ${device.userId}: yes`)
-      console.log(`[NOTIFICATION] Token: ${device.pushToken.slice(0, 18)}...`)
+      console.log(`[NOTIFICATION] FULL Token: ${device.pushToken}`)
 
       const record = records.find(r => String(r.receiverId) === String(device.userId))
       
       messages.push({
         to: device.pushToken,
         sound: 'default',
-        title: 'New Activity',
+        title: 'CRM Notification',
         body: message,
         data: record || { notificationType, entityType, entityId },
-        channelId: 'default', // Ensures it uses the Android channel we create
+        channelId: 'crm-high-priority', // Uses the newly created Android channel
+        priority: 'high', // Forces Android to wake up and show lockscreen notification
+        badge: 1,
       })
     }
 
     if (messages.length > 0) {
       console.log(`[NOTIFICATION] Sending ${messages.length} mobile push notification(s)`)
+      console.log(`[NOTIFICATION] EXACT Payload being sent to Expo:`, JSON.stringify(messages, null, 2))
       const chunks = expo.chunkPushNotifications(messages)
       for (const chunk of chunks) {
         try {

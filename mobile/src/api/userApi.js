@@ -1,11 +1,18 @@
-import { request } from './client'
+import apiClient from './client'
+
+const unwrapData = (response, fallback) => (
+  response?.data?.data ?? response?.data ?? fallback
+)
 
 export const userApi = {
-  listUsers(token) {
-    return request('/users', { token })
+  async listUsers(token) {
+    // If a specific token is needed, headers can be passed
+    const response = await apiClient.get('/users', { headers: { Authorization: `Bearer ${token}` } })
+    return unwrapData(response, [])
   },
 
-  listDirectory(token) {
-    return request('/users/directory', { token })
+  async listDirectory(token) {
+    const response = await apiClient.get('/users/directory', { headers: { Authorization: `Bearer ${token}` } })
+    return unwrapData(response, [])
   },
 }

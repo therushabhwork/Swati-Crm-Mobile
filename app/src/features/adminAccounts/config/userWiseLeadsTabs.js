@@ -1,4 +1,4 @@
-import { CRM_OWNER_LABELS } from '../../users/crmUserDirectory'
+import { getCrmOwnerLabels } from '../../users/crmUserDirectory'
 
 const toSlug = (value) => String(value || '')
   .trim()
@@ -10,7 +10,7 @@ const USER_NAME_ALIASES = {
   'Keval V Shah': ['Keval Shah'],
 }
 
-export const USER_WISE_LEADS_TABS = CRM_OWNER_LABELS.map((name, index) => ({
+export const getUserWiseLeadsTabs = () => getCrmOwnerLabels().map((name, index) => ({
   key: toSlug(name),
   label: name,
   order: index + 1,
@@ -38,7 +38,7 @@ export const getUserWiseLeadsTabMatch = (record) => {
     return null
   }
 
-  return USER_WISE_LEADS_TABS.find((tab) =>
+  return getUserWiseLeadsTabs().find((tab) =>
     tab.userNames.some((userName) => candidateValues.includes(normalizeValue(userName)))
   ) || null
 }

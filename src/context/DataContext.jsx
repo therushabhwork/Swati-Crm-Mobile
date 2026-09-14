@@ -14,7 +14,7 @@ import { convertedDealApi, normalizeConvertedDealRecord } from '../services/conv
 import { quotationApi } from '../services/quotationApi'
 import { setupApi } from '../services/setupApi'
 import { SOCKET_ENTITY_TYPES, SOCKET_EVENTS } from '../constants/socketEvents'
-import { getCanonicalCrmUserName, getCrmOwnerCode } from '../features/users/crmUserDirectory'
+import { getCanonicalCrmUserName, getCrmOwnerCode, loadCrmDirectory } from '../features/users/crmUserDirectory'
 import {
   buildRealtimePayload,
   canUserAccessEntity,
@@ -310,6 +310,7 @@ export const DataProvider = ({ children }) => {
     setQuotationsError('')
 
     try {
+      await loadCrmDirectory()
       const results = await Promise.allSettled([
         leadApi.getLeads(),
         dealApi.getDeals(),

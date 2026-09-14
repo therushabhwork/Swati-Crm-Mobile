@@ -37,3 +37,19 @@ export const loadAccountOwnerOptions = async () => {
 }
 
 export const getAccountOwnerOptionLabel = getOwnerOptionLabel
+
+export const filterAccountOwnerOptionsByVertical = (options, verticalName) => {
+  if (!verticalName || typeof verticalName !== 'string') return options;
+  const target = verticalName.toLowerCase().trim();
+  
+  if (target !== 'swati' && target !== 'lumos') return options;
+
+  return options.filter((owner) => {
+    const compStr = String(owner.company || owner.companyName || '').toLowerCase().trim();
+    const emailStr = String(owner.email || '').toLowerCase().trim();
+    if (target === 'lumos') {
+      return compStr.includes('lumos') || Number(owner.companyId) === 2 || emailStr.includes('lumos');
+    }
+    return compStr.includes('swati') || Number(owner.companyId) === 1 || emailStr.includes('swati');
+  });
+};

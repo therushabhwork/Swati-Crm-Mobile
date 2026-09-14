@@ -1,6 +1,6 @@
 import { generateId } from '../utils/helpers'
 import {
-  CRM_FILTER_USERS,
+  getCrmFilterUsers,
   getCanonicalCrmUserName,
   getCrmOwnerCode,
   getCrmOwnerDisplay,
@@ -65,7 +65,7 @@ class DataService {
     const userRecord = typeof userOrId === 'object' ? userOrId : {}
     const ownerRecord = getCrmOwnerRecord(userRecord.ownerCode || userRecord.owner_code || scopedUser.name || userRecord.username)
     const linkedUsers = ownerRecord?.userGroup
-      ? CRM_FILTER_USERS.filter((entry) => entry.userGroup === ownerRecord.userGroup)
+      ? getCrmFilterUsers().filter((entry) => entry.userGroup === ownerRecord.userGroup)
       : []
 
     return {

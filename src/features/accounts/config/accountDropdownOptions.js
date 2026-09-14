@@ -1,13 +1,18 @@
-import { CRM_OWNER_LABELS, CRM_OWNER_OPTIONS } from '../../users/crmUserDirectory'
+import { getCrmOwnerLabels, getCrmOwnerOptions } from '../../users/crmUserDirectory'
 
 const toOption = (label) => ({
   value: label,
   label,
 })
 
-export const ACCOUNT_OWNER_LABELS = CRM_OWNER_LABELS
+// Account stages configuration
+export const ACCOUNT_STAGES = [
+  { value: 'new', label: 'New Lead' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'converted', label: 'Converted' },
+]
 
-export const ACCOUNT_OWNER_OPTIONS = CRM_OWNER_OPTIONS
+
 
 export const ACCOUNT_CATEGORY_OPTIONS = [
   'LUMOS',

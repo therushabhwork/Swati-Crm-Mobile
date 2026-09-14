@@ -347,7 +347,7 @@ const AccountActionPlaceholderPage = () => {
     if (actionKey === 'add-reminder') {
       const remindAt = `${reminderDate}T${reminderTime || '09:00'}:00`
       const reminderTitle = `${selectedAccount.name || 'Account'} reminder`
-      const assignedTo = selectedAccount.raw?.assignedTo || selectedAccount.raw?.ownerUserId || user?.id
+      const assignedTo = selectedAccount.raw?.assignedTo || selectedAccount.raw?.ownerUserId || selectedAccount.accountOwner || user?.id
 
       try {
         await Promise.allSettled([

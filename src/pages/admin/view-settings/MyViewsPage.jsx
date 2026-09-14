@@ -10,8 +10,8 @@ import {
   FaCheckCircle,
   FaArrowRight,
 } from 'react-icons/fa'
+import { getCrmOwnerLabels } from '../../../features/users/crmUserDirectory'
 import {
-  ACCOUNT_OWNER_LABELS,
   SW_BARODA_MUM_OWNER_LABELS,
 } from '../../../features/accounts/config/accountDropdownOptions'
 import './MyViewsPage.css'
@@ -65,7 +65,7 @@ const VIEWS_DATA = {
       filters: [
         {
           label: 'Account Owner',
-          values: ACCOUNT_OWNER_LABELS,
+          values: getCrmOwnerLabels(),
         },
       ],
     },

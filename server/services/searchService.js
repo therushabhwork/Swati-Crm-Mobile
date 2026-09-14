@@ -35,7 +35,7 @@ const globalSearch = async (actor, term) => {
 
   const pattern = regexSearch(q)
   const scopeOwnerCodes = !isPrivilegedRole(actor.role)
-    ? getCrmGroupOwnerCodesForUser(actor)
+    ? await getCrmGroupOwnerCodesForUser(actor)
     : []
   const groupUsers = scopeOwnerCodes.length
     ? await userRepository.findUsersByOwnerCodes(scopeOwnerCodes, actor.companyId)

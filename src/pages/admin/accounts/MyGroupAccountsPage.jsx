@@ -31,7 +31,7 @@ import { buildAdminDealDetailUrl } from '../../../features/adminDeals/config/adm
 import { leadApi } from '../../../services/leadApi'
 import { authService } from '../../../services/authService'
 import { getCityForUser } from '../../../features/adminAccounts/config/cityFilters'
-import { ACCOUNT_OWNER_OPTIONS } from '../../../features/accounts/config/accountDropdownOptions';
+import { getCrmOwnerOptions } from '../../../features/users/crmUserDirectory';
 import { getCrmOwnerCode } from '../../../features/users/crmUserDirectory';
 import './MyGroupAccounts.css'
 import { matchesSectionSearch } from '../../../utils/sectionSearch'
@@ -495,7 +495,7 @@ const resolveAccountOwnerFilterValue = (row = {}) => (
 
 const accountOwnerFilterOptions = [
   { value: 'All', label: 'All' },
-  ...ACCOUNT_OWNER_OPTIONS,
+  ...getCrmOwnerOptions(),
 ]
 
 const matchesViewAllDropdownFilters = (row = {}, cityFilter = 'All', ownerFilter = 'All') => {

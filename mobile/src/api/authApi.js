@@ -1,40 +1,38 @@
-import { request } from './client'
+import apiClient from './client'
+
+const unwrapData = (response, fallback) => (
+  response?.data?.data ?? response?.data ?? fallback
+)
 
 export const authApi = {
-  login({ username, password, role = 'user', rememberMe = true }) {
-    return request('/auth/login', {
-      method: 'POST',
-      body: {
-        username,
-        password,
-        role,
-        rememberMe,
-        clientType: 'mobile',
-        includeToken: true,
-      },
+  async login({ username, password, role = 'user', rememberMe = true }) {
+    const response = await apiClient.post('/auth/login', {
+      username,
+      password,
+      role,
+      rememberMe,
+      clientType: 'mobile',
+      includeToken: true,
     })
+    return unwrapData(response, null)
   },
 
-  me(token) {
-    return request('/auth/me', { token })
+  async me(token) {
+    const response = await apiClient.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+    return unwrapData(response, null)
   },
 
-  refresh(refreshToken) {
-    return request('/auth/refresh', {
-      method: 'POST',
-      body: {
-        refreshToken,
-        clientType: 'mobile',
-        includeToken: true,
-      },
+  async refresh(refreshToken) {
+    const response = await apiClient.post('/auth/refresh', {
+      refreshToken,
+      clientType: 'mobile',
+      includeToken: true,
     })
+    return unwrapData(response, null)
   },
 
-  logout({ token, refreshToken }) {
-    return request('/auth/logout', {
-      method: 'POST',
-      token,
-      body: { refreshToken },
-    })
+  async logout({ token, refreshToken }) {
+    const response = await apiClient.post('/auth/logout', { refreshToken }, { headers: { Authorization: `Bearer ${token}` } })
+    return unwrapData(response, null)
   },
 }

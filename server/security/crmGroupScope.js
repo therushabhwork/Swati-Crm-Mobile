@@ -18,7 +18,7 @@ const resolveCrmGroupScope = async (actor = {}) => {
     }
   }
 
-  const scopeOwnerCodes = uniqueNumbers(getCrmGroupOwnerCodesForUser(actor))
+  const scopeOwnerCodes = uniqueNumbers(await getCrmGroupOwnerCodesForUser(actor))
   const groupUsers = scopeOwnerCodes.length > 0
     ? await userRepository.findUsersByOwnerCodes(scopeOwnerCodes, actor.companyId)
     : []

@@ -17,7 +17,7 @@ import { colors } from '../../src/theme/colors';
 const normalizeSupportRequestRecord = (sr: any = {}) => {
   const data = sr.data && typeof sr.data === 'object' ? sr.data : {};
   const srNumber = sr.srNumber || data.srNumber || sr.legacyId || data.id;
-  
+
   return {
     ...data,
     ...sr,
@@ -41,7 +41,7 @@ export default function SupportRequestsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const { user } = useAuth();
-  
+
   const isSupportUser = user?.email?.endsWith('@support.com');
 
   const fetchData = async () => {
@@ -65,8 +65,8 @@ export default function SupportRequestsScreen() {
       'Are you sure you want to close this request?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Close', 
+        {
+          text: 'Close',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -122,17 +122,17 @@ export default function SupportRequestsScreen() {
     const s = (d.status || '').toLowerCase();
     return s === 'open' || s === 'new';
   }).length;
-  
+
   const inProgressCount = data.filter(d => {
     const s = (d.status || '').toLowerCase();
     return s === 'in progress' || s === 'working';
   }).length;
-  
+
   const waitingCount = data.filter(d => {
     const s = (d.status || '').toLowerCase();
     return s === 'waiting' || s === 'pending';
   }).length;
-  
+
   const escalatedCount = data.filter(d => {
     const s = (d.status || '').toLowerCase();
     return s === 'escalated';
@@ -148,13 +148,13 @@ export default function SupportRequestsScreen() {
   const filteredData = data.filter(item => {
     const status = (item.status || '').toLowerCase();
     const isClosedStatus = status === 'closed' || status === 'resolved';
-    
+
     // Check Tab logic
     if (isClosedTab && !isClosedStatus) return false;
     if (!isClosedTab && isClosedStatus) return false;
-    
+
     if (!searchQuery) return true;
-    
+
     // Check Search logic
     const searchString = `
       ${item.srNumber || item.legacyId || item.id || item.ticketNo || ''}
@@ -174,7 +174,7 @@ export default function SupportRequestsScreen() {
     const status = item.status || '-';
     const serviceType = item.requestType || '-';
     const owner = item.ownerName || item.data?.ownerName || item.ownerUserId || item.assignedTo || '-';
-    
+
     // Dates
     const serviceDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-';
     const lastUpdated = item.updatedAt ? new Date(item.updatedAt).toLocaleString() : '-';
@@ -190,8 +190,8 @@ export default function SupportRequestsScreen() {
     else if (s === 'escalated') { statusColor = '#e53e3e'; statusBg = '#fff5f5'; }
 
     return (
-      <TouchableOpacity 
-        style={styles.card} 
+      <TouchableOpacity
+        style={styles.card}
         onPress={() => router.push(`/support-details/${item._id || item.id}`)}
       >
         <View style={styles.cardHeader}>
@@ -200,11 +200,11 @@ export default function SupportRequestsScreen() {
             <Text style={[styles.statusText, { color: statusColor }]}>{status}</Text>
           </View>
         </View>
-        
+
         <Text style={styles.cardTitle}>{custName}</Text>
-        
+
         <View style={styles.cardDivider} />
-        
+
         <View style={styles.cardGrid}>
           <View style={styles.cardGridItem}>
             <Text style={styles.cardLabel}>Service Type</Text>
@@ -237,16 +237,16 @@ export default function SupportRequestsScreen() {
           <Text style={styles.updateLabel}>Last Updated</Text>
           <Text style={styles.updateValue}>{lastUpdated}</Text>
         </View>
-        
+
         {isSupportUser && s !== 'closed' && s !== 'resolved' && !isClosedTab && (
-          <TouchableOpacity 
-            style={styles.closeBtn} 
+          <TouchableOpacity
+            style={styles.closeBtn}
             onPress={() => handleCloseRequest(item._id || item.id)}
           >
             <Text style={styles.closeBtnText}>Close</Text>
           </TouchableOpacity>
         )}
-        
+
         {!isSupportUser && (
           <View style={styles.viewDetailsBtn}>
             <Text style={styles.viewDetailsText}>View Request</Text>
@@ -270,8 +270,8 @@ export default function SupportRequestsScreen() {
           placeholder="Search requests..."
         />
       ) : (
-        <AppHeader 
-          title="Support Requests" 
+        <AppHeader
+          title="Support Requests"
           onSearch={() => setIsSearchVisible(true)}
           showBack={from === 'more'}
           onBack={() => {
@@ -281,16 +281,16 @@ export default function SupportRequestsScreen() {
           }}
         />
       )}
-      
+
       <View style={styles.segmentContainer}>
-        <TouchableOpacity 
-          style={[styles.segmentButton, !isClosedTab && styles.segmentActive]} 
+        <TouchableOpacity
+          style={[styles.segmentButton, !isClosedTab && styles.segmentActive]}
           onPress={() => setIsClosedTab(false)}
         >
           <Text style={[styles.segmentText, !isClosedTab && styles.segmentTextActive]}>Open</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.segmentButton, isClosedTab && styles.segmentActive]} 
+        <TouchableOpacity
+          style={[styles.segmentButton, isClosedTab && styles.segmentActive]}
           onPress={() => setIsClosedTab(true)}
         >
           <Text style={[styles.segmentText, isClosedTab && styles.segmentTextActive]}>Closed</Text>
@@ -305,20 +305,20 @@ export default function SupportRequestsScreen() {
             <ResultsHeader count={filteredData.length} />
           ) : (
             !isClosedTab && (
-              <SummaryWidget 
-                title="Open Requests" 
+              <SummaryWidget
+                title="Open Requests"
                 totalCount={data.filter(d => {
                   const s = (d.status || '').toLowerCase();
                   return s !== 'closed' && s !== 'resolved';
-                }).length} 
-                metrics={summaryMetrics} 
+                }).length}
+                metrics={summaryMetrics}
               />
             )
           )}
-          
+
           {!isSearchVisible && (
-            <ListControls 
-              onSearch={setSearchQuery} 
+            <ListControls
+              onSearch={setSearchQuery}
               onAddPress={() => router.push('/(admin)/support/new')}
               addLabel="Add SR"
               variant="slider"

@@ -6,8 +6,8 @@ import LegacyFormField from '../../components/accounts/LegacyFormField'
 import LegacyFormSection from '../../components/accounts/LegacyFormSection'
 import WizardStepper from '../../components/accounts/WizardStepper'
 import { normalizeAccountRecord } from '../../features/adminAccounts/adapters/normalizeAccountRecord'
+import { getCrmOwnerOptions } from '../../features/users/crmUserDirectory'
 import {
-  ACCOUNT_OWNER_OPTIONS,
   ACCOUNT_SOURCE_OPTIONS,
   CUSTOMER_TYPE_OPTIONS,
   INDUSTRY_TYPE_OPTIONS,
@@ -22,6 +22,11 @@ const steps = [
   { id: 'reminder', label: 'Reminder & Remark' },
 ]
 import { userApi } from '../../services/userApi'
+import {
+  getAccountOwnerOptionLabel,
+  loadAccountOwnerOptions,
+  filterAccountOwnerOptionsByVertical,
+} from '../../features/adminAccounts/utils/accountOwnerOptions'
 
 const accountCategories = [
   { value: 'LUMOS', label: 'LUMOS' },
@@ -132,67 +137,35 @@ const fieldGroups = {
 const AddAccountWizard = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { createAccount, addNotification } = useData()
+  const { createAccount, createReminder, addNotification } = useData()
   const { user } = useAuth()
+  const owners = getCrmOwnerOptions()
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState(initialFormData)
   const [errors, setErrors] = useState({})
   const [validationNotice, setValidationNotice] = useState([])
   const [saving, setSaving] = useState(false)
-  const [swatiUsers, setSwatiUsers] = useState([])
-  const [lumosUsers, setLumosUsers] = useState([])
+  const [ownerOptions, setOwnerOptions] = useState([])
 
   React.useEffect(() => {
-    const loadOwners = async () => {
-      try {
-        let swatiRaw = [];
-        let lumosRaw = [];
+    let isMounted = true
+    loadAccountOwnerOptions()
+      .then((options) => {
+        if (isMounted) setOwnerOptions(options)
+      })
+      .catch((err) => console.error('Failed to load account owners:', err))
 
-        try {
-          swatiRaw = await userApi.listDirectory({ company: 'swati', _t: Date.now() });
-          lumosRaw = await userApi.listDirectory({ company: 'lumos', _t: Date.now() });
-        } catch (apiErr) {
-          console.error('[DEBUG] API fetch failed:', apiErr);
-        }
-
-        const formatUser = (u) => {
-          const nameStr = String(u.name || u.username || u.email || u.ownerCode || '').trim();
-          return { value: nameStr, label: nameStr, userObj: u };
-        };
-        const sortAlphabetically = (a, b) => String(a.label).localeCompare(String(b.label));
-
-        let swatiValid = Array.isArray(swatiRaw) ? swatiRaw : [];
-        let lumosValid = Array.isArray(lumosRaw) ? lumosRaw : [];
-
-        if (lumosValid.length === 0) {
-          try {
-            const allUsers = await userApi.listDirectory({ _t: Date.now() });
-            if (Array.isArray(allUsers)) {
-              lumosValid = allUsers.filter((u) => {
-                const compStr = String(u.company || u.companyName || '').toLowerCase().trim();
-                const emailStr = String(u.email || '').toLowerCase().trim();
-                return compStr.includes('lumos') || Number(u.companyId) === 2 || emailStr.includes('lumos');
-              });
-            }
-          } catch (e) {
-            console.error('[DEBUG] Fallback directory fetch failed:', e);
-          }
-        }
-
-        console.log('[DEBUG] Lumos owners loaded:', lumosValid);
-        setSwatiUsers(swatiValid.map(formatUser).sort(sortAlphabetically));
-        setLumosUsers(lumosValid.map(formatUser).sort(sortAlphabetically));
-        
-      } catch (err) {
-        console.error('Failed to load owners:', err);
-      }
-    };
-
-    loadOwners();
-  }, []);
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const categoryUpper = String(formData.accountCategory || '').toUpperCase().trim()
-  const activeOwners = categoryUpper === 'LUMOS' ? lumosUsers : categoryUpper === 'SWATI' ? swatiUsers : []
+  const activeOwners = filterAccountOwnerOptionsByVertical(ownerOptions, formData.accountCategory).map(owner => ({
+    value: owner.name,
+    label: getAccountOwnerOptionLabel(owner),
+    userObj: owner,
+  }))
 
   const isAdmin = useMemo(() => location.pathname.startsWith('/admin'), [location.pathname])
   const backPath = isAdmin ? '/admin/accounts/my-accounts' : '/accounts/my-group-accounts'
@@ -298,7 +271,7 @@ const AddAccountWizard = () => {
     setValidationNotice([])
 
     const selectedOwner = activeOwners.find(o => o.value === formData.accountOwner)
-    const finalOwnerName = selectedOwner ? selectedOwner.label : formData.accountOwner
+    const finalOwnerName = selectedOwner ? selectedOwner.userObj.name : formData.accountOwner
     const finalOwnerCode = selectedOwner && selectedOwner.userObj ? (selectedOwner.userObj.ownerCode || '') : ''
 
     const payload = {
@@ -320,6 +293,7 @@ const AddAccountWizard = () => {
       ...formData,
       accountOwner: finalOwnerName,
       accountOwnerCode: finalOwnerCode,
+      company: selectedOwner?.userObj?.company || selectedOwner?.userObj?.companyName || formData.accountCategory || '',
       contacts: [
         {
           name: formData.contactPerson,
@@ -349,6 +323,21 @@ const AddAccountWizard = () => {
     setSaving(false)
 
     if (result.success) {
+      if (result.data && (formData.reminderDate || formData.remark)) {
+        await createReminder({
+          title: 'Account Follow-up',
+          message: formData.remark?.trim() || '',
+          remindAt: formData.reminderDate ? `${formData.reminderDate}T10:00:00` : new Date().toISOString(),
+          status: 'scheduled',
+          relatedEntityType: 'account',
+          relatedEntityId: result.data.id || result.data._id,
+          assignedTo: finalOwnerName,
+          reminderDate: formData.reminderDate,
+          reminderTime: '10:00',
+          reminderMode: formData.reminderMode,
+        }).catch((err) => console.error('Failed to create reminder', err))
+      }
+
       addNotification(
         'success',
         'Account Created',

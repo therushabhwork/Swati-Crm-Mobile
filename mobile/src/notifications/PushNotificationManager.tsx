@@ -41,7 +41,7 @@ export function PushNotificationManager() {
 
       Notifications.setNotificationHandler({
         handleNotification: async () => ({
-          shouldShowAlert: false, // Suppress OS banner in foreground so our custom toast doesn't overlap
+          shouldShowAlert: true, // Show OS banner even in foreground to ensure it's visible during testing
           shouldPlaySound: true,
           shouldSetBadge: true,
         }),
@@ -140,14 +140,14 @@ export function PushNotificationManager() {
       }
 
       if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-          name: 'default',
+        await Notifications.setNotificationChannelAsync('crm-high-priority', {
+          name: 'CRM High Priority',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
           lightColor: '#FF231F7C',
           lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
         });
-        console.log('[NOTIFICATION] Android channel: created');
+        console.log('[NOTIFICATION] Android channel: created (crm-high-priority)');
       }
 
       if (token) {
@@ -180,7 +180,7 @@ export function PushNotificationManager() {
             },
             trigger: { 
               seconds: 15,
-              channelId: 'default',
+              channelId: 'crm-high-priority',
             }, // Let the native OS handle the timer!
           });
           console.log('\n[NOTIFICATION] ⏰ Native Local Diagnostic Push Scheduled successfully!');

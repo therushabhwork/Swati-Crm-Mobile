@@ -24,7 +24,7 @@ import { ACCOUNT_ACTION_DROPDOWN_LABEL, ACCOUNT_DRAWER_ACTIONS } from '../../../
 import { ACCOUNT_CATEGORY_OPTIONS, ACCOUNT_SOURCE_OPTIONS, CUSTOMER_TYPE_OPTIONS, INDUSTRY_TYPE_OPTIONS, STATE_OPTIONS } from '../../../features/accounts/config/accountDropdownOptions'
 import { ACCOUNT_CHANGE_STATUS_OPTIONS, ACCOUNT_ORDER_STATUS_OPTIONS, ACCOUNT_QUOTATION_STATUS_OPTIONS, ACCOUNT_STATE_OPTIONS } from '../../../features/adminAccounts/config/accountStages'
 import { buildAdminAccountActionUrl } from '../../../features/adminAccounts/utils/accountNavigation'
-import { getAccountOwnerOptionLabel, getCachedAccountOwnerOptions, loadAccountOwnerOptions } from '../../../features/adminAccounts/utils/accountOwnerOptions'
+import { getAccountOwnerOptionLabel, getCachedAccountOwnerOptions, loadAccountOwnerOptions, filterAccountOwnerOptionsByVertical } from '../../../features/adminAccounts/utils/accountOwnerOptions'
 import { formatCurrency, formatDate } from '../../../utils/helpers'
 import AccountActionModal from './AccountActionModal'
 import './MyGroupAccounts.css'
@@ -586,9 +586,16 @@ const AccountDetailsDrawer = ({
                 const canEditThisField = canEdit || !isAdminPortal || field.key === 'addedBy'
                 const canEditField = isSingleFieldEditing && canEditThisField && !field.readOnly
                 const isUserSelectField = ['accountOwner', 'addedBy'].includes(field.key)
-                const visibleOwnerOptions = isUserSelectField && value && !ownerOptions.some((owner) => owner.name === value)
-                  ? [{ id: `current-${value}`, name: value, ownerDisplayName: value }, ...ownerOptions]
-                  : ownerOptions
+
+                let currentOwnerOptions = ownerOptions
+                if (field.key === 'accountOwner') {
+                  const activeCategory = form.accountCategory || account.accountCategory || ''
+                  currentOwnerOptions = filterAccountOwnerOptionsByVertical(ownerOptions, activeCategory)
+                }
+
+                const visibleOwnerOptions = isUserSelectField && value && !currentOwnerOptions.some((owner) => owner.name === value)
+                  ? [{ id: `current-${value}`, name: value, ownerDisplayName: value }, ...currentOwnerOptions]
+                  : (isUserSelectField ? currentOwnerOptions : [])
 
                 return (
                   <label

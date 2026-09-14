@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiClient from '../api/client';
 import { getAccessToken, saveTokens, clearTokens } from '../storage/authStorage';
 import { router } from 'expo-router';
+import { loadCrmDirectory } from '../utils/crmUserDirectory';
 
 type User = {
   id: number;
@@ -40,6 +41,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (res.data?.success && res.data?.user) {
           console.log('[AuthContext] /auth/me successful, setting user:', res.data.user.name);
           setUser(res.data.user);
+          await loadCrmDirectory(token).catch(err => console.error('Failed to load CRM directory', err));
         } else {
           console.log('[AuthContext] /auth/me failed or no user returned. Clearing tokens.');
           await clearTokens();
@@ -73,6 +75,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (res.data.tokens) {
           await saveTokens(res.data.tokens.accessToken, res.data.tokens.refreshToken);
           console.log('[AuthContext] Tokens saved securely');
+          await loadCrmDirectory(res.data.tokens.accessToken).catch(err => console.error('Failed to load CRM directory', err));
         }
         if (res.data.user.role === 'admin') {
           router.replace('/(admin)/dashboard');

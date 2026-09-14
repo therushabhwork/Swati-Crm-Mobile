@@ -12,10 +12,10 @@ const uniqueValues = (values = []) => Array.from(new Set(
     .filter(Boolean)
 ))
 
-const buildCustomerOwnerTextFilter = (actor = {}) => {
+const buildCustomerOwnerTextFilter = async (actor = {}) => {
   if (!actor || isPrivilegedRole(actor.role)) return null
 
-  const ownerRecord = getCrmOwnerRecord(actor.ownerCode || actor.owner_code || actor.name || actor.username)
+  const ownerRecord = await getCrmOwnerRecord(actor.ownerCode || actor.owner_code || actor.name || actor.username)
   const ownerNames = uniqueValues([
     actor.name,
     actor.username,
@@ -93,7 +93,7 @@ repository.listForActor = async (actor, queryOptions = {}) => {
     return scopedRecords.map(repository.map)
   }
 
-  const ownerTextFilter = buildCustomerOwnerTextFilter(actor)
+  const ownerTextFilter = await buildCustomerOwnerTextFilter(actor)
   if (!ownerTextFilter) {
     return scopedRecords.map(repository.map)
   }

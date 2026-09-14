@@ -1,14 +1,15 @@
-import { USER_WISE_LEADS_TABS, getUserWiseLeadsTabMatch } from '../config/userWiseLeadsTabs'
+import { getUserWiseLeadsTabs, getUserWiseLeadsTabMatch } from '../config/userWiseLeadsTabs'
 import { getAccountsBoardData } from './getAccountsBoardData'
 
 export const getUserWiseLeadsBoardData = (accounts = []) => {
+  const tabs = getUserWiseLeadsTabs()
   const baseBoardData = getAccountsBoardData(accounts)
-  const countsByStage = USER_WISE_LEADS_TABS.reduce((lookup, tab) => {
+  const countsByStage = tabs.reduce((lookup, tab) => {
     lookup[tab.key] = 0
     return lookup
   }, {})
 
-  const rowsByStage = USER_WISE_LEADS_TABS.reduce((lookup, tab) => {
+  const rowsByStage = tabs.reduce((lookup, tab) => {
     lookup[tab.key] = []
     return lookup
   }, {})
@@ -33,7 +34,7 @@ export const getUserWiseLeadsBoardData = (accounts = []) => {
 
   return {
     records,
-    stages: USER_WISE_LEADS_TABS,
+    stages: tabs,
     countsByStage,
     rowsByStage,
     totalRecords: records.length,

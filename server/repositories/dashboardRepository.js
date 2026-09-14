@@ -23,7 +23,7 @@ const collectionModels = {
 
 const resolveScope = async (actor) => {
   const scopeOwnerCodes = !isPrivilegedRole(actor.role)
-    ? getCrmGroupOwnerCodesForUser(actor)
+    ? await getCrmGroupOwnerCodesForUser(actor)
     : []
   const groupUsers = scopeOwnerCodes.length
     ? await userRepository.findUsersByOwnerCodes(scopeOwnerCodes, actor.companyId)

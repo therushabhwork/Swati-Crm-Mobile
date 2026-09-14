@@ -9,3 +9,6 @@ npm-debug.*
 *.mobileprovision
 *.orig.*
 eas-build-*
+.git/
+../server/
+../.git/

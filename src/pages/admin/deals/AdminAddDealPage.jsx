@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { FaArrowLeft, FaArrowRight, FaUserPlus } from 'react-icons/fa'
 import { useAuth } from '../../../context/AuthContext'
 import { useData } from '../../../context/DataContext'
-import { ACCOUNT_OWNER_OPTIONS } from '../../../features/accounts/config/accountDropdownOptions'
+import { getCrmOwnerOptions } from '../../../features/users/crmUserDirectory'
 import { DEAL_CITY_OPTIONS } from '../../../features/adminDeals/config/dealCityOptions'
 import {
   CUSTOMER_QUOTATION_STATUS_OPTIONS,
@@ -879,7 +879,7 @@ const AdminAddDealPage = ({
             {renderTextField('deal-name', 'Deal Name', 'dealName', { required: true })}
             {renderTextareaField('deal-description', 'Description', 'description', { required: true })}
             {renderTextField('deal-po-value', 'PO Value', 'poValue', { type: 'number' })}
-            {renderSelectField('deal-co-owners', 'Deal Co-Owners', 'dealCoOwners', ACCOUNT_OWNER_OPTIONS)}
+            {renderSelectField('deal-co-owners', 'Deal Co-Owners', 'dealCoOwners', getCrmOwnerOptions())}
             <div className="admin-add-deal-detail-field">
               <label htmlFor="deal-value">
                 Deal Value<span className="admin-add-deal-required">*</span>
@@ -913,7 +913,7 @@ const AdminAddDealPage = ({
 
           <div className="admin-add-deal-detail-col">
             {renderSelectField('deal-source', 'Deal Source', 'dealSource', DEAL_SOURCE_OPTIONS, { required: true })}
-            {renderSelectField('deal-owner', 'Deal Owner', 'dealOwner', ACCOUNT_OWNER_OPTIONS, { required: true })}
+            {renderSelectField('deal-owner', 'Deal Owner', 'dealOwner', getCrmOwnerOptions(), { required: true })}
             {renderTextareaField('deal-address', 'Address', 'address', { rows: 2 })}
             {renderSelectField('deal-city', 'City', 'city', DEAL_CITY_OPTIONS)}
             {renderTextField('deal-expected-closure-date', 'Expected Closure Date', 'expectedClosureDate', { type: 'date', required: true })}

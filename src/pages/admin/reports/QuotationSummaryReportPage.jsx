@@ -17,7 +17,7 @@ import {
   FaUsers,
 } from 'react-icons/fa'
 import { normalizeAccountRecord } from '../../../features/adminAccounts/adapters/normalizeAccountRecord'
-import { ACCOUNT_OWNER_OPTIONS } from '../../../features/accounts/config/accountDropdownOptions'
+import { getCrmOwnerOptions } from '../../../features/users/crmUserDirectory'
 import { isSameCrmOwner } from '../../../features/users/crmUserDirectory'
 import { useData } from '../../../context/DataContext'
 import { exportExcelWorkbook, exportCsvWorkbook } from '../../../utils/excelExport'
@@ -1193,7 +1193,7 @@ const QuotationSummaryReportPage = ({ basePath }) => {
 
   const ownerOptions = useMemo(() => {
     const uniqueOwners = new Map()
-    ACCOUNT_OWNER_OPTIONS.forEach((ownerOption) => {
+    getCrmOwnerOptions().forEach((ownerOption) => {
       const ownerName = String(ownerOption.label || ownerOption.value || '').trim()
       if (!ownerName || ownerName === '-') return
       const ownerKey = ownerName.toLowerCase().replace(/\s+/g, ' ')

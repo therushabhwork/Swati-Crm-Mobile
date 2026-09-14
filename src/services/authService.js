@@ -1,6 +1,6 @@
 import apiClient from './apiClient'
 import {
-  CRM_FILTER_USERS,
+  getCrmFilterUsers,
   getCanonicalCrmUserName,
   getCrmOwnerCode,
   getCrmOwnerDisplay,
@@ -84,7 +84,7 @@ class AuthService {
         }
       })
 
-    CRM_FILTER_USERS.forEach((crmUser) => {
+    getCrmFilterUsers().forEach((crmUser) => {
       const key = normalizeCrmUserName(crmUser.name)
       const existingUser = usersByName.get(key)
       usersByName.set(

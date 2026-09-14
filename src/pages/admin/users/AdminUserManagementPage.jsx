@@ -41,7 +41,7 @@ import Table from '../../../components/common/Table'
 import { useAuth } from '../../../context/AuthContext'
 import { useData } from '../../../context/DataContext'
 import { SOCKET_EVENTS } from '../../../constants/socketEvents'
-import { CRM_FILTER_USERS, normalizeCrmUserName, getCanonicalCrmUserName } from '../../../features/users/crmUserDirectory'
+import { getCrmFilterUsers, normalizeCrmUserName, getCanonicalCrmUserName } from '../../../features/users/crmUserDirectory'
 import { userApi } from '../../../services/userApi'
 import ManageUserTypesModule from './ManageUserTypesModule'
 import { State, City } from 'country-state-city'
@@ -319,7 +319,7 @@ const buildDirectoryUsers = (users = []) => {
     const canonicalName = getCanonicalCrmUserName(entry.name || entry.username || entry.email)
     const normalizedTarget = canonicalName ? normalizeCrmUserName(canonicalName) : normalizeCrmUserName(entry.name || entry.username || entry.email)
     const directoryKey = `directory-${normalizedTarget || String(entry.id)}`
-    const directoryEntry = CRM_FILTER_USERS.find((crmUser) => normalizeCrmUserName(crmUser.name) === normalizedTarget) || {}
+    const directoryEntry = getCrmFilterUsers().find((crmUser) => normalizeCrmUserName(crmUser.name) === normalizedTarget) || {}
     const previousEntry = mergedUsers.get(directoryKey) || directoryEntry
 
     mergedUsers.set(directoryKey, {
