@@ -77,7 +77,7 @@ const emitEntity = (entityType, action, record, actor) => {
     entityType, action, recordId: record?.id, actor: { id: actor.id, name: actor.name, companyId: actor.companyId }, timestamp: new Date().toISOString(),
   })
 
-  const assignedUserId = record?.assignedTo || record?.userId
+  const assignedUserId = record?.assignedUserId || record?.assignedTo || record?.ownerUserId || record?.ownerId || record?.userId
   if (assignedUserId && assignedUserId !== actor.id) {
     const notificationMessage = `${actor.name || 'A user'} ${action} a ${entityType}.`
 

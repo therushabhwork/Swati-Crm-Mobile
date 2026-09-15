@@ -32,8 +32,8 @@ export function SelectField({
   const [visible, setVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
 
-  const getOptionLabel = (opt: SelectOption) => typeof opt === 'string' ? opt : opt.label;
-  const getOptionValue = (opt: SelectOption) => typeof opt === 'string' ? opt : opt.value;
+  const getOptionLabel = (opt: SelectOption) => typeof opt === 'object' && opt !== null ? String(opt.label || '') : String(opt || '');
+  const getOptionValue = (opt: SelectOption) => typeof opt === 'object' && opt !== null ? String(opt.value || '') : String(opt || '');
 
   const filteredOptions = options.filter(opt => 
     getOptionLabel(opt).toLowerCase().includes(searchText.toLowerCase())

@@ -33,7 +33,7 @@ async function testBackendFlow() {
   }
 
   console.log("Creating lead...")
-  const result = await leadService.createLead(payload, actor)
+  const result = await leadService.createLead(actor, payload)
   console.log("Lead created:", result.id)
 
   console.log("Checking if notifyUsers was called...")

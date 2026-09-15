@@ -20,10 +20,7 @@ export const CalendarYearSelector: React.FC<CalendarYearSelectorProps> = ({
     return list;
   }, [currentYear]);
 
-  // Initial scroll index calculation
-  // currentYear - startYear will give us the index. 
-  // We want to scroll roughly to the row, so we can divide by 3 but FlatList handles item index.
-  const initialScrollIndex = 100; // Since currentYear is exactly at index 100
+  const initialScrollIndex = Math.floor(100 / 3); // currentYear is at item index 100, row index is 100/3
 
   return (
     <View style={styles.container}>
@@ -33,7 +30,7 @@ export const CalendarYearSelector: React.FC<CalendarYearSelectorProps> = ({
         numColumns={3}
         initialScrollIndex={initialScrollIndex}
         getItemLayout={(data, index) => (
-          { length: 50, offset: 50 * Math.floor(index / 3), index }
+          { length: 50, offset: 50 * index, index }
         )}
         showsVerticalScrollIndicator={false}
         columnWrapperStyle={styles.row}

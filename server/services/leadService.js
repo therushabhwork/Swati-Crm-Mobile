@@ -48,16 +48,20 @@ const emitConvertedDealRealtime = (action, convertedDeal, actor) => {
 }
 
 const resolveAssignedUser = async (payload = {}, actor) => {
-  if (payload.assignedTo) {
-    const userById = await userRepository.findUserById(payload.assignedTo)
-    if (userById) return userById
-  }
-
   const ownerName = normalizeOwnerNameInput(payload.accountOwner || payload.ownerName || '')
   if (ownerName) {
     const user = await userRepository.findUserByName(ownerName)
     if (user) {
       return user
+    }
+  }
+
+  if (payload.assignedTo) {
+    try {
+      const userById = await userRepository.findUserById(payload.assignedTo)
+      if (userById) return userById
+    } catch (err) {
+      // ignore cast error
     }
   }
 
@@ -179,6 +183,7 @@ const buildLeadPayload = async (payload = {}, actor, existingLead = null) => {
       account_no: accountNo,
       accountOwner: ownerName,
       accountOwnerCode: ownerCode,
+      assignedTo: assignedUser?.id || existingLead?.assignedTo || null,
       ownerId: assignedUser?.id || existingLead?.assignedTo || null,
       assignedUserId: assignedUser?.id || existingLead?.assignedTo || null,
       userId: existingLead?.createdBy || actor.id,
@@ -364,7 +369,7 @@ const createLead = async (actor, payload) => {
     action: 'created',
     lead,
     actor,
-    assignedUserId: lead.assignedTo,
+    assignedUserId: lead.assignedUserId || lead.ownerUserId || lead.ownerId || lead.assignedTo,
   })
 
   return augmentLeadWithOwnerCode(lead)
@@ -401,7 +406,7 @@ const deleteLead = async (actor, leadId) => {
     }
     socketServer.pushActivity('lead-deleted', actor, {
       leadId: existingLead.id,
-      assignedUserId: existingLead.assignedTo,
+      assignedUserId: existingLead.assignedUserId || existingLead.ownerUserId || existingLead.ownerId || existingLead.assignedTo,
     })
   }
 
@@ -439,7 +444,7 @@ const frontendDeleteLead = async (actor, leadId) => {
     }
     socketServer.pushActivity('lead-frontend-delete', actor, {
       leadId: updatedLead.id,
-      assignedUserId: updatedLead.assignedTo,
+      assignedUserId: updatedLead.assignedUserId || updatedLead.ownerUserId || updatedLead.ownerId || updatedLead.assignedTo,
     })
   }
 
@@ -469,7 +474,7 @@ const updateLead = async (actor, leadId, payload) => {
     action: 'updated',
     lead: updatedLead,
     actor,
-    assignedUserId: updatedLead.assignedTo,
+    assignedUserId: updatedLead.assignedUserId || updatedLead.ownerUserId || updatedLead.ownerId || updatedLead.assignedTo,
     previousLead: existingLead,
   })
 
