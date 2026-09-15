@@ -79,8 +79,12 @@ const emitEntity = (entityType, action, record, actor) => {
 
   const assignedUserId = record?.assignedUserId || record?.assignedTo || record?.ownerUserId || record?.ownerId || record?.userId
   if (assignedUserId && assignedUserId !== actor.id) {
-    const notificationMessage = `${actor.name || 'A user'} ${action} a ${entityType}.`
-
+    const entityName = record?.title || record?.name || record?.dealName || record?.customerName || record?.accountName || record?.projectName || record?.taskName || ''
+    
+    let notificationMessage = `${actor.name || 'A user'} ${action} a ${entityType}.`
+    if (entityName) {
+      notificationMessage = `${actor.name || 'A user'} ${action} a ${entityType} ${entityName}.`
+    }
     notificationService.notifyUsers({
       senderId: actor.id,
       receiverIds: [assignedUserId],

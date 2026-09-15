@@ -8608,3 +8608,490 @@
 {"_e":"metro:config","_t":1789451729704,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
 {"_e":"expo:dev-tools-plugin:load","_t":1789451729963,"plugins":[]}
 {"_e":"metro:instantiate","_t":1789451736249,"atlas":false,"workers":4,"host":"::","port":8081}
+{"_e":"root:init","_t":1789460134814,"format":"v0-jsonl","version":"57.0.24"}
+{"_e":"env:mode","_t":1789460134815,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1789460134819,"mode":"development","files":["../..\\..\\.env"],"env":{"EXPO_NO_DEV_CLIENT":"1","EXPO_NO_TELEMETRY":"1","EXPO_PUBLIC_API_URL":"http://192.168.10.155:5000/api"}}
+{"_e":"devserver:start","_t":1789460135356,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1789460135902,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1789460136678,"plugins":[]}
+{"_e":"metro:instantiate","_t":1789460143832,"atlas":false,"workers":4,"host":"::","port":8081}
+{"_e":"metro:bundling:started","_t":1789460154344,"id":"3","platform":"android","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1789460154345,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1789460154351,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1789460154936,"id":"3","progress":0.010000000000000002,"total":1,"current":1}
+{"_e":"metro:bundling:progress","_t":1789460155037,"id":"3","progress":0.09,"total":6,"current":3}
+{"_e":"metro:bundling:progress","_t":1789460155136,"id":"3","progress":0.22145328719723184,"total":17,"current":8}
+{"_e":"metro:bundling:progress","_t":1789460155246,"id":"3","progress":0.2743764172335601,"total":21,"current":11}
+{"_e":"metro:bundling:progress","_t":1789460155348,"id":"3","progress":0.2743764172335601,"total":35,"current":13}
+{"_e":"metro:bundling:progress","_t":1789460155448,"id":"3","progress":0.2743764172335601,"total":35,"current":15}
+{"_e":"metro:bundling:progress","_t":1789460155548,"id":"3","progress":0.2743764172335601,"total":45,"current":18}
+{"_e":"metro:bundling:progress","_t":1789460155653,"id":"3","progress":0.34027777777777785,"total":48,"current":28}
+{"_e":"metro:bundling:progress","_t":1789460155769,"id":"3","progress":0.34027777777777785,"total":157,"current":35}
+{"_e":"metro:bundling:progress","_t":1789460155868,"id":"3","progress":0.34027777777777785,"total":171,"current":41}
+{"_e":"metro:bundling:progress","_t":1789460155968,"id":"3","progress":0.34027777777777785,"total":178,"current":54}
+{"_e":"metro:bundling:progress","_t":1789460156069,"id":"3","progress":0.34027777777777785,"total":202,"current":64}
+{"_e":"metro:bundling:progress","_t":1789460156170,"id":"3","progress":0.34027777777777785,"total":212,"current":73}
+{"_e":"metro:bundling:progress","_t":1789460156272,"id":"3","progress":0.34027777777777785,"total":224,"current":85}
+{"_e":"metro:bundling:progress","_t":1789460156373,"id":"3","progress":0.34027777777777785,"total":245,"current":104}
+{"_e":"metro:bundling:progress","_t":1789460156474,"id":"3","progress":0.34027777777777785,"total":269,"current":122}
+{"_e":"metro:bundling:progress","_t":1789460156575,"id":"3","progress":0.34027777777777785,"total":284,"current":148}
+{"_e":"metro:bundling:progress","_t":1789460156676,"id":"3","progress":0.34027777777777785,"total":314,"current":164}
+{"_e":"metro:bundling:progress","_t":1789460156778,"id":"3","progress":0.34027777777777785,"total":332,"current":180}
+{"_e":"metro:bundling:progress","_t":1789460156885,"id":"3","progress":0.34027777777777785,"total":357,"current":205}
+{"_e":"metro:bundling:progress","_t":1789460156985,"id":"3","progress":0.37382590973534974,"total":368,"current":225}
+{"_e":"metro:bundling:progress","_t":1789460157085,"id":"3","progress":0.38032828450518874,"total":407,"current":251}
+{"_e":"metro:bundling:progress","_t":1789460157186,"id":"3","progress":0.38032828450518874,"total":445,"current":272}
+{"_e":"metro:bundling:progress","_t":1789460157285,"id":"3","progress":0.38032828450518874,"total":544,"current":296}
+{"_e":"metro:bundling:progress","_t":1789460157385,"id":"3","progress":0.38032828450518874,"total":587,"current":312}
+{"_e":"metro:bundling:progress","_t":1789460157486,"id":"3","progress":0.38032828450518874,"total":609,"current":331}
+{"_e":"metro:bundling:progress","_t":1789460157586,"id":"3","progress":0.38032828450518874,"total":619,"current":345}
+{"_e":"metro:bundling:progress","_t":1789460157686,"id":"3","progress":0.38032828450518874,"total":631,"current":362}
+{"_e":"metro:bundling:progress","_t":1789460157788,"id":"3","progress":0.38032828450518874,"total":646,"current":386}
+{"_e":"metro:bundling:progress","_t":1789460157888,"id":"3","progress":0.3975735679738943,"total":655,"current":413}
+{"_e":"metro:bundling:progress","_t":1789460157990,"id":"3","progress":0.42053259871441684,"total":660,"current":428}
+{"_e":"metro:bundling:progress","_t":1789460158090,"id":"3","progress":0.4632975865890144,"total":667,"current":454}
+{"_e":"metro:bundling:progress","_t":1789460158194,"id":"3","progress":0.4632975865890144,"total":685,"current":466}
+{"_e":"metro:bundling:progress","_t":1789460158296,"id":"3","progress":0.4632975865890144,"total":705,"current":471}
+{"_e":"metro:bundling:progress","_t":1789460158398,"id":"3","progress":0.4632975865890144,"total":710,"current":478}
+{"_e":"metro:bundling:progress","_t":1789460158502,"id":"3","progress":0.4632975865890144,"total":715,"current":486}
+{"_e":"metro:bundling:progress","_t":1789460158612,"id":"3","progress":0.4792899408284023,"total":715,"current":495}
+{"_e":"metro:bundling:progress","_t":1789460158712,"id":"3","progress":0.49977044753086425,"total":720,"current":509}
+{"_e":"metro:bundling:progress","_t":1789460158812,"id":"3","progress":0.5397750937109538,"total":735,"current":540}
+{"_e":"metro:bundling:progress","_t":1789460158912,"id":"3","progress":0.5499089222465845,"total":770,"current":571}
+{"_e":"metro:bundling:progress","_t":1789460159012,"id":"3","progress":0.5499089222465845,"total":834,"current":595}
+{"_e":"metro:bundling:progress","_t":1789460159119,"id":"3","progress":0.5499089222465845,"total":859,"current":615}
+{"_e":"metro:bundling:progress","_t":1789460159219,"id":"3","progress":0.5499089222465845,"total":870,"current":641}
+{"_e":"metro:bundling:progress","_t":1789460159320,"id":"3","progress":0.5607967458677686,"total":880,"current":659}
+{"_e":"metro:bundling:progress","_t":1789460159422,"id":"3","progress":0.5607967458677686,"total":910,"current":675}
+{"_e":"metro:bundling:progress","_t":1789460159528,"id":"3","progress":0.5607967458677686,"total":917,"current":682}
+{"_e":"metro:bundling:progress","_t":1789460159628,"id":"3","progress":0.5607967458677686,"total":941,"current":698}
+{"_e":"metro:bundling:progress","_t":1789460159730,"id":"3","progress":0.5607967458677686,"total":945,"current":705}
+{"_e":"metro:bundling:progress","_t":1789460159841,"id":"3","progress":0.5607967458677686,"total":956,"current":714}
+{"_e":"metro:bundling:progress","_t":1789460159943,"id":"3","progress":0.5607967458677686,"total":1247,"current":720}
+{"_e":"metro:bundling:progress","_t":1789460160043,"id":"3","progress":0.5607967458677686,"total":1250,"current":732}
+{"_e":"metro:bundling:progress","_t":1789460160143,"id":"3","progress":0.5607967458677686,"total":1265,"current":747}
+{"_e":"metro:bundling:progress","_t":1789460160246,"id":"3","progress":0.5607967458677686,"total":1298,"current":763}
+{"_e":"metro:bundling:progress","_t":1789460160354,"id":"3","progress":0.5607967458677686,"total":1312,"current":779}
+{"_e":"metro:bundling:progress","_t":1789460160455,"id":"3","progress":0.5607967458677686,"total":1331,"current":796}
+{"_e":"metro:bundling:progress","_t":1789460160554,"id":"3","progress":0.5607967458677686,"total":1343,"current":813}
+{"_e":"metro:bundling:progress","_t":1789460160654,"id":"3","progress":0.5607967458677686,"total":1371,"current":830}
+{"_e":"metro:bundling:progress","_t":1789460160756,"id":"3","progress":0.5607967458677686,"total":1380,"current":846}
+{"_e":"metro:bundling:progress","_t":1789460160864,"id":"3","progress":0.5607967458677686,"total":1391,"current":857}
+{"_e":"metro:bundling:progress","_t":1789460160966,"id":"3","progress":0.5607967458677686,"total":1393,"current":862}
+{"_e":"metro:bundling:progress","_t":1789460161070,"id":"3","progress":0.5607967458677686,"total":1408,"current":878}
+{"_e":"metro:bundling:progress","_t":1789460161170,"id":"3","progress":0.5607967458677686,"total":1421,"current":897}
+{"_e":"metro:bundling:progress","_t":1789460161270,"id":"3","progress":0.5607967458677686,"total":1443,"current":919}
+{"_e":"metro:bundling:progress","_t":1789460161373,"id":"3","progress":0.5607967458677686,"total":1474,"current":934}
+{"_e":"metro:bundling:progress","_t":1789460161473,"id":"3","progress":0.5607967458677686,"total":1488,"current":950}
+{"_e":"metro:bundling:progress","_t":1789460161577,"id":"3","progress":0.5607967458677686,"total":1517,"current":963}
+{"_e":"metro:bundling:progress","_t":1789460161679,"id":"3","progress":0.5607967458677686,"total":1521,"current":970}
+{"_e":"metro:bundling:progress","_t":1789460161780,"id":"3","progress":0.5607967458677686,"total":1553,"current":978}
+{"_e":"metro:bundling:progress","_t":1789460161883,"id":"3","progress":0.5607967458677686,"total":1569,"current":986}
+{"_e":"metro:bundling:progress","_t":1789460161983,"id":"3","progress":0.5607967458677686,"total":1591,"current":999}
+{"_e":"metro:bundling:progress","_t":1789460162085,"id":"3","progress":0.5607967458677686,"total":1597,"current":1038}
+{"_e":"metro:bundling:progress","_t":1789460162186,"id":"3","progress":0.5607967458677686,"total":1603,"current":1070}
+{"_e":"metro:bundling:progress","_t":1789460162289,"id":"3","progress":0.5607967458677686,"total":1603,"current":1103}
+{"_e":"metro:bundling:progress","_t":1789460162392,"id":"3","progress":0.5607967458677686,"total":1603,"current":1117}
+{"_e":"metro:bundling:progress","_t":1789460162494,"id":"3","progress":0.5607967458677686,"total":1605,"current":1161}
+{"_e":"metro:bundling:progress","_t":1789460162595,"id":"3","progress":0.5607967458677686,"total":1607,"current":1200}
+{"_e":"metro:bundling:progress","_t":1789460162695,"id":"3","progress":0.6004322294002624,"total":1608,"current":1246}
+{"_e":"metro:bundling:progress","_t":1789460162795,"id":"3","progress":0.6105023689883987,"total":1619,"current":1265}
+{"_e":"metro:bundling:progress","_t":1789460162897,"id":"3","progress":0.636067597633136,"total":1625,"current":1296}
+{"_e":"metro:bundling:progress","_t":1789460163002,"id":"3","progress":0.6541955017301039,"total":1632,"current":1320}
+{"_e":"metro:bundling:progress","_t":1789460163102,"id":"3","progress":0.6742435084925927,"total":1638,"current":1345}
+{"_e":"metro:bundling:progress","_t":1789460163204,"id":"3","progress":0.6942760023992343,"total":1649,"current":1374}
+{"_e":"metro:bundling:progress","_t":1789460163305,"id":"3","progress":0.7105820485083867,"total":1662,"current":1401}
+{"_e":"metro:bundling:progress","_t":1789460163405,"id":"3","progress":0.7230576507940571,"total":1677,"current":1426}
+{"_e":"metro:bundling:progress","_t":1789460163505,"id":"3","progress":0.7431277015873617,"total":1689,"current":1456}
+{"_e":"metro:bundling:progress","_t":1789460163606,"id":"3","progress":0.7624019978942056,"total":1695,"current":1480}
+{"_e":"metro:bundling:progress","_t":1789460163705,"id":"3","progress":0.7704711193268292,"total":1718,"current":1508}
+{"_e":"metro:bundling:progress","_t":1789460163810,"id":"3","progress":0.7824654394625352,"total":1724,"current":1525}
+{"_e":"metro:bundling:progress","_t":1789460163910,"id":"3","progress":0.8073934047469019,"total":1725,"current":1550}
+{"_e":"metro:bundling:progress","_t":1789460164014,"id":"3","progress":0.8228259085289494,"total":1733,"current":1572}
+{"_e":"metro:bundling:progress","_t":1789460164115,"id":"3","progress":0.8385266523230368,"total":1744,"current":1597}
+{"_e":"metro:bundling:progress","_t":1789460164217,"id":"3","progress":0.8385266523230368,"total":1781,"current":1618}
+{"_e":"metro:bundling:progress","_t":1789460164317,"id":"3","progress":0.841726936475088,"total":1793,"current":1645}
+{"_e":"metro:bundling:progress","_t":1789460164417,"id":"3","progress":0.8677192201427573,"total":1796,"current":1673}
+{"_e":"metro:bundling:progress","_t":1789460164517,"id":"3","progress":0.8677192201427573,"total":1832,"current":1699}
+{"_e":"metro:bundling:progress","_t":1789460164617,"id":"3","progress":0.8742806857811538,"total":1847,"current":1727}
+{"_e":"metro:bundling:progress","_t":1789460164719,"id":"3","progress":0.8874186095358118,"total":1863,"current":1755}
+{"_e":"metro:bundling:progress","_t":1789460164819,"id":"3","progress":0.9163124696305619,"total":1871,"current":1791}
+{"_e":"metro:bundling:progress","_t":1789460164921,"id":"3","progress":0.93317857262721,"total":1883,"current":1819}
+{"_e":"metro:bundling:progress","_t":1789460165021,"id":"3","progress":0.9480339559553114,"total":1899,"current":1849}
+{"_e":"metro:bundling:progress","_t":1789460165121,"id":"3","progress":0.9597045100919191,"total":1916,"current":1877}
+{"_e":"metro:bundling:progress","_t":1789460165234,"id":"3","progress":0.9597045100919191,"total":1961,"current":1897}
+{"_e":"metro:bundling:progress","_t":1789460165338,"id":"3","progress":0.9597045100919191,"total":1971,"current":1924}
+{"_e":"metro:bundling:progress","_t":1789460165438,"id":"3","progress":0.9597045100919191,"total":2026,"current":1942}
+{"_e":"metro:bundling:progress","_t":1789460165538,"id":"3","progress":0.9597045100919191,"total":2038,"current":1973}
+{"_e":"metro:bundling:progress","_t":1789460165638,"id":"3","progress":0.9597045100919191,"total":2049,"current":2000}
+{"_e":"metro:bundling:progress","_t":1789460165745,"id":"3","progress":0.9671043426531826,"total":2050,"current":2016}
+{"_e":"metro:bundling:progress","_t":1789460165845,"id":"3","progress":0.9701293712885286,"total":2060,"current":2029}
+{"_e":"metro:bundling:progress","_t":1789460165947,"id":"3","progress":0.9836659003767224,"total":2073,"current":2056}
+{"_e":"metro:bundling:progress","_t":1789460166050,"id":"3","progress":0.9836659003767224,"total":2100,"current":2077}
+{"_e":"metro:bundling:progress","_t":1789460166152,"id":"3","progress":0.9836659003767224,"total":2115,"current":2089}
+{"_e":"metro:bundling:progress","_t":1789460166251,"id":"3","progress":0.9836659003767224,"total":2121,"current":2100}
+{"_e":"metro:bundling:progress","_t":1789460166353,"id":"3","progress":0.9952908000438354,"total":2121,"current":2116}
+{"_e":"metro:bundling:progress","_t":1789460166454,"id":"3","progress":0.999,"total":2127,"current":2127}
+{"_e":"metro:bundling:done","_t":1789460166752,"id":"3","total":2127,"ms":12407.7495}
+{"_e":"metro:client_log","_t":1789460175072,"level":"log","data":["[API Client] Initializing with API_URL:","http://192.168.10.155:5000/api"]}
+{"_e":"metro:client_log","_t":1789460175815,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460175847,"level":"log","data":["[NOTIFICATION DIAGNOSTIC] Runtime Environment:"]}
+{"_e":"metro:client_log","_t":1789460175847,"level":"log","data":["[NOTIFICATION] Execution Env: storeClient"]}
+{"_e":"metro:client_log","_t":1789460175847,"level":"log","data":["[NOTIFICATION] App ownership: expo"]}
+{"_e":"metro:client_log","_t":1789460175847,"level":"log","data":["[NOTIFICATION] Platform: android"]}
+{"_e":"metro:client_log","_t":1789460175847,"level":"log","data":["[NOTIFICATION] Is Device: true"]}
+{"_e":"metro:client_log","_t":1789460175847,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460175847,"level":"log","data":["Skipping push notifications setup: Not supported in Expo Go."]}
+{"_e":"metro:client_log","_t":1789460175906,"level":"log","data":["[IndexScreen] Component Mounted. Checking auth state..."]}
+{"_e":"metro:client_log","_t":1789460175955,"level":"log","data":["[IndexScreen] Waiting for auth to load..."]}
+{"_e":"metro:client_log","_t":1789460175955,"level":"log","data":["[AuthContext] Initializing, checking auth state..."]}
+{"_e":"metro:client_log","_t":1789460175955,"level":"log","data":["[AuthContext] checkAuth invoked"]}
+{"_e":"metro:client_log","_t":1789460176039,"level":"log","data":["[AuthContext] Access token found. Fetching /auth/me..."]}
+{"_e":"metro:client_log","_t":1789460176098,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/auth/me"]}
+{"_e":"metro:client_log","_t":1789460176274,"level":"log","data":["[API Response] GET /auth/me - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460176331,"level":"log","data":["[AuthContext] /auth/me successful, setting user:","Atish Shah"]}
+{"_e":"metro:client_log","_t":1789460176331,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/users/directory"]}
+{"_e":"metro:client_log","_t":1789460176379,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460176380,"level":"log","data":["[NOTIFICATION DIAGNOSTIC] Runtime Environment:"]}
+{"_e":"metro:client_log","_t":1789460176380,"level":"log","data":["[NOTIFICATION] Execution Env: storeClient"]}
+{"_e":"metro:client_log","_t":1789460176380,"level":"log","data":["[NOTIFICATION] App ownership: expo"]}
+{"_e":"metro:client_log","_t":1789460176380,"level":"log","data":["[NOTIFICATION] Platform: android"]}
+{"_e":"metro:client_log","_t":1789460176380,"level":"log","data":["[NOTIFICATION] Is Device: true"]}
+{"_e":"metro:client_log","_t":1789460176380,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460176380,"level":"log","data":["Skipping push notifications setup: Not supported in Expo Go."]}
+{"_e":"metro:client_log","_t":1789460176380,"level":"log","data":["[IndexScreen] Waiting for auth to load..."]}
+{"_e":"metro:client_log","_t":1789460176380,"level":"log","data":["[Socket] Attempting to connect to URL:","http://192.168.10.155:5000"]}
+{"_e":"metro:client_log","_t":1789460176426,"level":"log","data":["[API Response] GET /users/directory - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460176474,"level":"log","data":["[AuthContext] Initial auth check complete, isLoading set to false"]}
+{"_e":"metro:client_log","_t":1789460176521,"level":"log","data":["[IndexScreen] Auth loading complete. Waiting 2.5 seconds..."]}
+{"_e":"metro:client_log","_t":1789460176572,"level":"log","data":["[Socket] Connected to server"]}
+{"_e":"metro:client_log","_t":1789460179045,"level":"log","data":["[IndexScreen] Navigating to dashboard based on role"]}
+{"_e":"metro:client_log","_t":1789460179792,"level":"log","data":["[IndexScreen] Component Unmounted"]}
+{"_e":"metro:client_log","_t":1789460179873,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/dashboard/stats"]}
+{"_e":"metro:client_log","_t":1789460179934,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/leads"]}
+{"_e":"metro:client_log","_t":1789460179935,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/deals"]}
+{"_e":"metro:client_log","_t":1789460179935,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/users/me/legal-acceptance"]}
+{"_e":"metro:client_log","_t":1789460180008,"level":"log","data":["[API Response] GET /dashboard/stats - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460180008,"level":"log","data":["[DashboardScreen] Dashboard data fetched successfully"]}
+{"_e":"metro:client_log","_t":1789460180549,"level":"log","data":["[API Response] GET /users/me/legal-acceptance - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460180603,"level":"log","data":["[API Response] GET /deals - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460180604,"level":"log","data":["[API Response] GET /leads - Status: 200"]}
+{"_e":"metro:bundling:started","_t":1789460202261,"id":"4","platform":"android","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1789460202262,"id":"4","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1789460202339,"id":"4","total":1,"ms":77.7903}
+{"_e":"metro:client_log","_t":1789460213781,"level":"log","data":["[API Client] Initializing with API_URL:","http://192.168.10.155:5000/api"]}
+{"_e":"metro:client_log","_t":1789460214144,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460214204,"level":"log","data":["[NOTIFICATION DIAGNOSTIC] Runtime Environment:"]}
+{"_e":"metro:client_log","_t":1789460214204,"level":"log","data":["[NOTIFICATION] Execution Env: bare"]}
+{"_e":"metro:client_log","_t":1789460214204,"level":"log","data":["[NOTIFICATION] App ownership: null"]}
+{"_e":"metro:client_log","_t":1789460214204,"level":"log","data":["[NOTIFICATION] Platform: android"]}
+{"_e":"metro:client_log","_t":1789460214205,"level":"log","data":["[NOTIFICATION] Is Device: true"]}
+{"_e":"metro:client_log","_t":1789460214205,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460214258,"level":"log","data":["[IndexScreen] Component Mounted. Checking auth state..."]}
+{"_e":"metro:client_log","_t":1789460214258,"level":"log","data":["[IndexScreen] Waiting for auth to load..."]}
+{"_e":"metro:client_log","_t":1789460214258,"level":"log","data":["[AuthContext] Initializing, checking auth state..."]}
+{"_e":"metro:client_log","_t":1789460214258,"level":"log","data":["[AuthContext] checkAuth invoked"]}
+{"_e":"metro:client_log","_t":1789460214374,"level":"log","data":["[AuthContext] Access token found. Fetching /auth/me..."]}
+{"_e":"metro:client_log","_t":1789460214434,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/auth/me"]}
+{"_e":"metro:client_log","_t":1789460214559,"level":"log","data":["[API Error] GET http://192.168.10.155:5000/api/auth/me"]}
+{"_e":"metro:client_log","_t":1789460214625,"level":"log","data":["[API Error Details] Message: Request failed with status code 401"]}
+{"_e":"metro:client_log","_t":1789460214626,"level":"log","data":["[API Error Details] Code: ERR_BAD_REQUEST"]}
+{"_e":"metro:client_log","_t":1789460214626,"level":"log","data":["[API Error Response Status] 401"]}
+{"_e":"metro:client_log","_t":1789460214626,"level":"log","data":["[API Error Response Body]","{\n  \"success\": false,\n  \"message\": \"Authentication token has been invalidated.\",\n  \"code\": \"CLIENT_ERROR\",\n  \"requestId\": \"1789460214510-fs72se\"\n}"]}
+{"_e":"metro:client_log","_t":1789460214721,"level":"log","data":["[AuthContext] Auth check failed with error:","[AxiosError: Request failed with status code 401]"]}
+{"_e":"metro:client_log","_t":1789460214782,"level":"log","data":["[AuthContext] Initial auth check complete, isLoading set to false"]}
+{"_e":"metro:client_log","_t":1789460214783,"level":"log","data":["[IndexScreen] Auth loading complete. Waiting 2.5 seconds..."]}
+{"_e":"metro:client_log","_t":1789460217279,"level":"log","data":["[IndexScreen] Navigating to /login"]}
+{"_e":"metro:client_log","_t":1789460217647,"level":"log","data":["[IndexScreen] Component Unmounted"]}
+{"_e":"metro:client_log","_t":1789460217725,"level":"log","data":["[LoginScreen] Component Mounted"]}
+{"_e":"metro:client_log","_t":1789460223223,"level":"log","data":["[LoginScreen] username changed to length:","37"]}
+{"_e":"metro:client_log","_t":1789460224575,"level":"log","data":["[LoginScreen] handleLogin invoked for username:","automation.sales@swatiswitchgears.com"]}
+{"_e":"metro:client_log","_t":1789460224646,"level":"log","data":["[LoginScreen] Attempting to login via useAuth..."]}
+{"_e":"metro:client_log","_t":1789460224647,"level":"log","data":["[AuthContext] login invoked with username:","automation.sales@swatiswitchgears.com"]}
+{"_e":"metro:client_log","_t":1789460224647,"level":"log","data":["[AuthContext] Sending POST to /auth/login..."]}
+{"_e":"metro:client_log","_t":1789460224647,"level":"log","data":["[API Request] POST http://192.168.10.155:5000/api/auth/login"]}
+{"_e":"metro:client_log","_t":1789460224647,"level":"log","data":["[API Request Payload]","{\n  \"username\": \"automation.sales@swatiswitchgears.com\",\n  \"password\": \"***\",\n  \"clientType\": \"mobile\"\n}"]}
+{"_e":"metro:client_log","_t":1789460224957,"level":"log","data":["[API Response] POST /auth/login - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460225011,"level":"log","data":["[AuthContext] Raw response received. Status:","200"]}
+{"_e":"metro:client_log","_t":1789460225012,"level":"log","data":["[AuthContext] Login API call successful, updating state"]}
+{"_e":"metro:client_log","_t":1789460225012,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460225012,"level":"log","data":["[NOTIFICATION DIAGNOSTIC] Runtime Environment:"]}
+{"_e":"metro:client_log","_t":1789460225012,"level":"log","data":["[NOTIFICATION] Execution Env: bare"]}
+{"_e":"metro:client_log","_t":1789460225012,"level":"log","data":["[NOTIFICATION] App ownership: null"]}
+{"_e":"metro:client_log","_t":1789460225012,"level":"log","data":["[NOTIFICATION] Platform: android"]}
+{"_e":"metro:client_log","_t":1789460225012,"level":"log","data":["[NOTIFICATION] Is Device: true"]}
+{"_e":"metro:client_log","_t":1789460225012,"level":"log","data":["===================================="]}
+{"_e":"metro:bundling:started","_t":1789460225048,"id":"5","platform":"android","environment":null,"entry":"node_modules\\expo-notifications\\build\\index.js"}
+{"_e":"metro:bundling:progress","_t":1789460225048,"id":"5","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1789460225052,"id":"5","progress":0,"total":1,"current":0}
+{"_e":"metro:client_log","_t":1789460225073,"level":"log","data":["[NOTIFICATION] Initializing push setup..."]}
+{"_e":"metro:bundling:progress","_t":1789460225073,"id":"5","progress":0,"total":1,"current":0}
+{"_e":"metro:client_log","_t":1789460225073,"level":"log","data":["[AuthContext] Tokens saved securely"]}
+{"_e":"metro:bundling:progress","_t":1789460225073,"id":"5","progress":0,"total":1,"current":0}
+{"_e":"metro:client_log","_t":1789460225073,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/users/directory"]}
+{"_e":"metro:bundling:progress","_t":1789460225073,"id":"5","progress":0,"total":1,"current":0}
+{"_e":"metro:client_log","_t":1789460225073,"level":"log","data":["[Socket] Attempting to connect to URL:","http://192.168.10.155:5000"]}
+{"_e":"metro:bundling:progress","_t":1789460225073,"id":"5","progress":0,"total":1,"current":0}
+{"_e":"metro:client_log","_t":1789460225141,"level":"log","data":["[API Response] GET /users/directory - Status: 200"]}
+{"_e":"metro:bundling:progress","_t":1789460225141,"id":"5","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1789460225152,"id":"5","progress":0.0324,"total":50,"current":9}
+{"_e":"metro:bundling:progress","_t":1789460225252,"id":"5","progress":0.13602914600471308,"total":263,"current":97}
+{"_e":"metro:bundling:progress","_t":1789460225352,"id":"5","progress":0.33634463235000944,"total":419,"current":243}
+{"_e":"metro:bundling:progress","_t":1789460225452,"id":"5","progress":0.6613975615921834,"total":573,"current":466}
+{"_e":"metro:client_log","_t":1789460225515,"level":"log","data":["[LoginScreen] Component Unmounted"]}
+{"_e":"metro:bundling:progress","_t":1789460225515,"id":"5","progress":0.6613975615921834,"total":573,"current":466}
+{"_e":"metro:client_log","_t":1789460225542,"level":"log","data":["[LoginScreen] Login successful"]}
+{"_e":"metro:bundling:progress","_t":1789460225543,"id":"5","progress":0.6613975615921834,"total":573,"current":466}
+{"_e":"metro:bundling:progress","_t":1789460225554,"id":"5","progress":0.7357715361924992,"total":682,"current":585}
+{"_e":"metro:client_log","_t":1789460225614,"level":"log","data":["[LoginScreen] Finished login attempt process"]}
+{"_e":"metro:bundling:progress","_t":1789460225614,"id":"5","progress":0.7357715361924992,"total":682,"current":585}
+{"_e":"metro:client_log","_t":1789460225614,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/dashboard/stats"]}
+{"_e":"metro:bundling:progress","_t":1789460225615,"id":"5","progress":0.7357715361924992,"total":682,"current":585}
+{"_e":"metro:client_log","_t":1789460225615,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/leads"]}
+{"_e":"metro:bundling:progress","_t":1789460225615,"id":"5","progress":0.7357715361924992,"total":682,"current":585}
+{"_e":"metro:client_log","_t":1789460225615,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/deals"]}
+{"_e":"metro:bundling:progress","_t":1789460225615,"id":"5","progress":0.7357715361924992,"total":682,"current":585}
+{"_e":"metro:client_log","_t":1789460225615,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/users/me/legal-acceptance"]}
+{"_e":"metro:bundling:progress","_t":1789460225615,"id":"5","progress":0.7357715361924992,"total":682,"current":585}
+{"_e":"metro:client_log","_t":1789460225615,"level":"log","data":["[Socket] Connected to server"]}
+{"_e":"metro:bundling:progress","_t":1789460225615,"id":"5","progress":0.7357715361924992,"total":682,"current":585}
+{"_e":"metro:bundling:progress","_t":1789460225654,"id":"5","progress":0.984169115389676,"total":755,"current":749}
+{"_e":"metro:bundling:done","_t":1789460225705,"id":"5","total":755,"ms":657.457}
+{"_e":"metro:client_log","_t":1789460225773,"level":"log","data":["[API Response] GET /dashboard/stats - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460225831,"level":"log","data":["[DashboardScreen] Dashboard data fetched successfully"]}
+{"_e":"metro:client_log","_t":1789460226474,"level":"log","data":["[API Response] GET /users/me/legal-acceptance - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460226534,"level":"log","data":["[API Response] GET /deals - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460226535,"level":"log","data":["[API Response] GET /leads - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460226737,"level":"log","data":["[NOTIFICATION] Permission: granted"]}
+{"_e":"metro:client_log","_t":1789460226790,"level":"log","data":["[NOTIFICATION] Attempting to fetch RAW Native Device Token (Firebase/APNs)..."]}
+{"_e":"metro:client_log","_t":1789460226790,"level":"log","data":["[NOTIFICATION] SUCCESS! Raw Native Token: cKT867WeSqmdAXJebvYH7d:APA91bEvwPBkqIwJfWPprBBuWyCJy53XZEFxEfpYwChIG3Wzp92meCJUkpRQdFBwWT0jD_0D-WssCDvHw3HYobC8SM7rTGiV2F4KdUcK8RWhnghL_mPqnWE"]}
+{"_e":"metro:client_log","_t":1789460226790,"level":"log","data":["[NOTIFICATION] Native Token Type: android"]}
+{"_e":"metro:client_log","_t":1789460226790,"level":"log","data":["[NOTIFICATION] Attempting to fetch Expo wrapper token..."]}
+{"_e":"metro:client_log","_t":1789460227978,"level":"log","data":["[NOTIFICATION] SUCCESS! Expo Push Token: ExponentPushToken[Tag5BcD8PXP7Z4ZrgF70HV]"]}
+{"_e":"metro:client_log","_t":1789460228038,"level":"log","data":["[NOTIFICATION] Android channel: created (crm-high-priority)"]}
+{"_e":"metro:client_log","_t":1789460228038,"level":"log","data":["[API Request] POST http://192.168.10.155:5000/api/devices/register"]}
+{"_e":"metro:client_log","_t":1789460228038,"level":"log","data":["[API Request Payload]","{\n  \"pushToken\": \"ExponentPushToken[Tag5BcD8PXP7Z4ZrgF70HV]\",\n  \"platform\": \"android\",\n  \"deviceId\": \"2508CRN2BI\"\n}"]}
+{"_e":"metro:client_log","_t":1789460228099,"level":"log","data":["[API Response] POST /devices/register - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460228099,"level":"log","data":["[NOTIFICATION] Token sent to backend successfully."]}
+{"_e":"metro:client_log","_t":1789460228100,"level":"log","data":["[NOTIFICATION] Scheduling Native Local Diagnostic Push for 15 seconds from now..."]}
+{"_e":"metro:client_log","_t":1789460228100,"level":"log","data":["\n[NOTIFICATION] ⏰ Native Local Diagnostic Push Scheduled successfully!"]}
+{"_e":"metro:client_log","_t":1789460228100,"level":"warn","data":["[expo-notifications]: `shouldShowAlert` is deprecated. Specify `shouldShowBanner` and / or `shouldShowList` instead."]}
+{"_e":"metro:bundling:started","_t":1789460278065,"id":"7","platform":"android","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1789460278066,"id":"7","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1789460278144,"id":"7","total":1,"ms":78.1197}
+{"_e":"metro:client_log","_t":1789460287755,"level":"log","data":["[API Client] Initializing with API_URL:","http://192.168.10.155:5000/api"]}
+{"_e":"metro:client_log","_t":1789460288885,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460288933,"level":"log","data":["[NOTIFICATION DIAGNOSTIC] Runtime Environment:"]}
+{"_e":"metro:client_log","_t":1789460288933,"level":"log","data":["[NOTIFICATION] Execution Env: storeClient"]}
+{"_e":"metro:client_log","_t":1789460288933,"level":"log","data":["[NOTIFICATION] App ownership: expo"]}
+{"_e":"metro:client_log","_t":1789460288933,"level":"log","data":["[NOTIFICATION] Platform: android"]}
+{"_e":"metro:client_log","_t":1789460288933,"level":"log","data":["[NOTIFICATION] Is Device: true"]}
+{"_e":"metro:client_log","_t":1789460288934,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460288934,"level":"log","data":["Skipping push notifications setup: Not supported in Expo Go."]}
+{"_e":"metro:client_log","_t":1789460289098,"level":"log","data":["[IndexScreen] Component Mounted. Checking auth state..."]}
+{"_e":"metro:client_log","_t":1789460289153,"level":"log","data":["[IndexScreen] Waiting for auth to load..."]}
+{"_e":"metro:client_log","_t":1789460289153,"level":"log","data":["[AuthContext] Initializing, checking auth state..."]}
+{"_e":"metro:client_log","_t":1789460289153,"level":"log","data":["[AuthContext] checkAuth invoked"]}
+{"_e":"metro:client_log","_t":1789460289206,"level":"log","data":["[AuthContext] Access token found. Fetching /auth/me..."]}
+{"_e":"metro:client_log","_t":1789460289333,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/auth/me"]}
+{"_e":"metro:client_log","_t":1789460289426,"level":"log","data":["[API Response] GET /auth/me - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460289490,"level":"log","data":["[AuthContext] /auth/me successful, setting user:","Atish Shah"]}
+{"_e":"metro:client_log","_t":1789460289490,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/users/directory"]}
+{"_e":"metro:client_log","_t":1789460289550,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460289551,"level":"log","data":["[NOTIFICATION DIAGNOSTIC] Runtime Environment:"]}
+{"_e":"metro:client_log","_t":1789460289551,"level":"log","data":["[NOTIFICATION] Execution Env: storeClient"]}
+{"_e":"metro:client_log","_t":1789460289551,"level":"log","data":["[NOTIFICATION] App ownership: expo"]}
+{"_e":"metro:client_log","_t":1789460289551,"level":"log","data":["[NOTIFICATION] Platform: android"]}
+{"_e":"metro:client_log","_t":1789460289551,"level":"log","data":["[NOTIFICATION] Is Device: true"]}
+{"_e":"metro:client_log","_t":1789460289551,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460289551,"level":"log","data":["Skipping push notifications setup: Not supported in Expo Go."]}
+{"_e":"metro:client_log","_t":1789460289551,"level":"log","data":["[IndexScreen] Waiting for auth to load..."]}
+{"_e":"metro:client_log","_t":1789460289551,"level":"log","data":["[API Response] GET /users/directory - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460289551,"level":"log","data":["[AuthContext] Initial auth check complete, isLoading set to false"]}
+{"_e":"metro:client_log","_t":1789460289551,"level":"log","data":["[IndexScreen] Auth loading complete. Waiting 2.5 seconds..."]}
+{"_e":"metro:client_log","_t":1789460289551,"level":"log","data":["[Socket] Attempting to connect to URL:","http://192.168.10.155:5000"]}
+{"_e":"metro:client_log","_t":1789460289784,"level":"log","data":["[Socket] Connected to server"]}
+{"_e":"metro:client_log","_t":1789460292050,"level":"log","data":["[IndexScreen] Navigating to dashboard based on role"]}
+{"_e":"metro:client_log","_t":1789460292981,"level":"log","data":["[IndexScreen] Component Unmounted"]}
+{"_e":"metro:client_log","_t":1789460293082,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/dashboard/stats"]}
+{"_e":"metro:client_log","_t":1789460293128,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/leads"]}
+{"_e":"metro:client_log","_t":1789460293128,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/deals"]}
+{"_e":"metro:client_log","_t":1789460293128,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/users/me/legal-acceptance"]}
+{"_e":"metro:client_log","_t":1789460293200,"level":"log","data":["[API Response] GET /dashboard/stats - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460293253,"level":"log","data":["[DashboardScreen] Dashboard data fetched successfully"]}
+{"_e":"metro:client_log","_t":1789460293783,"level":"log","data":["[API Response] GET /users/me/legal-acceptance - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460293834,"level":"log","data":["[API Response] GET /deals - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460293834,"level":"log","data":["[API Response] GET /leads - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460318917,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/deals"]}
+{"_e":"metro:client_log","_t":1789460318981,"level":"log","data":["[API Response] GET /deals - Status: 200"]}
+{"_e":"metro:bundling:started","_t":1789460574624,"id":"a","platform":"android","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1789460574624,"id":"a","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1789460574710,"id":"a","total":1,"ms":85.7137}
+{"_e":"metro:client_log","_t":1789460582983,"level":"log","data":["[API Client] Initializing with API_URL:","http://192.168.10.155:5000/api"]}
+{"_e":"metro:client_log","_t":1789460583762,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460583822,"level":"log","data":["[NOTIFICATION DIAGNOSTIC] Runtime Environment:"]}
+{"_e":"metro:client_log","_t":1789460583822,"level":"log","data":["[NOTIFICATION] Execution Env: storeClient"]}
+{"_e":"metro:client_log","_t":1789460583822,"level":"log","data":["[NOTIFICATION] App ownership: expo"]}
+{"_e":"metro:client_log","_t":1789460583822,"level":"log","data":["[NOTIFICATION] Platform: android"]}
+{"_e":"metro:client_log","_t":1789460583822,"level":"log","data":["[NOTIFICATION] Is Device: true"]}
+{"_e":"metro:client_log","_t":1789460583822,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460583822,"level":"log","data":["Skipping push notifications setup: Not supported in Expo Go."]}
+{"_e":"metro:client_log","_t":1789460583880,"level":"log","data":["[IndexScreen] Component Mounted. Checking auth state..."]}
+{"_e":"metro:client_log","_t":1789460583880,"level":"log","data":["[IndexScreen] Waiting for auth to load..."]}
+{"_e":"metro:client_log","_t":1789460583926,"level":"log","data":["[AuthContext] Initializing, checking auth state..."]}
+{"_e":"metro:client_log","_t":1789460583926,"level":"log","data":["[AuthContext] checkAuth invoked"]}
+{"_e":"metro:client_log","_t":1789460583990,"level":"log","data":["[AuthContext] Access token found. Fetching /auth/me..."]}
+{"_e":"metro:client_log","_t":1789460584039,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/auth/me"]}
+{"_e":"metro:client_log","_t":1789460584223,"level":"log","data":["[API Response] GET /auth/me - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460584276,"level":"log","data":["[AuthContext] /auth/me successful, setting user:","Atish Shah"]}
+{"_e":"metro:client_log","_t":1789460584277,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/users/directory"]}
+{"_e":"metro:client_log","_t":1789460584336,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460584336,"level":"log","data":["[NOTIFICATION DIAGNOSTIC] Runtime Environment:"]}
+{"_e":"metro:client_log","_t":1789460584336,"level":"log","data":["[NOTIFICATION] Execution Env: storeClient"]}
+{"_e":"metro:client_log","_t":1789460584337,"level":"log","data":["[NOTIFICATION] App ownership: expo"]}
+{"_e":"metro:client_log","_t":1789460584337,"level":"log","data":["[NOTIFICATION] Platform: android"]}
+{"_e":"metro:client_log","_t":1789460584337,"level":"log","data":["[NOTIFICATION] Is Device: true"]}
+{"_e":"metro:client_log","_t":1789460584337,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460584337,"level":"log","data":["Skipping push notifications setup: Not supported in Expo Go."]}
+{"_e":"metro:client_log","_t":1789460584337,"level":"log","data":["[IndexScreen] Waiting for auth to load..."]}
+{"_e":"metro:client_log","_t":1789460584337,"level":"log","data":["[Socket] Attempting to connect to URL:","http://192.168.10.155:5000"]}
+{"_e":"metro:client_log","_t":1789460584398,"level":"log","data":["[API Response] GET /users/directory - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460584399,"level":"log","data":["[AuthContext] Initial auth check complete, isLoading set to false"]}
+{"_e":"metro:client_log","_t":1789460584450,"level":"log","data":["[IndexScreen] Auth loading complete. Waiting 2.5 seconds..."]}
+{"_e":"metro:client_log","_t":1789460584583,"level":"log","data":["[Socket] Connected to server"]}
+{"_e":"metro:client_log","_t":1789460586919,"level":"log","data":["[IndexScreen] Navigating to dashboard based on role"]}
+{"_e":"metro:client_log","_t":1789460587646,"level":"log","data":["[IndexScreen] Component Unmounted"]}
+{"_e":"metro:client_log","_t":1789460587725,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/dashboard/stats"]}
+{"_e":"metro:client_log","_t":1789460587780,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/leads"]}
+{"_e":"metro:client_log","_t":1789460587780,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/deals"]}
+{"_e":"metro:client_log","_t":1789460587780,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/users/me/legal-acceptance"]}
+{"_e":"metro:client_log","_t":1789460587850,"level":"log","data":["[API Response] GET /dashboard/stats - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460587907,"level":"log","data":["[DashboardScreen] Dashboard data fetched successfully"]}
+{"_e":"metro:client_log","_t":1789460588372,"level":"log","data":["[API Response] GET /users/me/legal-acceptance - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460588430,"level":"log","data":["[API Response] GET /deals - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460588430,"level":"log","data":["[API Response] GET /leads - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460598016,"level":"log","data":["[DashboardScreen] Triggering test notification toast"]}
+{"_e":"metro:client_log","_t":1789460600194,"level":"log","data":["[Socket] Disconnected from server"]}
+{"_e":"metro:client_log","_t":1789460602856,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460602906,"level":"log","data":["[NOTIFICATION DIAGNOSTIC] Runtime Environment:"]}
+{"_e":"metro:client_log","_t":1789460602906,"level":"log","data":["[NOTIFICATION] Execution Env: storeClient"]}
+{"_e":"metro:client_log","_t":1789460602906,"level":"log","data":["[NOTIFICATION] App ownership: expo"]}
+{"_e":"metro:client_log","_t":1789460602907,"level":"log","data":["[NOTIFICATION] Platform: android"]}
+{"_e":"metro:client_log","_t":1789460602907,"level":"log","data":["[NOTIFICATION] Is Device: true"]}
+{"_e":"metro:client_log","_t":1789460602907,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460602907,"level":"log","data":["Skipping push notifications setup: Not supported in Expo Go."]}
+{"_e":"metro:client_log","_t":1789460602907,"level":"log","data":["[IndexScreen] Component Mounted. Checking auth state..."]}
+{"_e":"metro:client_log","_t":1789460602907,"level":"log","data":["[IndexScreen] Waiting for auth to load..."]}
+{"_e":"metro:client_log","_t":1789460602907,"level":"log","data":["[AuthContext] Initializing, checking auth state..."]}
+{"_e":"metro:client_log","_t":1789460602907,"level":"log","data":["[AuthContext] checkAuth invoked"]}
+{"_e":"metro:client_log","_t":1789460602907,"level":"log","data":["[AuthContext] Access token found. Fetching /auth/me..."]}
+{"_e":"metro:client_log","_t":1789460602907,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/auth/me"]}
+{"_e":"metro:client_log","_t":1789460602962,"level":"log","data":["[API Response] GET /auth/me - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460603017,"level":"log","data":["[AuthContext] /auth/me successful, setting user:","Atish Shah"]}
+{"_e":"metro:client_log","_t":1789460603017,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/users/directory"]}
+{"_e":"metro:client_log","_t":1789460603018,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460603018,"level":"log","data":["[NOTIFICATION DIAGNOSTIC] Runtime Environment:"]}
+{"_e":"metro:client_log","_t":1789460603018,"level":"log","data":["[NOTIFICATION] Execution Env: storeClient"]}
+{"_e":"metro:client_log","_t":1789460603018,"level":"log","data":["[NOTIFICATION] App ownership: expo"]}
+{"_e":"metro:client_log","_t":1789460603018,"level":"log","data":["[NOTIFICATION] Platform: android"]}
+{"_e":"metro:client_log","_t":1789460603018,"level":"log","data":["[NOTIFICATION] Is Device: true"]}
+{"_e":"metro:client_log","_t":1789460603018,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460603018,"level":"log","data":["Skipping push notifications setup: Not supported in Expo Go."]}
+{"_e":"metro:client_log","_t":1789460603018,"level":"log","data":["[IndexScreen] Waiting for auth to load..."]}
+{"_e":"metro:client_log","_t":1789460603018,"level":"log","data":["[Socket] Attempting to connect to URL:","http://192.168.10.155:5000"]}
+{"_e":"metro:client_log","_t":1789460603018,"level":"log","data":["[API Response] GET /users/directory - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460603018,"level":"log","data":["[AuthContext] Initial auth check complete, isLoading set to false"]}
+{"_e":"metro:client_log","_t":1789460603025,"level":"log","data":["[IndexScreen] Auth loading complete. Waiting 2.5 seconds..."]}
+{"_e":"metro:client_log","_t":1789460603078,"level":"log","data":["[Socket] Connected to server"]}
+{"_e":"metro:client_log","_t":1789460605538,"level":"log","data":["[IndexScreen] Navigating to dashboard based on role"]}
+{"_e":"metro:client_log","_t":1789460605687,"level":"log","data":["[IndexScreen] Component Unmounted"]}
+{"_e":"metro:client_log","_t":1789460605734,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/dashboard/stats"]}
+{"_e":"metro:client_log","_t":1789460605801,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/leads"]}
+{"_e":"metro:client_log","_t":1789460605801,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/deals"]}
+{"_e":"metro:client_log","_t":1789460605802,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/users/me/legal-acceptance"]}
+{"_e":"metro:client_log","_t":1789460605891,"level":"log","data":["[API Response] GET /users/me/legal-acceptance - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460605945,"level":"log","data":["[API Response] GET /leads - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460605945,"level":"log","data":["[API Response] GET /deals - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460605945,"level":"log","data":["[API Response] GET /dashboard/stats - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460605945,"level":"log","data":["[DashboardScreen] Dashboard data fetched successfully"]}
+{"_e":"metro:client_log","_t":1789460611829,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/deals"]}
+{"_e":"metro:client_log","_t":1789460611954,"level":"log","data":["[API Response] GET /deals - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460621739,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/users/directory"]}
+{"_e":"metro:client_log","_t":1789460621795,"level":"log","data":["[API Response] GET /users/directory - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460624468,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/dashboard/stats"]}
+{"_e":"metro:client_log","_t":1789460624526,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/leads"]}
+{"_e":"metro:client_log","_t":1789460624527,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/deals"]}
+{"_e":"metro:client_log","_t":1789460624527,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/users/me/legal-acceptance"]}
+{"_e":"metro:client_log","_t":1789460624637,"level":"log","data":["[API Response] GET /users/me/legal-acceptance - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460624686,"level":"log","data":["[API Response] GET /deals - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460624686,"level":"log","data":["[API Response] GET /leads - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460624686,"level":"log","data":["[API Response] GET /dashboard/stats - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460624686,"level":"log","data":["[DashboardScreen] Dashboard data fetched successfully"]}
+{"_e":"metro:bundling:started","_t":1789460705354,"id":"e","platform":"android","environment":null,"entry":"node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1789460705354,"id":"e","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1789460705433,"id":"e","total":1,"ms":78.3502}
+{"_e":"metro:client_log","_t":1789460714250,"level":"log","data":["[API Client] Initializing with API_URL:","http://192.168.10.155:5000/api"]}
+{"_e":"metro:client_log","_t":1789460715009,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460715058,"level":"log","data":["[NOTIFICATION DIAGNOSTIC] Runtime Environment:"]}
+{"_e":"metro:client_log","_t":1789460715058,"level":"log","data":["[NOTIFICATION] Execution Env: storeClient"]}
+{"_e":"metro:client_log","_t":1789460715058,"level":"log","data":["[NOTIFICATION] App ownership: expo"]}
+{"_e":"metro:client_log","_t":1789460715058,"level":"log","data":["[NOTIFICATION] Platform: android"]}
+{"_e":"metro:client_log","_t":1789460715058,"level":"log","data":["[NOTIFICATION] Is Device: true"]}
+{"_e":"metro:client_log","_t":1789460715058,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460715058,"level":"log","data":["Skipping push notifications setup: Not supported in Expo Go."]}
+{"_e":"metro:client_log","_t":1789460715105,"level":"log","data":["[IndexScreen] Component Mounted. Checking auth state..."]}
+{"_e":"metro:client_log","_t":1789460715105,"level":"log","data":["[IndexScreen] Waiting for auth to load..."]}
+{"_e":"metro:client_log","_t":1789460715157,"level":"log","data":["[AuthContext] Initializing, checking auth state..."]}
+{"_e":"metro:client_log","_t":1789460715157,"level":"log","data":["[AuthContext] checkAuth invoked"]}
+{"_e":"metro:client_log","_t":1789460715254,"level":"log","data":["[AuthContext] Access token found. Fetching /auth/me..."]}
+{"_e":"metro:client_log","_t":1789460715317,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/auth/me"]}
+{"_e":"metro:client_log","_t":1789460715493,"level":"log","data":["[API Response] GET /auth/me - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460715552,"level":"log","data":["[AuthContext] /auth/me successful, setting user:","Atish Shah"]}
+{"_e":"metro:client_log","_t":1789460715552,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/users/directory"]}
+{"_e":"metro:client_log","_t":1789460715599,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460715599,"level":"log","data":["[NOTIFICATION DIAGNOSTIC] Runtime Environment:"]}
+{"_e":"metro:client_log","_t":1789460715599,"level":"log","data":["[NOTIFICATION] Execution Env: storeClient"]}
+{"_e":"metro:client_log","_t":1789460715600,"level":"log","data":["[NOTIFICATION] App ownership: expo"]}
+{"_e":"metro:client_log","_t":1789460715600,"level":"log","data":["[NOTIFICATION] Platform: android"]}
+{"_e":"metro:client_log","_t":1789460715600,"level":"log","data":["[NOTIFICATION] Is Device: true"]}
+{"_e":"metro:client_log","_t":1789460715600,"level":"log","data":["===================================="]}
+{"_e":"metro:client_log","_t":1789460715600,"level":"log","data":["Skipping push notifications setup: Not supported in Expo Go."]}
+{"_e":"metro:client_log","_t":1789460715600,"level":"log","data":["[IndexScreen] Waiting for auth to load..."]}
+{"_e":"metro:client_log","_t":1789460715646,"level":"log","data":["[API Response] GET /users/directory - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460715646,"level":"log","data":["[AuthContext] Initial auth check complete, isLoading set to false"]}
+{"_e":"metro:client_log","_t":1789460715646,"level":"log","data":["[Socket] Attempting to connect to URL:","http://192.168.10.155:5000"]}
+{"_e":"metro:client_log","_t":1789460715787,"level":"log","data":["[IndexScreen] Auth loading complete. Waiting 2.5 seconds..."]}
+{"_e":"metro:client_log","_t":1789460715898,"level":"log","data":["[Socket] Connected to server"]}
+{"_e":"metro:client_log","_t":1789460718311,"level":"log","data":["[IndexScreen] Navigating to dashboard based on role"]}
+{"_e":"metro:client_log","_t":1789460719128,"level":"log","data":["[IndexScreen] Component Unmounted"]}
+{"_e":"metro:client_log","_t":1789460719206,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/dashboard/stats"]}
+{"_e":"metro:client_log","_t":1789460719264,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/leads"]}
+{"_e":"metro:client_log","_t":1789460719264,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/deals"]}
+{"_e":"metro:client_log","_t":1789460719264,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/users/me/legal-acceptance"]}
+{"_e":"metro:client_log","_t":1789460719411,"level":"log","data":["[API Response] GET /deals - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460719468,"level":"log","data":["[API Response] GET /users/me/legal-acceptance - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460719468,"level":"log","data":["[API Response] GET /dashboard/stats - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460719468,"level":"log","data":["[DashboardScreen] Dashboard data fetched successfully"]}
+{"_e":"metro:client_log","_t":1789460720044,"level":"log","data":["[API Response] GET /leads - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460722131,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/leads"]}
+{"_e":"metro:client_log","_t":1789460722232,"level":"log","data":["[API Response] GET /leads - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460726658,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/leads/54"]}
+{"_e":"metro:client_log","_t":1789460726765,"level":"log","data":["[API Response] GET /leads/54 - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460734592,"level":"log","data":["[DashboardScreen] Manual refresh triggered"]}
+{"_e":"metro:client_log","_t":1789460734670,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/dashboard/stats"]}
+{"_e":"metro:client_log","_t":1789460734671,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/leads"]}
+{"_e":"metro:client_log","_t":1789460734671,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/deals"]}
+{"_e":"metro:client_log","_t":1789460734983,"level":"log","data":["[API Response] GET /dashboard/stats - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460735054,"level":"log","data":["[DashboardScreen] Dashboard data fetched successfully"]}
+{"_e":"metro:client_log","_t":1789460735055,"level":"log","data":["[API Response] GET /deals - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460735289,"level":"log","data":["[API Response] GET /leads - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460735378,"level":"log","data":["[DashboardScreen] Manual refresh completed"]}
+{"_e":"metro:client_log","_t":1789460738775,"level":"log","data":["[DashboardScreen] Manual refresh triggered"]}
+{"_e":"metro:client_log","_t":1789460738821,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/dashboard/stats"]}
+{"_e":"metro:client_log","_t":1789460738821,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/leads"]}
+{"_e":"metro:client_log","_t":1789460738821,"level":"log","data":["[API Request] GET http://192.168.10.155:5000/api/deals"]}
+{"_e":"metro:client_log","_t":1789460739170,"level":"log","data":["[API Response] GET /dashboard/stats - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460739224,"level":"log","data":["[DashboardScreen] Dashboard data fetched successfully"]}
+{"_e":"metro:client_log","_t":1789460739225,"level":"log","data":["[API Response] GET /leads - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460739225,"level":"log","data":["[API Response] GET /deals - Status: 200"]}
+{"_e":"metro:client_log","_t":1789460739225,"level":"log","data":["[DashboardScreen] Manual refresh completed"]}

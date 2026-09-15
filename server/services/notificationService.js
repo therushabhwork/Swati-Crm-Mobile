@@ -2,10 +2,10 @@ const notificationRepository = require('../repositories/notificationRepository')
 
 const createLeadNotificationMessage = ({ actorName, recordName, action }) => {
   if (action === 'created') {
-    return `${actorName} created ${recordName}.`
+    return `${actorName} created ${recordName} Account.`
   }
 
-  return `${actorName} updated ${recordName}.`
+  return `${actorName} updated ${recordName} Account.`
 }
 
 const { Expo } = require('expo-server-sdk')

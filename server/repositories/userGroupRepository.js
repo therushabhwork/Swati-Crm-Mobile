@@ -212,8 +212,8 @@ const deleteGroup = async (groupId) => {
   const byIdQuery = isNaN(groupId) ? { _id: groupId } : { legacyId: Number(groupId) }
   const group = await UserGroup.findOne(byIdQuery)
   if (group) {
-    await UserGroup.deleteOne({ _id: group._id })
-    await UserGroupMember.deleteMany({ groupId: group._id })
+    await UserGroup.deleteOne({ legacyId: group.legacyId })
+    await UserGroupMember.deleteMany({ groupId: { $in: [group._id, String(group._id)] } })
   }
 }
 
