@@ -30,7 +30,7 @@ import {
   resolveLinkedAccount,
   safeLower,
   triggerBrowserPdfSave,
-} from '../quotations/AdminQuotationsPage'
+} from '../quotations/quotationShared'
 import { customViewApi } from '../../../services/customViewApi'
 import { ExcelExportMenuButton } from '../../../components/common/ExcelExportButton'
 import './QuotationSummaryReportPage.css'

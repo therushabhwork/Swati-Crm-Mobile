@@ -24,7 +24,9 @@ const createGroup = async (req, res, next) => {
 
 const listGroups = async (req, res, next) => {
   try {
-    const companyId = req.user.companyId || null
+    const role = String(req.user?.actualRole || req.user?.role || '').toLowerCase()
+    const isAdmin = ['admin', 'owner', 'super_admin'].includes(role)
+    const companyId = isAdmin ? null : (req.user.companyId || null)
     const groups = await userGroupService.listGroups(companyId)
 
     res.json({
@@ -38,7 +40,9 @@ const listGroups = async (req, res, next) => {
 
 const listGroupMembers = async (req, res, next) => {
   try {
-    const companyId = req.user.companyId || null
+    const role = String(req.user?.actualRole || req.user?.role || '').toLowerCase()
+    const isAdmin = ['admin', 'owner', 'super_admin'].includes(role)
+    const companyId = isAdmin ? null : (req.user.companyId || null)
     const members = await userGroupService.listGroupMembers(req.params.id, companyId)
 
     res.json({

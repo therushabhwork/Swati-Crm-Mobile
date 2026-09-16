@@ -43,7 +43,7 @@ import {
   resolveLinkedAccount,
   safeLower,
   triggerBrowserPdfSave,
-} from '../admin/quotations/AdminQuotationsPage'
+} from '../admin/quotations/quotationShared'
 import { AddProductModal, AddOtherProductModal, AddOtherServiceModal } from './LineItemModals'
 import { dataService } from '../../services/dataService'
 import { exportExcelWorkbook, exportCsvWorkbook } from '../../utils/excelExport'
@@ -595,6 +595,8 @@ const Quotations = ({ autoOpen = false }) => {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [isOtherProductModalOpen, setIsOtherProductModalOpen] = useState(false)
   const [isOtherServiceModalOpen, setIsOtherServiceModalOpen] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const viewQuotationId = searchParams.get('view') || ''
   const globalSearchQuery = searchParams.get('query') || ''
 
   const handleAddModalLineItem = (item) => {
@@ -621,8 +623,6 @@ const Quotations = ({ autoOpen = false }) => {
   const [builderMessage, setBuilderMessage] = useState('')
   const [savingQuotation, setSavingQuotation] = useState(false)
   const [additionalSections, setAdditionalSections] = useState([])
-  const [searchParams, setSearchParams] = useSearchParams()
-  const viewQuotationId = searchParams.get('view') || ''
 
   const nextQuotationNumber = useMemo(
     () => dataService.buildQuotationNumber(dataService.getNextQuotationSequence(quotations)),

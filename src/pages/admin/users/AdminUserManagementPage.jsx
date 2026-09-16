@@ -452,6 +452,21 @@ const ManageUserGroupsView = ({
   onDelete,
 }) => {
   const [isUsersDropdownOpen, setUsersDropdownOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const ITEMS_PER_PAGE = 4
+  const totalPages = Math.ceil(groups.length / ITEMS_PER_PAGE)
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages)
+    }
+  }, [totalPages, currentPage])
+
+  const paginatedGroups = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    return groups.slice(startIndex, startIndex + ITEMS_PER_PAGE)
+  }, [groups, currentPage])
   
   const directoryGroupCount = groups.filter((entry) => entry.source === 'Directory').length
   const customGroupCount = groups.filter((entry) => entry.isCustom).length
@@ -727,10 +742,33 @@ const ManageUserGroupsView = ({
         <div className="manage-user-groups-table-shell">
           <Table
             columns={columns}
-            data={groups}
+            data={paginatedGroups}
             emptyMessage="No user groups found."
             className="manage-user-groups-table"
           />
+          {totalPages > 1 && (
+            <div className="admin-user-management-pagination" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '16px', padding: '16px 0' }}>
+              <Button
+                variant="outline"
+                size="small"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="small"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
     </div>
@@ -963,19 +1001,6 @@ const ManageUsersCardView = ({
         </div>
 
         <div className="manage-users-toolbar-right">
-          <select
-            className="manage-users-filter-select"
-            value={userGroupFilter}
-            onChange={(event) => onUserGroupFilterChange(event.target.value)}
-          >
-            <option value="">All Departments</option>
-            {userGroupOptions.map((group) => (
-              <option key={group} value={group}>
-                {group}
-              </option>
-            ))}
-          </select>
-
           <select
             className="manage-users-filter-select"
             value={orderBy}
@@ -1567,8 +1592,13 @@ const AdminUserManagementPage = () => {
 
   const loadGroups = useCallback(async () => {
     try {
-      const data = await userGroupApi.listGroups()
-      setCustomGroups(Array.isArray(data) ? data : [])
+      const response = await userGroupApi.listGroups()
+      const groups = Array.isArray(response?.data)
+        ? response.data
+        : Array.isArray(response)
+          ? response
+          : []
+      setCustomGroups(groups)
     } catch (error) {
       console.error('Failed to load user groups:', error)
     }
@@ -1798,42 +1828,19 @@ const AdminUserManagementPage = () => {
   }, [directoryUsers, orderBy, searchTerm, statusFilter, userGroupFilter])
 
   const groupRows = useMemo(() => {
-    const groupedCounts = directoryUsers.reduce((accumulator, entry) => {
-      const groupName = String(entry.userGroup || 'Unassigned').trim() || 'Unassigned'
-      accumulator[groupName] = (accumulator[groupName] || 0) + 1
-      return accumulator
-    }, {})
-
-    const mergedRows = new Map()
-
-    Object.entries(groupedCounts).forEach(([name, count]) => {
-      const id = `directory-${slugifyValue(name)}`
-      mergedRows.set(normalizeCrmUserName(name), {
-        id,
-        name,
-        description: 'In use by CRM user directory.',
-        members: count,
-        source: 'Directory',
-        isCustom: false,
-      })
-    })
-
-    customGroups.forEach((entry) => {
+    return customGroups.map((entry) => {
       const entryName = entry.groupName || entry.name
-      const key = normalizeCrmUserName(entryName)
-      const previousEntry = mergedRows.get(key)
-      mergedRows.set(key, {
-        id: entry.id,
+      return {
+        id: entry.id || entry._id || entry.mongoId,
         name: entryName,
-        description: entry.description || previousEntry?.description || 'Custom group entry.',
-        members: (entry.members || 0) + (previousEntry?.members || 0),
-        source: previousEntry ? 'Directory' : 'Custom',
-        isCustom: !previousEntry,
-      })
-    })
-
-    return Array.from(mergedRows.values()).sort((left, right) => left.name.localeCompare(right.name))
-  }, [customGroups, directoryUsers])
+        description: entry.description || 'Custom group entry.',
+        members: entry.members || 0,
+        source: 'Custom',
+        isCustom: true,
+        companyName: entry.companyName || '',
+      }
+    }).sort((left, right) => left.name.localeCompare(right.name))
+  }, [customGroups])
 
   const userTypeRows = useMemo(() => {
     const typeCounts = directoryUsers.reduce((accumulator, entry) => {

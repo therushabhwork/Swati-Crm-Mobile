@@ -338,7 +338,7 @@ const getNextOwnerCode = async (companyId) => {
   const baseSeries = companyId === 2 ? 2000 : 1000
   
   const users = await User.find(
-    { companyId }, 
+    {}, 
     { ownerCode: 1, owner_code: 1 }
   ).lean()
   
