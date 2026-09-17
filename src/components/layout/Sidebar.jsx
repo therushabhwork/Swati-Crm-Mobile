@@ -92,21 +92,6 @@ const SidebarTopCard = ({ isAdmin, isCollapsed, displayName, user }) => {
             }} 
           />
         )}
-        {(isKeval || isLumos) && (
-          <img 
-            src={lumosLogo} 
-            alt="Lumos Logo" 
-            style={{ 
-              maxWidth: isKeval ? '50%' : '100%', 
-              height: 'auto',
-              maxHeight: '85px', 
-              objectFit: 'contain',
-              marginLeft: isKeval ? '12px' : '0', 
-              transform: isKeval ? 'scale(1.35)' : 'none', 
-              transformOrigin: 'center'
-            }} 
-          />
-        )}
       </div>
     </div>
   )

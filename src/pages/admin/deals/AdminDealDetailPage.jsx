@@ -14,7 +14,9 @@ import {
   FaTrash,
   FaUser,
   FaUserCog,
+  FaEllipsisV,
 } from 'react-icons/fa'
+import { FiEdit2 } from 'react-icons/fi'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import Button from '../../../components/common/Button'
 import Modal from '../../../components/common/Modal'
@@ -360,16 +362,6 @@ const AdminDealDetailPage = () => {
     navigate(fromPath)
   }
 
-  const handleManageDeal = () => {
-    if (!deal?.id) return
-    navigate(buildAdminManageDealUrl(deal.id), {
-      state: {
-        fromPath,
-        dealSnapshot: sourceDeal || deal,
-      },
-    })
-  }
-
   const navigateBackWithAction = (actionKey) => {
     if (!deal?.id) return
     navigate(fromPath, { state: { dealActionKey: actionKey, dealActionId: deal.id } })
@@ -388,10 +380,6 @@ const AdminDealDetailPage = () => {
   const handleReassignDeal = () => {
     if (!deal?.id) return
     navigate(buildCrmDealActionUrl('re-assign-deal', deal.id, fromPath))
-  }
-
-  const handleChangeStatus = () => {
-    navigateBackWithAction('change-status')
   }
 
   const handleGenerateQuotation = () => {
@@ -565,13 +553,6 @@ const AdminDealDetailPage = () => {
               </div>
 
               <div className="admin-deal-detail-meta-actions">
-                <Button type="button" size="small" onClick={handleManageDeal}>
-                  Manage Deal
-                </Button>
-                <Button type="button" size="small" variant="primary" style={{ background: '#3b82f6', borderColor: '#3b82f6' }} onClick={handleChangeStatus}>
-                  Change Status
-                </Button>
-
                 <div className="admin-deal-detail-actions-menu" ref={actionsMenuRef}>
                   <button
                     type="button"
@@ -579,9 +560,10 @@ const AdminDealDetailPage = () => {
                     onClick={() => setIsActionsMenuOpen((value) => !value)}
                     aria-haspopup="menu"
                     aria-expanded={isActionsMenuOpen}
+                    title="Actions"
+                    aria-label="Actions"
                   >
-                    <span>Actions</span>
-                    <FaCaretDown />
+                    <FaEllipsisV />
                   </button>
 
                   {isActionsMenuOpen ? (
@@ -635,73 +617,72 @@ const AdminDealDetailPage = () => {
               </div>
             </section>
 
-            <div className="admin-deal-detail-cards">
-              {[
-                { key: 'overview', title: 'Overview', items: overviewItems },
-                { key: 'detail', title: 'Deal Details', items: detailItems },
-                { key: 'contact', title: 'Contact', items: contactItems },
-                { key: 'other', title: 'Other Details', items: otherItems },
-              ].map((group) => (
-                <section key={group.key} className="admin-deal-detail-info-card">
-                  <header className="admin-deal-detail-info-card-header">
-                    <span className="admin-deal-detail-info-card-title">{group.title}</span>
-                  </header>
-                  <div className="admin-deal-detail-info-card-body">
-                    {group.items.map((item) => (
-                      <div key={`${group.key}-${item.label}`} className="admin-deal-detail-info-row">
-                        <span className="admin-deal-detail-info-row-label">
-                          {item.icon}
-                          {item.label}
-                        </span>
-                        {editingFieldKey === item.key ? (
-                          renderInlineEditor(item)
-                        ) : (
-                          <>
-                            <span className={`admin-deal-detail-info-row-value ${hasDisplayValue(item.value) ? '' : 'admin-deal-detail-item-value-empty'}`}>
-                              {renderDisplayValue(item.value, item.options)}
-                            </span>
-                            {!item.readonly && (
-                              <button
-                                type="button"
-                                className="admin-deal-detail-inline-edit"
-                                onClick={() => handleStartEditing(item.key, item.rawValue)}
-                                aria-label={`Edit ${item.label}`}
-                                title={`Edit ${item.label}`}
-                              >
-                                <FaPencilAlt />
-                              </button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              ))}
+            <div className="admin-deal-detail-flat-fields">
+              {[...overviewItems, ...detailItems, ...contactItems, ...otherItems].map((item, idx) => {
+                const isSingleFieldEditing = editingFieldKey === item.key
+                return (
+                  <label 
+                    key={`${item.key}-${idx}`} 
+                    className={`admin-deal-detail-field admin-deal-detail-field--flat ${isSingleFieldEditing ? 'admin-deal-detail-field--single-editing' : ''}`}
+                    data-field-key={item.key}
+                  >
+                    <span className="admin-deal-detail-field-label">
+                      <span>{item.label}</span>
+                      {!item.readonly ? (
+                        <button
+                          type="button"
+                          className="admin-deal-detail-field-edit-btn"
+                          onClick={(event) => {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            handleStartEditing(item.key, item.rawValue)
+                          }}
+                          aria-label={`Edit ${item.label}`}
+                          title={`Edit ${item.label}`}
+                        >
+                          <FiEdit2 />
+                        </button>
+                      ) : null}
+                    </span>
+                    {isSingleFieldEditing ? (
+                      renderInlineEditor(item)
+                    ) : (
+                      <span className={`admin-deal-detail-info-row-value ${hasDisplayValue(item.value) ? '' : 'admin-deal-detail-item-value-empty'}`}>
+                        {renderDisplayValue(item.value, item.options)}
+                      </span>
+                    )}
+                  </label>
+                )
+              })}
 
-              <section className="admin-deal-detail-info-card admin-deal-detail-info-card-wide">
-                <header className="admin-deal-detail-info-card-header">
-                  <span className="admin-deal-detail-info-card-title">Description</span>
-                </header>
-                <div className="admin-deal-detail-info-card-body">
-                  {editingFieldKey === 'description' ? (
-                    renderInlineEditor({ key: 'description', type: 'text', rawValue: deal.description })
-                  ) : (
-                    <div className={`admin-deal-detail-description ${hasDisplayValue(deal.description) ? '' : 'admin-deal-detail-item-value-empty'}`}>
-                      {renderDisplayValue(deal.description, null)}
-                      <button
-                        type="button"
-                        className="admin-deal-detail-inline-edit admin-deal-detail-description-edit"
-                        onClick={() => handleStartEditing('description', deal.description)}
-                        aria-label="Edit Description"
-                        title="Edit Description"
-                      >
-                        <FaPencilAlt />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </section>
+              <label 
+                className={`admin-deal-detail-field admin-deal-detail-field--flat admin-deal-detail-field-wide ${editingFieldKey === 'description' ? 'admin-deal-detail-field--single-editing' : ''}`}
+                data-field-key="description"
+              >
+                <span className="admin-deal-detail-field-label">
+                  <span>Description</span>
+                  <button
+                    type="button"
+                    className="admin-deal-detail-field-edit-btn"
+                    onClick={(event) => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      handleStartEditing('description', deal.description)
+                    }}
+                    aria-label="Edit Description"
+                    title="Edit Description"
+                  >
+                    <FiEdit2 />
+                  </button>
+                </span>
+                {editingFieldKey === 'description' ? (
+                  renderInlineEditor({ key: 'description', type: 'text', rawValue: deal.description })
+                ) : (
+                  <span className={`admin-deal-detail-info-row-value ${hasDisplayValue(deal.description) ? '' : 'admin-deal-detail-item-value-empty'}`}>
+                    {renderDisplayValue(deal.description, null)}
+                  </span>
+                )}
+              </label>
             </div>
           </article>
         </div>

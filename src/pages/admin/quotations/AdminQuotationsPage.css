@@ -247,6 +247,7 @@
 
 .aqp-report-export {
   position: relative;
+  flex-shrink: 0;
 }
 
 .aqp-report-export-menu {

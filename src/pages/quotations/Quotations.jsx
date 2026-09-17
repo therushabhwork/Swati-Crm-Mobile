@@ -1847,14 +1847,6 @@ const Quotations = ({ autoOpen = false }) => {
                 <FaPrint className="aqp-btn-icon" />
                 Print
               </button>
-              {getVisibleQuotationActions().some((action) => action.key === 'pdf') ? (
-                <button type="button" className="aqp-btn aqp-btn--blue" onClick={() => {
-                  setPreviewRow(null)
-                  setPdfRow(previewRow)
-                }}>
-                  View As PDF
-                </button>
-              ) : null}
             </>
           )}
         >
@@ -1882,13 +1874,6 @@ const Quotations = ({ autoOpen = false }) => {
               </button>
               <button
                 type="button"
-                className="aqp-btn aqp-btn--orange"
-                onClick={() => handleViewModalAction('pdf')}
-              >
-                View As PDF
-              </button>
-              <button
-                type="button"
                 className="aqp-btn aqp-btn--blue"
                 onClick={() => printQuotationDocument(viewDocument)}
               >
@@ -1899,16 +1884,15 @@ const Quotations = ({ autoOpen = false }) => {
           </div>
           <div className="aqp-view-summary">
             <div className="aqp-view-summary__header">
-              <div className="aqp-view-summary__header-crm">
-                <div className="aqp-view-summary__crm-badge">
-                  <span className="aqp-view-summary__crm-text">CRM</span>
-                </div>
-              </div>
+
               <div className="aqp-view-summary__header-info">
                 <div className="aqp-view-summary__quotation-actions">
                   <div className="aqp-num-cell aqp-num-cell--inline">
-                    <span className={`aqp-num-badge ${getActionBadgeClassName(viewRow?.status || viewDocument.statusLabel)}`}>
-                      {viewDocument.quotationNumber || '-'}
+                    <span 
+                      className={`aqp-num-badge ${getActionBadgeClassName(viewRow?.status || viewDocument.statusLabel)}`}
+                      style={{ fontSize: '1.25rem', fontWeight: '600' }}
+                    >
+                      abc - {viewDocument.quotationNumber || '-'}
                     </span>
                     <button
                       type="button"
@@ -1944,19 +1928,10 @@ const Quotations = ({ autoOpen = false }) => {
                     ) : null}
                   </div>
                 </div>
-                <div className="aqp-view-summary__quotation-company">{viewDocument.companyName || '-'}</div>
               </div>
               <div className="aqp-view-summary__header-status">
                 <StatusBadge status={viewDocument.statusLabel} />
               </div>
-            </div>
-            <div className="aqp-view-summary__grid">
-              <div><strong>Date:</strong> {viewDocument.quotationDate || '-'}</div>
-              <div><strong>Valid Until:</strong> {viewDocument.validUntil || '-'}</div>
-              <div><strong>Profile:</strong> {viewDocument.profileName || '-'}</div>
-              <div><strong>Currency:</strong> {viewDocument.currency}</div>
-              <div><strong>Total:</strong> {formatCurrency(viewDocument.total, viewDocument.currency)}</div>
-              <div><strong>Inquiry Ref:</strong> {viewDocument.customerReferenceNumber || '-'}</div>
             </div>
             {viewDocument.rejectionReason ? (
               <div className="aqp-view-summary__alert">

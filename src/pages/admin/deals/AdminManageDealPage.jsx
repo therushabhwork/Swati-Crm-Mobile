@@ -18,6 +18,7 @@ import {
   FaUserCog,
   FaBan,
   FaClipboardList,
+  FaEllipsisV,
 } from 'react-icons/fa'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import Button from '../../../components/common/Button'
@@ -1037,7 +1038,6 @@ const AdminManageDealPage = () => {
     { key: 'changeType', label: 'Change Type', icon: <FaExchangeAlt />, accent: 'blue', onSelect: handleOpenChangeType },
     { key: 'reassign', label: 'Re-Assign Deal', icon: <FaUserCog />, accent: 'slate', onSelect: handleReassignDeal },
     { key: 'sendMail', label: 'Send Mail', icon: <FaEnvelope />, accent: 'blue', onSelect: handleSendMail },
-    { key: 'delete', label: 'Delete Deal', icon: <FaTrash />, accent: 'danger', onSelect: () => navigateBackWithAction('delete') },
   ]
 
   const handleActionsItemClick = (item) => {
@@ -1410,9 +1410,10 @@ const AdminManageDealPage = () => {
                     onClick={() => setIsActionsMenuOpen((value) => !value)}
                     aria-haspopup="menu"
                     aria-expanded={isActionsMenuOpen}
+                    title="Actions"
+                    aria-label="Actions"
                   >
-                    <span>Actions</span>
-                    <FaCaretDown />
+                    <FaEllipsisV />
                   </button>
 
                   {isActionsMenuOpen ? (

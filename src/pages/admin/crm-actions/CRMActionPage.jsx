@@ -19,6 +19,7 @@ import {
   FaUndo,
   FaUserCog,
 } from 'react-icons/fa'
+import { FiEdit2 } from 'react-icons/fi'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Button from '../../../components/common/Button'
 import { useAuth } from '../../../context/AuthContext'
@@ -237,7 +238,7 @@ const SearchableSelect = ({
 
   return (
     <label className={`crm-action-field ${className}`}>
-      <span>{label}{required ? <em>*</em> : null}</span>
+      {label ? <span>{label}{required ? <em>*</em> : null}</span> : null}
       <input
         type="search"
         className="crm-action-input crm-action-dropdown-search"
@@ -313,6 +314,86 @@ const CRMActionPage = () => {
   const [previewOpen, setPreviewOpen] = useState(false)
   const [isEditorFullscreen, setIsEditorFullscreen] = useState(false)
 
+  const [editingFieldKey, setEditingFieldKey] = useState('')
+  const [editValue, setEditValue] = useState('')
+  const [isSavingField, setIsSavingField] = useState(false)
+
+  const accountRecords = useMemo(() => getAccountsBoardData(accounts).records, [accounts])
+  const customerRecords = useMemo(() => customerService.getCustomers(), [])
+
+  const moduleRecords = useMemo(() => ({
+    deal: deals.map((deal) => ({
+      ...deal,
+      label: `${deal.dealNumber || 'Deal'} - ${deal.name || deal.customerName || deal.companyName || 'Untitled'}`,
+    })),
+    account: accountRecords.map((account) => ({
+      ...account,
+      label: `${account.accountNumber || 'Account'} - ${account.name || account.customerName || 'Untitled'}`,
+    })),
+    customer: customerRecords.map((customer) => ({
+      ...customer,
+      label: `${customer.customerNumber || 'Customer'} - ${customer.customerName || 'Untitled'}`,
+    })),
+  }), [accountRecords, customerRecords, deals])
+
+  const selectedEntity = useMemo(() => {
+    const records = moduleRecords[recordModule] || []
+    return records.find((record) => String(record.id) === String(selectedRecordId)) || null
+  }, [moduleRecords, recordModule, selectedRecordId])
+
+  const selectedDeal = useMemo(() => {
+    if (recordModule === 'deal') return selectedEntity
+    const dealId = searchParams.get('dealId')
+    return deals.find((deal) => String(deal.id) === String(dealId)) || null
+  }, [deals, recordModule, searchParams, selectedEntity])
+
+  const handleStartEditing = (key, initialValue) => {
+    setEditingFieldKey(key)
+    setEditValue(initialValue || '')
+  }
+
+  const handleCancelEditing = () => {
+    setEditingFieldKey('')
+    setEditValue('')
+  }
+
+  const handleSaveField = async (key) => {
+    if (!selectedDeal?.id || isSavingField) return
+    setIsSavingField(true)
+    
+    let updatePayload = { [key]: editValue }
+    
+    if (key === 'dealName') updatePayload = { dealName: editValue, title: editValue, name: editValue }
+    else if (key === 'contactName') updatePayload = { contactName: editValue, contactPerson: editValue }
+    else if (key === 'email') updatePayload = { email: editValue, contactEmail: editValue }
+    else if (key === 'companyName') updatePayload = { customerName: editValue, accountName: editValue }
+    else if (key === 'customerReferenceNumber') updatePayload = { customerReferenceNumber: editValue, dealNumber: editValue }
+    else if (key === 'dealNumber') updatePayload = { dealNumber: editValue }
+
+    const targetDealId = selectedDeal.sourceDealId || selectedDeal.source_deal_id || selectedDeal.dealId || selectedDeal.id
+    const result = await updateDeal(targetDealId, updatePayload)
+    setIsSavingField(false)
+
+    if (!result.success) {
+      addNotification('error', 'Update Deal', result.message || 'Unable to update field.')
+      return
+    }
+
+    addNotification('success', 'Update Deal', 'Deal updated successfully.')
+    setEditingFieldKey('')
+    setEditValue('')
+  }
+
+  const renderInlineEditor = (key, type = 'text') => (
+    <div className="admin-deal-detail-inline-editor">
+      <input type={type} value={editValue} onChange={(e) => setEditValue(e.target.value)} disabled={isSavingField} />
+      <div className="admin-deal-detail-inline-actions">
+        <button type="button" onClick={() => handleSaveField(key)} disabled={isSavingField}>{isSavingField ? 'Saving...' : 'Save'}</button>
+        <button type="button" onClick={handleCancelEditing} disabled={isSavingField}>Cancel</button>
+      </div>
+    </div>
+  )
+
   const [mailForm, setMailForm] = useState({
     template: 'Inquiry Received',
     fromEmail: user?.email || 'sales@company.com',
@@ -366,34 +447,7 @@ const CRMActionPage = () => {
       .sort((left, right) => left.name.localeCompare(right.name))
   ), [])
 
-  const accountRecords = useMemo(() => getAccountsBoardData(accounts).records, [accounts])
-  const customerRecords = useMemo(() => customerService.getCustomers(), [])
 
-  const moduleRecords = useMemo(() => ({
-    deal: deals.map((deal) => ({
-      ...deal,
-      label: `${deal.dealNumber || 'Deal'} - ${deal.name || deal.customerName || deal.companyName || 'Untitled'}`,
-    })),
-    account: accountRecords.map((account) => ({
-      ...account,
-      label: `${account.accountNumber || 'Account'} - ${account.name || account.customerName || 'Untitled'}`,
-    })),
-    customer: customerRecords.map((customer) => ({
-      ...customer,
-      label: `${customer.customerNumber || 'Customer'} - ${customer.customerName || 'Untitled'}`,
-    })),
-  }), [accountRecords, customerRecords, deals])
-
-  const selectedEntity = useMemo(() => {
-    const records = moduleRecords[recordModule] || []
-    return records.find((record) => String(record.id) === String(selectedRecordId)) || null
-  }, [moduleRecords, recordModule, selectedRecordId])
-
-  const selectedDeal = useMemo(() => {
-    if (recordModule === 'deal') return selectedEntity
-    const dealId = searchParams.get('dealId')
-    return deals.find((deal) => String(deal.id) === String(dealId)) || null
-  }, [deals, recordModule, searchParams, selectedEntity])
 
   const returnTo = searchParams.get('returnTo') || location.state?.returnTo || '/admin/deals/view'
 
@@ -824,6 +878,67 @@ const CRMActionPage = () => {
     const entity = dealOnly ? selectedDeal : selectedEntity
     if (!entity) return null
 
+    if (dealOnly) {
+      return (
+        <div className="admin-deal-detail-flat-fields" style={{ margin: '0 0 1rem', padding: '1rem', border: '1px solid var(--border-subtle)', background: 'var(--surface-card)' }}>
+          <label className={`admin-deal-detail-field admin-deal-detail-field--flat ${editingFieldKey === 'dealName' ? 'admin-deal-detail-field--single-editing' : ''}`} onDoubleClick={() => handleStartEditing('dealName', getEntityLabel(entity))}>
+            <div className="admin-deal-detail-field-label">
+              <span>Deal Name</span>
+              {editingFieldKey !== 'dealName' ? (
+                <button type="button" className="admin-deal-detail-field-edit-btn" onClick={() => handleStartEditing('dealName', getEntityLabel(entity))} title="Edit Deal Name"><FiEdit2 /></button>
+              ) : null}
+            </div>
+            {editingFieldKey === 'dealName' ? renderInlineEditor('dealName') : <div className="admin-deal-detail-field-value"><strong>{getEntityLabel(entity) || '-'}</strong></div>}
+          </label>
+          <label className={`admin-deal-detail-field admin-deal-detail-field--flat ${editingFieldKey === 'dealNumber' ? 'admin-deal-detail-field--single-editing' : ''}`} onDoubleClick={() => handleStartEditing('dealNumber', entity.dealNumber)}>
+            <div className="admin-deal-detail-field-label">
+              <span>Deal No.</span>
+              {editingFieldKey !== 'dealNumber' ? (
+                <button type="button" className="admin-deal-detail-field-edit-btn" onClick={() => handleStartEditing('dealNumber', entity.dealNumber)} title="Edit Deal No"><FiEdit2 /></button>
+              ) : null}
+            </div>
+            {editingFieldKey === 'dealNumber' ? renderInlineEditor('dealNumber') : <div className="admin-deal-detail-field-value"><strong>{entity.dealNumber || entity.accountNumber || entity.customerNumber || '-'}</strong></div>}
+          </label>
+          <label className={`admin-deal-detail-field admin-deal-detail-field--flat ${editingFieldKey === 'contactName' ? 'admin-deal-detail-field--single-editing' : ''}`} onDoubleClick={() => handleStartEditing('contactName', getEntityContactName(entity))}>
+            <div className="admin-deal-detail-field-label">
+              <span>Contact Name</span>
+              {editingFieldKey !== 'contactName' ? (
+                <button type="button" className="admin-deal-detail-field-edit-btn" onClick={() => handleStartEditing('contactName', getEntityContactName(entity))} title="Edit Contact Name"><FiEdit2 /></button>
+              ) : null}
+            </div>
+            {editingFieldKey === 'contactName' ? renderInlineEditor('contactName') : <div className="admin-deal-detail-field-value"><strong>{getEntityContactName(entity) || '-'}</strong></div>}
+          </label>
+          <label className={`admin-deal-detail-field admin-deal-detail-field--flat ${editingFieldKey === 'email' ? 'admin-deal-detail-field--single-editing' : ''}`} onDoubleClick={() => handleStartEditing('email', getEntityEmail(entity))}>
+            <div className="admin-deal-detail-field-label">
+              <span>Email ID</span>
+              {editingFieldKey !== 'email' ? (
+                <button type="button" className="admin-deal-detail-field-edit-btn" onClick={() => handleStartEditing('email', getEntityEmail(entity))} title="Edit Email"><FiEdit2 /></button>
+              ) : null}
+            </div>
+            {editingFieldKey === 'email' ? renderInlineEditor('email', 'email') : <div className="admin-deal-detail-field-value"><strong>{getEntityEmail(entity) || '-'}</strong></div>}
+          </label>
+          <label className={`admin-deal-detail-field admin-deal-detail-field--flat ${editingFieldKey === 'companyName' ? 'admin-deal-detail-field--single-editing' : ''}`} onDoubleClick={() => handleStartEditing('companyName', getEntityCompanyName(entity))}>
+            <div className="admin-deal-detail-field-label">
+              <span>Company Name</span>
+              {editingFieldKey !== 'companyName' ? (
+                <button type="button" className="admin-deal-detail-field-edit-btn" onClick={() => handleStartEditing('companyName', getEntityCompanyName(entity))} title="Edit Company Name"><FiEdit2 /></button>
+              ) : null}
+            </div>
+            {editingFieldKey === 'companyName' ? renderInlineEditor('companyName') : <div className="admin-deal-detail-field-value"><strong>{getEntityCompanyName(entity) || '-'}</strong></div>}
+          </label>
+          <label className={`admin-deal-detail-field admin-deal-detail-field--flat ${editingFieldKey === 'customerReferenceNumber' ? 'admin-deal-detail-field--single-editing' : ''}`} onDoubleClick={() => handleStartEditing('customerReferenceNumber', selectedDeal?.dealNumber || entity.dealNumber)}>
+            <div className="admin-deal-detail-field-label">
+              <span>Deal Reference</span>
+              {editingFieldKey !== 'customerReferenceNumber' ? (
+                <button type="button" className="admin-deal-detail-field-edit-btn" onClick={() => handleStartEditing('customerReferenceNumber', selectedDeal?.dealNumber || entity.dealNumber)} title="Edit Deal Reference"><FiEdit2 /></button>
+              ) : null}
+            </div>
+            {editingFieldKey === 'customerReferenceNumber' ? renderInlineEditor('customerReferenceNumber') : <div className="admin-deal-detail-field-value"><strong>{selectedDeal?.dealNumber || entity.dealNumber || '-'}</strong></div>}
+          </label>
+        </div>
+      )
+    }
+
     return (
       <div className="crm-action-context">
         <div><span>{dealOnly ? 'Deal Name' : 'Name'}</span><strong>{getEntityLabel(entity)}</strong></div>
@@ -838,14 +953,12 @@ const CRMActionPage = () => {
 
   const renderDealChangeStatus = () => (
     <form className="crm-action-form" onSubmit={handleSaveDealStatus}>
-      {renderRecordPicker(true)}
       {renderContext(true)}
 
       <section className="crm-action-section">
         <h2>Change Status</h2>
         <div className="crm-action-grid">
           <SearchableSelect
-            label="Deal Status"
             value={statusForm.status}
             onChange={(value) => setStatusForm({ ...statusForm, status: value })}
             options={DEAL_CHANGE_STATUS_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
@@ -1259,7 +1372,7 @@ const CRMActionPage = () => {
             <h1>{pageTitle}</h1>
           </div>
           <div className="crm-action-header-icon">
-            {actionKey === 'send-mail' ? <FaEnvelope /> : actionKey === 're-assign-deal' ? <FaUserCog /> : actionKey === 'upload-deal-quotation' ? <FaFileAlt /> : <FaCalendarAlt />}
+            {actionKey === 'change-status' ? null : actionKey === 'send-mail' ? <FaEnvelope /> : actionKey === 're-assign-deal' ? <FaUserCog /> : actionKey === 'upload-deal-quotation' ? <FaFileAlt /> : <FaCalendarAlt />}
           </div>
         </div>
 

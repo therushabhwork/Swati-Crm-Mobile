@@ -224,8 +224,6 @@ export const PROFILE_FALLBACKS = {
 }
 
 export const ACTIONS = [
-  { key: 'pdf', label: 'View As PDF', icon: FaFilePdf, iconClass: 'aqp-action-icon--pdf' },
-  { key: 'preview', label: 'Preview', icon: FaEye },
   { key: 'view', label: 'View Quote', icon: FaEye },
   { key: 'approve', label: 'Approve Quote', icon: FaCheck },
   { key: 'reject', label: 'Reject Quote', icon: FaTimes },

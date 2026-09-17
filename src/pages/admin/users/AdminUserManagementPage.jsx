@@ -1013,9 +1013,6 @@ const ManageUsersCardView = ({
             ))}
           </select>
 
-          <button type="button" className="manage-users-secondary-button" onClick={onUserHistory}>
-            <FaHistory /> User History
-          </button>
           <button
             type="button"
             className="manage-users-secondary-button"

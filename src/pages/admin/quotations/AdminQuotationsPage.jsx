@@ -976,7 +976,6 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
                 <ExcelExportMenuButton
                   label="Export"
                   title="Export quotation manager"
-                  className="aqp-report-export"
                   items={[
                     {
                       key: 'quotation-manager-excel',
@@ -1540,15 +1539,6 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
                 <FaPrint className="aqp-btn-icon" />
                 Print
               </button>
-              {previewActions.some((action) => action.key === 'pdf') ? (
-                <button type="button" className="aqp-btn aqp-btn--blue" onClick={() => {
-                  const target = previewRow
-                  setPreviewRow(null)
-                  openPdfPage(target)
-                }}>
-                  View As PDF
-                </button>
-              ) : null}
             </>
           )}
         >
