@@ -13,7 +13,7 @@
 .admin-search-header {
   padding: 1rem 1.3rem;
   border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-app);
+  background: var(--surface-card);
 }
 
 .admin-search-header h1 {
@@ -44,8 +44,9 @@
 
 .admin-search-section-title {
   padding: 0.75rem 0.95rem;
-  background: linear-gradient(180deg, #4da6c8 0%, #2d7fb0 100%);
-  color: #ffffff;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 800;
 }
@@ -89,6 +90,17 @@
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+.admin-search-record-link:hover {
+  color: var(--text-primary);
+}
+
+.admin-search-record-link:focus-visible,
+.admin-search-account-actions-trigger:focus-visible,
+.admin-search-account-actions-item:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
 }
 
 .admin-search-empty-cell {
@@ -162,11 +174,18 @@
   padding: 0.5rem 0.95rem;
   border: 1px solid var(--border-subtle);
   border-radius: 6px;
-  background: linear-gradient(180deg, #3291d1 0%, #1f6ea4 100%);
-  color: #ffffff;
+  background: var(--surface-card);
+  color: var(--text-primary);
   font-size: 0.84rem;
   font-weight: 700;
   cursor: pointer;
+}
+
+.admin-search-account-actions-trigger:hover,
+.admin-search-account-actions-trigger:active {
+  background: var(--surface-card);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
 }
 
 .admin-search-account-actions-menu {
@@ -178,6 +197,8 @@
   background: var(--surface-card);
   box-shadow: 0 14px 32px rgba(15, 23, 42, 0.16);
   z-index: 8;
+  overflow: hidden;
+  border-radius: 10px;
 }
 
 .admin-search-account-actions-item {
@@ -199,7 +220,11 @@
 }
 
 .admin-search-account-actions-item:hover {
-  background: var(--surface-muted);
+  background: var(--surface-card);
+}
+
+.admin-search-account-actions-item:active {
+  background: var(--surface-card);
 }
 
 .admin-search-account-summary-grid {
@@ -248,6 +273,7 @@
 
 .admin-search-account-section-title {
   padding: 0.72rem 0.95rem;
+  border-bottom: 1px solid var(--border-subtle);
   background: var(--surface-card);
   color: var(--text-primary);
   font-size: 0.86rem;
@@ -264,6 +290,83 @@
 .admin-search-account-field {
   display: grid;
   gap: 0.28rem;
+}
+
+.admin-search-page,
+.admin-search-page :is(
+  .admin-search-shell,
+  .admin-search-header,
+  .admin-search-grid,
+  .admin-search-section,
+  .admin-search-section-title,
+  .admin-search-section-table-wrap,
+  .admin-search-section-table,
+  .admin-search-section-table thead,
+  .admin-search-section-table tbody,
+  .admin-search-section-table tr,
+  .admin-search-section-table th,
+  .admin-search-section-table td,
+  .admin-search-account-modal,
+  .admin-search-account-section,
+  .admin-search-account-section-title,
+  .admin-search-account-summary-item,
+  .admin-search-account-actions-trigger,
+  .admin-search-account-actions-menu,
+  .admin-search-account-actions-item,
+  .admin-search-account-icon-row span
+) {
+  background: var(--surface-card) !important;
+  background-color: var(--surface-card) !important;
+  background-image: none !important;
+}
+
+.admin-search-page :is(
+  .admin-search-shell,
+  .admin-search-section,
+  .admin-search-section-title,
+  .admin-search-section-table,
+  .admin-search-section-table th,
+  .admin-search-section-table td,
+  .admin-search-account-section,
+  .admin-search-account-section-title,
+  .admin-search-account-summary-item,
+  .admin-search-account-actions-trigger,
+  .admin-search-account-actions-menu,
+  .admin-search-account-actions-item,
+  .admin-search-account-icon-row span
+) {
+  border-color: var(--border-subtle) !important;
+}
+
+.admin-search-page :is(
+  .admin-search-header,
+  .admin-search-section-title,
+  .admin-search-account-section-title,
+  .admin-search-section-table th,
+  .admin-search-section-table td,
+  .admin-search-account-actions-item
+) {
+  border-bottom-color: var(--border-subtle) !important;
+}
+
+.admin-search-page :is(
+  .admin-search-header h1,
+  .admin-search-header p,
+  .admin-search-section-title,
+  .admin-search-section-table th,
+  .admin-search-section-table td,
+  .admin-search-record-link,
+  .admin-search-empty-cell,
+  .admin-search-account-section-title,
+  .admin-search-account-actions-trigger,
+  .admin-search-account-actions-item,
+  .admin-search-account-summary-item span,
+  .admin-search-account-summary-item strong,
+  .admin-search-account-field span,
+  .admin-search-account-field strong
+) {
+  color: var(--text-primary) !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
 }
 
 @media (max-width: 1024px) {

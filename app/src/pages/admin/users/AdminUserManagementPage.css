@@ -2287,3 +2287,37 @@ select.add-user-wizard-input {
   color: inherit;
   opacity: 1;
 }
+
+/* Light mode border-only table treatment for Users pages. Red is border-only, never a heading fill. */
+html:not([data-theme="dark"]) .admin-users-page :is(.table-container, .manage-users-table, .manage-user-groups-table),
+html:not([data-theme="dark"]) .user-management-page :is(.table-container, .manage-users-table, .manage-user-groups-table) {
+  border-color: var(--color-danger) !important;
+  background: var(--surface-card);
+}
+
+html:not([data-theme="dark"]) .admin-users-page :is(.table-header-cell, th),
+html:not([data-theme="dark"]) .user-management-page :is(.table-header-cell, th) {
+  border-color: var(--color-danger) !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+html:not([data-theme="dark"]) .admin-users-page :is(.table-cell, td),
+html:not([data-theme="dark"]) .user-management-page :is(.table-cell, td) {
+  border-color: var(--color-danger) !important;
+}
+
+html:not([data-theme="dark"]) .admin-users-page .table-striped .table-row:nth-child(even),
+html:not([data-theme="dark"]) .admin-users-page .table-striped .table-row:nth-child(odd),
+html:not([data-theme="dark"]) .user-management-page .table-striped .table-row:nth-child(even),
+html:not([data-theme="dark"]) .user-management-page .table-striped .table-row:nth-child(odd) {
+  background: var(--surface-card);
+}
+
+html:not([data-theme="dark"]) .admin-users-page :is(.card-header, .admin-user-settings-content-card .card-header),
+html:not([data-theme="dark"]) .user-management-page :is(.card-header, .admin-user-settings-content-card .card-header) {
+  border-bottom-color: var(--color-danger) !important;
+  background: transparent !important;
+}

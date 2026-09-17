@@ -229,6 +229,7 @@ function App() {
                 <Route path="integrations/:channel" element={<IntegrationQrPage />} />
                 <Route path="outlook" element={<OutlookMailPage />} />
                 <Route path="messages" element={<AdminMessagesPage />} />
+                <Route path="search" element={<AdminAdvancedSearchPage />} />
               </Route>
 
               <Route

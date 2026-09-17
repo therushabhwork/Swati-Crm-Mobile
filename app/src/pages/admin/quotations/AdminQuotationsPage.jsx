@@ -2364,6 +2364,8 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
                   className="aqp-report-export"
                   buttonClassName="aqp-report-icon-btn aqp-report-icon-btn--blue aqp-report-icon-btn--export"
                   menuClassName="aqp-report-export-menu"
+                  compact
+                  responsiveHideLabel
                   items={[
                     {
                       key: 'quotation-manager-excel',

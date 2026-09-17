@@ -26,10 +26,10 @@
 }
 
 .user-approvals-tab.is-active {
-  background: linear-gradient(180deg, #58b5e4 0%, #3396cc 100%);
-  border-color: var(--text-primary);
-  color: #ffffff;
-  box-shadow: 0 10px 18px rgba(51, 150, 204, 0.18);
+  background: transparent;
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+  box-shadow: none;
 }
 
 .user-approvals-tab-count {
@@ -48,6 +48,28 @@
 
 .user-approvals-tab.is-active .user-approvals-tab-count {
   background: var(--surface-card);
+}
+
+html:not([data-theme="dark"]) .user-approvals-tab.is-active {
+  border-color: var(--color-danger);
+}
+
+html:not([data-theme="dark"]) .user-approvals-tabs + .table-container,
+html:not([data-theme="dark"]) .user-approvals-tabs ~ .table-container {
+  border-color: var(--color-danger) !important;
+}
+
+html:not([data-theme="dark"]) .user-approvals-tabs + .table-container :is(.table-header-cell, th),
+html:not([data-theme="dark"]) .user-approvals-tabs ~ .table-container :is(.table-header-cell, th) {
+  border-color: var(--color-danger) !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  text-shadow: none !important;
+}
+
+html:not([data-theme="dark"]) .user-approvals-tabs + .table-container :is(.table-cell, td),
+html:not([data-theme="dark"]) .user-approvals-tabs ~ .table-container :is(.table-cell, td) {
+  border-color: var(--color-danger) !important;
 }
 
 .user-approvals-actions {

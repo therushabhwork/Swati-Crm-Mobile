@@ -265,6 +265,20 @@
   font-weight: 800;
 }
 
+html:not([data-theme="dark"]) .cr-section:has(.cr-field-picker) {
+  border-color: color-mix(in srgb, var(--color-danger) 55%, var(--border-subtle));
+}
+
+html:not([data-theme="dark"]) .cr-section:has(.cr-field-picker) .cr-section-heading,
+html:not([data-theme="dark"]) .cr-section:has(.cr-field-picker) .cr-field-box-head {
+  border-color: color-mix(in srgb, var(--color-danger) 45%, var(--border-subtle));
+  background: color-mix(in srgb, var(--color-danger) 6%, var(--surface-card));
+}
+
+html:not([data-theme="dark"]) .cr-section:has(.cr-field-picker) :is(h2, strong, span, .cr-field-group-title, button) {
+  color: var(--color-danger);
+}
+
 .cr-config-grid,
 .cr-sort-grid {
   display: grid;
@@ -428,12 +442,15 @@
   background: var(--surface-card);
   color: var(--text-primary);
   text-align: left;
+  line-height: 1.3;
+  white-space: normal;
+  overflow-wrap: anywhere;
   cursor: pointer;
 }
 
 .cr-field-list button.active {
-  border-color: var(--color-primary);
-  background: var(--surface-muted);
+  border-color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 9%, var(--surface-card));
 }
 
 .cr-field-transfer {
@@ -450,6 +467,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: 4px;
   background: var(--surface-card);
+  color: var(--color-danger);
   cursor: pointer;
 }
 
@@ -461,6 +479,10 @@
   font-size: 0.7rem;
   font-weight: 800;
   white-space: nowrap;
+}
+
+html:not([data-theme="dark"]) .cr-selected-actions span {
+  color: var(--color-danger);
 }
 
 .cr-output-section {
