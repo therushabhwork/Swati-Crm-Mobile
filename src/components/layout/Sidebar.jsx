@@ -221,17 +221,12 @@ const Sidebar = ({ isAdmin = false }) => {
     { label: 'My Group Accounts', to: '/admin/accounts/my-group-accounts' },
     { label: 'Search Account', to: '/admin/accounts/search' },
     { label: 'My Accounts', to: '/admin/accounts/my-accounts' },
+    { label: 'View Deal', to: '/admin/deals/view' },
+    { label: 'Search Deal', to: '/admin/deals/search' },
     ...(!isKevalVShah ? [{ label: 'Weekly reports-ALL', to: '/admin/accounts/weekly-reports-all' }] : []),
   ]), [isKevalVShah])
 
-  const dealMenuItems = useMemo(() => {
-    return [
-      { label: 'Add Deal', to: '/admin/deals/add' },
-      { label: 'View Deal', to: '/admin/deals/view' },
-      { label: 'Search Deal', to: '/admin/deals/search' },
 
-    ]
-  }, [])
 
   const supportRequestsMenuItems = [
     { label: 'Add SR', to: '/admin/support-requests/add' },
@@ -543,25 +538,6 @@ const Sidebar = ({ isAdmin = false }) => {
             <SubLink to="/admin/customers/add" label="Add Customer" />
             <SubLink to="/admin/customers/search" label="Search Customer" />
             <SubLink to="/admin/customers/my-customers" label="My Customers" />
-          </SidebarGroup>
-
-          <SidebarGroup
-            icon={<FaHandshake />}
-            label="Deals"
-            isActive={isDealsRoute}
-            isOpen={dealsOpen}
-            isCollapsed={isSidebarCollapsed}
-            onToggle={() => setDealsOpen((previous) => !previous)}
-          >
-            {dealMenuItems.map((item) => (
-              <SubLink
-                key={item.to}
-                to={item.to}
-                label={item.label}
-                accent={item.accent}
-                end={item.to === '/admin/deals/view'}
-              />
-            ))}
           </SidebarGroup>
 
           <SidebarGroup

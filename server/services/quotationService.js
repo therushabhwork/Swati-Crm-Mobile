@@ -381,6 +381,41 @@ const applyStrictIsolation = (actor) => {
 
 module.exports = {
   ...quotationService,
+  create: async (actor, payload) => {
+    const result = await quotationService.create(actor, payload)
+    try {
+      const { findUserById } = require('../repositories/userRepository')
+      const assignedUserId = result.assignedTo || actor.id
+      const userRecord = assignedUserId ? await findUserById(assignedUserId) : null
+      const ownerName = userRecord?.name || result.data?.selectedAccountOwner || result.data?.quotationOwner || ''
+      const ownerCode = userRecord?.ownerCode || result.ownerCode || result.data?.ownerCode || result.data?.customerOwnerCode || ''
+
+      const customerService = require('./customerService')
+      const customerPayload = {
+        name: result.customerName || result.companyName || result.title || 'Quotation Customer',
+        accountId: result.customerId || null,
+        email: result.data?.email || result.data?.organizationEmail || null,
+        phone: result.data?.telephone || result.data?.phone || result.data?.organizationPhone || null,
+        company: result.companyName || result.customerName || null,
+        assignedTo: assignedUserId,
+        customerOwner: ownerName,
+        customerOwnerName: ownerName,
+        customerOwnerDisplay: ownerName,
+        customerOwnerCode: ownerCode,
+        customerStatus: 'pending',
+        customerCategory: 'SWATI',
+        contacts: [],
+        documents: []
+      };
+      
+      delete customerPayload.data;
+      
+      await customerService.create(actor, customerPayload)
+    } catch (err) {
+      console.warn('Could not auto-create customer upon quotation generation', err)
+    }
+    return result
+  },
   list: (actor, filters = {}) => quotationService.list(applyStrictIsolation(actor), filters),
   get: (actor, id) => quotationService.get(applyStrictIsolation(actor), id),
   search: (actor, query) => quotationService.search(applyStrictIsolation(actor), query),

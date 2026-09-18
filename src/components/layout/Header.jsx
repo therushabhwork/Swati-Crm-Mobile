@@ -78,6 +78,9 @@ const ADMIN_QUICK_ADD_ITEMS = [
 ]
 
 const STANDARD_QUICK_ADD_ITEMS = [
+  { label: 'Add Account', icon: FaBriefcase, route: '/accounts/new' },
+  { label: 'Add Customer', icon: FaUsers, route: '/customers/add' },
+  { label: 'Add Support Request', icon: FaHandsHelping, route: '/support-requests/add' },
   { label: 'Add Reminder', icon: FiBell, action: ADD_REMINDER_ACTION },
   { label: 'Image Gallery', icon: FaImages, route: '/image-gallery' },
 ]
@@ -329,7 +332,7 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
     if (path.includes('/quotations')) return `${prefix}/quotations`
     if (path.includes('/support-requests')) return path.includes('/list') ? path : `${prefix}/support-requests/list`
 
-    return isAdmin ? '/admin/search' : '/support-requests/search'
+    return isAdmin ? '/admin/search' : '/search'
   }
 
   const handleOpenMessagePanel = () => {

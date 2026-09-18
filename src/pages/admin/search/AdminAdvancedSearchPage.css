@@ -313,3 +313,17 @@
     justify-self: start;
   }
 }
+
+/* 
+ * Override global maroon table headers for the global search page 
+ * This ensures the table headers on this page stay white/clean instead of using Table.css maroon styling.
+ */
+.admin-search-section-table th,
+.layout .admin-search-section-table th,
+[data-theme="dark"] .layout .admin-search-section-table th {
+  border-color: var(--border-subtle) !important;
+  background: var(--surface-muted) !important;
+  background-color: var(--surface-muted) !important;
+  color: var(--text-primary) !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+}

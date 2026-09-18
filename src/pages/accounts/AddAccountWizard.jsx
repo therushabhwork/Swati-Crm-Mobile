@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
@@ -14,19 +14,25 @@ import {
   STATE_OPTIONS,
 } from '../../features/accounts/config/accountDropdownOptions'
 import { getAccountCategoryLogo } from '../../features/accounts/config/accountCategoryLogo'
-import './AddAccountWizard.css'
-
-const steps = [
-  { id: 'basic', label: 'Account Basic Details' },
-  { id: 'contacts', label: 'Contacts' },
-  { id: 'reminder', label: 'Reminder & Remark' },
-]
+import { customerService } from '../../services/customerService'
+import {
+  CUSTOMER_QUOTATION_STATUS_OPTIONS,
+  DEAL_LIFECYCLE_STATUS_OPTIONS,
+} from '../../features/adminDeals/config/dealUtils'
 import { userApi } from '../../services/userApi'
 import {
   getAccountOwnerOptionLabel,
   loadAccountOwnerOptions,
   filterAccountOwnerOptionsByVertical,
 } from '../../features/adminAccounts/utils/accountOwnerOptions'
+import './AddAccountWizard.css'
+
+const steps = [
+  { id: 'basic', label: 'Account Basic Details' },
+  { id: 'deal', label: 'Deal Details' },
+  { id: 'contacts', label: 'Contacts' },
+  { id: 'reminder', label: 'Reminders & Remark' },
+]
 
 const accountCategories = [
   { value: 'LUMOS', label: 'LUMOS' },
@@ -34,11 +40,8 @@ const accountCategories = [
 ]
 
 const accountSources = ACCOUNT_SOURCE_OPTIONS
-
 const customerTypes = CUSTOMER_TYPE_OPTIONS
-
 const industryTypes = INDUSTRY_TYPE_OPTIONS
-
 const states = STATE_OPTIONS
 
 const reminderTypes = [
@@ -47,6 +50,16 @@ const reminderTypes = [
   { value: 'visit', label: 'Visit' },
   { value: 'email', label: 'Email' },
 ]
+
+const dealTypes = [
+  { value: 'LUMOS', label: 'LUMOS' },
+  { value: 'SWATI', label: 'SWATI' },
+  { value: 'PURCHASE ENQUIRY', label: 'PURCHASE ENQUIRY' },
+  { value: 'TENDER ENQUIRY', label: 'TENDER ENQUIRY' },
+]
+
+const dealSources = ['LUMOS', 'SWATI', 'PURCHASE ENQUIRY', 'TENDER ENQUIRY']
+const dealStatuses = ['new', 'negotiation', 'won', 'lost', 'hold', 'dropped']
 
 const initialFormData = {
   accountName: '',
@@ -82,6 +95,27 @@ const initialFormData = {
   reminderDate: '',
   reminderMode: '',
   remark: '',
+  // Deal Details Fields
+  dealDate: new Date().toISOString().slice(0, 10),
+  dealName: '',
+  dealDescription: '',
+  poValue: '',
+  dealCoOwners: '',
+  dealValue: '',
+  dealScore: '',
+  customerQuotationStatus: '',
+  dealType: '',
+  dealSource: '',
+  dealOwner: '',
+  dealCity: '',
+  expectedClosureDate: new Date().toISOString().slice(0, 10),
+  probability: '1',
+  gstin: '',
+  jobNo: '',
+  customerOrderStatus: '',
+  valueCurrency: 'INR',
+  dealStatus: 'new',
+  dealStage: '',
 }
 
 const requiredMessages = {
@@ -111,6 +145,34 @@ const fieldGroups = {
     { name: 'customerRefDate', label: 'Inquiry Ref Date', type: 'date' },
     { name: 'industryType', label: 'Industry Type', type: 'select', options: industryTypes, required: true },
   ],
+  dealDetailsLeft: [
+    { name: 'dealDate', label: 'Deal Date', type: 'date' },
+    { name: 'dealName', label: 'Deal Name' },
+    { name: 'dealDescription', label: 'Description', type: 'textarea', textareaRows: 2 },
+    { name: 'poValue', label: 'PO Value', type: 'number' },
+    { name: 'dealCoOwners', label: 'Deal Co-Owners', type: 'select', options: [] },
+    { name: 'dealValue', label: 'Deal Value (PO Value/Base Price)', type: 'number' },
+    { name: 'dealScore', label: 'Deal Score', type: 'number' },
+    { name: 'consultantName', label: 'Consultant/AR Name' },
+    { name: 'customerRefNo', label: 'Customer Ref. No.' },
+    { name: 'projectName', label: 'Project Name' },
+    { name: 'customerQuotationStatus', label: 'Status Of Customer as per quotation Given', type: 'select', options: CUSTOMER_QUOTATION_STATUS_OPTIONS },
+    { name: 'dealType', label: 'Deal Type', type: 'select', options: dealTypes },
+  ],
+  dealDetailsRight: [
+    { name: 'dealSource', label: 'Deal Source', type: 'select', options: dealSources },
+    { name: 'dealOwner', label: 'Deal Owner', type: 'select', options: [] },
+    { name: 'address', label: 'Address', type: 'textarea', textareaRows: 2 },
+    { name: 'dealCity', label: 'City' },
+    { name: 'expectedClosureDate', label: 'Expected Closure Date', type: 'date' },
+    { name: 'probability', label: 'Probability (%)', type: 'range' },
+    { name: 'productCategory', label: 'Product Category' },
+    { name: 'customerRefDate', label: 'Customer Ref. Date', type: 'date' },
+    { name: 'gstin', label: 'GSTIN' },
+    { name: 'jobNo', label: 'Job No' },
+    { name: 'customerOrderStatus', label: 'Status of Customer as per Order Received', type: 'select', options: DEAL_LIFECYCLE_STATUS_OPTIONS },
+    { name: 'valueCurrency', label: 'Currency', type: 'select', options: ['INR', 'USD', 'AED', 'EUR', 'GBP'] },
+  ],
   projectDetails: [
     { name: 'projectName', label: 'Project Name' },
     { name: 'architectName', label: 'Architect / Consultant' },
@@ -137,9 +199,8 @@ const fieldGroups = {
 const AddAccountWizard = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { createAccount, createReminder, addNotification } = useData()
+  const { accounts, createAccount, createDeal, createReminder, addNotification } = useData()
   const { user } = useAuth()
-  const owners = getCrmOwnerOptions()
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState(initialFormData)
   const [errors, setErrors] = useState({})
@@ -147,7 +208,12 @@ const AddAccountWizard = () => {
   const [saving, setSaving] = useState(false)
   const [ownerOptions, setOwnerOptions] = useState([])
 
-  React.useEffect(() => {
+  const [isExistingCustomer, setIsExistingCustomer] = useState(false)
+  const [customerSearch, setCustomerSearch] = useState('')
+  const [selectedCustomerId, setSelectedCustomerId] = useState('')
+  const [customers, setCustomers] = useState(() => customerService.getCustomers())
+
+  useEffect(() => {
     let isMounted = true
     loadAccountOwnerOptions()
       .then((options) => {
@@ -158,6 +224,14 @@ const AddAccountWizard = () => {
     return () => {
       isMounted = false
     }
+  }, [])
+
+  useEffect(() => {
+    const unsubscribe = customerService.subscribe((nextCustomers) => {
+      setCustomers([...nextCustomers])
+    })
+    customerService.loadCustomers().then((nextCustomers) => setCustomers([...nextCustomers])).catch(() => {})
+    return unsubscribe
   }, [])
 
   const categoryUpper = String(formData.accountCategory || '').toUpperCase().trim()
@@ -174,6 +248,109 @@ const AddAccountWizard = () => {
     [formData.accountCategory]
   )
 
+  const customerOptions = useMemo(() => {
+    const customerRecords = customers.map((customer) => ({
+      ...customer,
+      sourceType: customer.sourceType || 'customer',
+    }))
+    const customerKeys = new Set(customerRecords.flatMap((customer) => [
+      String(customer.id || '').toLowerCase(),
+      String(customer.customerName || '').trim().toLowerCase(),
+      String(customer.customerNumber || '').trim().toLowerCase(),
+    ].filter(Boolean)))
+
+    const buildCustomerFromAccount = (account = {}) => ({
+      id: `account-${account.id || account.accountId || account.accountNumber || account.accountNo || account.name}`,
+      sourceType: 'account',
+      accountId: account.id || account.accountId || '',
+      customerNumber: account.customerNumber || account.customerRefNo || account.accountNumber || account.accountNo || '',
+      customerName: account.customerName || account.accountName || account.name || account.company || '',
+      customerOwner: account.accountOwner || account.ownerName || account.assignedUserName || '',
+      customerOwnerDisplay: account.accountOwnerDisplay || getAccountOwnerOptionLabel({ name: account.accountOwner || account.ownerName || '' }),
+      customerCategory: account.customerCategory || account.accountCategory || account.category || '',
+      customerStatus: account.customerStatus || account.accountStatus || account.status || '',
+      address: account.address || '',
+      gstin: account.gstin || '',
+      consultantName: account.consultantName || '',
+      jobNo: account.jobNo || '',
+      projectName: account.projectName || '',
+      contacts: [
+        {
+          contactPerson: account.contactPerson || account.contactName || '',
+          phone: account.contactPhone || account.phone || '',
+          mobile: account.contactMobile || account.mobile || account.contactPhone || account.phone || '',
+          email: account.contactEmail || account.email || '',
+          designation: account.contactDesignation || account.designation || '',
+        },
+      ],
+    })
+
+    const accountRecords = accounts
+      .map(buildCustomerFromAccount)
+      .filter((customer) => customer.customerName)
+      .filter((customer) => ![
+        String(customer.accountId || '').toLowerCase(),
+        String(customer.customerName || '').trim().toLowerCase(),
+        String(customer.customerNumber || '').trim().toLowerCase(),
+      ].some((key) => customerKeys.has(key)))
+
+    return [...customerRecords, ...accountRecords]
+  }, [accounts, customers])
+
+  const filteredCustomers = useMemo(() => {
+    const searchValue = customerSearch.trim().toLowerCase()
+    if (!searchValue) return []
+    return customerOptions
+      .map((customer) => {
+        const primaryContact = customer.contacts?.[0] || {}
+        const searchableFields = [
+          customer.customerName,
+          customer.customerNumber,
+          customer.customerOwner,
+          customer.customerCategory,
+          customer.customerStatus,
+          customer.address,
+          primaryContact.email,
+          primaryContact.mobile,
+          primaryContact.phone,
+          primaryContact.contactPerson,
+        ].map((field) => String(field || '').toLowerCase())
+        const matched = searchableFields.some((field) => field.includes(searchValue))
+        return { customer, matched }
+      })
+      .filter((entry) => entry.matched)
+      .map((entry) => entry.customer)
+      .slice(0, 12)
+  }, [customerOptions, customerSearch])
+
+  const handleSelectCustomer = (customer) => {
+    const primaryContact = customer.contacts?.[0] || {}
+    setSelectedCustomerId(customer.id)
+    setCustomerSearch(customer.customerName)
+    setErrors((prev) => {
+      const next = { ...prev }
+      delete next.customer
+      return next
+    })
+    
+    setFormData((prev) => ({
+      ...prev,
+      accountName: customer.customerName || prev.accountName,
+      customerName: customer.customerName || prev.customerName,
+      address: customer.address || prev.address,
+      contactPerson: primaryContact.contactPerson || prev.contactPerson,
+      contactPhone: primaryContact.phone || prev.contactPhone,
+      contactMobile: primaryContact.mobile || prev.contactMobile,
+      contactEmail: primaryContact.email || prev.contactEmail,
+      contactDesignation: primaryContact.designation || prev.contactDesignation,
+      consultantName: customer.consultantName || prev.consultantName,
+      projectName: customer.projectName || prev.projectName,
+      accountCategory: customer.customerCategory || prev.accountCategory,
+      dealName: `${customer.customerName || 'Account'} Deal`,
+      dealType: customer.customerCategory || prev.dealType,
+    }))
+  }
+
   const validateStep = (stepIndex) => {
     const nextErrors = {}
 
@@ -183,6 +360,17 @@ const AddAccountWizard = () => {
           nextErrors[field] = message
         }
       })
+      if (isExistingCustomer && !selectedCustomerId && !customerSearch.trim()) {
+        nextErrors.customer = 'Please select a customer or type a valid customer name.'
+      }
+    }
+
+    if (stepIndex === 1) {
+      // Deal details are optional. However, if they entered a dealName, we might want to validate some fields, 
+      // but per requirements, it can be skipped. We will only flag errors if they provided partial critical data.
+      if (formData.dealName && !formData.dealValue) {
+        nextErrors.dealValue = 'Please provide a deal value if you are adding a deal.'
+      }
     }
 
     if (formData.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)) {
@@ -206,6 +394,14 @@ const AddAccountWizard = () => {
         collectedErrors[field] = message
       }
     })
+
+    if (isExistingCustomer && !selectedCustomerId && !customerSearch.trim()) {
+      collectedErrors.customer = 'Please select a customer or type a valid customer name.'
+    }
+
+    if (formData.dealName && !formData.dealValue) {
+      collectedErrors.dealValue = 'Please provide a deal value if you are adding a deal.'
+    }
 
     if (formData.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)) {
       collectedErrors.contactEmail = 'Enter a valid contact email.'
@@ -241,6 +437,8 @@ const AddAccountWizard = () => {
 
     if (validateStep(currentStep)) {
       setCurrentStep(targetStep)
+    } else {
+      triggerErrorScroll()
     }
   }
 
@@ -249,8 +447,19 @@ const AddAccountWizard = () => {
       setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1))
       setValidationNotice([])
     } else {
+      triggerErrorScroll()
       addNotification('error', 'Required Fields', 'Please complete all required fields marked as required.')
     }
+  }
+
+  const triggerErrorScroll = () => {
+    setTimeout(() => {
+      const firstInvalid = document.querySelector('.legacy-form-error-message, .admin-add-deal-input-error, .border-red-500')
+      if (firstInvalid) {
+        const fieldContainer = firstInvalid.closest('.legacy-form-row, .legacy-form-field-stack, .add-account-landscape-field-column, .relative') || firstInvalid
+        fieldContainer.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 100)
   }
 
   const handlePrevious = () => {
@@ -262,7 +471,21 @@ const AddAccountWizard = () => {
     const validationErrors = validateAllSteps()
 
     if (Object.keys(validationErrors).length > 0) {
-      setCurrentStep(0)
+      // Find which step failed and redirect
+      const errorKeys = Object.keys(validationErrors)
+      let stepWithError = 0
+      if (errorKeys.some(key => ['accountName', 'accountOwner', 'accountSource', 'state', 'industryType', 'customer'].includes(key))) {
+        stepWithError = 0
+      } else if (errorKeys.some(key => ['dealValue'].includes(key))) {
+        stepWithError = 1
+      } else if (errorKeys.some(key => ['contactEmail'].includes(key))) {
+        stepWithError = 2
+      }
+      
+      if (currentStep !== stepWithError) {
+        setCurrentStep(stepWithError)
+      }
+      triggerErrorScroll()
       addNotification('error', 'Required Fields', 'Please complete all required fields marked as required.')
       return
     }
@@ -274,7 +497,7 @@ const AddAccountWizard = () => {
     const finalOwnerName = selectedOwner ? selectedOwner.userObj.name : formData.accountOwner
     const finalOwnerCode = selectedOwner && selectedOwner.userObj ? (selectedOwner.userObj.ownerCode || '') : ''
 
-    const payload = {
+    const accountPayload = {
       name: formData.accountName,
       email: formData.contactEmail,
       phone: formData.contactMobile || formData.contactPhone,
@@ -319,18 +542,68 @@ const AddAccountWizard = () => {
       ],
     }
 
-    const result = await createAccount(payload)
-    setSaving(false)
+    // Always create account first
+    const accountResult = await createAccount(accountPayload)
 
-    if (result.success) {
-      if (result.data && (formData.reminderDate || formData.remark)) {
+    if (accountResult.success) {
+      const createdAccountId = accountResult.data?.id || accountResult.data?._id || ''
+      const createdAccountName = accountResult.data?.name || formData.accountName || ''
+
+      // If Deal Name is provided, create a Deal using the new Account ID
+      if (formData.dealName.trim()) {
+        const dealPayload = {
+          name: formData.dealName.trim(),
+          dealDate: formData.dealDate || new Date().toISOString().slice(0, 10),
+          description: formData.dealDescription || '',
+          poValue: parseFloat(formData.poValue) || 0,
+          dealCoOwners: formData.dealCoOwners || '',
+          value: parseFloat(formData.dealValue) || 0,
+          valueCurrency: formData.valueCurrency || 'INR',
+          dealScore: parseFloat(formData.dealScore) || 0,
+          consultantName: formData.consultantName || '',
+          customerRefNo: formData.customerRefNo || '',
+          projectName: formData.projectName || '',
+          quotationCustomerStatus: formData.customerQuotationStatus || '',
+          dealType: formData.dealType || formData.accountCategory,
+          dealSource: formData.dealSource || formData.accountSource,
+          dealOwner: formData.dealOwner || finalOwnerName,
+          ownerName: formData.dealOwner || finalOwnerName,
+          city: formData.dealCity || '',
+          closeDate: formData.expectedClosureDate,
+          expectedClosureDate: formData.expectedClosureDate,
+          probability: parseFloat(formData.probability) || 1,
+          productCategory: formData.productCategory || '',
+          customerRefDate: formData.customerRefDate || '',
+          gstin: formData.gstin || '',
+          jobNo: formData.jobNo || '',
+          orderCustomerStatus: formData.customerOrderStatus || '',
+          status: formData.dealStatus,
+          stage: formData.dealStage || 'new',
+          accountId: createdAccountId,
+          accountName: createdAccountName,
+          customerName: formData.customerName || createdAccountName,
+          contacts: [
+            {
+              name: formData.contactPerson,
+              designation: formData.contactDesignation,
+              email: formData.contactEmail,
+              phone: formData.contactPhone,
+              mobile: formData.contactMobile,
+            }
+          ]
+        }
+        await createDeal(dealPayload).catch((err) => console.error('Failed to create deal', err))
+      }
+
+      // Create reminder if fields filled
+      if (formData.reminderDate || formData.remark) {
         await createReminder({
           title: 'Account Follow-up',
           message: formData.remark?.trim() || '',
           remindAt: formData.reminderDate ? `${formData.reminderDate}T10:00:00` : new Date().toISOString(),
           status: 'scheduled',
           relatedEntityType: 'account',
-          relatedEntityId: result.data.id || result.data._id,
+          relatedEntityId: createdAccountId,
           assignedTo: finalOwnerName,
           reminderDate: formData.reminderDate,
           reminderTime: '10:00',
@@ -338,13 +611,16 @@ const AddAccountWizard = () => {
         }).catch((err) => console.error('Failed to create reminder', err))
       }
 
+
+
       addNotification(
         'success',
-        'Account Created',
+        'Records Created',
         `${formData.accountName} is now visible in Search Account.`
       )
-      if (result.data) {
-        const normalizedAccount = normalizeAccountRecord(result.data)
+
+      if (accountResult.data) {
+        const normalizedAccount = normalizeAccountRecord(accountResult.data)
         const nextParams = new URLSearchParams({
           stage: normalizedAccount.stage || 'new',
           accountId: normalizedAccount.id,
@@ -356,14 +632,14 @@ const AddAccountWizard = () => {
             newAccountName: normalizedAccount.name,
           },
         })
-        return
+      } else {
+        navigate(backPath)
       }
-
-      navigate(backPath)
-      return
+    } else {
+      addNotification('error', 'Save Failed', accountResult.message || 'Unable to create account.')
     }
-
-    addNotification('error', 'Save Failed', result.message || 'Unable to create account.')
+    
+    setSaving(false)
   }
 
   const renderFieldGroup = (fields, options = {}) =>
@@ -409,6 +685,54 @@ const AddAccountWizard = () => {
             titleClassName="text-[17px] sm:text-[18px]"
             subtitleClassName="text-[9px] text-[var(--text-muted)]"
           >
+            <div className="mb-4 flex items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+              <input 
+                type="checkbox" 
+                id="existingCustomerCheckbox" 
+                checked={isExistingCustomer} 
+                onChange={(e) => setIsExistingCustomer(e.target.checked)} 
+                className="mr-2 w-4 h-4 cursor-pointer"
+              />
+              <label htmlFor="existingCustomerCheckbox" className="font-semibold text-sm text-gray-700 cursor-pointer select-none">Are your current Account is existing customer?</label>
+            </div>
+            
+            {isExistingCustomer && (
+              <div className="mb-6 relative">
+                <label className="block text-sm font-semibold mb-1 text-slate-700">
+                  Customer Search <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={customerSearch}
+                  onChange={(e) => {
+                    setCustomerSearch(e.target.value)
+                    setSelectedCustomerId('')
+                  }}
+                  placeholder="Start typing the customer name (e.g. Tata, Demo)"
+                  className={`w-full p-2 border rounded outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-shadow ${errors.customer ? 'border-red-500 admin-add-deal-input-error' : 'border-gray-300'}`}
+                />
+                {errors.customer && <p className="text-xs text-red-600 mt-1 legacy-form-error-message">{errors.customer}</p>}
+                {filteredCustomers.length > 0 && !selectedCustomerId && (
+                  <div className="absolute z-10 w-full bg-white border border-gray-200 mt-1 rounded shadow-lg max-h-60 overflow-y-auto">
+                    {filteredCustomers.map(c => (
+                      <div key={c.id} onClick={() => handleSelectCustomer(c)} className="p-3 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-0">
+                        <div className="font-semibold text-sm text-slate-800">{c.customerName}</div>
+                        <div className="text-xs text-slate-500">
+                          <span className="bg-gray-100 px-1 py-0.5 rounded mr-2">{c.sourceType === 'account' ? 'Account' : 'Customer'}</span>
+                          {c.customerNumber || 'No number'} | {c.customerOwnerDisplay || 'No owner'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {selectedCustomerId && customerSearch.trim() && (
+                  <div className="mt-2 text-sm text-green-700 bg-green-50 p-2 rounded border border-green-100">
+                    Selected: <strong>{customerSearch}</strong>. Details auto-filled!
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="add-account-landscape-field-grid add-account-landscape-field-grid-two">
               <div className="add-account-landscape-field-column">
                 {renderFieldGroup(
@@ -448,6 +772,29 @@ const AddAccountWizard = () => {
 
         {currentStep === 1 ? (
           <LegacyFormSection
+            title="Deal Details (Optional)"
+            subtitle="Fill these details if you also want to create a Deal alongside the Account."
+            className="add-account-landscape-section"
+          >
+            <div className="add-account-landscape-field-grid add-account-landscape-field-grid-two">
+              <div className="add-account-landscape-field-column">
+                {renderFieldGroup(
+                  fieldGroups.dealDetailsLeft.map(f => f.name === 'dealCoOwners' ? { ...f, options: activeOwners, type: 'select', isMulti: true } : f),
+                  { layout: 'inline' }
+                )}
+              </div>
+              <div className="add-account-landscape-field-column">
+                {renderFieldGroup(
+                  fieldGroups.dealDetailsRight.map(f => f.name === 'dealOwner' ? { ...f, options: activeOwners } : f),
+                  { layout: 'inline' }
+                )}
+              </div>
+            </div>
+          </LegacyFormSection>
+        ) : null}
+
+        {currentStep === 2 ? (
+          <LegacyFormSection
             title="Contacts"
             subtitle="Add the primary contact details linked to this account."
             className="add-account-landscape-section"
@@ -459,15 +806,15 @@ const AddAccountWizard = () => {
           </LegacyFormSection>
         ) : null}
 
-        {currentStep === 2 ? (
+        {currentStep === 3 ? (
           <LegacyFormSection
-            title="Reminder & Remark"
+            title="Reminders"
             subtitle="Capture follow-up details and internal notes before saving the account."
             className="add-account-landscape-section"
           >
             <div className="add-account-landscape-field-grid add-account-landscape-field-grid-two">
-              <div className="add-account-landscape-field-column">{renderFieldGroup(fieldGroups.reminderLeft, { layout: 'inline' })}</div>
-              <div className="add-account-landscape-field-column">{renderFieldGroup(fieldGroups.reminderRight, { layout: 'inline' })}</div>
+              <div className="add-account-landscape-field-column">{renderFieldGroup(fieldGroups.reminderLeft, { layout: 'stacked' })}</div>
+              <div className="add-account-landscape-field-column">{renderFieldGroup(fieldGroups.reminderRight, { layout: 'stacked' })}</div>
             </div>
           </LegacyFormSection>
         ) : null}
@@ -501,7 +848,7 @@ const AddAccountWizard = () => {
                 disabled={saving}
                 className="add-account-landscape-button add-account-landscape-button-primary"
               >
-                {saving ? 'Saving...' : 'Save Account'}
+                {saving ? 'Saving...' : 'Submit'}
               </button>
             )}
 

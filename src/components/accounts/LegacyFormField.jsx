@@ -60,6 +60,8 @@ const LegacyFormField = ({
     ? [{ value: normalizedValue, label: normalizedValue }, ...normalizedOptions]
     : normalizedOptions
 
+  const errorClasses = error ? 'border-red-500 ring-2 ring-red-100 focus:border-red-500 focus:ring-red-100' : ''
+  
   const control =
     type === 'textarea' ? (
       <textarea
@@ -69,7 +71,7 @@ const LegacyFormField = ({
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className={`${inputClasses} min-h-[74px] resize-none leading-5 ${className} ${fieldClassName}`.trim()}
+        className={`${inputClasses} ${errorClasses} min-h-[74px] resize-none leading-5 ${className} ${fieldClassName}`.trim()}
       />
     ) : type === 'select' ? (
       <select
@@ -77,7 +79,7 @@ const LegacyFormField = ({
         name={name}
         value={normalizedValue}
         onChange={handleChange}
-        className={`${inputClasses} min-h-[38px] appearance-none ${className} ${fieldClassName}`.trim()}
+        className={`${inputClasses} ${errorClasses} min-h-[38px] appearance-none ${className} ${fieldClassName}`.trim()}
       >
         <option value="">Select</option>
         {resolvedOptions.map((option) => (
@@ -86,6 +88,20 @@ const LegacyFormField = ({
           </option>
         ))}
       </select>
+    ) : type === 'range' ? (
+      <div className="flex items-center gap-3">
+        <input
+          id={name}
+          name={name}
+          type={type}
+          min={0}
+          max={100}
+          value={value || 0}
+          onChange={handleChange}
+          className={`flex-1 ${className} ${fieldClassName}`.trim()}
+        />
+        <span className="text-sm font-semibold text-gray-700 min-w-[3rem]">{value || 0}%</span>
+      </div>
     ) : (
       <input
         id={name}
@@ -94,7 +110,7 @@ const LegacyFormField = ({
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className={`${inputClasses} min-h-[38px] ${className} ${fieldClassName}`.trim()}
+        className={`${inputClasses} ${errorClasses} min-h-[38px] ${className} ${fieldClassName}`.trim()}
       />
     )
 

@@ -43,15 +43,17 @@ const ContactIntegrationActions = ({
 
   return (
     <span className="contact-integration-actions">
-      <button
-        type="button"
-        className="contact-integration-action contact-integration-action--outlook"
-        onClick={handleOutlook}
-        disabled={!cleanEmail || busyAction === 'outlook'}
-        title="Send Email"
-      >
-        <FaEnvelope />
-      </button>
+      {cleanEmail ? (
+        <button
+          type="button"
+          className="contact-integration-action contact-integration-action--outlook"
+          onClick={handleOutlook}
+          disabled={busyAction === 'outlook'}
+          title="Send Email"
+        >
+          <FaEnvelope />
+        </button>
+      ) : null}
     </span>
   )
 }

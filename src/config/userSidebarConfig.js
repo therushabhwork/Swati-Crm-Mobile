@@ -51,6 +51,8 @@ export const USER_ACCOUNT_MENU_ITEMS = [
   { label: 'My Group Accounts', to: '/accounts/my-group-accounts' },
   { label: 'Search Account', to: '/accounts/search' },
   { label: 'My Accounts', to: '/accounts/my-accounts' },
+  { label: 'View Deal', to: '/deals/view' },
+  { label: 'Search Deal', to: '/deals/search' },
   { label: 'Daily Fresh Leads', to: '/accounts/daily-fresh-leads' },
   { label: 'No Follow Leads', to: '/accounts/no-follow-leads' },
 ]
@@ -74,17 +76,7 @@ export const USER_SIDEBAR_GROUPS = [
       { label: 'My Customers', to: '/customers/my-customers' },
     ],
   },
-  {
-    key: 'deals',
-    label: 'Deals',
-    icon: FaHandshake,
-    routePrefix: '/deals',
-    items: [
-      { label: 'Add Deal', to: '/deals/add' },
-      { label: 'View Deal', to: '/deals/view' },
-      { label: 'Search Deal', to: '/deals/search' },
-    ],
-  },
+
   {
     key: 'support-requests',
     label: 'Support Requests',

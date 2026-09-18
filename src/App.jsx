@@ -186,6 +186,7 @@ function App() {
               >
                 <Route index element={<Navigate to={DASHBOARD_ROUTES.user} replace />} />
                 <Route path="home" element={<Navigate to={DASHBOARD_ROUTES.user} replace />} />
+                <Route path="search" element={<AdminAdvancedSearchPage />} />
                 <Route path="dashboard" element={<UserDashboardPage />} />
                 <Route path="monitoring" element={<UserDashboardPage />} />
                 <Route path="accounts/new" element={<AddAccountWizard />} />
@@ -203,8 +204,9 @@ function App() {
                 <Route path="customers/my-customers" element={<AdminCustomersPage variantKey="myCustomers" basePath="/customers" ownerOptionsOverride={getCrmOwnerOptions()} />} />
                 <Route path="customers/view/:customerId" element={<AdminCustomersPage variantKey="view" basePath="/customers" ownerOptionsOverride={getCrmOwnerOptions()} />} />
                 <Route path="customers/manage/:customerId" element={<AdminCustomersPage variantKey="manage" basePath="/customers" ownerOptionsOverride={getCrmOwnerOptions()} />} />
+                <Route path="customers/actions/:actionKey" element={<CustomerActionPage basePath="/customers" />} />
+                <Route path="crm-actions/:actionKey" element={<CRMActionPage />} />
                 <Route path="deals" element={<Navigate to="/deals/view" replace />} />
-                <Route path="deals/add" element={<AdminAddDealPage basePath="/deals" customerBasePath="/customers" />} />
                 <Route path="deals/search" element={<Deals variantKey="search" />} />
                 <Route path="deals/view" element={<Deals variantKey="view" />} />
                 <Route path="deals/view/:dealId" element={<AdminDealDetailPage />} />
@@ -253,6 +255,7 @@ function App() {
                 <Route path="support-requests/view" element={<SupportRequestView />} />
                 <Route path="support-requests/search" element={<SupportRequestSearch />} />
                 <Route path="support-requests/closed" element={<ClosedSupportRequest basePath="/support-requests" showActionMenu={false} />} />
+                <Route path="search" element={<AdminAdvancedSearchPage />} />
                 <Route path="reminders" element={<Navigate to="/reminders/my" replace />} />
                 <Route path="reminders/my" element={<UserRemindersPage variantKey="my" />} />
                 <Route path="reminders/active" element={<UserRemindersPage variantKey="active" />} />
@@ -313,7 +316,6 @@ function App() {
                 <Route path="customers/actions/:actionKey" element={<CustomerActionPage />} />
                 <Route path="crm-actions/:actionKey" element={<CRMActionPage />} />
                 <Route path="deals" element={<Navigate to="/admin/deals/view" replace />} />
-                <Route path="deals/add" element={<AdminAddDealPage />} />
                 <Route path="deals/view/:dealId" element={<AdminDealDetailPage />} />
                 <Route path="deals/manage/:dealId" element={<AdminManageDealPage />} />
                 <Route path="deals/search" element={<Deals isAdmin variantKey="search" />} />

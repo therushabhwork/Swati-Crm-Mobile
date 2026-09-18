@@ -12,7 +12,7 @@ const WizardStepper = ({
       className,
     ].join(' ').trim()}
   >
-    <div className="wizard-stepper__track flex items-start gap-3 sm:gap-4">
+    <div className="wizard-stepper__track grid grid-cols-2 gap-3 sm:gap-4">
       {steps.map((step, index) => {
         const isActive = index === currentStep
         const isComplete = index < currentStep
@@ -24,7 +24,7 @@ const WizardStepper = ({
               onClick={() => onStepChange(index)}
               aria-current={isActive ? 'step' : undefined}
               className={[
-                'wizard-stepper__step flex min-w-0 flex-1 items-start gap-3 rounded-[20px] px-1 py-1 text-left transition duration-200 ease-out hover:bg-[rgba(255,255,255,0.55)]',
+                'wizard-stepper__step flex min-w-0 w-full items-start gap-3 rounded-[20px] px-1 py-1 text-left transition duration-200 ease-out hover:bg-[rgba(255,255,255,0.55)]',
                 isActive ? 'wizard-stepper__step--active' : '',
                 isComplete ? 'wizard-stepper__step--complete' : '',
               ].filter(Boolean).join(' ')}
@@ -54,9 +54,6 @@ const WizardStepper = ({
               </span>
             </button>
 
-            {index < steps.length - 1 ? (
-              <div className="wizard-stepper__divider mt-5 h-px flex-1 bg-[var(--border-default)]" />
-            ) : null}
           </React.Fragment>
         )
       })}

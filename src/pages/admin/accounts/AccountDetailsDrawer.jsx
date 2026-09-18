@@ -58,6 +58,14 @@ const getAllowedAccountInformationStage = (value) => (
   ACCOUNT_INFORMATION_STAGE_OPTIONS.some((option) => option.value === value) ? value : ''
 )
 
+const DEAL_TYPE_OPTIONS = [
+  { value: 'LUMOS', label: 'LUMOS' },
+  { value: 'SWATI', label: 'SWATI' },
+  { value: 'PURCHASE ENQUIRY', label: 'PURCHASE ENQUIRY' },
+  { value: 'TENDER ENQUIRY', label: 'TENDER ENQUIRY' },
+]
+const DEAL_SOURCE_OPTIONS = ['LUMOS', 'SWATI', 'PURCHASE ENQUIRY', 'TENDER ENQUIRY'].map(val => ({ value: val, label: val }))
+
 const ACTION_ICONS = {
   'add-note-remarks': FaRegStickyNote,
   'add-reminder': FaBell,
@@ -117,6 +125,28 @@ const sectionConfig = [
       { key: 'jobNo', label: 'Job No' },
       { key: 'reasonForLost', label: 'Reason For Lost', options: REASON_FOR_LOST_OPTIONS },
       { key: 'customerName', label: 'Customer Name' },
+    ],
+  },
+  {
+    key: 'dealDetails',
+    fields: [
+      { key: 'dealDate', label: 'Deal Date', type: 'date' },
+      { key: 'dealName', label: 'Deal Name' },
+      { key: 'dealDescription', label: 'Description', multiline: true },
+      { key: 'dealValue', label: 'Deal Value', type: 'number' },
+      { key: 'poValue', label: 'PO Value', type: 'number' },
+      { key: 'dealCoOwners', label: 'Deal Co-Owners' },
+      { key: 'expectedClosureDate', label: 'Expected Closure Date', type: 'date' },
+      { key: 'dealSource', label: 'Deal Source', options: DEAL_SOURCE_OPTIONS },
+      { key: 'dealType', label: 'Deal Type', options: DEAL_TYPE_OPTIONS },
+      { key: 'probability', label: 'Probability (%)', type: 'number' },
+      { key: 'dealScore', label: 'Deal Score', type: 'number' },
+      { key: 'dealOwner', label: 'Deal Owner' },
+      { key: 'dealCity', label: 'City' },
+      { key: 'gstin', label: 'GSTIN' },
+      { key: 'jobNo', label: 'Job No' },
+      { key: 'customerQuotationStatus', label: 'Status Of Customer as per quotation Given', options: toSelectOptions(ACCOUNT_QUOTATION_STATUS_OPTIONS) },
+      { key: 'customerOrderStatus', label: 'Status of Customer as per Order Received', options: toSelectOptions(ACCOUNT_ORDER_STATUS_OPTIONS) },
     ],
   },
 ]
@@ -229,6 +259,20 @@ const buildInitialForm = (account) => ({
   jobNo: account.jobNo || '',
   customerRefNo: account.customerRefNo || '',
   customerRefDate: normalizeDateInput(account.customerRefDate) || '',
+  dealName: account.dealName || '',
+  dealDate: normalizeDateInput(account.dealDate) || '',
+  dealDescription: account.dealDescription || account.raw?.dealDescription || '',
+  dealValue: account.dealValue || '',
+  dealCoOwners: account.dealCoOwners || account.raw?.dealCoOwners || '',
+  dealOwner: account.dealOwner || account.raw?.dealOwner || '',
+  dealCity: account.dealCity || account.raw?.dealCity || '',
+  customerQuotationStatus: account.customerQuotationStatus || account.raw?.customerQuotationStatus || '',
+  customerOrderStatus: account.customerOrderStatus || account.raw?.customerOrderStatus || '',
+  expectedClosureDate: normalizeDateInput(account.expectedClosureDate) || '',
+  dealSource: account.dealSource || '',
+  dealType: account.dealType || '',
+  probability: account.probability || '',
+  dealScore: account.dealScore || '',
 })
 
 const buildUpdatePayload = (form) => ({
@@ -289,6 +333,20 @@ const buildUpdatePayload = (form) => ({
   customerRefNo: form.customerRefNo,
   customerRefDate: form.customerRefDate,
   customerName: form.customerName,
+  dealDate: form.dealDate,
+  dealName: form.dealName,
+  dealDescription: form.dealDescription,
+  dealValue: form.dealValue,
+  dealCoOwners: form.dealCoOwners,
+  dealOwner: form.dealOwner,
+  dealCity: form.dealCity,
+  customerQuotationStatus: form.customerQuotationStatus,
+  customerOrderStatus: form.customerOrderStatus,
+  expectedClosureDate: form.expectedClosureDate,
+  dealSource: form.dealSource,
+  dealType: form.dealType,
+  probability: form.probability,
+  dealScore: form.dealScore,
 })
 
 const AccountDetailsDrawer = ({
@@ -421,13 +479,66 @@ const AccountDetailsDrawer = ({
 
     setIsSaving(true)
     const selectedOwner = ownerOptions.find((owner) => owner.name === form.accountOwner)
-    const result = await onSaveAccount(account.id, {
+    const updatePayload = {
       ...buildUpdatePayload(form),
       ...(selectedOwner ? {
         ownerId: selectedOwner.id,
         assignedUserId: selectedOwner.id,
       } : {}),
-    })
+    }
+    const result = await onSaveAccount(account.id, updatePayload)
+    
+    if (result?.success) {
+      try {
+        const { dealApi } = await import('../../../services/dealApi')
+        const { customerService } = await import('../../../services/customerService')
+        
+        // Force sync deal
+        const allDeals = await dealApi.getDeals().catch(() => [])
+        let dealToUpdate = relatedConvertedDeals[0] || (account.dealId ? { id: account.dealId } : null)
+        if (!dealToUpdate || !dealToUpdate.id) {
+          dealToUpdate = allDeals.find(d => String(d.accountId) === String(account.id))
+        }
+        if (dealToUpdate && dealToUpdate.id) {
+           const dealUpdatePayload = {
+             ...updatePayload,
+             name: form.dealName || updatePayload.dealName || dealToUpdate.name,
+             dealDate: form.dealDate || updatePayload.dealDate || dealToUpdate.dealDate,
+             description: form.dealDescription || updatePayload.dealDescription || dealToUpdate.description,
+             poValue: form.poValue !== undefined ? parseFloat(form.poValue) || 0 : dealToUpdate.poValue,
+             dealCoOwners: form.dealCoOwners || updatePayload.dealCoOwners || dealToUpdate.dealCoOwners,
+             value: form.dealValue !== undefined ? parseFloat(form.dealValue) || 0 : dealToUpdate.value,
+             dealScore: form.dealScore !== undefined ? parseFloat(form.dealScore) || 0 : dealToUpdate.dealScore,
+             consultantName: form.consultantName || updatePayload.consultantName || dealToUpdate.consultantName,
+             customerRefNo: form.customerRefNo || updatePayload.customerRefNo || dealToUpdate.customerRefNo,
+             projectName: form.projectName || updatePayload.projectName || dealToUpdate.projectName,
+             quotationCustomerStatus: form.customerQuotationStatus || updatePayload.customerQuotationStatus || dealToUpdate.quotationCustomerStatus,
+             dealType: form.dealType || updatePayload.dealType || dealToUpdate.dealType,
+             dealSource: form.dealSource || updatePayload.dealSource || dealToUpdate.dealSource,
+             dealOwner: form.dealOwner || updatePayload.dealOwner || dealToUpdate.dealOwner,
+             ownerName: form.dealOwner || updatePayload.dealOwner || dealToUpdate.ownerName,
+             city: form.dealCity || updatePayload.dealCity || dealToUpdate.city,
+             closeDate: form.expectedClosureDate || updatePayload.expectedClosureDate || dealToUpdate.closeDate,
+             expectedClosureDate: form.expectedClosureDate || updatePayload.expectedClosureDate || dealToUpdate.expectedClosureDate,
+             probability: form.probability !== undefined ? parseFloat(form.probability) || 1 : dealToUpdate.probability,
+             productCategory: form.productCategory || updatePayload.productCategory || dealToUpdate.productCategory,
+             customerRefDate: form.customerRefDate || updatePayload.customerRefDate || dealToUpdate.customerRefDate,
+             gstin: form.gstin || updatePayload.gstin || dealToUpdate.gstin,
+             jobNo: form.jobNo || updatePayload.jobNo || dealToUpdate.jobNo,
+             orderCustomerStatus: form.customerOrderStatus || updatePayload.customerOrderStatus || dealToUpdate.orderCustomerStatus,
+           }
+           await dealApi.updateDeal(dealToUpdate.id, dealUpdatePayload).catch(() => {})
+        }
+
+      } catch (err) {
+        console.error("Failed to sync deal/customer updates", err)
+      }
+      
+      if (typeof onRefresh === 'function') {
+        onRefresh()
+      }
+    }
+
     setIsSaving(false)
 
     if (result?.success) {
@@ -509,7 +620,8 @@ const AccountDetailsDrawer = ({
                         onClick={() => {
                           closeActions()
                           if (action.key === 'generate-quotation') {
-                            navigate('/admin/quotations', {
+                            const isAdminPortal = window.location.pathname.startsWith('/admin')
+                            navigate(isAdminPortal ? '/admin/quotations' : '/quotations', {
                               state: {
                                 openGenerator: true,
                                 preselectedAccountId: account.id,
@@ -585,7 +697,7 @@ const AccountDetailsDrawer = ({
                 const isSingleFieldEditing = isEditing && editingFieldKey === field.key
                 const canEditThisField = canEdit || !isAdminPortal || field.key === 'addedBy'
                 const canEditField = isSingleFieldEditing && canEditThisField && !field.readOnly
-                const isUserSelectField = ['accountOwner', 'addedBy'].includes(field.key)
+                const isUserSelectField = ['accountOwner', 'addedBy', 'dealOwner', 'dealCoOwners'].includes(field.key)
 
                 let currentOwnerOptions = ownerOptions
                 if (field.key === 'accountOwner') {
@@ -674,8 +786,8 @@ const AccountDetailsDrawer = ({
                         {displayValue || 'Not available'}
                         {['mobile', 'email'].includes(field.key) && value ? (
                           <ContactIntegrationActions
-                            phone={form.mobile}
-                            email={form.email}
+                            phone={field.key === 'mobile' ? form.mobile : undefined}
+                            email={field.key === 'email' ? form.email : undefined}
                             targetType="account"
                             targetId={account.id}
                             defaultMessage={`Hello ${account.name || ''}`.trim()}

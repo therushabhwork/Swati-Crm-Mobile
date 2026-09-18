@@ -1,6 +1,7 @@
 const leadRepository = require('../repositories/leadRepository')
 const userRepository = require('../repositories/userRepository')
 const dealService = require('./dealService')
+const customerService = require('./customerService')
 const convertedDealRepository = require('../repositories/convertedDealRepository')
 const { AppError } = require('../utils/appError')
 const { getSocketServer } = require('../socket/socketServer')
@@ -106,13 +107,30 @@ const resolveAccountScope = async (actor, { includeGroupScope = true } = {}) => 
 const isLeadCreatedByActor = (lead = {}, actor = {}) => {
   if (isPrivilegedRole(actor.role)) return true
   const actorId = String(actor.id || '')
-  return [
+  const actorName = String(actor.name || '')
+  
+  const hasIdMatch = [
     lead.createdBy,
     lead.createdByUserId,
     lead.userId,
     lead.formData?.userId,
     lead.formData?.createdByUserId,
+    lead.assignedTo,
+    lead.assignedUserId,
+    lead.ownerId,
+    lead.ownerUserId,
   ].map((value) => String(value || '')).filter(Boolean).includes(actorId)
+
+  const hasNameMatch = actorName && [
+    lead.accountOwner,
+    lead.accountOwnerName,
+    lead.ownerName,
+    lead.assignedUser?.name,
+    lead.formData?.accountOwner,
+    lead.formData?.ownerName
+  ].map((value) => String(value || '')).filter(Boolean).includes(actorName)
+
+  return hasIdMatch || hasNameMatch
 }
 
 const buildLeadPayload = async (payload = {}, actor, existingLead = null) => {
@@ -579,6 +597,38 @@ const convertLeadToDeal = async (actor, leadId) => {
       status: 'converted',
     },
   })
+
+  try {
+    const { findUserById } = require('../repositories/userRepository')
+    const assignedUserId = updatedAccount.assignedTo || updatedAccount.ownerUserId || actor.id
+    const userRecord = assignedUserId ? await findUserById(assignedUserId) : null
+    const ownerName = userRecord?.name || updatedAccount.ownerName || updatedAccount.accountOwner || ''
+    const ownerCode = userRecord?.ownerCode || updatedAccount.ownerCode || ''
+
+    const customerPayload = {
+      ...(updatedAccount.formData || {}),
+      name: updatedAccount.accountName || updatedAccount.customerName || updatedAccount.name || 'Converted Deal Customer',
+      email: updatedAccount.email || updatedAccount.contactEmail || null,
+      phone: updatedAccount.phone || updatedAccount.mobile || updatedAccount.contactMobile || null,
+      company: updatedAccount.company || updatedAccount.companyName || null,
+      assignedTo: assignedUserId,
+      accountId: updatedAccount.id,
+      customerOwner: ownerName,
+      customerOwnerName: ownerName,
+      customerOwnerDisplay: ownerName,
+      customerOwnerCode: ownerCode,
+      customerStatus: updatedAccount.status || updatedAccount.accountState || 'pending',
+      customerCategory: updatedAccount.customerCategory || updatedAccount.accountCategory || 'SWATI',
+      contacts: updatedAccount.contacts || [],
+      documents: updatedAccount.documents || []
+    };
+    
+    delete customerPayload.data;
+    
+    await customerService.create(actor, customerPayload)
+  } catch (err) {
+    console.warn('Could not auto-create customer upon conversion', err)
+  }
 
   await emitLeadRealtime({
     action: 'updated',
