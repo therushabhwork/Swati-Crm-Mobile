@@ -50,12 +50,12 @@
   --color-gray-900: #111827;
 
   /* Surfaces - Premium Minimal */
-  --surface-app: #fbfbfc;
-  --body-bg: #fbfbfc;
+  --surface-app: #FAF6EE;
+  --body-bg: #FAF6EE;
   --surface-card: #ffffff;
   --surface-raised: #ffffff;
-  --surface-muted: #f3f4f6;
-  --surface-sunken: #f9fafb;
+  --surface-muted: #F5EFE4;
+  --surface-sunken: #FAF6EE;
   --surface-inverse: #111827;
 
   /* Glass - Removed */
@@ -279,7 +279,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  background: var(--body-bg);
+  background-color: #FAF6EE;
 }
 
 body {
@@ -290,7 +290,11 @@ body {
   font-size: 14px;
   line-height: 1.55;
   color: var(--text-primary);
-  background: var(--body-bg);
+  background-color: #FAF6EE;
+  background-image: url('/login-bg.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
   background-attachment: fixed;
   animation: none;
 }
@@ -303,11 +307,43 @@ body::after {
 #root {
   min-height: 100vh;
   position: relative;
+  background-color: #FAF6EE;
+  background-image: url('/login-bg.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 #root::before,
 #root::after {
   display: none;
+}
+
+.layout,
+.layout--admin,
+.layout--user,
+.lp-page {
+  background-color: #FAF6EE !important;
+  background-image: url('/login-bg.png') !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
+.layout-main,
+.layout-stage,
+.layout-main-shell,
+.layout-main-inner,
+.layout-content-frame,
+.sales-dashboard,
+.admin-panel,
+.dashboard-page,
+.workspace-page,
+.landing-page {
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 button,
@@ -1547,7 +1583,7 @@ html.is-user[data-theme="dark"] *::after {
   --text-muted: #8fa3b4;
 }
 
-.layout :where(.layout-main, .sidebar, .right-panel, .header) {
+.layout :where(.layout-main, .sidebar, .right-panel) {
   border-color: var(--crm-shell-border);
   background: var(--crm-panel-bg);
   box-shadow: var(--crm-shell-shadow);
@@ -1850,11 +1886,16 @@ html.is-user[data-theme="dark"] *::after {
   border-color: var(--crm-accent-border);
 }
 
-.layout :where(.header, .sidebar, .right-panel, .layout-main, .card, .table-container, .modal-content) {
+.layout :where(.sidebar, .right-panel, .layout-main, .card, .table-container, .modal-content) {
   border-radius: var(--radius-lg);
 }
 
-.layout :where(.header) {
+.layout :where(.header, .header-panel, .header-action-cluster) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border-radius: 0;
 }
 

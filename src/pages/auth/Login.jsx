@@ -250,98 +250,130 @@ const Login = () => {
 
 
   return (
-    <div className="login-shell login-shell--single">
-      <div className="login-layout login-layout--single">
-        <motion.section
-          className="login-panel login-panel--form"
-          initial={{ opacity: 0, x: 24 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ ...panelMotion, delay: 0.08 }}
-        >
-          {setupNotice ? (
-            <div className="login-setup-banner login-setup-banner--warning">
-              <strong>Setup Notice:</strong> {setupNotice}
-            </div>
-          ) : null}
+    <div className="login-page-container">
+      {/* Background Decorative Circles */}
+      <div className="login-bg-shape login-bg-shape--top-right" />
+      <div className="login-bg-shape login-bg-shape--mid-left" />
+      <div className="login-bg-shape login-bg-shape--bottom" />
 
-          {isSetupBlocked ? (
-            <div className="login-setup-card">
-              <strong>Current login blocker</strong>
-              <p>{setupStatus.lastError || 'MongoDB setup is incomplete.'}</p>
-              <ul className="login-setup-list">
-                {(setupStatus.nextSteps || []).map((step) => (
-                  <li key={step}>{step}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+      {/* Desktop Bounding Box Card */}
+      <motion.div
+        className="login-desktop-card"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      >
+        {setupNotice ? (
+          <div className="login-setup-banner login-setup-banner--warning">
+            <strong>Setup Notice:</strong> {setupNotice}
+          </div>
+        ) : null}
 
-          <div className="login-form-header">
-            <LoginBrandHeader
-              showLogoImage={showLogoImage}
-              setShowLogoImage={setShowLogoImage}
-              logoSrc={loginLogoSrc}
-              logoAlt={loginLogoAlt}
-              fallbackText={loginLogoFallback}
-              logoClassName={isLumosLogo ? 'login-brand-image--lumos' : ''}
-              markClassName={isLumosLogo ? 'login-brand-mark--lumos' : ''}
-              onLogoClick={() => navigate('/admin/login')}
-              logoHint="Click for admin login"
-              forceShowHint={showAdminHint}
-              glowColor={setupStatus?.loginBrandGlowColor}
-            />
-            <h2>User Login</h2>
+        {isSetupBlocked ? (
+          <div className="login-setup-card">
+            <strong>Current login blocker</strong>
+            <p>{setupStatus.lastError || 'MongoDB setup is incomplete.'}</p>
+            <ul className="login-setup-list">
+              {(setupStatus.nextSteps || []).map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {/* Brand Header */}
+        <div className="login-card-header">
+          <div className="login-logo-badge">
+            {showLogoImage ? (
+              <img
+                src={loginLogoSrc}
+                alt={loginLogoAlt}
+                className="login-logo-img"
+                onError={() => setShowLogoImage(false)}
+              />
+            ) : (
+              <span className="login-logo-text">{loginLogoFallback}</span>
+            )}
+          </div>
+          <h1 className="login-card-title">Sales CRM</h1>
+
+          {/* Role Switcher Tabs */}
+          <div className="login-role-tabs">
+            <button
+              type="button"
+              className="login-role-tab login-role-tab--active"
+            >
+              User Login
+            </button>
+            <button
+              type="button"
+              className="login-role-tab"
+              onClick={() => navigate('/admin/login')}
+            >
+              Admin Login
+            </button>
+          </div>
+        </div>
+
+        {/* Form */}
+        <form className="login-card-form" onSubmit={handleSubmit}>
+          {/* Username / Email Input */}
+          <div className="login-pill-field-group">
+            <div className={`login-pill-input-wrap ${fieldErrors.username ? 'login-pill-input-wrap--error' : ''}`}>
+              <FiUser className="login-pill-icon-left" />
+              <input
+                type="text"
+                className="login-pill-input"
+                placeholder="Username or Email"
+                value={username}
+                onChange={handleUsernameChange}
+                required
+              />
+            </div>
+            {fieldErrors.username ? (
+              <div className="login-field-error">{fieldErrors.username}</div>
+            ) : null}
           </div>
 
-          <form className="login-form" onSubmit={handleSubmit}>
-            <Input
-              label="Username / Email"
-              type="text"
-              value={username}
-              onChange={handleUsernameChange}
-              placeholder="Enter username or email"
-              fullWidth
-              required
-            />
-            {fieldErrors.username ? <div className="login-field-error">{fieldErrors.username}</div> : null}
-
-            <div className="login-password-field input-wrapper input-full-width">
-              <label className="input-label" htmlFor="login-password-input">Password</label>
-              <div className="login-password-input-wrap">
-                <input
-                  id="login-password-input"
-                  className="input-field login-password-input"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={handlePasswordChange}
-                  placeholder="Enter your password"
-                  required
-                />
-                <button
-                  type="button"
-                  className="login-password-toggle"
-                  onClick={() => setShowPassword((currentValue) => !currentValue)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  aria-pressed={showPassword}
-                >
-                  {showPassword ? <FiEyeOff /> : <FiEye />}
-                </button>
-              </div>
+          {/* Password Input */}
+          <div className="login-pill-field-group">
+            <div className={`login-pill-input-wrap ${fieldErrors.password ? 'login-pill-input-wrap--error' : ''}`}>
+              <FiLock className="login-pill-icon-left" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="login-pill-input"
+                placeholder="Password"
+                value={password}
+                onChange={handlePasswordChange}
+                required
+              />
+              <button
+                type="button"
+                className="login-pill-toggle-btn"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
             </div>
-            {fieldErrors.password ? <div className="login-field-error">{fieldErrors.password}</div> : null}
+            {fieldErrors.password ? (
+              <div className="login-field-error">{fieldErrors.password}</div>
+            ) : null}
+          </div>
 
-            {error ? <div className="login-error">{error}</div> : null}
+          {error ? <div className="login-error-alert">{error}</div> : null}
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="large"
-              className="btn-red-theme"
-              fullWidth
-              loading={loading}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Button>
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="login-pill-submit-btn"
+            disabled={loading}
+          >
+            <span>{loading ? 'Signing in...' : 'Log In'}</span>
+            {!loading && <FiArrowRight className="login-btn-arrow" />}
+          </button>
+
+          <div className="login-form-actions login-form-actions--center">
             <button
               type="button"
               className="login-reset-link"
@@ -349,15 +381,10 @@ const Login = () => {
             >
               Reset Password
             </button>
-          </form>
-
-          <div className="login-footer">
-            <p className="login-footer-note">
-              Version {APP_VERSION} - Copyright {new Date().getFullYear()}. Need an account? Contact your administrator.
-            </p>
           </div>
-        </motion.section>
-      </div>
+        </form>
+      </motion.div>
+
       <ResetPasswordModal
         open={resetPasswordOpen}
         loginValue={username}

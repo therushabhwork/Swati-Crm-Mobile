@@ -9,6 +9,21 @@
   flex-direction: column;
   isolation: isolate;
   padding-bottom: 10px;
+  background-color: #FAF6EE;
+  background-image: url('/login-bg.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.layout .header {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .layout-aura {
@@ -130,12 +145,12 @@
   min-height: calc(100vh - var(--header-height) - 8px);
   height: auto;
   overflow: visible;
-  border: 1px solid var(--crm-shell-border, var(--border-subtle));
-  border-radius: var(--radius-lg);
-  background: var(--crm-panel-bg, var(--surface-card));
-  box-shadow: var(--crm-shell-shadow, var(--shadow-sm));
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .layout-main::before,

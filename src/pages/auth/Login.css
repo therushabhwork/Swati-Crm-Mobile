@@ -1,3 +1,386 @@
+/* ==========================================================================
+   NEW REDESIGNED LOGIN PAGE (SWATI SWITCHGEARS SALES CRM PROSPEC)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+.login-page-container {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FAF6EE;
+  background-image: url('/login-bg.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  padding: 32px 16px;
+  box-sizing: border-box;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Background Soft Circular Shapes */
+.login-bg-shape {
+  display: none;
+}
+
+/* Form Container */
+.login-desktop-card {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 520px;
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .login-desktop-card {
+    max-width: 440px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-desktop-card {
+    max-width: 90%;
+    padding: 10px 0;
+  }
+}
+
+/* Header & Logo Badge */
+.login-card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 36px;
+  width: 100%;
+}
+
+.login-badge-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  outline: none;
+}
+
+.login-badge-button:focus-visible .login-logo-badge {
+  outline: 2px solid #B20D18;
+  outline-offset: 4px;
+}
+
+.login-logo-badge {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07), inset 0 -2px 4px rgba(0, 0, 0, 0.02);
+  padding: 16px;
+  box-sizing: border-box;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.login-badge-button:hover .login-logo-badge {
+  transform: scale(1.03);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+}
+
+.login-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.login-logo-text {
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: 1px;
+  color: #B20D18;
+}
+
+.login-badge-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #8A8A8A;
+  font-weight: 500;
+}
+
+.login-card-title {
+  margin: 22px 0 0 0;
+  font-size: 34px;
+  font-weight: 700;
+  color: #111111;
+  text-align: center;
+  letter-spacing: -0.4px;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* User vs Admin Role Switcher Tabs */
+.login-role-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 4px;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.login-role-tab {
+  border: none;
+  background: transparent;
+  padding: 8px 18px;
+  border-radius: 16px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.login-role-tab:hover {
+  color: #111111;
+}
+
+.login-role-tab--active {
+  background: #FFFFFF;
+  color: #B20D18;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Form Layout */
+.login-card-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.login-pill-field-group {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Rounded Pill Inputs (72px height, 20px radius, Poppins font) */
+.login-pill-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 72px;
+  background: #FFFFFF;
+  border: 1px solid #EAE6DF;
+  border-radius: 20px;
+  padding: 0 24px;
+  box-sizing: border-box;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-pill-input-wrap:focus-within {
+  border-color: #B20D18;
+  box-shadow: 0 6px 20px rgba(178, 13, 24, 0.12);
+}
+
+.login-pill-input-wrap--error {
+  border-color: #DC2626 !important;
+}
+
+.login-pill-icon-left {
+  font-size: 22px;
+  color: #B20D18;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.login-pill-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 16px;
+  color: #111111;
+  font-weight: 400;
+  font-family: 'Poppins', sans-serif;
+  width: 100%;
+}
+
+.login-pill-input::placeholder {
+  color: #A0A0A0;
+  font-weight: 400;
+}
+
+.login-pill-toggle-btn {
+  background: transparent;
+  border: none;
+  color: #B20D18;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.login-pill-toggle-btn:hover {
+  opacity: 0.8;
+  transform: scale(1.08);
+}
+
+/* Log In Button (Exact Gradient & Elevation from image) */
+.login-pill-submit-btn {
+  margin-top: 6px;
+  width: 100%;
+  height: 72px;
+  background: linear-gradient(180deg, #333333 0%, #0A0A0A 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 20px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  outline: none;
+}
+
+.login-btn-arrow {
+  font-size: 19px;
+  transition: transform 0.2s ease;
+}
+
+.login-pill-submit-btn:hover:not(:disabled) .login-btn-arrow {
+  transform: translateX(4px);
+}
+
+.login-pill-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(180deg, #3D3D3D 0%, #181818 100%);
+}
+
+.login-pill-submit-btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+
+.login-pill-submit-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Errors & Actions */
+.login-field-error {
+  font-size: 12px;
+  color: #DC2626;
+  margin-top: 6px;
+  padding-left: 16px;
+  font-weight: 500;
+}
+
+.login-error-alert {
+  background: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  color: #991B1B;
+  font-size: 13px;
+  padding: 10px 16px;
+  border-radius: 16px;
+  text-align: center;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.login-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding: 0 4px;
+}
+
+.login-form-actions--center {
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.login-reset-link {
+  background: transparent;
+  border: none;
+  color: #B20D18;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: opacity 0.2s ease;
+  padding: 4px 8px;
+}
+
+.login-reset-link:hover {
+  opacity: 0.8;
+}
+
+.login-switch-mode-link {
+  background: transparent;
+  border: none;
+  color: #555555;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.15s ease;
+  padding: 4px 0;
+}
+
+.login-reset-link:hover,
+.login-switch-mode-link:hover {
+  color: #8B1E1E;
+  text-decoration: underline;
+}
+
+/* Footer */
+.login-card-footer {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.login-card-footer .login-footer-note {
+  font-size: 11px;
+  color: #888888;
+  line-height: 1.4;
+  margin: 0;
+}
+
 .login-shell,
 .login-page {
   position: relative;

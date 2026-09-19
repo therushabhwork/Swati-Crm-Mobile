@@ -4,35 +4,17 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: transparent;
+  background-color: #FAF6EE;
+  background-image: url('/login-bg.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 .lp-page::before,
 .lp-page::after {
-  content: '';
-  position: fixed;
-  pointer-events: none;
-  z-index: 0;
-  border-radius: 9999px;
-  filter: blur(100px);
-}
-
-.lp-page::before {
-  top: -10rem;
-  left: -10rem;
-  width: 40vw;
-  height: 40vw;
-  background: radial-gradient(circle, rgba(52, 182, 209, 0.15) 0%, transparent 70%);
-  animation: lpBackdropFloat 20s ease-in-out infinite alternate;
-}
-
-.lp-page::after {
-  bottom: -10rem;
-  right: -10rem;
-  width: 35vw;
-  height: 35vw;
-  background: radial-gradient(circle, rgba(12, 112, 144, 0.15) 0%, transparent 70%);
-  animation: lpBackdropFloat 25s ease-in-out infinite alternate-reverse;
+  display: none;
 }
 
 
@@ -56,9 +38,46 @@
   background: transparent;
 }
 
-.lp-page .header {
+html body #root .lp-page .header,
+html body #root .lp-page .header.header--admin,
+html body #root .lp-page .header.header--user,
+html body #root .lp-page .header-panel,
+html body #root .lp-page .header-panel--actions,
+html body #root .lp-page .header-panel--center,
+html body #root .lp-page .header-action-cluster,
+html body #root .lp-page .hdr-message-wrap,
+html body #root .lp-page .hdr-user-menu-wrap {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: none !important;
   border-bottom: none !important;
+  border-radius: 0 !important;
   box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html body #root .lp-page .header::before,
+html body #root .lp-page .header::after,
+html body #root .lp-page .header-panel::before,
+html body #root .lp-page .header-panel::after {
+  display: none !important;
+  content: none !important;
+}
+
+.lp-page .right-panel {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding-top: calc(var(--header-height, 56px) + 48px);
+}
+
+.lp-page .right-panel::before,
+.lp-page .right-panel::after {
+  display: none !important;
 }
 
 .lp-brand-logo-container {
@@ -543,25 +562,18 @@
 .lp-modules-shell {
   grid-area: modules;
   position: relative;
-  overflow: hidden;
-  padding: 1.35rem;
-  border: 1px solid rgba(255, 255, 255, 0.44);
-  border-radius: 34px;
-  background: var(--surface-app);
-  box-shadow:
-    0 30px 70px rgba(18, 74, 116, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
+  overflow: visible;
+  padding: 0;
+  border: none !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .lp-modules-shell::before {
-  content: '';
-  position: absolute;
-  inset: -16% 54% 42% -8%;
-  background: linear-gradient(120deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0));
-  transform: rotate(-9deg);
-  pointer-events: none;
+  display: none !important;
 }
 
 .lp-modules-header {
@@ -1242,7 +1254,6 @@
 .lp-titlebar,
 .lp-titlebar-stat,
 .lp-note,
-.lp-modules-shell,
 .lp-card-footer {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -1250,8 +1261,7 @@
 }
 
 .lp-card,
-.lp-module-card,
-.lp-modules-shell {
+.lp-module-card {
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08) !important;
 }
 
