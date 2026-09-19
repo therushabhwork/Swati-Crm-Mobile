@@ -1046,7 +1046,7 @@ const isConvertedDealRecord = (deal = {}) => Boolean(
 const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition = null }) => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { accounts, deals, convertedDeals, quotations, createDeal, updateDeal, deleteDeal, createConvertedDeal, addNotification, refreshData } = useData()
+  const { accounts, deals, convertedDeals, quotations, createDeal, updateDeal, createConvertedDeal, addNotification, refreshData } = useData()
   const { user } = useAuth()
   const { isOpen, data, open, close } = useModal()
   const [hasAutoOpened, setHasAutoOpened] = useState(false)
@@ -1836,8 +1836,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
         handleOpenDealActionPage('re-assign-deal', deal)
         return
       case 'reminder':
-      case 'delete':
-        handleOpenBoardActionModal(action, deal); return
+
       case 'sendMail': {
         handleOpenDealActionPage('send-mail', deal)
         return
@@ -2885,7 +2884,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
     }
 
     const actionParams = new URLSearchParams({ module: 'deal', dealId: String(activeDeal.id), returnTo })
-    navigate(`/deals/actions/${actionKey}?${actionParams.toString()}`)
+    navigate(`/crm-actions/${actionKey}?${actionParams.toString()}`)
   }
 
   const handleOpenDealModalActionFromMenu = (type, deal) => {
@@ -3492,35 +3491,6 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
     }
   }
 
-  const handleFrontendDeleteDeal = async (deal) => {
-    if (!deal?.id) return
-    const confirmed = window.confirm('Are you sure you want to delete this Deal?')
-    if (!confirmed) return
-
-    try {
-      await dealApi.frontendDeleteDeal(deal.id)
-      addNotification('success', 'Deal deleted', 'Deal was removed from the list.')
-      await refreshData()
-    } catch (error) {
-      addNotification('error', 'Delete failed', error?.response?.data?.message || error?.message || 'Unable to delete deal.')
-    }
-  }
-
-  const handleDeleteDeal = async () => {
-    const activeDeal = boardActionModal.deal
-
-    if (!activeDeal) return
-
-    const result = await deleteDeal(activeDeal.id)
-
-    if (result.success) {
-      addNotification('success', 'Success', 'Deal deleted successfully')
-      closeBoardActionModal()
-    } else {
-      addNotification('error', 'Error', result.message)
-    }
-  }
-
   const handleSaveDealType = async (event) => {
     event.preventDefault()
     const activeDeal = boardActionModal.deal
@@ -3689,10 +3659,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
                 <FaUser />
                 <span>Re-Assign Deal</span>
               </button>
-              <button type="button" className="deals-board-card-action-item deals-board-card-action-item-danger" onClick={() => handleFrontendDeleteDeal(activeDeal)} disabled={isConvertedDeal}>
-                <FaTrash />
-                <span>Delete Deal</span>
-              </button>
+
             </div>
           ),
           document.body
@@ -4716,10 +4683,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
                                         <FaEnvelope />
                                         <span>Send Mail</span>
                                       </button>
-                                      <button type="button" className="deals-board-card-action-item deals-board-card-action-item-danger" onClick={() => handleBoardActionMenuItem('delete', deal)}>
-                                        <FaTrash />
-                                        <span>Delete Deal</span>
-                                      </button>
+
                                     </div>
                                   ),
                                   document.body
@@ -4809,9 +4773,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
               ? 'Add Reminder'
               : boardActionModal.type === 'reassign'
                 ? 'Re-Assign Deal'
-                : boardActionModal.type === 'changeType'
-                  ? 'Change Type'
-                : 'Delete Deal'
+                : 'Change Type'
           }
           size="medium"
         >
@@ -4835,9 +4797,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
               <Button type="button" variant="outline" onClick={() => handleOpenBoardActionModal('changeType', boardActionModal.deal)}>
                 Change Type
               </Button>
-              <Button type="button" variant="outline" onClick={() => handleOpenBoardActionModal('delete', boardActionModal.deal)}>
-                Delete Deal
-              </Button>
+
             </div>
           ) : null}
 
@@ -4866,71 +4826,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
             </form>
           ) : null}
 
-          {boardActionModal.type === 'reminder' ? (
-            <form onSubmit={handleSaveReminder} className="deals-board-action-form">
-              <label className="deals-board-action-field">
-                <span>Reminder Date</span>
-                <input
-                  type="date"
-                  value={reminderForm.reminderDate}
-                  onChange={(event) => setReminderForm((currentValue) => ({ ...currentValue, reminderDate: event.target.value }))}
-                />
-              </label>
 
-              <label className="deals-board-action-field">
-                <span>Reminder Mode</span>
-                <select
-                  value={reminderForm.reminderMode}
-                  onChange={(event) => setReminderForm((currentValue) => ({ ...currentValue, reminderMode: event.target.value }))}
-                >
-                  {REMINDER_MODE_OPTIONS.map((option) => (
-                    <option key={option.value || 'empty-mode'} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <div className="deals-board-action-field">
-                <span>Reminder Time</span>
-                <div className="deals-board-reminder-time-row">
-                  {REMINDER_TIME_OPTIONS.map((time) => (
-                    <button
-                      key={time}
-                      type="button"
-                      className={`deals-board-reminder-time-chip${reminderForm.reminderTime === time ? ' deals-board-reminder-time-chip--active' : ''}`}
-                      onClick={() => setReminderForm((currentValue) => ({ ...currentValue, reminderTime: time }))}
-                    >
-                      {time}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="time"
-                  value={reminderForm.reminderTime}
-                  onChange={(event) => setReminderForm((currentValue) => ({ ...currentValue, reminderTime: event.target.value }))}
-                />
-              </div>
-
-              <label className="deals-board-action-field">
-                <span>Reminder Note</span>
-                <textarea
-                  rows={5}
-                  value={reminderForm.reminderNote}
-                  onChange={(event) => setReminderForm((currentValue) => ({ ...currentValue, reminderNote: event.target.value }))}
-                />
-              </label>
-
-              <div className="deals-board-action-footer">
-                <Button type="button" variant="outline" onClick={closeBoardActionModal}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  Save Reminder
-                </Button>
-              </div>
-            </form>
-          ) : null}
 
           {boardActionModal.type === 'reassign' ? (
             <form onSubmit={handleReassignDeal} className="deals-board-action-form">
@@ -4987,23 +4883,18 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
               </div>
             </form>
           ) : null}
-
-          {boardActionModal.type === 'delete' ? (
-            <div className="deals-board-delete-confirm">
-              <p>Delete deal <strong>{boardActionModal.deal?.dealNumber}</strong> from the board?</p>
-              <p>This action removes the deal permanently.</p>
-
-              <div className="deals-board-action-footer">
-                <Button type="button" variant="outline" onClick={closeBoardActionModal}>
-                  Cancel
-                </Button>
-                <Button type="button" onClick={handleDeleteDeal}>
-                  Delete Deal
-                </Button>
-              </div>
-            </div>
-          ) : null}
         </Modal>
+
+        <AddReminderModal
+          isOpen={boardActionModal.type === 'reminder'}
+          onClose={closeBoardActionModal}
+          contextLabel={`${boardActionModal.deal?.dealName || boardActionModal.deal?.dealNumber || 'Deal'} | ${boardActionModal.deal?.dealNumber || ''}`}
+          createdBy={user?.name}
+          relatedEntityType="deal"
+          relatedEntityId={boardActionModal.deal?.id}
+          assignedTo={boardActionModal.deal?.assignedTo || boardActionModal.deal?.ownerUserId || boardActionModal.deal?.userId || user?.id}
+          onSaved={handleSavedReminder}
+        />
 
         <Modal
           isOpen={isBoardClassificationOpen}

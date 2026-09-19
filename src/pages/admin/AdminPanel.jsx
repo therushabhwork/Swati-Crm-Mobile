@@ -12,6 +12,7 @@ import {
   FaSyncAlt,
   FaTable,
   FaUsers,
+  FaTasks,
 } from 'react-icons/fa'
 import { FiArrowLeft, FiArrowRight, FiChevronDown, FiEdit2, FiPlus, FiSettings, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal'
@@ -37,6 +38,7 @@ import { getSwBarodaMumBoardData } from '../../features/adminAccounts/selectors/
 import { getAdminReminders } from '../../features/adminReminders/getAdminReminders'
 import { closeAdminReminder, getAdminReminderStates, subscribeAdminReminderStates } from '../../features/adminReminders/reminderStorage'
 import { buildMonthlyWonLostData, buildPerformanceSummary } from '../../features/adminDashboardTabs/dashboardInsights'
+import { getStatusColor, formatDate } from '../../utils/helpers'
 import './AdminPanel.css'
 
 const QUICK_NAV = [
@@ -202,7 +204,7 @@ const DashboardTabModal = ({
 const AdminPanel = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { accounts, deals, supportRequests, refreshData, addNotification } = useData()
+  const { accounts, deals, supportRequests, tasks = [], refreshData, addNotification } = useData()
   const { user, socket } = useAuth()
   const [dashboardTabs, setDashboardTabs] = useState(() => getDashboardTabs())
   const [activeSection, setActiveSection] = useState('home')
@@ -578,6 +580,13 @@ const AdminPanel = () => {
     )
   }
 
+  const upcomingTasks = useMemo(() => (
+    [...(tasks || [])]
+      .filter((t) => t.status === 'pending')
+      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+      .slice(0, 5)
+  ), [tasks])
+
   const renderHomeContent = () => (
     <div className="ap-body">
       <div className="ap-left-col">
@@ -687,6 +696,38 @@ const AdminPanel = () => {
           <div className="ap-todo-empty">No reminders available</div>
         )}
       </div>
+      
+      {/* Upcoming Tasks Section Replicated from Dashboard */}
+      <div className="ap-todo-panel" style={{ marginTop: '20px' }}>
+        <div className="md-card__header" style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h3 className="md-card__title" style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-color)' }}>Upcoming Tasks</h3>
+            <p className="md-card__subtitle" style={{ margin: '4px 0 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+              {tasks.filter(t => t.status === 'pending').length} pending
+            </p>
+          </div>
+          <button type="button" className="md-link-btn" onClick={() => navigate('/admin/tasks')} style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontWeight: '500' }}>View all</button>
+        </div>
+        <ul className="md-list" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          {upcomingTasks.length === 0 ? (
+            <li className="md-list__empty" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No pending tasks</li>
+          ) : upcomingTasks.map((task) => (
+            <li key={task.id} className="md-list__item" style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}>
+              <span className="md-avatar md-avatar--orange" style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'rgba(255, 152, 0, 0.1)', color: '#ff9800', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '16px', fontSize: '1.1rem' }}>
+                <FaTasks />
+              </span>
+              <div className="md-list__main" style={{ flex: 1 }}>
+                <span className="md-list__title" style={{ display: 'block', fontWeight: '500', color: 'var(--text-color)', marginBottom: '4px' }}>{task.title}</span>
+                <span className="md-list__meta" style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Due {formatDate(task.dueDate)}</span>
+              </div>
+              <span className={`md-chip md-chip--${getStatusColor(task.priority)}`} style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase' }}>
+                {task.priority}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
     </div>
   )
 

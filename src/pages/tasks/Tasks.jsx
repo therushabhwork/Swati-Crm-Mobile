@@ -1,17 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { FaBell, FaEnvelope, FaExternalLinkAlt } from 'react-icons/fa'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useData } from '../../context/DataContext'
-import { useModal } from '../../hooks'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
-import Input from '../../components/common/Input'
-import Select from '../../components/common/Select'
-import Modal from '../../components/common/Modal'
 import Table from '../../components/common/Table'
 import Badge from '../../components/common/Badge'
 import AddReminderModal from '../../components/common/AddReminderModal'
+import AddTaskModal from '../../components/common/AddTaskModal'
 import {
   getStandaloneReminders,
   subscribeStandaloneReminders,
@@ -34,19 +31,24 @@ const Tasks = () => {
     clearNotification,
   } = useData()
   const { user } = useAuth()
-  const navigate = useNavigate()
-  const { isOpen, data, open, close } = useModal()
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    status: 'pending',
-    priority: 'medium',
-    dueDate: ''
-  })
+
+  const navigate = useNavigate()
 
   const [localReminders, setLocalReminders] = useState(() => getStandaloneReminders())
   const [addReminderOpen, setAddReminderOpen] = useState(false)
+  const [addTaskOpen, setAddTaskOpen] = useState(false)
+  
+  useEffect(() => {
+    if (searchParams.get('add') === 'true') {
+      setAddTaskOpen(true)
+      searchParams.delete('add')
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
+
+  const [selectedTask, setSelectedTask] = useState(null)
   const [dismissedMessageIds, setDismissedMessageIds] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('crm_todo_dismissed_message_ids') || '[]')
@@ -111,29 +113,9 @@ const Tasks = () => {
     })),
   ].sort((left, right) => new Date(right.timestamp || 0) - new Date(left.timestamp || 0))), [isAdminUser, notifications, visibleMessages])
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    const result = data 
-      ? await updateTask(data.id, formData)
-      : await createTask(formData)
-
-    if (result.success) {
-      addNotification('success', 'Success', `Task ${data ? 'updated' : 'created'} successfully`)
-      close()
-      resetForm()
-    }
-  }
-
   const handleEdit = (task) => {
-    setFormData({
-      title: task.title,
-      description: task.description || '',
-      status: task.status,
-      priority: task.priority,
-      dueDate: task.dueDate || ''
-    })
-    open(task)
+    setSelectedTask(task)
+    setAddTaskOpen(true)
   }
 
   const handleDelete = async (task) => {
@@ -144,13 +126,7 @@ const Tasks = () => {
   }
 
   const resetForm = () => {
-    setFormData({
-      title: '',
-      description: '',
-      status: 'pending',
-      priority: 'medium',
-      dueDate: ''
-    })
+    setSelectedTask(null)
   }
 
   const rememberDismissedMessage = (id) => {
@@ -373,7 +349,7 @@ const Tasks = () => {
             >
               Export
             </Button>
-            <Button onClick={() => { resetForm(); open(); }}>
+            <Button onClick={() => { resetForm(); setAddTaskOpen(true); }}>
               + Add Task
             </Button>
           </div>
@@ -386,63 +362,11 @@ const Tasks = () => {
         />
       </Card>
 
-      <Modal
-        isOpen={isOpen}
-        onClose={close}
-        title={data ? 'Edit Task' : 'Add New Task'}
-      >
-        <form onSubmit={handleSubmit} className="task-form">
-          <Input
-            label="Title *"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            required
-            fullWidth
-          />
-
-          <Input
-            label="Description"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            fullWidth
-          />
-
-          <Select
-            label="Priority *"
-            value={formData.priority}
-            onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-            options={PRIORITY_LEVELS}
-            required
-            fullWidth
-          />
-
-          <Select
-            label="Status *"
-            value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            options={TASK_STATUS}
-            required
-            fullWidth
-          />
-
-          <Input
-            label="Due Date"
-            type="date"
-            value={formData.dueDate}
-            onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-            fullWidth
-          />
-
-          <div className="modal-actions">
-            <Button type="button" variant="outline" onClick={close}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary">
-              {data ? 'Update' : 'Create'} Task
-            </Button>
-          </div>
-        </form>
-      </Modal>
+      <AddTaskModal
+        isOpen={addTaskOpen}
+        onClose={() => setAddTaskOpen(false)}
+        taskData={selectedTask}
+      />
 
       <AddReminderModal
         isOpen={addReminderOpen}

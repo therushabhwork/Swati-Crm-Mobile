@@ -22,6 +22,7 @@ import {
   FaUserCircle,
   FaUserCog,
   FaUsers,
+  FaTasks,
 } from 'react-icons/fa'
 import { FiBell, FiChevronDown } from 'react-icons/fi'
 import { useAuth } from '../../context/AuthContext'
@@ -38,6 +39,7 @@ import { APP_NAME, getDashboardRoute } from '../../utils/constants'
 import swatiLogo from '../../assets/swati-logo.png'
 import AdminMessagesModal from './AdminMessagesModal'
 import AddReminderModal from '../common/AddReminderModal'
+import AddTaskModal from '../common/AddTaskModal'
 import { buildShellRouteLabel, formatCompactValue } from './shellMeta'
 import './Header.css'
 
@@ -67,6 +69,7 @@ const STANDARD_USER_MENU = [
 ]
 
 const ADD_REMINDER_ACTION = '__add_reminder__'
+const ADD_TASK_ACTION = '__add_task__'
 
 const ADMIN_QUICK_ADD_ITEMS = [
   { label: 'Add Account', icon: FaBriefcase, route: '/admin/accounts/new' },
@@ -74,6 +77,7 @@ const ADMIN_QUICK_ADD_ITEMS = [
   { label: 'Add Deal', icon: FaThumbsUp, route: '/admin/deals/add' },
   { label: 'Add Support Request', icon: FaHandsHelping, route: '/admin/support-requests/add' },
   { label: 'Add Reminder', icon: FiBell, action: ADD_REMINDER_ACTION },
+  { label: 'Add Task', icon: FaTasks, action: ADD_TASK_ACTION },
   { label: 'Image Gallery', icon: FaImages, route: '/admin/data-manager/image-gallery' },
 ]
 
@@ -82,6 +86,7 @@ const STANDARD_QUICK_ADD_ITEMS = [
   { label: 'Add Customer', icon: FaUsers, route: '/customers/add' },
   { label: 'Add Support Request', icon: FaHandsHelping, route: '/support-requests/add' },
   { label: 'Add Reminder', icon: FiBell, action: ADD_REMINDER_ACTION },
+  { label: 'Add Task', icon: FaTasks, action: ADD_TASK_ACTION },
   { label: 'Image Gallery', icon: FaImages, route: '/image-gallery' },
 ]
 
@@ -107,6 +112,7 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
   const [messagePanelOpen, setMessagePanelOpen] = useState(false)
   const [messageModalOpen, setMessageModalOpen] = useState(false)
   const [addReminderOpen, setAddReminderOpen] = useState(false)
+  const [addTaskOpen, setAddTaskOpen] = useState(false)
   const [showCenteredLogo, setShowCenteredLogo] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [reminderStatesById, setReminderStatesById] = useState(() => getAdminReminderStates())
@@ -353,6 +359,10 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
     setQuickAddOpen(false)
     if (item.action === ADD_REMINDER_ACTION) {
       setAddReminderOpen(true)
+      return
+    }
+    if (item.action === ADD_TASK_ACTION) {
+      setAddTaskOpen(true)
       return
     }
     navigate(item.route)
@@ -659,6 +669,11 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
         isOpen={addReminderOpen}
         onClose={() => setAddReminderOpen(false)}
         createdBy={user?.name || ''}
+      />
+
+      <AddTaskModal
+        isOpen={addTaskOpen}
+        onClose={() => setAddTaskOpen(false)}
       />
 
     </>

@@ -171,14 +171,4 @@ export const dealApi = {
     const responseData = response.data?.success ? response.data.data : response.data
     return normalizeDealRecord(responseData)
   },
-
-  async deleteDeal(id) {
-    const response = await apiClient.delete(`/deals/${encodeURIComponent(id)}`)
-    return response.data
-  },
-
-  async frontendDeleteDeal(id) {
-    const response = await apiClient.patch(`/deals/${encodeURIComponent(id)}/frontend-delete`)
-    return response.data
-  },
 }

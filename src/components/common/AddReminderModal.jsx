@@ -3,6 +3,7 @@ import { FaCalendarAlt } from 'react-icons/fa'
 import { useAuth } from '../../context/AuthContext'
 import { useData } from '../../context/DataContext'
 import { addStandaloneReminder } from '../../features/standaloneReminders/standaloneReminderStorage'
+import { calendarApi } from '../../services/calendarApi'
 import './AddReminderModal.css'
 
 const REMINDER_TIMES = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00']
@@ -28,9 +29,18 @@ const getInitialFormState = () => ({
  *   createdBy   – name of the logged-in user
  *   onSaved     – optional (reminder) => void callback after save
  */
-const AddReminderModal = ({ isOpen, onClose, contextLabel = '', createdBy = '', onSaved }) => {
+const AddReminderModal = ({
+  isOpen,
+  onClose,
+  contextLabel = '',
+  createdBy = '',
+  onSaved,
+  relatedEntityType,
+  relatedEntityId,
+  assignedTo,
+}) => {
   const { user } = useAuth()
-  const { createReminder, addNotification } = useData()
+  const { createReminder, createTask, addNotification } = useData()
   const [form, setForm] = useState(getInitialFormState)
   const [saving, setSaving] = useState(false)
 
@@ -57,18 +67,40 @@ const AddReminderModal = ({ isOpen, onClose, contextLabel = '', createdBy = '', 
     setSaving(true)
 
     const reminderTime = form.reminderTime || '09:00'
+    const remindAt = `${form.reminderDate}T${reminderTime}:00`
+    const finalAssignedTo = assignedTo || user?.id
+
     const reminderPayload = {
       title: form.title.trim(),
       message: form.note.trim(),
-      remindAt: `${form.reminderDate}T${reminderTime}:00`,
+      remindAt,
       status: 'scheduled',
       reminderDate: form.reminderDate,
       reminderTime,
       reminderMode: form.reminderMode,
-      assignedTo: user?.id,
+      assignedTo: finalAssignedTo,
+      ...(relatedEntityType && { relatedEntityType }),
+      ...(relatedEntityId && { relatedEntityId }),
     }
 
     const result = await createReminder(reminderPayload)
+
+    if (result.success) {
+      try {
+        await calendarApi.createEvent({
+          title: form.title.trim(),
+          description: form.note.trim(),
+          startAt: remindAt,
+          category: 'Reminder',
+          assignedTo: finalAssignedTo,
+          ...(relatedEntityType && { relatedEntityType }),
+          ...(relatedEntityId && { relatedEntityId }),
+        })
+      } catch (err) {
+        console.error('Failed to create calendar event for reminder', err)
+      }
+    }
+
     const saved = result.success
       ? result.data
       : addStandaloneReminder({
@@ -80,6 +112,22 @@ const AddReminderModal = ({ isOpen, onClose, contextLabel = '', createdBy = '', 
         createdBy,
         createTask: form.createTask,
       })
+
+    if (result.success && form.createTask) {
+      await createTask({
+        title: form.title.trim(),
+        description: [
+          form.note.trim(),
+          '(Linked to Reminder)'
+        ].filter(Boolean).join('\n'),
+        status: 'pending',
+        priority: 'medium',
+        dueDate: form.reminderDate,
+        relatedEntityType: relatedEntityType || 'reminder',
+        relatedEntityId: relatedEntityId || result.data.id || result.data._id,
+        assignedTo: finalAssignedTo,
+      })
+    }
 
     if (!result.success) {
       addNotification?.('warning', 'Reminder saved locally', result.message || 'MongoDB reminder save failed, so this reminder was kept on this device.')

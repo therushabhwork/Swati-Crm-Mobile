@@ -18,6 +18,7 @@ import {
 } from 'react-icons/fa'
 import { FiEdit2 } from 'react-icons/fi'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import AddReminderModal from '../../../components/common/AddReminderModal'
 import Button from '../../../components/common/Button'
 import Modal from '../../../components/common/Modal'
 import { useAuth } from '../../../context/AuthContext'
@@ -194,6 +195,7 @@ const AdminDealDetailPage = () => {
   const { deals, convertedDeals, accounts, addNotification, updateDeal } = useData()
   const { user } = useAuth()
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false)
+  const [isReminderOpen, setIsReminderOpen] = useState(false)
   const [probabilityDraft, setProbabilityDraft] = useState(0)
   const [isSavingProbability, setIsSavingProbability] = useState(false)
 
@@ -393,6 +395,16 @@ const AdminDealDetailPage = () => {
     })
   }
 
+  const handleSavedReminder = async (reminderData) => {
+    await updateDeal(deal.sourceDealId || deal.source_deal_id || deal.id, {
+      reminderDate: reminderData.reminderDate,
+      reminderTime: reminderData.reminderTime,
+      reminderMode: reminderData.reminderMode,
+      reminderNote: reminderData.note.trim(),
+    })
+    setIsReminderOpen(false)
+  }
+
   const handleOpenChangeType = () => {
     if (!deal) return
     setChangeTypeValue(deal.dealType || '')
@@ -432,13 +444,12 @@ const AdminDealDetailPage = () => {
   }
 
   const actionsMenuItems = [
-    { key: 'reminder', label: 'Add Reminder', icon: <FaBell />, accent: 'orange', onSelect: () => navigateBackWithAction('reminder') },
+    { key: 'reminder', label: 'Add Reminder', icon: <FaBell />, accent: 'orange', onSelect: () => setIsReminderOpen(true) },
     { key: 'generateQuotation', label: 'Generate Quotation', icon: <FaFileAlt />, accent: 'green', onSelect: handleGenerateQuotation },
     { key: 'uploadQuotation', label: 'Upload Quotation', icon: <FaFileUpload />, accent: 'blue', onSelect: handleUploadQuotation },
     { key: 'changeType', label: 'Change Type', icon: <FaExchangeAlt />, accent: 'green', onSelect: handleOpenChangeType },
     { key: 'reassign', label: 'Re-Assign Deal', icon: <FaUserCog />, accent: 'slate', onSelect: handleReassignDeal },
     { key: 'sendMail', label: 'Send Mail', icon: <FaEnvelope />, accent: 'blue', onSelect: handleSendMail },
-    { key: 'delete', label: 'Delete Deal', icon: <FaTrash />, accent: 'danger', onSelect: () => navigateBackWithAction('delete') },
   ]
 
   const handleActionsItemClick = (item) => {
@@ -715,6 +726,17 @@ const AdminDealDetailPage = () => {
           </div>
         </form>
       </Modal>
+
+      <AddReminderModal
+        isOpen={isReminderOpen}
+        onClose={() => setIsReminderOpen(false)}
+        contextLabel={`${deal?.dealName || deal?.dealNumber || 'Deal'} | ${deal?.dealNumber || ''}`}
+        createdBy={user?.name}
+        relatedEntityType="deal"
+        relatedEntityId={deal?.id}
+        assignedTo={deal?.assignedTo || deal?.ownerUserId || deal?.userId || user?.id}
+        onSaved={handleSavedReminder}
+      />
     </>
   )
 }

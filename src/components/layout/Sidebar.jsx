@@ -18,6 +18,7 @@ import {
   FaUserCircle,
   FaUsers,
   FaUserTie,
+  FaTasks,
 } from 'react-icons/fa'
 import { FiChevronDown, FiChevronRight, FiChevronUp } from 'react-icons/fi'
 import { useAuth } from '../../context/AuthContext'
@@ -130,6 +131,7 @@ const Sidebar = ({ isAdmin = false }) => {
   const isDealsRoute = isAdmin && location.pathname.startsWith('/admin/deals')
   const isSupportRequestsRoute = isAdmin && location.pathname.startsWith('/admin/support-requests')
   const isRemindersRoute = isAdmin && location.pathname.startsWith('/admin/reminders')
+  const isTasksRoute = isAdmin && location.pathname.startsWith('/admin/tasks')
   const isReportsRoute = isAdmin && location.pathname.startsWith('/admin/reports')
   const isPasswordResetRoute = isAdmin && location.pathname.startsWith('/admin/password-reset-requests')
   const isTeamViewRoute = isAdmin && location.pathname.startsWith('/admin/team-view')
@@ -142,6 +144,7 @@ const Sidebar = ({ isAdmin = false }) => {
   const isUserDealsRoute = !isAdmin && location.pathname.startsWith('/deals')
   const isUserSupportRequestsRoute = !isAdmin && location.pathname.startsWith('/support-requests')
   const isUserRemindersRoute = !isAdmin && location.pathname.startsWith('/reminders')
+  const isUserTasksRoute = !isAdmin && location.pathname.startsWith('/tasks')
   const isUserReportsRoute = !isAdmin && location.pathname.startsWith('/reports')
   const isUserQuotationRoute = !isAdmin && (
     location.pathname.startsWith('/quotation-manager')
@@ -153,6 +156,7 @@ const Sidebar = ({ isAdmin = false }) => {
   const [dealsOpen, setDealsOpen] = useState(isDealsRoute)
   const [supportRequestsOpen, setSupportRequestsOpen] = useState(isSupportRequestsRoute)
   const [remindersOpen, setRemindersOpen] = useState(isRemindersRoute)
+  const [tasksOpen, setTasksOpen] = useState(isTasksRoute)
   const [reportsOpen, setReportsOpen] = useState(isReportsRoute)
   const [quotationManagerOpen, setQuotationManagerOpen] = useState(isQuotationRoute)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => (
@@ -163,6 +167,7 @@ const Sidebar = ({ isAdmin = false }) => {
   const [userDealsOpen, setUserDealsOpen] = useState(isUserDealsRoute)
   const [userSupportRequestsOpen, setUserSupportRequestsOpen] = useState(isUserSupportRequestsRoute)
   const [userRemindersOpen, setUserRemindersOpen] = useState(isUserRemindersRoute)
+  const [userTasksOpen, setUserTasksOpen] = useState(isUserTasksRoute)
   const [userReportsOpen, setUserReportsOpen] = useState(isUserReportsRoute)
   const [userQuotationManagerOpen, setUserQuotationManagerOpen] = useState(isUserQuotationRoute)
 
@@ -187,6 +192,7 @@ const Sidebar = ({ isAdmin = false }) => {
   useEffect(() => { if (isDealsRoute) setDealsOpen(true) }, [isDealsRoute])
   useEffect(() => { if (isSupportRequestsRoute) setSupportRequestsOpen(true) }, [isSupportRequestsRoute])
   useEffect(() => { if (isRemindersRoute) setRemindersOpen(true) }, [isRemindersRoute])
+  useEffect(() => { if (isTasksRoute) setTasksOpen(true) }, [isTasksRoute])
   useEffect(() => { if (isReportsRoute) setReportsOpen(true) }, [isReportsRoute])
   useEffect(() => { if (isQuotationRoute) setQuotationManagerOpen(true) }, [isQuotationRoute])
   useEffect(() => { if (isUserAccountsRoute) setUserAccountsOpen(true) }, [isUserAccountsRoute])
@@ -194,6 +200,7 @@ const Sidebar = ({ isAdmin = false }) => {
   useEffect(() => { if (isUserDealsRoute) setUserDealsOpen(true) }, [isUserDealsRoute])
   useEffect(() => { if (isUserSupportRequestsRoute) setUserSupportRequestsOpen(true) }, [isUserSupportRequestsRoute])
   useEffect(() => { if (isUserRemindersRoute) setUserRemindersOpen(true) }, [isUserRemindersRoute])
+  useEffect(() => { if (isUserTasksRoute) setUserTasksOpen(true) }, [isUserTasksRoute])
   useEffect(() => { if (isUserReportsRoute) setUserReportsOpen(true) }, [isUserReportsRoute])
   useEffect(() => { if (isUserQuotationRoute) setUserQuotationManagerOpen(true) }, [isUserQuotationRoute])
 
@@ -243,6 +250,11 @@ const Sidebar = ({ isAdmin = false }) => {
     { label: 'Closed Reminders', to: '/admin/reminders/closed' },
   ]
 
+  const tasksMenuItems = [
+    { label: 'Add Tasks', to: '/admin/tasks?add=true' },
+    { label: 'View Tasks', to: '/admin/tasks' },
+  ]
+
   const reportsMenuItems = [
     { label: 'Custom Reports', to: '/admin/reports/custom' },
     { label: 'Summary Reports', to: '/admin/reports/summary' },
@@ -261,12 +273,14 @@ const Sidebar = ({ isAdmin = false }) => {
         setSupportRequestsOpen(false)
         setRemindersOpen(false)
         setReportsOpen(false)
+        setTasksOpen(false)
         setQuotationManagerOpen(false)
         setUserAccountsOpen(false)
         setUserCustomersOpen(false)
         setUserDealsOpen(false)
         setUserSupportRequestsOpen(false)
         setUserRemindersOpen(false)
+        setUserTasksOpen(false)
         setUserReportsOpen(false)
         setUserQuotationManagerOpen(false)
       }
@@ -284,6 +298,7 @@ const Sidebar = ({ isAdmin = false }) => {
       deals: [userDealsOpen, setUserDealsOpen],
       'support-requests': [userSupportRequestsOpen, setUserSupportRequestsOpen],
       reminders: [userRemindersOpen, setUserRemindersOpen],
+      tasks: [userTasksOpen, setUserTasksOpen],
       reports: [userReportsOpen, setUserReportsOpen],
       'quotation-manager': [userQuotationManagerOpen, setUserQuotationManagerOpen],
     }
@@ -562,12 +577,25 @@ const Sidebar = ({ isAdmin = false }) => {
             icon={<FaBell />}
             label="Reminders"
             isActive={isRemindersRoute}
-            isOpen={remindersOpen}
+            isOpen={remindersOpen && !isSidebarCollapsed}
             isCollapsed={isSidebarCollapsed}
-            onToggle={() => setRemindersOpen((previous) => !previous)}
+            onToggle={() => setRemindersOpen(!remindersOpen)}
           >
             {remindersMenuItems.map((item) => (
-              <SubLink key={item.to} to={item.to} label={item.label} />
+              <SubLink key={item.label} to={item.to} label={item.label} />
+            ))}
+          </SidebarGroup>
+
+          <SidebarGroup
+            icon={<FaTasks />}
+            label="Tasks"
+            isActive={isTasksRoute}
+            isOpen={tasksOpen && !isSidebarCollapsed}
+            isCollapsed={isSidebarCollapsed}
+            onToggle={() => setTasksOpen(!tasksOpen)}
+          >
+            {tasksMenuItems.map((item) => (
+              <SubLink key={item.label} to={item.to} label={item.label} />
             ))}
           </SidebarGroup>
 

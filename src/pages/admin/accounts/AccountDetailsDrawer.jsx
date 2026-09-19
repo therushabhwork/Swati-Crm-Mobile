@@ -210,9 +210,9 @@ const resolveAddedByDisplay = (account = {}) => (
   || ''
 )
 
-const buildInitialForm = (account) => ({
+const buildInitialForm = (account, deal = {}) => ({
   accountNumber: account.accountNumber || '',
-  accountName: account.name || '',
+  accountName: account.name || account.accountName || '',
   company: account.raw?.company || account.company || '',
   industry: account.industryType || account.raw?.industry || '',
   accountCategory: account.accountCategory || account.customerType || '',
@@ -236,46 +236,47 @@ const buildInitialForm = (account) => ({
   address: account.address || '',
   city: account.location || account.raw?.city || '',
   state: account.state || '',
-  gstin: account.gstin || account.raw?.gstin || '',
+  gstin: account.gstin || account.raw?.gstin || deal.gstin || '',
   stateCode: account.stateCode || account.raw?.stateCode || '',
   country: account.raw?.country || '',
   pincode: account.raw?.pincode || account.raw?.pinCode || '',
-  projectName: account.projectName || '',
-  projectType: account.productCategory || account.raw?.projectType || '',
+  projectName: account.projectName || deal.projectName || '',
+  projectType: account.productCategory || account.raw?.projectType || deal.productCategory || '',
   projectLocation: account.projectLocation || account.raw?.projectLocation || '',
-  consultantName: account.consultantName || '',
+  consultantName: account.consultantName || deal.consultantName || '',
   architectName: account.architectName || account.raw?.architectName || '',
   pmcName: account.pmcName || account.raw?.pmcName || '',
-  poValue: account.poValue || account.raw?.poValue || '',
+  poValue: account.poValue || account.raw?.poValue || deal.poValue || '',
   statusAsPerOrderReceived: account.statusAsPerOrderReceived || account.raw?.statusAsPerOrderReceived || '',
   statusAsPerQuotationGiven: account.statusAsPerQuotationGiven || account.raw?.statusAsPerQuotationGiven || '',
   reasonForLost: account.reasonForLost || account.raw?.reasonForLost || '',
-  customerName: account.customerName || account.raw?.customerName || '',
+  customerName: account.customerName || account.raw?.customerName || deal.customerName || '',
   reminderDate: normalizeDateInput(account.reminderDate) || getTodayInputValue(),
   reminderMode: account.reminderMode || '',
   latestRemark: account.latestRemark || '',
   remark: account.remark || '',
   description: account.description || account.raw?.description || '',
-  jobNo: account.jobNo || '',
-  customerRefNo: account.customerRefNo || '',
-  customerRefDate: normalizeDateInput(account.customerRefDate) || '',
-  dealName: account.dealName || '',
-  dealDate: normalizeDateInput(account.dealDate) || '',
-  dealDescription: account.dealDescription || account.raw?.dealDescription || '',
-  dealValue: account.dealValue || '',
-  dealCoOwners: account.dealCoOwners || account.raw?.dealCoOwners || '',
-  dealOwner: account.dealOwner || account.raw?.dealOwner || '',
-  dealCity: account.dealCity || account.raw?.dealCity || '',
-  customerQuotationStatus: account.customerQuotationStatus || account.raw?.customerQuotationStatus || '',
-  customerOrderStatus: account.customerOrderStatus || account.raw?.customerOrderStatus || '',
-  expectedClosureDate: normalizeDateInput(account.expectedClosureDate) || '',
-  dealSource: account.dealSource || '',
-  dealType: account.dealType || '',
-  probability: account.probability || '',
-  dealScore: account.dealScore || '',
+  jobNo: account.jobNo || deal.jobNo || '',
+  customerRefNo: account.customerRefNo || deal.customerRefNo || '',
+  customerRefDate: normalizeDateInput(account.customerRefDate || deal.customerRefDate) || '',
+  dealName: account.dealName || deal.name || deal.dealName || '',
+  dealDate: normalizeDateInput(account.dealDate || deal.dealDate) || '',
+  dealDescription: account.dealDescription || account.raw?.dealDescription || deal.description || deal.dealDescription || '',
+  dealValue: account.dealValue || deal.value || deal.dealValue || '',
+  dealCoOwners: account.dealCoOwners || account.raw?.dealCoOwners || deal.dealCoOwners || '',
+  dealOwner: account.dealOwner || account.raw?.dealOwner || deal.ownerName || deal.dealOwner || '',
+  dealCity: account.dealCity || account.raw?.dealCity || deal.city || deal.dealCity || '',
+  customerQuotationStatus: account.customerQuotationStatus || account.raw?.customerQuotationStatus || deal.quotationCustomerStatus || '',
+  customerOrderStatus: account.customerOrderStatus || account.raw?.customerOrderStatus || deal.orderCustomerStatus || '',
+  expectedClosureDate: normalizeDateInput(account.expectedClosureDate || deal.expectedClosureDate || deal.closeDate) || '',
+  dealSource: account.dealSource || deal.dealSource || '',
+  dealType: account.dealType || deal.dealType || '',
+  probability: account.probability || deal.probability || '',
+  dealScore: account.dealScore || deal.dealScore || '',
 })
 
 const buildUpdatePayload = (form) => ({
+  name: form.accountName,
   accountName: form.accountName,
   company: form.company,
   industry: form.industry,
@@ -365,10 +366,20 @@ const AccountDetailsDrawer = ({
   const location = useLocation()
   const navigate = useNavigate()
   const { convertedDeals } = useData()
+  
+  const relatedConvertedDeals = useMemo(() => (
+    (Array.isArray(convertedDeals) ? convertedDeals : [])
+      .filter((entry) => String(entry.accountId || '') === String(account?.id || ''))
+      .sort((left, right) => (
+        new Date(right.convertedAt || right.createdAt || 0).getTime()
+        - new Date(left.convertedAt || left.createdAt || 0).getTime()
+      ))
+  ), [account?.id, convertedDeals])
+  
   const [isActionsOpen, setIsActionsOpen] = useState(false)
   const [editingSection, setEditingSection] = useState(null)
   const [editingFieldKey, setEditingFieldKey] = useState('')
-  const [form, setForm] = useState(() => account ? buildInitialForm(account) : {})
+  const [form, setForm] = useState(() => account ? buildInitialForm(account, relatedConvertedDeals[0]) : {})
   const [isSaving, setIsSaving] = useState(false)
   const [validationError, setValidationError] = useState('')
   const [activeActionKey, setActiveActionKey] = useState(null)
@@ -383,13 +394,14 @@ const AccountDetailsDrawer = ({
 
   useEffect(() => {
     if (account) {
-      setForm(buildInitialForm(account))
+      const deal = relatedConvertedDeals[0] || {}
+      setForm(buildInitialForm(account, deal))
       setEditingSection(null)
       setEditingFieldKey('')
       setValidationError('')
       setActiveActionKey(null)
     }
-  }, [account])
+  }, [account, relatedConvertedDeals])
 
   useEffect(() => {
     let isMounted = true
@@ -412,14 +424,6 @@ const AccountDetailsDrawer = ({
     { label: 'Last Updated', value: formatHeaderDate(account?.updatedAt) },
   ]), [account])
   const isAdminPortal = location.pathname.startsWith('/admin')
-  const relatedConvertedDeals = useMemo(() => (
-    (Array.isArray(convertedDeals) ? convertedDeals : [])
-      .filter((entry) => String(entry.accountId || '') === String(account?.id || ''))
-      .sort((left, right) => (
-        new Date(right.convertedAt || right.createdAt || 0).getTime()
-        - new Date(left.convertedAt || left.createdAt || 0).getTime()
-      ))
-  ), [account?.id, convertedDeals])
   const linkedDealId = useMemo(() => {
     const convertedDeal = relatedConvertedDeals[0] || null
     return account?.dealId

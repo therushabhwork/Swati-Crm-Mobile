@@ -11,6 +11,7 @@ import {
   FaTh,
   FaUsers,
   FaUserTie,
+  FaTasks,
 } from 'react-icons/fa'
 
 export const USER_SIDEBAR_TOOLBAR = [
@@ -99,7 +100,16 @@ export const USER_SIDEBAR_GROUPS = [
       { label: 'My Reminders', to: '/reminders/my' },
       { label: 'Active Reminders', to: '/reminders/active' },
       { label: 'Closed Reminders', to: '/reminders/closed' },
-      { label: 'Tasks & Reminders', to: '/tasks' },
+    ],
+  },
+  {
+    key: 'tasks',
+    label: 'Tasks',
+    icon: FaTasks,
+    routePrefix: '/tasks',
+    items: [
+      { label: 'Add Tasks', to: '/tasks?add=true' },
+      { label: 'View Tasks', to: '/tasks' },
     ],
   },
   {

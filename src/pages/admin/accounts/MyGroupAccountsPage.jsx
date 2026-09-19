@@ -766,7 +766,8 @@ const activeStageParam = searchParams.get('stage')
       .filter((row) => {
         if (variantKey !== 'viewAll') return true
         return matchesViewAllDropdownFilters(row, cityFilter, ownerFilter)
-      }),
+      })
+      .sort((a, b) => new Date(b.createdAt || b.accountDate || 0).getTime() - new Date(a.createdAt || a.accountDate || 0).getTime()),
     [boardRows, filterColumnDefinitions, filters, matchesConvertedFilterRules, variantKey, cityFilter, ownerFilter]
   )
   const filteredAllStageRows = useMemo(
@@ -788,7 +789,8 @@ const activeStageParam = searchParams.get('stage')
       .filter((row) => {
         if (variantKey !== 'viewAll') return true
         return matchesViewAllDropdownFilters(row, cityFilter, ownerFilter)
-      }),
+      })
+      .sort((a, b) => new Date(b.createdAt || b.accountDate || 0).getTime() - new Date(a.createdAt || a.accountDate || 0).getTime()),
     [convertedBoardRecords, filterColumnDefinitions, filters, matchesConvertedFilterRules, variantKey, cityFilter, ownerFilter]
   )
 

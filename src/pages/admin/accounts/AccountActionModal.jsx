@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import AddRemarksModal from '../../../components/common/AddRemarksModal'
+import AddReminderModal from '../../../components/common/AddReminderModal'
 import Button from '../../../components/common/Button'
 import { useData } from '../../../context/DataContext'
 import { remarkApi } from '../../../services/remarkApi'
@@ -17,9 +18,7 @@ import {
 } from '../../../features/adminAccounts/config/accountStages'
 import './MyGroupAccounts.css'
 
-const reminderModes = ['Call', 'Email', 'Meeting', 'Visit', 'WhatsApp', 'Follow Up']
 const documentTypes = ['Proposal', 'Quotation', 'PO', 'Drawing', 'Site Photo', 'Other']
-const reminderTimes = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00']
 const getTodayInputValue = () => new Date().toISOString().slice(0, 10)
 const ACTION_CHANGE_STATUS_OPTIONS = ACCOUNT_CHANGE_STATUS_OPTIONS.filter((entry) => (
   !['converted', 'closed', 'contacted', 'order_lost'].includes(entry.value)
@@ -37,10 +36,6 @@ const getAllowedActionStatusOption = (value) => {
 const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
   const { addNotification, updateAccount } = useData()
   const action = ACCOUNT_ACTION_MAP[actionKey]
-  const [reminderDate, setReminderDate] = useState(getTodayInputValue)
-  const [reminderTime, setReminderTime] = useState('')
-  const [reminderMode, setReminderMode] = useState(reminderModes[0])
-  const [reminderNote, setReminderNote] = useState('')
   const [stage, setStage] = useState(ACCOUNT_CHANGE_STATUS_OPTIONS[0]?.value || 'new')
   const [statusNote, setStatusNote] = useState('')
   const [poValue, setPoValue] = useState('')
@@ -78,10 +73,6 @@ const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
   useEffect(() => {
     if (!account) return
 
-    setReminderDate(account.reminderDate || getTodayInputValue())
-    setReminderTime(account.raw?.reminderTime || '')
-    setReminderMode(account.reminderMode || reminderModes[0])
-    setReminderNote(account.raw?.reminderNote || '')
     setStage(getAllowedActionStatusOption(account.status || account.stage)?.value || ACTION_CHANGE_STATUS_OPTIONS[0]?.value || 'new')
     setStatusNote('')
     setPoValue(account.poValue || '')
@@ -145,6 +136,33 @@ const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
     )
   }
 
+  if (actionKey === 'add-reminder') {
+    return (
+      <AddReminderModal
+        isOpen
+        onClose={onClose}
+        contextLabel={`${account.name || 'Account'} | ${account.accountNumber || '-'}`}
+        createdBy={account.accountOwnerName || account.accountOwner || ''}
+        onSaved={async (reminder) => {
+          if (reminder) {
+            await updateAccount(account.raw?.id || account.id, {
+              reminderDate: reminder.reminderDate,
+              reminderTime: reminder.reminderTime,
+              reminderMode: reminder.reminderMode,
+              latestRemark: reminder.message || reminder.note || account.latestRemark,
+              updatedAt: new Date().toISOString(),
+            })
+          }
+          if (onSaved) onSaved(reminder)
+          onClose()
+        }}
+        relatedEntityType="account"
+        relatedEntityId={account.raw?.id || account.id}
+        assignedTo={account.raw?.assignedTo || account.raw?.ownerUserId || account.accountOwner || account.raw?.createdBy || null}
+      />
+    )
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
     setFormError('')
@@ -157,20 +175,7 @@ const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
 
     let updates = {}
 
-    if (actionKey === 'add-reminder') {
-      if (!reminderDate) {
-        setFormError('Reminder date is required.')
-        return
-      }
-
-      updates = {
-        reminderDate,
-        reminderTime,
-        reminderMode,
-        reminderNote: reminderNote.trim(),
-        latestRemark: reminderNote.trim() || account.latestRemark,
-      }
-    } else if (actionKey === 'change-status') {
+    if (actionKey === 'change-status') {
       if (!stage) {
         setFormError('Status is required.')
         return
@@ -252,80 +257,12 @@ const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
       return
     }
 
-    if (actionKey === 'add-reminder') {
-      const remindAt = `${reminderDate}T${reminderTime || '09:00'}:00`
-      const reminderTitle = `${account.name || 'Account'} reminder`
-      const assignedTo = account.raw?.assignedTo || account.raw?.ownerUserId || account.accountOwner || account.raw?.createdBy || null
-
-      await Promise.allSettled([
-        reminderApi.createReminder({
-          title: reminderTitle,
-          message: reminderNote.trim(),
-          remindAt,
-          status: 'scheduled',
-          relatedEntityType: 'account',
-          relatedEntityId: account.raw?.id || account.id,
-          assignedTo,
-          reminderDate,
-          reminderTime,
-          reminderMode,
-        }),
-        calendarApi.createEvent({
-          title: reminderTitle,
-          description: reminderNote.trim(),
-          startAt: remindAt,
-          category: 'Reminder',
-          relatedEntityType: 'account',
-          relatedEntityId: account.raw?.id || account.id,
-          assignedTo,
-        }),
-      ])
-    }
-
     addNotification('success', `${action.label} saved`, `${action.label} completed successfully.`)
     onSaved?.()
     onClose()
   }
 
   const renderFields = () => {
-    if (actionKey === 'add-reminder') {
-      return (
-        <div className="admin-accounts-action-form-grid">
-          <label className="admin-accounts-bulk-field">
-            Reminder Date
-            <input type="date" value={reminderDate} onChange={(event) => setReminderDate(event.target.value)} />
-          </label>
-          <label className="admin-accounts-bulk-field">
-            Reminder Mode
-            <select value={reminderMode} onChange={(event) => setReminderMode(event.target.value)}>
-              {reminderModes.map((mode) => <option key={mode} value={mode}>{mode}</option>)}
-            </select>
-          </label>
-          <div className="admin-accounts-bulk-field admin-accounts-action-field-full">
-            Reminder Time
-            <div className="admin-accounts-reminder-time-buttons">
-              {reminderTimes.map((time, index) => (
-                <button
-                  key={time}
-                  type="button"
-                  className={`admin-accounts-reminder-time-btn admin-accounts-reminder-time-btn-${index % 5} ${reminderTime === time ? 'active' : ''}`}
-                  onClick={() => setReminderTime(time)}
-                >
-                  {time}
-                </button>
-              ))}
-            </div>
-            <span className="admin-accounts-reminder-time-other">Other</span>
-            <input type="time" value={reminderTime} onChange={(event) => setReminderTime(event.target.value)} />
-          </div>
-          <label className="admin-accounts-bulk-field admin-accounts-action-field-full">
-            Reminder Note
-            <textarea value={reminderNote} onChange={(event) => setReminderNote(event.target.value)} placeholder="Add reminder note here..." />
-          </label>
-        </div>
-      )
-    }
-
     if (actionKey === 'change-status') {
       return (
         <>

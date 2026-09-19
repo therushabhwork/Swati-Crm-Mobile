@@ -905,17 +905,6 @@ export const DataProvider = ({ children }) => {
     }
   }
 
-  const deleteDeal = async (id) => {
-    try {
-      await dealApi.deleteDeal(id)
-      setDeals((prev) => prev.filter((entry) => String(entry.id) !== String(id)))
-
-      return { success: true }
-    } catch (error) {
-      return { success: false, message: getErrorMessage(error) }
-    }
-  }
-
   const findConvertedDealForAccount = async (accountId) => {
     try {
       const existing = await dealApi.getConvertedDealForAccount(accountId)
@@ -1193,7 +1182,6 @@ export const DataProvider = ({ children }) => {
     deleteProject,
     createDeal,
     updateDeal,
-    deleteDeal,
     findConvertedDealForAccount,
     createConvertedDeal,
     refreshConvertedDeals,

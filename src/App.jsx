@@ -348,6 +348,7 @@ function App() {
                 <Route path="reminders/my" element={<AdminRemindersPage variantKey="my" />} />
                 <Route path="reminders/active" element={<AdminRemindersPage variantKey="active" />} />
                 <Route path="reminders/closed" element={<AdminRemindersPage variantKey="closed" />} />
+                <Route path="tasks" element={<Tasks />} />
                 <Route path="team-view" element={<TeamViewPage />} />
                 <Route path="reports"               element={<Navigate to="/admin/reports/custom" replace />} />
                 <Route path="reports/custom"       element={<CustomReportsPage />} />

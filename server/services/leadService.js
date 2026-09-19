@@ -172,6 +172,7 @@ const buildLeadPayload = async (payload = {}, actor, existingLead = null) => {
     || null
   const hasReasonForLost = Object.prototype.hasOwnProperty.call(sanitizedPayload, 'reasonForLost')
   const normalizedPayload = applyOwnershipMetadata(actor, {
+    ...sanitizedPayload,
     customerName: sanitizedPayload.accountName || sanitizedPayload.customerName || existingLead?.customerName || '',
     mobile: sanitizedPayload.alternatePhone || sanitizedPayload.mobile || existingLead?.mobile || '',
     email: sanitizedPayload.alternateEmail || sanitizedPayload.email || existingLead?.email || '',
@@ -482,10 +483,49 @@ const updateLead = async (actor, leadId, payload) => {
   }
 
   const leadPayload = await buildLeadPayload(payload, actor, existingLead)
-  const updatedLead = await leadRepository.updateLead(normalizeLeadId(leadId), leadPayload)
+  let updatedLead = await leadRepository.updateLead(normalizeLeadId(leadId), leadPayload)
 
   if (!updatedLead) {
     throw new AppError('Lead not found.', 404)
+  }
+
+  const hasDealDetails = Boolean(payload.dealName || payload.dealValue || payload.dealDescription || payload.expectedClosureDate || payload.dealOwner)
+  const isStatusConverted = payload.status === 'converted' || payload.stage === 'converted' || payload.accountState === 'converted'
+  
+  if (!updatedLead.isConverted && (hasDealDetails || isStatusConverted)) {
+    const { getMongoModel } = require('../models/mongoModels')
+    const Deal = getMongoModel('deals')
+    const existingDeal = await Deal.findOne({ accountId: normalizeLeadId(leadId), frontendDeleted: { $ne: true } }).lean()
+    
+    if (existingDeal) {
+      const dealPayload = buildDealPayloadFromAccount(updatedLead, actor)
+      const targetDealId = existingDeal.legacyId || existingDeal.id || existingDeal._id
+      await dealService.update(actor, targetDealId, dealPayload)
+      
+      const convertedAt = new Date().toISOString()
+      await leadRepository.updateLead(normalizeLeadId(leadId), {
+        isConverted: true,
+        convertedAt,
+        convertedBy: actor.id,
+        accountId: leadId,
+        dealId: targetDealId,
+        status: 'converted',
+        accountState: 'converted',
+        formData: {
+          ...(updatedLead.formData || {}),
+          isConverted: true,
+          convertedAt,
+          convertedBy: actor.id,
+          dealId: targetDealId,
+          status: 'converted',
+          accountState: 'converted',
+        }
+      })
+      updatedLead = await getLeadById(actor, leadId, { includeGroupScope: false })
+    } else {
+      await convertLeadToDeal(actor, leadId)
+      updatedLead = await getLeadById(actor, leadId, { includeGroupScope: false })
+    }
   }
 
   await emitLeadRealtime({
@@ -496,22 +536,18 @@ const updateLead = async (actor, leadId, payload) => {
     previousLead: existingLead,
   })
 
-  if (updatedLead.isConverted && updatedLead.dealId) {
-    const convertedDeal = await convertedDealRepository.syncFromDeal({ id: updatedLead.dealId })
-    emitConvertedDealRealtime('updated', convertedDeal, actor)
-  }
-
   return augmentLeadWithOwnerCode(updatedLead)
 }
 
 const buildDealPayloadFromAccount = (account = {}, actor = {}) => {
-  const dealTitle = account.projectName || account.accountName || account.customerName || account.name || 'Converted Deal'
+  const dealTitle = account.dealName || account.projectName || account.accountName || account.customerName || account.name || 'Converted Deal'
   const ownerUserId = account.ownerUserId || account.assignedTo || account.createdBy || actor.id
   const ownerName = account.accountOwner || account.ownerName || actor.name || ''
+  const dealOwner = account.dealOwner || ownerName
   const accountName = account.accountName || account.name || account.customerName || ''
   const accountNumber = account.accountNumber || account.accountNo || ''
   const customerName = account.customerName || accountName
-  const city = account.city || account.location || account.branch || account.branchLocation || account.projectLocation || ''
+  const city = account.dealCity || account.city || account.location || account.branch || account.branchLocation || account.projectLocation || ''
 
   return {
     title: dealTitle,
@@ -524,15 +560,23 @@ const buildDealPayloadFromAccount = (account = {}, actor = {}) => {
     linkedAccountNumber: accountNumber,
     customerId: account.customerId || null,
     customerNumber: account.customerNumber || accountNumber,
-    amount: account.projectValue || account.value || account.amount || null,
-    value: account.projectValue || account.value || account.amount || null,
+    amount: account.dealValue || account.projectValue || account.value || account.amount || null,
+    value: account.dealValue || account.projectValue || account.value || account.amount || null,
     currency: account.currency || 'INR',
     stage: 'converted',
     status: 'converted',
     assignedTo: ownerUserId,
     ownerUserId,
     ownerName,
-    dealOwner: ownerName,
+    dealOwner,
+    dealCoOwners: account.dealCoOwners || '',
+    dealType: account.dealType || '',
+    dealSource: account.dealSource || '',
+    dealScore: account.dealScore || 0,
+    probability: account.probability || null,
+    expectedCloseDate: account.expectedClosureDate || null,
+    closeDate: account.expectedClosureDate || null,
+    expectedClosureDate: account.expectedClosureDate || null,
     createdBy: account.createdBy || actor.id,
     convertedFromAccount: true,
     conversionSource: 'search-account',
@@ -559,7 +603,7 @@ const buildDealPayloadFromAccount = (account = {}, actor = {}) => {
     companyProfile: account.companyProfile || account.company || account.companyName || account.accountCategory || '',
     companyLogo: account.companyLogo || '',
     gstin: account.gstin || '',
-    description: account.description || account.notes || '',
+    description: account.dealDescription || account.description || account.notes || '',
     notes: `Converted from account ${accountNumber || account.id || ''}`.trim(),
     companyId: account.companyId || actor.companyId || 1,
     organizationId: account.organizationId || account.companyId || actor.companyId || 1,
