@@ -40,6 +40,7 @@ import {
   normalizeOptionalNumberInput,
 } from '../../../features/adminDeals/config/dealUtils'
 import { buildCrmDealActionUrl } from '../crm-actions/CRMActionPage'
+import { getCachedAccountOwnerOptions, loadAccountOwnerOptions } from '../../../features/adminAccounts/utils/accountOwnerOptions'
 import { authService } from '../../../services/authService'
 import { customerService } from '../../../services/customerService'
 import { calendarApi } from '../../../services/calendarApi'
@@ -505,10 +506,29 @@ const AdminManageDealPage = () => {
     }
   }, [isActionsMenuOpen])
 
-  const availableUsers = useMemo(
-    () => authService.getAvailableUsers().filter((entry) => entry.name !== 'System Administrator'),
-    []
-  )
+  const [availableUsers, setAvailableUsers] = useState(() => (
+    getCachedAccountOwnerOptions().filter((entry) => entry.name !== 'System Administrator')
+  ))
+
+  useEffect(() => {
+    let isMounted = true
+    
+    loadAccountOwnerOptions()
+      .then((options) => {
+        if (isMounted) {
+          setAvailableUsers(options.filter((entry) => entry.name !== 'System Administrator'))
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setAvailableUsers(getCachedAccountOwnerOptions().filter((entry) => entry.name !== 'System Administrator'))
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
   const customers = useMemo(() => customerService.getCustomers(), [])
 
   const sourceDeal = useMemo(() => {

@@ -369,20 +369,17 @@ const AdminDealDetailPage = () => {
     navigate(fromPath, { state: { dealActionKey: actionKey, dealActionId: deal.id } })
   }
 
-  const handleSendMail = () => {
+  const handleOpenDealActionPage = (actionKey) => {
     if (!deal?.id) return
-    navigate(buildCrmDealActionUrl('send-mail', deal.id, fromPath))
+    const routeActionUrl = user?.role === 'admin' 
+      ? buildCrmDealActionUrl(actionKey, deal.id, fromPath) 
+      : `/crm-actions/${actionKey}?module=deal&dealId=${deal.id}&returnTo=${encodeURIComponent(fromPath)}`
+    navigate(routeActionUrl)
   }
 
-  const handleUploadQuotation = () => {
-    if (!deal?.id) return
-    navigate(buildCrmDealActionUrl('upload-deal-quotation', deal.id, fromPath))
-  }
-
-  const handleReassignDeal = () => {
-    if (!deal?.id) return
-    navigate(buildCrmDealActionUrl('re-assign-deal', deal.id, fromPath))
-  }
+  const handleSendMail = () => handleOpenDealActionPage('send-mail')
+  const handleUploadQuotation = () => handleOpenDealActionPage('upload-deal-quotation')
+  const handleReassignDeal = () => handleOpenDealActionPage('re-assign-deal')
 
   const handleGenerateQuotation = () => {
     if (!deal) return

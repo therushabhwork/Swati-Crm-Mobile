@@ -26,6 +26,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { useModal, useSearch, useFilter } from '../../hooks'
+import AddReminderModal from '../../components/common/AddReminderModal'
 import Badge from '../../components/common/Badge'
 import Button from '../../components/common/Button'
 import Card from '../../components/common/Card'
@@ -1836,7 +1837,8 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
         handleOpenDealActionPage('re-assign-deal', deal)
         return
       case 'reminder':
-
+        handleOpenBoardActionModal('reminder', deal)
+        return
       case 'sendMail': {
         handleOpenDealActionPage('send-mail', deal)
         return

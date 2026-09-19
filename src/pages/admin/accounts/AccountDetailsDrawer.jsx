@@ -365,7 +365,7 @@ const AccountDetailsDrawer = ({
 }) => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { convertedDeals } = useData()
+  const { convertedDeals, convertAccountToDeal } = useData()
   
   const relatedConvertedDeals = useMemo(() => (
     (Array.isArray(convertedDeals) ? convertedDeals : [])
@@ -494,48 +494,14 @@ const AccountDetailsDrawer = ({
     
     if (result?.success) {
       try {
-        const { dealApi } = await import('../../../services/dealApi')
-        const { customerService } = await import('../../../services/customerService')
+        const isUnconverted = !account.isConverted && account.stage !== 'converted' && account.stage !== 'converted_to_po'
+        const filledDealTriggerFields = Boolean(form.dealName || form.dealOwner || form.dealValue || form.poValue)
         
-        // Force sync deal
-        const allDeals = await dealApi.getDeals().catch(() => [])
-        let dealToUpdate = relatedConvertedDeals[0] || (account.dealId ? { id: account.dealId } : null)
-        if (!dealToUpdate || !dealToUpdate.id) {
-          dealToUpdate = allDeals.find(d => String(d.accountId) === String(account.id))
+        if (isUnconverted && filledDealTriggerFields && typeof convertAccountToDeal === 'function') {
+          await convertAccountToDeal(account.id)
         }
-        if (dealToUpdate && dealToUpdate.id) {
-           const dealUpdatePayload = {
-             ...updatePayload,
-             name: form.dealName || updatePayload.dealName || dealToUpdate.name,
-             dealDate: form.dealDate || updatePayload.dealDate || dealToUpdate.dealDate,
-             description: form.dealDescription || updatePayload.dealDescription || dealToUpdate.description,
-             poValue: form.poValue !== undefined ? parseFloat(form.poValue) || 0 : dealToUpdate.poValue,
-             dealCoOwners: form.dealCoOwners || updatePayload.dealCoOwners || dealToUpdate.dealCoOwners,
-             value: form.dealValue !== undefined ? parseFloat(form.dealValue) || 0 : dealToUpdate.value,
-             dealScore: form.dealScore !== undefined ? parseFloat(form.dealScore) || 0 : dealToUpdate.dealScore,
-             consultantName: form.consultantName || updatePayload.consultantName || dealToUpdate.consultantName,
-             customerRefNo: form.customerRefNo || updatePayload.customerRefNo || dealToUpdate.customerRefNo,
-             projectName: form.projectName || updatePayload.projectName || dealToUpdate.projectName,
-             quotationCustomerStatus: form.customerQuotationStatus || updatePayload.customerQuotationStatus || dealToUpdate.quotationCustomerStatus,
-             dealType: form.dealType || updatePayload.dealType || dealToUpdate.dealType,
-             dealSource: form.dealSource || updatePayload.dealSource || dealToUpdate.dealSource,
-             dealOwner: form.dealOwner || updatePayload.dealOwner || dealToUpdate.dealOwner,
-             ownerName: form.dealOwner || updatePayload.dealOwner || dealToUpdate.ownerName,
-             city: form.dealCity || updatePayload.dealCity || dealToUpdate.city,
-             closeDate: form.expectedClosureDate || updatePayload.expectedClosureDate || dealToUpdate.closeDate,
-             expectedClosureDate: form.expectedClosureDate || updatePayload.expectedClosureDate || dealToUpdate.expectedClosureDate,
-             probability: form.probability !== undefined ? parseFloat(form.probability) || 1 : dealToUpdate.probability,
-             productCategory: form.productCategory || updatePayload.productCategory || dealToUpdate.productCategory,
-             customerRefDate: form.customerRefDate || updatePayload.customerRefDate || dealToUpdate.customerRefDate,
-             gstin: form.gstin || updatePayload.gstin || dealToUpdate.gstin,
-             jobNo: form.jobNo || updatePayload.jobNo || dealToUpdate.jobNo,
-             orderCustomerStatus: form.customerOrderStatus || updatePayload.customerOrderStatus || dealToUpdate.orderCustomerStatus,
-           }
-           await dealApi.updateDeal(dealToUpdate.id, dealUpdatePayload).catch(() => {})
-        }
-
       } catch (err) {
-        console.error("Failed to sync deal/customer updates", err)
+        console.error("Failed to process auto-convert", err)
       }
       
       if (typeof onRefresh === 'function') {

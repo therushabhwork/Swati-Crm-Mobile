@@ -27,8 +27,10 @@ import { useData } from '../../../context/DataContext'
 import { getAccountsBoardData } from '../../../features/adminAccounts/selectors/getAccountsBoardData'
 import { ACCOUNT_CHANGE_STATUS_OPTIONS, getAccountChangeStatusOption } from '../../../features/adminAccounts/config/accountStages'
 import { getCrmOwnerDisplay } from '../../../features/users/crmUserDirectory'
+import { getCachedAccountOwnerOptions, loadAccountOwnerOptions } from '../../../features/adminAccounts/utils/accountOwnerOptions'
 import { authService } from '../../../services/authService'
 import { customerService } from '../../../services/customerService'
+import { reminderApi } from '../../../services/reminderApi'
 import { formatDate } from '../../../utils/helpers'
 import './CRMActionPage.css'
 
@@ -440,12 +442,39 @@ const CRMActionPage = () => {
     quoteFileName: '',
   })
 
-  const availableUsers = useMemo(() => (
-    authService
-      .getAvailableUsers()
+  const [availableUsers, setAvailableUsers] = useState(() => (
+    getCachedAccountOwnerOptions()
       .filter((entry) => entry.name !== 'System Administrator')
       .sort((left, right) => left.name.localeCompare(right.name))
-  ), [])
+  ))
+
+  useEffect(() => {
+    let isMounted = true
+    
+    loadAccountOwnerOptions()
+      .then((options) => {
+        if (isMounted) {
+          setAvailableUsers(
+            options
+              .filter((entry) => entry.name !== 'System Administrator')
+              .sort((left, right) => left.name.localeCompare(right.name))
+          )
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setAvailableUsers(
+            getCachedAccountOwnerOptions()
+              .filter((entry) => entry.name !== 'System Administrator')
+              .sort((left, right) => left.name.localeCompare(right.name))
+          )
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
 
 
@@ -651,18 +680,21 @@ const CRMActionPage = () => {
     const nextOwner = availableUsers.find((entry) => String(entry.id) === String(reassignForm.newOwnerId))
     const previousOwner = getDealOwnerLabel(selectedDeal)
     const nextOwnerName = nextOwner?.name || 'Unassigned'
-    const nextOwnerId = normalizeNumberId(nextOwner?.ownerCode || nextOwner?.id || reassignForm.newOwnerId)
+    const resolvedOwnerId = String(nextOwner?.id || reassignForm.newOwnerId || '')
+    const apiOwnerId = normalizeNumberId(resolvedOwnerId)
     const reminderDate = getReminderDate()
     const reminderTime = reassignForm.reminderTiming === 'Now'
       ? getCurrentTimeKey()
       : (reassignForm.reminderTimeSlot === 'Custom Time' || reassignForm.reminderTimeSlot === 'Other') ? reassignForm.customTime : reassignForm.reminderTimeSlot
 
     const result = await updateDeal(selectedDeal.id, {
-      ownerUserId: nextOwnerId,
-      ownerId: nextOwnerId,
-      assignedTo: nextOwnerId,
-      assignedUserId: nextOwnerId,
-      userId: nextOwnerId,
+      ...(apiOwnerId ? {
+        ownerUserId: apiOwnerId,
+        ownerId: apiOwnerId,
+        assignedTo: apiOwnerId,
+        assignedUserId: apiOwnerId,
+      } : {}),
+      userId: resolvedOwnerId,
       dealOwner: nextOwnerName,
       ownerName: nextOwnerName,
       dealOwnerName: nextOwnerName,
@@ -687,6 +719,23 @@ const CRMActionPage = () => {
     if (!result.success) {
       setErrors({ record: result.message || 'Unable to re-assign deal.' })
       return
+    }
+
+    if (reassignForm.addReminder) {
+      const remindAt = `${reminderDate}T${reminderTime.padEnd(5, ':00')}:00`
+      const reminderPayload = {
+        title: `Reassigned Deal Follow-Up: ${selectedDeal.dealNumber || selectedDeal.name || 'Deal'}`,
+        message: reassignForm.message || `Follow up for reassigned deal ${selectedDeal.dealNumber || ''}`,
+        remindAt,
+        status: 'scheduled',
+        reminderDate,
+        reminderTime,
+        reminderMode: 'Ownership Follow Up',
+        assignedTo: nextOwnerId,
+        relatedEntityType: 'deal',
+        relatedEntityId: selectedDeal.id,
+      }
+      await reminderApi.createReminder(reminderPayload).catch(() => {})
     }
 
     appendStoredRow(OWNERSHIP_KEY, {

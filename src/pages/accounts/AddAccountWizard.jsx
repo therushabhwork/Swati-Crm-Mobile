@@ -120,6 +120,7 @@ const initialFormData = {
 
 const requiredMessages = {
   accountName: 'Account Name: Please provide Account Name',
+  accountCategory: 'Vertical Name: Please select Vertical Name',
   accountOwner: 'Account Owner: Please select Account Owner',
   accountSource: 'Account Source: Please select Account Source',
   state: 'State: Please provide State',

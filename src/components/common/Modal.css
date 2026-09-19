@@ -96,7 +96,7 @@
 
 @media (max-width: 640px) {
   .modal-overlay {
-    align-items: flex-start;
+    align-items: center;
   }
 
   .modal-content {

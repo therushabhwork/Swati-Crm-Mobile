@@ -102,14 +102,15 @@ const SectionLabel = ({ children, isCollapsed }) => (
   isCollapsed ? null : <div className="sb-section-label">{children}</div>
 )
 
-const SubLink = ({ to, label, accent, end }) => (
+const SubLink = ({ to, label, accent, end, isActiveMatch }) => (
   <NavLink
     to={to}
     end={end}
     title={label}
-    className={({ isActive }) => (
-      `sb-sub-link ${isActive ? 'sb-sub-link--active' : ''} ${accent ? 'sb-sub-link--accent' : ''}`
-    )}
+    className={({ isActive, isPending }) => {
+      const match = typeof isActiveMatch === 'function' ? isActiveMatch() : isActive
+      return `sb-sub-link ${match ? 'sb-sub-link--active' : ''} ${accent ? 'sb-sub-link--accent' : ''}`
+    }}
   >
     <FiChevronRight className="sb-sub-arrow" />
     <span>{label}</span>
@@ -251,8 +252,16 @@ const Sidebar = ({ isAdmin = false }) => {
   ]
 
   const tasksMenuItems = [
-    { label: 'Add Tasks', to: '/admin/tasks?add=true' },
-    { label: 'View Tasks', to: '/admin/tasks' },
+    { 
+      label: 'Add Tasks', 
+      to: '/admin/tasks?add=true',
+      isActiveMatch: () => location.pathname === '/admin/tasks' && location.search.includes('add=true')
+    },
+    { 
+      label: 'View Tasks', 
+      to: '/admin/tasks',
+      isActiveMatch: () => location.pathname === '/admin/tasks' && !location.search.includes('add=true')
+    },
   ]
 
   const reportsMenuItems = [
@@ -595,7 +604,7 @@ const Sidebar = ({ isAdmin = false }) => {
             onToggle={() => setTasksOpen(!tasksOpen)}
           >
             {tasksMenuItems.map((item) => (
-              <SubLink key={item.label} to={item.to} label={item.label} />
+              <SubLink key={item.label} to={item.to} label={item.label} isActiveMatch={item.isActiveMatch} />
             ))}
           </SidebarGroup>
 
