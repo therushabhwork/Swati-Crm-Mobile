@@ -1034,15 +1034,19 @@ const activeStageParam = searchParams.get('stage')
 
     const createdDeal = result.data?.deal || {}
     const createdConvertedDeal = result.data?.convertedDeal || {}
-    navigate(isAdminPortal ? '/admin/deals/view' : '/deals/view', {
-      state: {
-        quotationDealLookup: {
-          dealNumber: createdDeal.dealNumber || createdConvertedDeal.dealNumber || '',
-          projectName: createdDeal.name || createdDeal.dealName || createdDeal.projectName || createdConvertedDeal.name || createdConvertedDeal.projectName || '',
-          companyName: createdDeal.companyName || createdDeal.customerName || createdDeal.accountName || createdConvertedDeal.accountName || row.name || '',
+    if (createdDeal.id) {
+      navigate(isAdminPortal ? `/admin/deals/view/${createdDeal.id}` : `/deals/view/${createdDeal.id}`, { replace: true })
+    } else {
+      navigate(isAdminPortal ? '/admin/deals/view' : '/deals/view', {
+        state: {
+          quotationDealLookup: {
+            dealNumber: createdDeal.dealNumber || createdConvertedDeal.dealNumber || '',
+            projectName: createdDeal.name || createdDeal.dealName || createdDeal.projectName || createdConvertedDeal.name || createdConvertedDeal.projectName || '',
+            companyName: createdDeal.companyName || createdDeal.customerName || createdDeal.accountName || createdConvertedDeal.accountName || row.name || '',
+          },
         },
-      },
-    })
+      })
+    }
   }
 
   const handleViewLinkedDeal = (row) => {

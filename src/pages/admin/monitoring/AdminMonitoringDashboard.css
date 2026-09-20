@@ -1,21 +1,30 @@
-.monitoring-dashboard {
+.monitoring-dashboard-transparent {
   padding: 20px;
-  background-color: var(--bg-primary, #ffffff);
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  background-color: transparent; /* Changed from white to transparent */
 }
 
-.monitoring-header {
-  margin-bottom: 24px;
+.monitoring-header-logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+  text-align: center;
 }
 
-.monitoring-header h1 {
+.monitoring-main-logo {
+  max-width: 280px; /* Increased logo size */
+  height: auto;
+  margin-bottom: 16px;
+}
+
+.monitoring-header-text h1 {
   margin: 0 0 8px 0;
-  font-size: 1.5rem;
+  font-size: 1.8rem; /* Slightly larger text */
   color: var(--text-primary, #333333);
 }
 
-.monitoring-header p {
+.monitoring-header-text p {
   margin: 0;
   color: var(--text-secondary, #666666);
 }

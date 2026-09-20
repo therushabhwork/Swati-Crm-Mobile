@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import swatiLogo from '../../assets/swati-logo.png'
-import lumosLogo from '../../assets/lumos-logo.svg'
 import {
   FaBell,
   FaCalendarAlt,
@@ -71,36 +69,9 @@ const LumosRailMark = () => (
   </span>
 )
 
-const SidebarTopCard = ({ isAdmin, isCollapsed, displayName, user }) => {
-  const normalizedUser = String(user?.email || user?.username || user?.name || '').trim().toLowerCase()
-  const isKeval = normalizedUser === 'keval@swatiswitchgears.com' || normalizedUser === 'keval v shah'
-  const company = String(user?.company || '').trim().toLowerCase()
-  const LUMOS_USERS = ["sahana prasenjit", "kuldeep nayi", "manish patel", "vishal vandra", "amiha purohit", "vihal memaria", "jaydip chavda", "dhara", "demo"];
-  const isLumos = company.includes("lumos") || LUMOS_USERS.includes(normalizedUser) || normalizedUser.includes("@lumossolution.com") || normalizedUser.includes("@gmail.com")
-
-  return (
-    <div className="sb-top-card" style={{ padding: '20px 16px', background: 'transparent', borderBottom: 'none' }}>
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'center', justifyContent: 'center', width: '100%', opacity: isCollapsed ? 0.5 : 1, transition: 'opacity 0.2s ease' }}>
-        {(isKeval || !isLumos) && (
-          <img 
-            src={swatiLogo} 
-            alt="Swati Switchgears Logo" 
-            style={{ 
-              maxWidth: isKeval ? '45%' : '100%', 
-              height: 'auto',
-              maxHeight: '65px', 
-              objectFit: 'contain',
-            }} 
-          />
-        )}
-      </div>
-    </div>
+  const SectionLabel = ({ children, isCollapsed }) => (
+    isCollapsed ? null : <div className="sb-section-label">{children}</div>
   )
-}
-
-const SectionLabel = ({ children, isCollapsed }) => (
-  isCollapsed ? null : <div className="sb-section-label">{children}</div>
-)
 
 const SubLink = ({ to, label, accent, end, isActiveMatch }) => (
   <NavLink
@@ -315,7 +286,6 @@ const Sidebar = ({ isAdmin = false }) => {
     return (
       <aside className={`sidebar sidebar--user ${isSidebarCollapsed ? 'sidebar--collapsed' : ''}`}>
         <nav className="sb-nav">
-          <SidebarTopCard isAdmin={false} isCollapsed={isSidebarCollapsed} displayName={displayName} user={user} />
 
           <div className="sb-view-toolbar" aria-label="Sidebar view options">
             {USER_SIDEBAR_TOOLBAR.slice(0, 2).map((item) => {
@@ -470,7 +440,6 @@ const Sidebar = ({ isAdmin = false }) => {
   return (
     <aside className={`sidebar sidebar--admin ${isSidebarCollapsed ? 'sidebar--collapsed' : ''}`}>
       <nav className="sb-nav">
-        <SidebarTopCard isAdmin isCollapsed={isSidebarCollapsed} displayName={displayName} user={user} />
 
         <div className="sb-view-toolbar" aria-label="Sidebar view options">
           <NavLink

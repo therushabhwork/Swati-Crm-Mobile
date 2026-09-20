@@ -12,8 +12,8 @@
   isolation: isolate;
   border: 1px solid var(--crm-shell-border, rgba(255, 255, 255, 0.68));
   border-radius: var(--radius-lg);
-  background: var(--crm-panel-bg, var(--glass-surface));
-  box-shadow: var(--crm-shell-shadow, var(--shadow-sm));
+  background: transparent !important;
+  box-shadow: none !important;
   backdrop-filter: blur(var(--glass-blur-strong));
   -webkit-backdrop-filter: blur(var(--glass-blur-strong));
 }
@@ -726,10 +726,10 @@
 }
 
 [data-theme="dark"] .right-panel {
-  background: var(--crm-panel-bg);
+  background: transparent !important;
   border-color: var(--crm-shell-border);
   color: #eef7fc;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.36);
+  box-shadow: none !important;
 }
 
 [data-theme="dark"] .right-panel-section,
@@ -788,7 +788,6 @@
 }
 
 [data-theme="dark"] :where(
-  .right-panel,
   .rp-card,
   .rp-section,
   .rp-action-card,

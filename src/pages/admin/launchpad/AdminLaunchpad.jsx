@@ -12,45 +12,7 @@ import {
 import { adminModules } from '../../../features/adminLaunchpad/adminModules'
 import { buildAdminDealCustomViewUrl } from '../../../features/adminDeals/config/adminDealViews'
 import { getAdminDealCustomViews, subscribeAdminDealCustomViews } from '../../../features/adminDeals/customViews/dealCustomViewStorage'
-import swatiLogo from '../../../assets/swati-logo.png'
-import lumosLogo from '../../../assets/lumos-logo.svg'
 import './AdminLaunchpad.css'
-
-const LUMOS_ONLY_USERS = [
-  "sahana prasenjit",
-  "kuldeep nayi",
-  "manish patel",
-  "vishal vandra",
-  "amiha purohit",
-  "vihal memaria",
-  "jaydip chavda",
-  "dhara",
-  "demo"
-]
-
-const getMonitoringCardLogos = (user) => {
-  const username = String(user?.name || user?.email || '').trim().toLowerCase()
-  
-  if (username === 'keval v shah' || username === 'keval@swatiswitchgears.com') {
-    return { showSwati: true, showLumos: false }
-  }
-  
-  if (
-    LUMOS_ONLY_USERS.includes(username) || 
-    username.includes('@lumossolution.com') ||
-    username.includes('@gmail.com')
-  ) {
-    return { showSwati: false, showLumos: true }
-  }
-
-  return { showSwati: true, showLumos: false }
-}
-
-const chunkModules = (modules, chunkSize) => (
-  Array.from({ length: Math.ceil(modules.length / chunkSize) }, (_, index) => (
-    modules.slice(index * chunkSize, index * chunkSize + chunkSize)
-  ))
-)
 
 const isKevalVShah = (user = {}) => {
   const v = String(user?.name || user?.email || '').trim().toLowerCase()
@@ -76,7 +38,6 @@ const AdminLaunchpad = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
   const isKeval = isKevalVShah(user)
-  const { showSwati, showLumos } = getMonitoringCardLogos(user)
   const [defaultRoute, setDefaultRoute] = useState(() => getAdminDefaultModuleRoute(user))
   const [dealCustomViews, setDealCustomViews] = useState(() => getAdminDealCustomViews())
 
@@ -105,14 +66,6 @@ const AdminLaunchpad = () => {
     launchpadModules.find((module) => module.route === defaultRoute)?.title || 'Not Set'
   ), [defaultRoute, launchpadModules])
 
-  const featuredModules = useMemo(() => (
-    launchpadModules.slice(0, 3)
-  ), [launchpadModules])
-
-  const remainingModuleRows = useMemo(() => (
-    chunkModules(launchpadModules.slice(3), 4)
-  ), [launchpadModules])
-
   return (
     <div className="lp-page">
       <Header isAdmin />
@@ -124,10 +77,6 @@ const AdminLaunchpad = () => {
             <section className="lp-modules-shell">
               <div className="lp-modules-header">
                 <div className="lp-modules-copy">
-                  <div className="lp-logo-strip">
-                    {showSwati && <img className="lp-header-logo" src={swatiLogo} alt="Swati Logo" />}
-                    {showLumos && <img className="lp-header-logo" src={lumosLogo} alt="Lumos Logo" />}
-                  </div>
                   <span className="lp-modules-kicker">Admin Workspace</span>
                   <h1 className="lp-modules-title">LaunchPad</h1>
                   <p className="lp-modules-subtitle">
@@ -146,8 +95,8 @@ const AdminLaunchpad = () => {
                 </div>
               </div>
 
-              <div className="lp-featured-grid">
-                {featuredModules.map((module, moduleIndex) => {
+              <div className="lp-modules-grid">
+                {launchpadModules.map((module, moduleIndex) => {
                   const Icon = module.icon
                   const isDefault = defaultRoute === module.route
 
@@ -158,7 +107,7 @@ const AdminLaunchpad = () => {
                       variants={cardMotion}
                       initial="hidden"
                       animate="visible"
-                      className={`lp-card lp-card--featured lp-card--${module.accent}`}
+                      className={`lp-card lp-card--${module.accent}`}
                     >
                       <button
                         type="button"
@@ -180,49 +129,8 @@ const AdminLaunchpad = () => {
                   )
                 })}
               </div>
-
-              <div className="lp-module-rows">
-                {remainingModuleRows.map((moduleRow, rowIndex) => (
-                  <div key={`module-row-${rowIndex}`} className="lp-module-row">
-                    {moduleRow.map((module, moduleIndex) => {
-                      const Icon = module.icon
-                      const isDefault = defaultRoute === module.route
-
-                      return (
-                        <motion.div
-                          key={module.id}
-                          custom={moduleIndex}
-                          variants={cardMotion}
-                          initial="hidden"
-                          animate="visible"
-                          className={`lp-card lp-card--${module.accent}`}
-                        >
-                          <button
-                            type="button"
-                            className={`lp-card-top lp-card-top--${module.accent}`}
-                            onClick={() => navigate(module.route)}
-                          >
-                            <span className="lp-card-icon"><Icon /></span>
-                            <span className={`lp-card-title${isKeval ? ' lp-card-title--full' : ''}`}>{module.title}</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            className={`lp-card-footer${isDefault ? ' lp-card-footer--active' : ''}`}
-                            onClick={() => handleDefaultSelection(module.route)}
-                          >
-                            Set As Default Module
-                          </button>
-                        </motion.div>
-                      )
-                    })}
-                  </div>
-                ))}
-              </div>
             </section>
           </div>
-
-          {/* Expiry bar removed as requested */}
         </main>
 
         <RightPanel />

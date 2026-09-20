@@ -7,8 +7,8 @@
   overflow: hidden auto;
   border: 1px solid var(--crm-shell-border, var(--border-subtle));
   border-radius: var(--radius-lg);
-  background: var(--crm-panel-bg, var(--surface-card));
-  box-shadow: var(--crm-shell-shadow, var(--shadow-sm));
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .sidebar::before,
@@ -542,7 +542,7 @@
 }
 
 [data-theme="dark"] .sidebar {
-  background: var(--crm-panel-bg);
+  background: transparent !important;
   border-color: var(--crm-shell-border);
 }
 

@@ -56,6 +56,20 @@
   box-sizing: border-box;
 }
 
+.header-panel--left {
+  justify-content: flex-start;
+  overflow: visible;
+  padding-left: 1rem;
+  margin-right: auto;
+}
+
+.global-header-logo {
+  max-height: 72px;
+  width: auto;
+  object-fit: contain;
+  margin-top: 4px;
+}
+
 .header-panel::before,
 .header-panel::after {
   display: none;

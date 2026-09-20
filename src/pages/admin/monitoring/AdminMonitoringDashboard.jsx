@@ -54,11 +54,7 @@ export const AdminMonitoringDashboard = () => {
   }, [deals, quotations])
 
   return (
-    <div className="monitoring-dashboard">
-      <header className="monitoring-header">
-        <h1>Monitoring Dashboard</h1>
-        <p>Real-time overview of CRM activities and metrics</p>
-      </header>
+    <div className="monitoring-dashboard-transparent">
 
       <div className="monitoring-metrics-grid">
         <div className="metric-card">

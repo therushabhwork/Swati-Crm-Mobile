@@ -446,6 +446,10 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
   return (
     <>
       <header className={`header ${isAdmin ? 'header--admin' : 'header--user'}`}>
+        <div className="header-panel header-panel--left">
+          <img src={swatiLogo} alt="Swati CRM Logo" className="global-header-logo" />
+        </div>
+
         <div className="header-panel header-panel--center">
         </div>
 

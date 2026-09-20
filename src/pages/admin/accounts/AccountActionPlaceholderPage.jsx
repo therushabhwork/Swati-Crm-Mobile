@@ -160,18 +160,23 @@ const AccountActionPlaceholderPage = () => {
       const createdDeal = conversionResult.data?.deal || {}
       const createdConvertedDeal = conversionResult.data?.convertedDeal || {}
 
-      addNotification('success', 'Account converted', 'Deal and Converted Deal were created successfully. Opening Search Deal.')
-      navigate(searchDealPagePath, {
-        replace: true,
-        state: {
-          editDealId: createdDeal.id || '',
-          quotationDealLookup: {
-            dealNumber: createdDeal.dealNumber || createdConvertedDeal.dealNumber || '',
-            projectName: createdDeal.dealName || createdDeal.projectName || createdConvertedDeal.name || createdConvertedDeal.projectName || '',
-            companyName: createdDeal.customerName || createdDeal.accountName || createdConvertedDeal.accountName || selectedAccount.name || '',
+      addNotification('success', 'Account converted', 'Deal and Converted Deal were created successfully.')
+
+      if (createdDeal.id) {
+        navigate(isAdminUser ? `/admin/deals/view/${createdDeal.id}` : `/deals/view/${createdDeal.id}`, { replace: true })
+      } else {
+        navigate(searchDealPagePath, {
+          replace: true,
+          state: {
+            editDealId: createdDeal.id || '',
+            quotationDealLookup: {
+              dealNumber: createdDeal.dealNumber || createdConvertedDeal.dealNumber || '',
+              projectName: createdDeal.dealName || createdDeal.projectName || createdConvertedDeal.name || createdConvertedDeal.projectName || '',
+              companyName: createdDeal.customerName || createdDeal.accountName || createdConvertedDeal.accountName || selectedAccount.name || '',
+            },
           },
-        },
-      })
+        })
+      }
     }
 
     runConversion()

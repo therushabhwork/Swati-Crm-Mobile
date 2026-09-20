@@ -657,25 +657,9 @@ html body #root .lp-page .header-panel::after {
   text-overflow: ellipsis;
 }
 
-.lp-featured-grid {
+.lp-modules-grid {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-  align-items: stretch;
-  margin-bottom: 1rem;
-  perspective: 1400px;
-}
-
-.lp-module-rows {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  gap: 1rem;
-}
-
-.lp-module-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
@@ -1133,11 +1117,7 @@ html body #root .lp-page .header-panel::after {
     min-width: 0;
   }
 
-  .lp-featured-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .lp-module-row {
+  .lp-modules-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -1161,8 +1141,7 @@ html body #root .lp-page .header-panel::after {
     grid-template-columns: 1fr;
   }
 
-  .lp-featured-grid,
-  .lp-module-row {
+  .lp-modules-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -1292,8 +1271,7 @@ html body #root .lp-page .header-panel::after {
   object-fit: contain;
 }
 
-.lp-page .lp-featured-grid,
-.lp-page .lp-module-row {
+.lp-page .lp-modules-grid {
   grid-auto-rows: 1fr;
 }
 
