@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FiChevronDown } from 'react-icons/fi'
 import { useClickOutside } from '../../../hooks'
 import { ACCOUNT_ROW_ACTIONS } from '../../../features/adminAccounts/config/accountActions'
 import { openAdminAccountActionPage } from '../../../features/adminAccounts/utils/accountNavigation'
@@ -267,57 +266,16 @@ const AccountsLegacyBoard = ({
                   return (
                     <td key={column.key}>
                       {column.clickable ? (
-                        rowActionsEnabled ? (
-                          <div
-                            className={`admin-accounts-cell-action-wrap ${openMenuId === row.id ? 'admin-accounts-cell-action-wrap-open' : ''}`}
-                            ref={openMenuId === row.id ? activeMenuRef : null}
-                          >
-                            <button
-                              type="button"
-                              className="admin-accounts-cell-link"
-                              onClick={() => {
-                                setOpenMenuId(null)
-                                onAccountOpen(row)
-                              }}
-                            >
-                              {clickableContent}
-                            </button>
-                            <button
-                              type="button"
-                              className="admin-accounts-cell-menu-trigger"
-                              onClick={(event) => toggleRowMenu(row.id, event)}
-                              aria-label={`Open actions for ${row.accountNumber}`}
-                            >
-                              <FiChevronDown />
-                            </button>
-
-                            {openMenuId === row.id ? (
-                              <div className="admin-accounts-row-menu" style={menuStyle}>
-                                {getVisibleRowActions(row).map((action) => (
-                                  <button
-                                    key={action.key}
-                                    type="button"
-                                    className="admin-accounts-row-menu-item"
-                                    onClick={() => handleMenuAction(action, row)}
-                                  >
-                                    {action.label}
-                                  </button>
-                                ))}
-                              </div>
-                            ) : null}
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            className="admin-accounts-cell-link admin-accounts-cell-link-standalone"
-                            onClick={() => {
-                              setOpenMenuId(null)
-                              onAccountOpen(row)
-                            }}
-                          >
-                            {clickableContent}
-                          </button>
-                        )
+                        <button
+                          type="button"
+                          className="admin-accounts-cell-link admin-accounts-cell-link-standalone"
+                          onClick={() => {
+                            setOpenMenuId(null)
+                            onAccountOpen(row)
+                          }}
+                        >
+                          {clickableContent}
+                        </button>
                       ) : (
                         cellContent
                       )}

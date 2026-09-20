@@ -206,6 +206,7 @@ const AddAccountWizard = () => {
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState(initialFormData)
   const [errors, setErrors] = useState({})
+  const [, setValidationNotice] = useState([])
   const [saving, setSaving] = useState(false)
   const [ownerOptions, setOwnerOptions] = useState([])
 

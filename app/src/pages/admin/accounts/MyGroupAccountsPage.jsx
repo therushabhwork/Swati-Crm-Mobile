@@ -413,6 +413,88 @@ const filterBoardDataByHiddenStages = (boardData, hiddenStageKeys = []) => {
   }
 }
 
+const getAccountOpenIdentifiers = (row = {}) => [
+  row.id,
+  row._id,
+  row.mongoId,
+  row.accountId,
+  row.sourceAccountId,
+  row.originalAccountId,
+  row.convertedFromAccountId,
+  row.convertedFromAccount,
+  row.accountNumber,
+  row.accountNo,
+  row.raw?.id,
+  row.raw?._id,
+  row.raw?.mongoId,
+  row.raw?.accountId,
+  row.raw?.sourceAccountId,
+  row.raw?.originalAccountId,
+  row.raw?.convertedFromAccountId,
+  row.raw?.convertedFromAccount,
+  row.raw?.accountNumber,
+  row.raw?.accountNo,
+  row.raw?.formData?.id,
+  row.raw?.formData?._id,
+  row.raw?.formData?.accountId,
+  row.raw?.formData?.sourceAccountId,
+  row.raw?.formData?.originalAccountId,
+  row.raw?.formData?.convertedFromAccountId,
+  row.raw?.formData?.convertedFromAccount,
+  row.raw?.formData?.accountNumber,
+  row.raw?.formData?.accountNo,
+]
+  .map((value) => String(value || '').trim())
+  .filter(Boolean)
+
+const findAccountRecordForOpen = (records = [], row = {}) => {
+  const identifiers = new Set(getAccountOpenIdentifiers(row))
+  if (identifiers.size === 0) return null
+
+  return records.find((record) => (
+    getAccountOpenIdentifiers(record).some((value) => identifiers.has(value))
+  )) || null
+}
+
+const getAccountStageValue = (record) => {
+  const account = record || {}
+
+  return String(
+    account.stage
+    || account.accountStage
+    || account.accountState
+    || account.status
+    || account.raw?.stage
+    || account.raw?.accountStage
+    || account.raw?.accountState
+    || account.raw?.status
+    || account.raw?.formData?.stage
+    || account.raw?.formData?.accountStage
+    || account.raw?.formData?.accountState
+    || account.raw?.formData?.status
+    || ''
+  ).trim()
+}
+
+const isConvertedAccountRecord = (record) => {
+  const account = record || {}
+
+  return Boolean(
+    account.isConverted
+    || account.stage === 'converted'
+    || account.convertedAs
+    || account.convertedContextNumber
+    || account.convertedDealId
+    || account.dealId
+    || account.raw?.isConverted
+    || account.raw?.stage === 'converted'
+    || account.raw?.convertedAs
+    || account.raw?.convertedContextNumber
+    || account.raw?.convertedDealId
+    || account.raw?.dealId
+  )
+}
+
 const MyGroupAccountsPage = ({ variantKey = 'myGroup' }) => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -589,10 +671,17 @@ const MyGroupAccountsPage = ({ variantKey = 'myGroup' }) => {
     const selectedIds = new Set(selectedAccountIds.map((id) => String(id)))
     return filteredAllStageRows.filter((row) => selectedIds.has(String(row.id)))
   }, [filteredAllStageRows, selectedAccountIds])
-  const selectedAccount = useMemo(
-    () => getAccountById(boardData.records, selectedAccountId),
-    [boardData.records, selectedAccountId]
-  )
+  const selectedAccount = useMemo(() => {
+    const directMatch = getAccountById(boardData.records, selectedAccountId)
+    if (directMatch) return directMatch
+
+    return findAccountRecordForOpen([
+      ...paginatedRows,
+      ...filteredRows,
+      ...filteredAllStageRows,
+      ...boardData.records,
+    ], { id: selectedAccountId })
+  }, [boardData.records, filteredAllStageRows, filteredRows, paginatedRows, selectedAccountId])
 
   const updateUrlState = useCallback((updates, replace = false) => {
     const nextParams = new URLSearchParams(searchParams)
@@ -625,7 +714,16 @@ const MyGroupAccountsPage = ({ variantKey = 'myGroup' }) => {
   }, [selectedAccount, selectedAccountId, updateUrlState])
 
   useEffect(() => {
-    if (showStageTabs && selectedAccount && selectedAccount[selectedTabField] !== activeStage) {
+    const selectedStage = getAccountStageValue(selectedAccount)
+    const isConvertedVisibleInNew = activeStage === 'new' && isConvertedAccountRecord(selectedAccount)
+
+    if (
+      showStageTabs
+      && selectedAccount
+      && selectedStage
+      && selectedStage !== activeStage
+      && !isConvertedVisibleInNew
+    ) {
       updateUrlState({ accountId: null }, true)
     }
   }, [activeStage, selectedAccount, selectedTabField, showStageTabs, updateUrlState])
@@ -708,7 +806,15 @@ const MyGroupAccountsPage = ({ variantKey = 'myGroup' }) => {
   const drawerActions = isAdminPortal ? undefined : USER_ACCOUNT_DRAWER_ACTIONS
 
   const handleOpenAccount = (row) => {
-    updateUrlState({ accountId: row.id })
+    const matchedRecord = findAccountRecordForOpen([
+      ...paginatedRows,
+      ...filteredRows,
+      ...filteredAllStageRows,
+      ...boardData.records,
+    ], row)
+    const accountId = matchedRecord?.id || getAccountOpenIdentifiers(row)[0]
+    if (!accountId) return
+    updateUrlState({ accountId })
   }
 
   const handleConvertToDeal = async (row) => {
