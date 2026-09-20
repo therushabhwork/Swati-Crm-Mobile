@@ -42,9 +42,10 @@ import { getStatusColor, formatDate } from '../../utils/helpers'
 import './AdminPanel.css'
 
 const QUICK_NAV = [
-  { id: 'dash', dotColor: '#3498db', label: 'Start with Dashboard', route: '/admin/monitoring' },
+  { id: 'dash', dotColor: '#3498db', label: 'Start with Dashboard', route: '/admin/monitoring/dashboard' },
   { id: 'work', dotColor: '#bdc3c7', label: 'Let me check with my work and status', route: '/admin/my-work-status' },
   { id: 'reports', dotColor: '#e67e22', label: 'Analyze and monitor custom reports', route: '/admin/reports/custom' },
+  { id: 'matrix', dotColor: '#9b59b6', label: 'Matrix Reports', route: '/admin/reports/matrix' },
   { id: 'admin', dotColor: '#27ae60', label: 'Take me to Administration', route: '/admin/settings' },
   { id: 'profile', dotColor: '#f1c40f', label: 'My User Profile', route: '/admin/user-management' },
 ]

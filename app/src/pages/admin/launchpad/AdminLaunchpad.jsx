@@ -93,8 +93,10 @@ const AdminLaunchpad = () => {
           <div className="lp-content lp-content--modules-only">
             <section className="lp-modules-shell">
               <div className="lp-modules-header">
-                <div className="lp-modules-copy" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                  <img src={swatiLogo} alt="Swati Logo" style={{ height: '120px', marginBottom: '24px' }} />
+                <div className="lp-modules-copy">
+                  <div className="lp-logo-strip">
+                    <img className="lp-header-logo" src={swatiLogo} alt="Swati Logo" />
+                  </div>
                   <span className="lp-modules-kicker">Admin Workspace</span>
                   <h1 className="lp-modules-title">LaunchPad</h1>
                   <p className="lp-modules-subtitle">

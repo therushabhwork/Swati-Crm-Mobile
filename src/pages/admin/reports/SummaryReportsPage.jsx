@@ -139,7 +139,7 @@ const formatSummaryGeneratedOn = (value = new Date()) => {
   if (Number.isNaN(date.getTime())) return ''
 
   const day = String(date.getDate()).padStart(2, '0')
-  const month = date.toLocaleString('en-IN', { month: 'short' })
+  const month = date.toLocaleString('en-IN', { month: 'short' }).replace(/^Sep$/i, 'Sept')
   const year = date.getFullYear()
   const weekday = date.toLocaleString('en-IN', { weekday: 'short' })
   const minutes = String(date.getMinutes()).padStart(2, '0')
@@ -289,6 +289,132 @@ const buildMonthlyStatusExportData = (
     reportFilter: config.configureFilters === 'YES'
       ? `${config.timeField} ${config.timePeriod}`
       : 'All Records',
+    generatedOn: formatSummaryGeneratedOn(new Date()),
+    owners,
+    rows: matrixRows,
+    columns,
+    tableRows: [...tableRows, totalsRow],
+    totalRecords: filteredRecords.length,
+  }
+}
+
+const titleizeMatrixValue = (value, fallback = 'Unspecified') => {
+  const normalized = String(value || '').trim().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ')
+  if (!normalized) return fallback
+  return normalized.replace(/\b\w/g, (character) => character.toUpperCase())
+}
+
+const getSummaryMatrixRecordDate = (record = {}) => parseReportDate(
+  record.createdAt
+  || record.addedOn
+  || record.addedDate
+  || record.customerDate
+  || record.dealDate
+  || record.updatedAt
+)
+
+const getSummaryMatrixOwner = (record = {}, entityType = '') => {
+  const ownerValue = entityType === 'Customers'
+    ? record.customerOwner || record.customerOwnerDisplay || record.customerOwnerName || record.ownerName || record.owner || record.ownerCode
+    : record.dealOwner || record.dealOwnerDisplay || record.dealOwnerName || record.ownerName || record.owner || record.ownerCode
+
+  return normalizeOwnerDisplayValue(ownerValue) || 'Unassigned'
+}
+
+const getSummaryMatrixStatus = (record = {}, entityType = '') => {
+  const statusValue = entityType === 'Customers'
+    ? record.customerStatus || record.status || record.stage
+    : record.dealStatus || record.status || record.stage
+
+  return titleizeMatrixValue(statusValue)
+}
+
+const buildSummaryMatrixExportData = ({
+  entityType,
+  records = [],
+  availableUsers = [],
+  reportName = '',
+} = {}) => {
+  const now = new Date()
+  const filteredRecords = (Array.isArray(records) ? records : []).filter((record) => {
+    const recordDate = getSummaryMatrixRecordDate(record)
+    if (!recordDate) return true
+
+    return (
+      recordDate.getFullYear() === now.getFullYear()
+      && recordDate.getMonth() === now.getMonth()
+    )
+  })
+
+  const owners = dedupeByNormalizedValue([
+    ...availableUsers.map(normalizeOwnerDisplayValue),
+    ...filteredRecords.map((record) => getSummaryMatrixOwner(record, entityType)),
+  ])
+  const statuses = dedupeByNormalizedValue(filteredRecords.map((record) => getSummaryMatrixStatus(record, entityType)))
+    .sort((left, right) => left.localeCompare(right))
+  const statusHeader = `${entityType === 'Deals' ? 'Deal' : 'Customer'} Status`
+
+  const matrixRows = statuses.map((status) => ({
+    status,
+    counts: owners.reduce((lookup, owner) => {
+      lookup[owner] = 0
+      return lookup
+    }, {}),
+    total: 0,
+  }))
+  const matrixByStatus = matrixRows.reduce((lookup, row) => {
+    lookup[normalizeLabel(row.status)] = row
+    return lookup
+  }, {})
+  const normalizedOwnerLookup = owners.reduce((lookup, owner) => {
+    lookup[normalizeLabel(owner)] = owner
+    return lookup
+  }, {})
+
+  filteredRecords.forEach((record) => {
+    const statusRow = matrixByStatus[normalizeLabel(getSummaryMatrixStatus(record, entityType))]
+    const owner = normalizedOwnerLookup[normalizeLabel(getSummaryMatrixOwner(record, entityType))]
+    if (!statusRow || !owner) return
+
+    statusRow.counts[owner] += 1
+    statusRow.total += 1
+  })
+
+  const columns = [
+    { key: 'status', label: statusHeader, width: 24 },
+    ...owners.map((owner) => ({
+      key: owner,
+      label: owner,
+      align: 'center',
+      type: 'integer',
+      width: Math.max(14, owner.length + 2),
+    })),
+    { key: 'total', label: 'Total', align: 'center', type: 'integer', width: 12 },
+  ]
+
+  const tableRows = matrixRows.map((row) => ({
+    status: row.status,
+    ...owners.reduce((lookup, owner) => {
+      lookup[owner] = row.counts[owner] || 0
+      return lookup
+    }, {}),
+    total: row.total,
+  }))
+
+  const totalsRow = {
+    status: 'Total',
+    ...owners.reduce((lookup, owner) => {
+      lookup[owner] = matrixRows.reduce((sum, row) => sum + Number(row.counts[owner] || 0), 0)
+      return lookup
+    }, {}),
+    total: filteredRecords.length,
+  }
+
+  return {
+    title: 'CRM Summary',
+    reportName: reportName || `Monthly ${entityType}`,
+    comparison: `${statusHeader} vs ${entityType === 'Deals' ? 'Deal' : 'Customer'} Owner`,
+    reportFilter: 'Added On This Month',
     generatedOn: formatSummaryGeneratedOn(new Date()),
     owners,
     rows: matrixRows,
@@ -902,6 +1028,7 @@ const SummaryReportsPage = () => {
   const visibleReports = useMemo(() => (
     reports.filter((report) => report.entityType === activeCategory)
   ), [activeCategory, reports])
+  const reportGeneratedOn = useMemo(() => formatSummaryGeneratedOn(new Date()), [activeCategory])
 
   const monthlyStatusExportData = useMemo(
     () => buildMonthlyStatusExportData(
@@ -911,6 +1038,20 @@ const SummaryReportsPage = () => {
     ),
     [monthlyStatusConfig, monthlyStatusOwnerOptions, normalizedAccountsBoard.records],
   )
+  const summaryMatrixExportDataByType = useMemo(() => ({
+    Customers: buildSummaryMatrixExportData({
+      entityType: 'Customers',
+      records: customers,
+      availableUsers,
+      reportName: 'Monthly Customers',
+    }),
+    Deals: buildSummaryMatrixExportData({
+      entityType: 'Deals',
+      records: deals,
+      availableUsers,
+      reportName: 'Monthly Deals',
+    }),
+  }), [availableUsers, customers, deals])
 
   const handleNewSummaryReport = (option) => {
     setActiveCategory(option.category)
@@ -966,7 +1107,7 @@ const SummaryReportsPage = () => {
   const handleSummaryExportAction = useCallback((actionKey, report) => {
     if (report.id === MONTHLY_STATUS_REPORT_ID) {
       const monthlyStatusMetadata = [
-        { label: 'Generated On', value: monthlyStatusExportData.generatedOn },
+        { label: 'Generated On', value: reportGeneratedOn },
         { label: 'Summary Report Name', value: monthlyStatusExportData.reportName },
         { label: 'Comparison', value: monthlyStatusExportData.comparison },
         { label: 'Report Filter', value: monthlyStatusExportData.reportFilter },
@@ -987,6 +1128,28 @@ const SummaryReportsPage = () => {
         showToast('success', `${report.title} exported to Excel.`)
         return
       }
+    }
+
+    const matrixExportData = summaryMatrixExportDataByType[report.entityType]
+    if (matrixExportData && actionKey === 'excel') {
+      exportExcelWorkbook({
+        title: matrixExportData.title,
+        subtitle: '',
+        metadata: [
+          { label: 'Generated On', value: reportGeneratedOn },
+          { label: 'Summary Report Name', value: matrixExportData.reportName },
+          { label: 'Comparison', value: matrixExportData.comparison },
+          { label: 'Report Filter', value: matrixExportData.reportFilter },
+          { label: 'Total Records', value: String(matrixExportData.totalRecords) },
+        ],
+        columns: matrixExportData.columns,
+        rows: matrixExportData.tableRows,
+        sheetName: matrixExportData.reportName,
+        filename: buildReportFilename(report, 'xlsx'),
+      })
+      addNotification('success', 'Excel exported', `${report.title} was exported to Excel.`)
+      showToast('success', `${report.title} exported to Excel.`)
+      return
     }
 
     const rows = [
@@ -1024,7 +1187,7 @@ const SummaryReportsPage = () => {
       addNotification('success', 'Excel exported', `${report.title} was exported to Excel.`)
       showToast('success', `${report.title} exported to Excel.`)
     }
-  }, [addNotification, buildReportFilename, monthlyStatusExportData, showToast])
+  }, [addNotification, buildReportFilename, monthlyStatusExportData, reportGeneratedOn, showToast, summaryMatrixExportDataByType])
 
   const handleToggleSummaryCollapse = (reportId) => {
     setCollapsedReportIds((currentValue) => (
@@ -1201,6 +1364,10 @@ const SummaryReportsPage = () => {
         </aside>
 
         <main className="summary-reports-content">
+          <div className="summary-reports-center-heading">
+            <h2>{activeCategory} Summary</h2>
+            <span>{reportGeneratedOn}</span>
+          </div>
           <section className="summary-reports-panel">
             {activeCategory === 'Quotations' ? (
               quotations.map((quotation) => (

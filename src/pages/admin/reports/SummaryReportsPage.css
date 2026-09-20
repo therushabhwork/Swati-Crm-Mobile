@@ -164,6 +164,29 @@
   overflow: visible;
 }
 
+.summary-reports-center-heading {
+  display: grid;
+  justify-items: center;
+  gap: 0.25rem;
+  margin: 0 0 0.9rem;
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
+.summary-reports-center-heading h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.24rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.summary-reports-center-heading span {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 .summary-reports-panel {
   border: 1px solid var(--border-subtle);
   background: var(--surface-card);
@@ -1370,4 +1393,62 @@ html:not([data-theme="dark"]) body .summary-reports-page .summary-report-icon-bt
 html:not([data-theme="dark"]) body .summary-reports-page .summary-report-icon-btn--export :is(svg, .excel-export-button__icon) {
   color: #dc2626 !important;
   fill: currentColor !important;
+}
+/* Matrix UI Custom Styles */
+.matrix-ui-container {
+  padding: 16px;
+  background-color: transparent;
+  border-top: 1px solid var(--border-color, #e0e0e0);
+}
+
+.matrix-ui-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.matrix-ui-generated-on {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #666);
+  font-style: italic;
+}
+
+.matrix-ui-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 4px;
+}
+
+.matrix-ui-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: transparent;
+}
+
+.matrix-ui-table th,
+.matrix-ui-table td {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color, #e0e0e0);
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-primary, #333);
+}
+
+.matrix-ui-table th {
+  background-color: transparent;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #666);
+}
+
+.matrix-ui-table th:first-child,
+.matrix-ui-table td:first-child {
+  text-align: left;
+}
+
+.matrix-ui-total-row td {
+  font-weight: bold;
 }

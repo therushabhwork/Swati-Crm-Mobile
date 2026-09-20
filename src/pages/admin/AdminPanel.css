@@ -1430,3 +1430,70 @@ html:not([data-theme="dark"]) select.ap-performance-select option {
   color: #1f2937 !important;
   -webkit-text-fill-color: #1f2937 !important;
 }
+
+/* Monitoring transparency/readability pass. */
+.layout--admin .admin-panel {
+  background: transparent !important;
+}
+
+html:not([data-theme="dark"]) .layout--admin :where(
+  .ap-tabbar,
+  .ap-welcome-block,
+  .ap-todo-panel,
+  .ap-dashboard-card,
+  .ap-performance-card,
+  .ap-stat-card,
+  .ap-mycrm-profile-card,
+  .ap-mycrm-summary-card
+) {
+  background: rgba(255, 255, 255, 0.72) !important;
+  border-color: rgba(185, 28, 28, 0.18) !important;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08) !important;
+}
+
+html:not([data-theme="dark"]) .layout--admin :where(
+  .ap-dashboard-card-header,
+  .ap-mycrm-summary-header
+) {
+  background: rgba(255, 255, 255, 0.58) !important;
+}
+
+.layout--admin :where(
+  .ap-welcome-heading,
+  .ap-dashboard-card-title,
+  .ap-dashboard-card-title-link,
+  .ap-todo-title,
+  .ap-quick-label,
+  .ap-performance-card strong,
+  .ap-mycrm-profile-copy h2
+) {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+}
+
+.layout--admin :where(
+  .ap-welcome-sub,
+  .ap-dashboard-subtitle,
+  .ap-dashboard-grid-row,
+  .ap-dashboard-grid-row span,
+  .ap-dashboard-bar-group span,
+  .ap-performance-card span,
+  .ap-mycrm-profile-list span
+) {
+  color: var(--text-secondary) !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .layout--admin :where(
+  .ap-tabbar,
+  .ap-welcome-block,
+  .ap-todo-panel,
+  .ap-dashboard-card,
+  .ap-performance-card,
+  .ap-stat-card,
+  .ap-mycrm-profile-card,
+  .ap-mycrm-summary-card
+) {
+  background: rgba(18, 32, 42, 0.78) !important;
+  border-color: rgba(240, 255, 253, 0.42) !important;
+}

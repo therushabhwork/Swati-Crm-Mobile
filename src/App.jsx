@@ -44,6 +44,8 @@ import Deals from './pages/deals/Deals'
 import ConvertedDeals from './pages/deals/ConvertedDeals'
 import CustomReportsPage from './pages/admin/reports/CustomReportsPage'
 import ReportOutputPage from './pages/admin/reports/ReportOutputPage'
+import MatrixReportsPage from './pages/admin/reports/MatrixReportsPage'
+import AdminMonitoringDashboard from './pages/admin/monitoring/AdminMonitoringDashboard'
 import AddAccountReportPage from './pages/admin/reports/AddAccountReportPage'
 import AddCustomerReportPage from './pages/admin/reports/AddCustomerReportPage'
 import AddDailyStatusReportPage from './pages/admin/reports/AddDailyStatusReportPage'
@@ -306,6 +308,8 @@ function App() {
                 <Route path="accounts/weekly-reports-all" element={<MyGroupAccountsPage variantKey="weeklyReportsAll" />} />
                 <Route path="accounts/sw-baroda-mum" element={<MyGroupAccountsPage variantKey="swBarodaMum" />} />
                 <Route path="accounts/user-wise-leads" element={<MyGroupAccountsPage variantKey="userWiseLeads" />} />
+                <Route path="monitoring/dashboard" element={<AdminMonitoringDashboard />} />
+                <Route path="reports/matrix" element={<MatrixReportsPage />} />
 
                 <Route path="accounts/actions/:actionKey" element={<AccountActionPlaceholderPage />} />
                 <Route path="customers/add" element={<AdminCustomersPage variantKey="add" />} />

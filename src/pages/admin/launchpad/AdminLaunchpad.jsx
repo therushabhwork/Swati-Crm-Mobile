@@ -123,10 +123,10 @@ const AdminLaunchpad = () => {
           <div className="lp-content lp-content--modules-only">
             <section className="lp-modules-shell">
               <div className="lp-modules-header">
-                <div className="lp-modules-copy" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', alignItems: 'center' }}>
-                    {showSwati && <img src={swatiLogo} alt="Swati Logo" style={{ height: '120px' }} />}
-                    {showLumos && <img src={lumosLogo} alt="Lumos Logo" style={{ height: '120px' }} />}
+                <div className="lp-modules-copy">
+                  <div className="lp-logo-strip">
+                    {showSwati && <img className="lp-header-logo" src={swatiLogo} alt="Swati Logo" />}
+                    {showLumos && <img className="lp-header-logo" src={lumosLogo} alt="Lumos Logo" />}
                   </div>
                   <span className="lp-modules-kicker">Admin Workspace</span>
                   <h1 className="lp-modules-title">LaunchPad</h1>

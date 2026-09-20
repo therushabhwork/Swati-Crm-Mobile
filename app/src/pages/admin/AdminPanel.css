@@ -13,10 +13,9 @@
   align-items: center;
   gap: 0.55rem;
   padding: 0.65rem 0.75rem;
-  border: 1px solid rgba(203, 214, 230, 0.9);
+  border: none;
   border-radius: 18px;
   background: var(--surface-card);
-  backdrop-filter: blur(16px);
   box-shadow: var(--shadow-md);
 }
 
@@ -26,7 +25,7 @@
   gap: 0.5rem;
   min-height: 2.85rem;
   padding: 0.72rem 1rem;
-  border: 1px solid rgba(199, 210, 228, 0.95);
+  border: none;
   border-radius: 16px;
   background: var(--surface-card);
   color: var(--text-primary);
@@ -81,7 +80,7 @@
   gap: 0.45rem;
   min-height: 2.85rem;
   padding: 0.72rem 0.95rem;
-  border: 1px solid rgba(202, 213, 229, 0.95);
+  border: none;
   border-radius: 16px 0 0 16px;
   background: var(--surface-card);
   color: var(--text-primary);
@@ -117,8 +116,7 @@
 
 .ap-tab-caret {
   width: 2rem;
-  border: 1px solid rgba(202, 213, 229, 0.95);
-  border-left: none;
+  border: none;
   border-radius: 0 16px 16px 0;
   background: var(--surface-card);
   color: var(--text-muted);
@@ -144,10 +142,9 @@
   position: fixed;
   min-width: 248px;
   padding: 0.45rem;
-  border: 1px solid rgba(186, 196, 211, 0.94);
+  border: none;
   border-radius: 6px;
   background: var(--surface-card);
-  backdrop-filter: blur(18px);
   box-shadow: 0 16px 30px rgba(15, 23, 42, 0.18);
   z-index: 1200;
 }
@@ -1179,4 +1176,71 @@
   .ap-tab-menu-icon-bookmark-active
 ) {
   color: var(--text-primary) !important;
+}
+
+/* Monitoring transparency/readability pass. */
+.layout--admin .admin-panel {
+  background: transparent !important;
+}
+
+html:not([data-theme="dark"]) .layout--admin :where(
+  .ap-tabbar,
+  .ap-welcome-block,
+  .ap-todo-panel,
+  .ap-dashboard-card,
+  .ap-performance-card,
+  .ap-stat-card,
+  .ap-mycrm-profile-card,
+  .ap-mycrm-summary-card
+) {
+  background: rgba(255, 255, 255, 0.72) !important;
+  border-color: rgba(185, 28, 28, 0.18) !important;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08) !important;
+}
+
+html:not([data-theme="dark"]) .layout--admin :where(
+  .ap-dashboard-card-header,
+  .ap-mycrm-summary-header
+) {
+  background: rgba(255, 255, 255, 0.58) !important;
+}
+
+.layout--admin :where(
+  .ap-welcome-heading,
+  .ap-dashboard-card-title,
+  .ap-dashboard-card-title-link,
+  .ap-todo-title,
+  .ap-quick-label,
+  .ap-performance-card strong,
+  .ap-mycrm-profile-copy h2
+) {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+}
+
+.layout--admin :where(
+  .ap-welcome-sub,
+  .ap-dashboard-subtitle,
+  .ap-dashboard-grid-row,
+  .ap-dashboard-grid-row span,
+  .ap-dashboard-bar-group span,
+  .ap-performance-card span,
+  .ap-mycrm-profile-list span
+) {
+  color: var(--text-secondary) !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .layout--admin :where(
+  .ap-tabbar,
+  .ap-welcome-block,
+  .ap-todo-panel,
+  .ap-dashboard-card,
+  .ap-performance-card,
+  .ap-stat-card,
+  .ap-mycrm-profile-card,
+  .ap-mycrm-summary-card
+) {
+  background: rgba(18, 32, 42, 0.78) !important;
+  border-color: rgba(240, 255, 253, 0.42) !important;
 }
