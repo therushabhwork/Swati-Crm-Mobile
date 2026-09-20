@@ -758,3 +758,100 @@
     min-height: 40px;
   }
 }
+
+/* Admin monitoring readability: transparent side navigation without losing labels. */
+.layout--admin .sidebar,
+.layout--admin .sidebar--admin {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+}
+
+.layout--admin .sidebar::before,
+.layout--admin .sidebar::after,
+.layout--admin .sidebar .sb-top-card,
+.layout--admin .sidebar .sb-view-toolbar,
+.layout--admin .sidebar .sb-submenu {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.layout--admin .sidebar .sb-top-card {
+  min-height: 104px !important;
+  justify-content: center !important;
+  padding-top: 0.25rem !important;
+}
+
+.layout--admin .sidebar .sb-top-card-logo {
+  width: 86px !important;
+  height: 86px !important;
+}
+
+html:not([data-theme="dark"]) .layout--admin .sidebar :where(
+  .sb-link,
+  .sb-link span,
+  .sb-link svg,
+  .sb-plain-link,
+  .sb-group-trigger,
+  .sb-sub-link,
+  .sb-section-title,
+  .sb-brand-title
+) {
+  color: #111827 !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .layout--admin .sidebar :where(
+  .sb-link,
+  .sb-link span,
+  .sb-link svg,
+  .sb-plain-link,
+  .sb-group-trigger,
+  .sb-sub-link,
+  .sb-section-title,
+  .sb-brand-title
+) {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Whole CRM sidebar transparency: no white surfaces, no borders, text remains readable. */
+:is(.layout--admin, .layout--user) .sidebar,
+:is(.layout--admin, .layout--user) .sidebar *:not(.sb-top-card-logo) {
+  box-shadow: none !important;
+}
+
+:is(.layout--admin, .layout--user) .sidebar :where(
+  .sb-top-card,
+  .sb-view-toolbar,
+  .sb-today-section,
+  .sb-link,
+  .sb-link--team,
+  .sb-plain-link,
+  .sb-group-trigger,
+  .sb-submenu,
+  .sb-sub-link
+) {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+}
+
+html:not([data-theme="dark"]) :is(.layout--admin, .layout--user) .sidebar :where(a, button, span, small, strong, svg) {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] :is(.layout--admin, .layout--user) .sidebar :where(a, button, span, small, strong, svg) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}

@@ -29,7 +29,9 @@ const normalizeOptions = (options = []) => {
   }, [])
 }
 
-const Select = ({ 
+import { forwardRef } from 'react'
+
+const Select = forwardRef(({ 
   label,
   error,
   options = [],
@@ -38,7 +40,7 @@ const Select = ({
   className = '',
   value = '',
   ...props 
-}) => {
+}, ref) => {
   const normalizedValue = normalizeOptionValue(value)
   const normalizedOptions = normalizeOptions(options)
   const hasSelectedOption = normalizedOptions.some((option) => option.value === normalizedValue)
@@ -56,7 +58,7 @@ const Select = ({
   return (
     <div className={classes}>
       {label && <label className="select-label">{label}</label>}
-      <select className="select-field" {...props} value={normalizedValue}>
+      <select ref={ref} className="select-field" {...props} value={normalizedValue}>
         <option value="">{placeholder}</option>
         {resolvedOptions.map((option) => (
           <option key={option.value} value={option.value}>
@@ -67,6 +69,6 @@ const Select = ({
       {error && <span className="select-error-text">{error}</span>}
     </div>
   )
-}
+})
 
 export default Select

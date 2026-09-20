@@ -928,3 +928,101 @@
   fill: currentColor !important;
   stroke: currentColor !important;
 }
+
+/* Admin monitoring readability: transparent right utility panel with strong text contrast. */
+.layout--admin .right-panel {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+}
+
+.layout--admin .right-panel::before,
+.layout--admin .right-panel::after,
+.layout--admin .right-panel :where(
+  .right-panel-hero,
+  .right-panel-section,
+  .rp-action-card,
+  .rp-entry,
+  .right-panel-stat-card
+) {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html:not([data-theme="dark"]) .layout--admin .right-panel :where(
+  .rp-section-title,
+  .rp-action-card__label,
+  .rp-action-card__title,
+  .rp-action-card__subtitle,
+  .rp-entry-title,
+  .rp-entry-meta,
+  .rp-integration-status,
+  span,
+  strong,
+  svg
+) {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .layout--admin .right-panel :where(
+  .rp-section-title,
+  .rp-action-card__label,
+  .rp-action-card__title,
+  .rp-action-card__subtitle,
+  .rp-entry-title,
+  .rp-entry-meta,
+  .rp-integration-status,
+  span,
+  strong,
+  svg
+) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Whole CRM right panel transparency: remove white cards/borders while keeping labels readable. */
+:is(.layout--admin, .layout--user) .right-panel,
+:is(.layout--admin, .layout--user) .right-panel :where(
+  .right-panel-hero,
+  .right-panel-section,
+  .right-panel-stat-card,
+  .rp-action-card,
+  .rp-action-card--outlook,
+  .rp-entry,
+  .rp-entry-icon-wrap,
+  .rp-action-card__icon
+) {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+:is(.layout--admin, .layout--user) .right-panel::before,
+:is(.layout--admin, .layout--user) .right-panel::after,
+:is(.layout--admin, .layout--user) .right-panel :where(.right-panel-hero, .right-panel-section)::before,
+:is(.layout--admin, .layout--user) .right-panel :where(.right-panel-hero, .right-panel-section)::after {
+  display: none !important;
+}
+
+html:not([data-theme="dark"]) :is(.layout--admin, .layout--user) .right-panel :where(a, button, span, small, strong, p, h1, h2, h3, svg) {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] :is(.layout--admin, .layout--user) .right-panel :where(a, button, span, small, strong, p, h1, h2, h3, svg) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}

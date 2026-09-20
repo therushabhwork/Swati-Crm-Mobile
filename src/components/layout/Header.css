@@ -1545,3 +1545,20 @@ html:not([data-theme="dark"]) .header.header--admin .header-action-cluster > .hd
   opacity: 1 !important;
   visibility: visible !important;
 }
+
+/* Larger header logo treatment. */
+.global-header-logo {
+  max-height: 88px !important;
+  margin-top: 0 !important;
+}
+
+.header-scallop-content {
+  top: -34px !important;
+}
+
+.header-scallop-logo {
+  width: 88px !important;
+  height: 88px !important;
+  max-width: 88px !important;
+  max-height: 88px !important;
+}

@@ -9,6 +9,7 @@ import {
   FaChevronDown,
   FaEdit,
   FaFilePdf,
+  FaFileExcel,
   FaEnvelope,
   FaSave,
   FaTrash,
@@ -33,11 +34,16 @@ import { customerService } from '../../../services/customerService'
 import { exportExcelWorkbook } from '../../../utils/excelExport'
 import { ExcelExportMenuButton } from '../../../components/common/ExcelExportButton'
 import { getCrmOwnerDisplay, isSameCrmOwner } from '../../../features/users/crmUserDirectory'
+import { summaryReportSettingsApi } from '../../../services/summaryReportSettingsApi'
 import './SummaryReportsPage.css'
 
 const CATEGORY_ITEMS = ['Accounts', 'Customers', 'Deals']
 const MONTHLY_STATUS_STORAGE_KEY = 'crm-summary-monthly-status'
+const MONTHLY_CUSTOMERS_STORAGE_KEY = 'crm-summary-monthly-customers'
+const MONTHLY_DEALS_STORAGE_KEY = 'crm-summary-monthly-deals'
 const MONTHLY_STATUS_REPORT_ID = 'summary-accounts-monthly-status'
+const MONTHLY_CUSTOMERS_REPORT_ID = 'summary-customers-monthly-status'
+const MONTHLY_DEALS_REPORT_ID = 'summary-deals-monthly-status'
 const MONTHLY_STATUS_OPTIONS = [
   'New',
   'Follow-up',
@@ -79,11 +85,22 @@ const DEFAULT_MONTHLY_STATUS_CONFIG = {
   statusAll: true,
   selectedStatuses: [...MONTHLY_STATUS_OPTIONS],
   compareBy: 'Account Owner',
-  ownerAll: true,
-  selectedOwners: [...MONTHLY_STATUS_OWNERS],
+  selectedOwner: 'All',
   timeField: 'Added On',
   timePeriod: 'This Month',
   configureFilters: 'YES',
+}
+
+const DEFAULT_MONTHLY_CUSTOMERS_CONFIG = {
+  ...DEFAULT_MONTHLY_STATUS_CONFIG,
+  reportName: 'Monthly Customers',
+  compareBy: 'Customer Owner',
+}
+
+const DEFAULT_MONTHLY_DEALS_CONFIG = {
+  ...DEFAULT_MONTHLY_STATUS_CONFIG,
+  reportName: 'Monthly Deals',
+  compareBy: 'Deal Owner',
 }
 const MONTHLY_STATUS_EXPORT_ROW_CONFIG = [
   { stageKey: 'new', label: 'New' },
@@ -194,7 +211,11 @@ const buildMonthlyStatusExportData = (
     config.statusAll ? MONTHLY_STATUS_OPTIONS : config.selectedStatuses,
   )
   const selectedStatusSet = new Set(activeStatuses.map((entry) => normalizeLabel(entry)))
-  const configuredOwners = dedupeByNormalizedValue(ownerOptions)
+  
+  let configuredOwners = dedupeByNormalizedValue(ownerOptions)
+  if (config.selectedOwner && config.selectedOwner !== 'All') {
+    configuredOwners = configuredOwners.filter(o => normalizeLabel(o) === normalizeLabel(config.selectedOwner))
+  }
 
   const filteredRecords = normalizedRecords.filter((record) => {
     if (!shouldIncludeMonthlyStatusRecord(record, config)) return false
@@ -334,6 +355,7 @@ const buildSummaryMatrixExportData = ({
   records = [],
   availableUsers = [],
   reportName = '',
+  config = {},
 } = {}) => {
   const now = new Date()
   const filteredRecords = (Array.isArray(records) ? records : []).filter((record) => {
@@ -346,10 +368,13 @@ const buildSummaryMatrixExportData = ({
     )
   })
 
-  const owners = dedupeByNormalizedValue([
+  let owners = dedupeByNormalizedValue([
     ...availableUsers.map(normalizeOwnerDisplayValue),
     ...filteredRecords.map((record) => getSummaryMatrixOwner(record, entityType)),
   ])
+  if (config.selectedOwner && config.selectedOwner !== 'All') {
+    owners = owners.filter(o => normalizeLabel(o) === normalizeLabel(config.selectedOwner))
+  }
   const statuses = dedupeByNormalizedValue(filteredRecords.map((record) => getSummaryMatrixStatus(record, entityType)))
     .sort((left, right) => left.localeCompare(right))
   const statusHeader = `${entityType === 'Deals' ? 'Deal' : 'Customer'} Status`
@@ -424,26 +449,7 @@ const buildSummaryMatrixExportData = ({
   }
 }
 
-const readMonthlyStatusConfig = () => {
-  try {
-    const rawValue = window.localStorage.getItem(MONTHLY_STATUS_STORAGE_KEY)
-    if (!rawValue) return DEFAULT_MONTHLY_STATUS_CONFIG
-    const parsedValue = JSON.parse(rawValue)
 
-    return {
-      ...DEFAULT_MONTHLY_STATUS_CONFIG,
-      ...parsedValue,
-      selectedStatuses: Array.isArray(parsedValue?.selectedStatuses) && parsedValue.selectedStatuses.length > 0
-        ? parsedValue.selectedStatuses
-        : DEFAULT_MONTHLY_STATUS_CONFIG.selectedStatuses,
-      selectedOwners: Array.isArray(parsedValue?.selectedOwners) && parsedValue.selectedOwners.length > 0
-        ? parsedValue.selectedOwners
-        : DEFAULT_MONTHLY_STATUS_CONFIG.selectedOwners,
-    }
-  } catch {
-    return DEFAULT_MONTHLY_STATUS_CONFIG
-  }
-}
 
 const formatToggleSummary = (isAllSelected, values) => (
   isAllSelected || values.length === 0 ? 'All' : values.join(', ')
@@ -504,9 +510,6 @@ const SummaryReportCard = ({
         <div className="summary-report-card-actions">
           <button type="button" className="summary-report-icon-btn summary-report-icon-btn-settings" title="Settings" onClick={onOpenSettings}>
             <FaCog />
-          </button>
-          <button type="button" className="summary-report-icon-btn summary-report-icon-btn-edit" title="Edit report" onClick={onEdit}>
-            <FaEdit />
           </button>
           <button type="button" className="summary-report-icon-btn summary-report-icon-btn-delete" title="Delete report" onClick={onDelete}>
             <FaTrash />
@@ -585,6 +588,7 @@ const SummaryReportCard = ({
 const MonthlyStatusSettingsPanel = ({
   draft,
   ownerOptions,
+  statusOptions = MONTHLY_STATUS_OPTIONS,
   onClose,
   onSave,
   onUpdate,
@@ -592,20 +596,27 @@ const MonthlyStatusSettingsPanel = ({
   if (!draft) return null
 
   const handleStatusToggle = (status) => {
-    const nextStatuses = toggleConfigValue(draft.selectedStatuses, status, MONTHLY_STATUS_OPTIONS)
+    let nextStatuses = []
+    if (status === 'All') {
+      nextStatuses = [...statusOptions]
+      onUpdate({ ...draft, statusAll: true, selectedStatuses: nextStatuses })
+      return
+    }
+    
+    const draftStatuses = draft.selectedStatuses || statusOptions
+    const nextSet = new Set(draftStatuses.map(s => normalizeLabel(s)))
+    const normalized = normalizeLabel(status)
+    if (nextSet.has(normalized)) {
+      nextSet.delete(normalized)
+    } else {
+      nextSet.add(normalized)
+    }
+    
+    nextStatuses = statusOptions.filter(entry => nextSet.has(normalizeLabel(entry)))
     onUpdate({
       ...draft,
-      statusAll: nextStatuses.length === MONTHLY_STATUS_OPTIONS.length,
+      statusAll: nextStatuses.length === statusOptions.length,
       selectedStatuses: nextStatuses.length > 0 ? nextStatuses : draft.selectedStatuses,
-    })
-  }
-
-  const handleOwnerToggle = (owner) => {
-    const nextOwners = toggleConfigValue(draft.selectedOwners, owner, ownerOptions)
-    onUpdate({
-      ...draft,
-      ownerAll: nextOwners.length === ownerOptions.length,
-      selectedOwners: nextOwners.length > 0 ? nextOwners : draft.selectedOwners,
     })
   }
 
@@ -650,107 +661,53 @@ const MonthlyStatusSettingsPanel = ({
           </section>
 
           <section className="monthly-status-section">
+            <label className="monthly-status-field mt-2">
+              <span>Select Owner</span>
+              <div className="monthly-status-select-wrapper">
+                <select
+                  className="monthly-status-select"
+                  value={draft.selectedOwner || 'All'}
+                  onChange={(e) => onUpdate({ ...draft, selectedOwner: e.target.value })}
+                >
+                  <option value="All">All Owners</option>
+                  {ownerOptions.map((owner) => (
+                    <option key={owner} value={owner}>
+                      {owner}
+                    </option>
+                  ))}
+                </select>
+                <FaChevronDown className="monthly-status-select-icon" />
+              </div>
+            </label>
+          </section>
+
+          <section className="monthly-status-section">
             <div className="monthly-status-section-title">Count By</div>
-            <p className="monthly-status-note">Report will be generated with all Account details selected below.</p>
+            <p className="monthly-status-note">Report will be generated with all {draft._reportId === MONTHLY_STATUS_REPORT_ID ? 'Account' : draft._reportId === MONTHLY_CUSTOMERS_REPORT_ID ? 'Customer' : 'Deal'} details selected below.</p>
             <div className="monthly-status-toggle-row">
-              <span>Select Account Status</span>
+              <span>Select {draft._reportId === MONTHLY_STATUS_REPORT_ID ? 'Account' : draft._reportId === MONTHLY_CUSTOMERS_REPORT_ID ? 'Customer' : 'Deal'} Status</span>
               <button
                 type="button"
-                className={`monthly-status-toggle-chip${draft.statusAll ? ' monthly-status-toggle-chip--active' : ''}`}
-                onClick={() => onUpdate({ ...draft, statusAll: true, selectedStatuses: [...MONTHLY_STATUS_OPTIONS] })}
+                className={`monthly-status-toggle-chip${draft.statusAll ? ' !bg-red-600 !text-white !border-red-600' : ''}`}
+                onClick={() => handleStatusToggle('All')}
               >
                 All
               </button>
             </div>
             <div className="monthly-status-chip-grid">
-              {MONTHLY_STATUS_OPTIONS.map((status) => {
-                const isActive = draft.statusAll || draft.selectedStatuses.some((entry) => normalizeLabel(entry) === normalizeLabel(status))
+              {statusOptions.map((status) => {
+                const isActive = draft.statusAll || (draft.selectedStatuses && draft.selectedStatuses.some((entry) => normalizeLabel(entry) === normalizeLabel(status)))
                 return (
                   <button
                     key={status}
                     type="button"
-                    className={`monthly-status-chip${isActive ? ' monthly-status-chip--active' : ''}`}
+                    className={`monthly-status-chip${isActive ? ' !bg-red-600 !text-white !border-red-600' : ''}`}
                     onClick={() => handleStatusToggle(status)}
                   >
                     {status}
                   </button>
                 )
               })}
-            </div>
-          </section>
-
-          <section className="monthly-status-section">
-            <div className="monthly-status-section-title">Compare By</div>
-            <label className="monthly-status-field">
-              <span>Compare By</span>
-              <select value={draft.compareBy} onChange={(event) => onUpdate({ ...draft, compareBy: event.target.value })}>
-                <option value="Account Owner">Account Owner</option>
-              </select>
-            </label>
-            <div className="monthly-status-toggle-row">
-              <span>Select Account Owner</span>
-              <button
-                type="button"
-                className={`monthly-status-toggle-chip${draft.ownerAll ? ' monthly-status-toggle-chip--active' : ''}`}
-                onClick={() => onUpdate({ ...draft, ownerAll: true, selectedOwners: [...ownerOptions] })}
-              >
-                All
-              </button>
-            </div>
-            <div className="monthly-status-chip-grid">
-              {ownerOptions.map((owner) => {
-                const isActive = draft.ownerAll || draft.selectedOwners.some((entry) => normalizeLabel(entry) === normalizeLabel(owner))
-                return (
-                  <button
-                    key={owner}
-                    type="button"
-                    className={`monthly-status-chip${isActive ? ' monthly-status-chip--active' : ''}`}
-                    onClick={() => handleOwnerToggle(owner)}
-                  >
-                    {owner}
-                  </button>
-                )
-              })}
-            </div>
-          </section>
-
-          <section className="monthly-status-section monthly-status-section--compact">
-            <div className="monthly-status-section-title">Time Period</div>
-            <div className="monthly-status-field-grid">
-              <label className="monthly-status-field">
-                <span>Field</span>
-                <select value={draft.timeField} onChange={(event) => onUpdate({ ...draft, timeField: event.target.value })}>
-                  <option value="Added On">Added On</option>
-                </select>
-              </label>
-              <label className="monthly-status-field">
-                <span>Period</span>
-                <select value={draft.timePeriod} onChange={(event) => onUpdate({ ...draft, timePeriod: event.target.value })}>
-                  <option value="This Month">This Month</option>
-                </select>
-              </label>
-            </div>
-          </section>
-
-          <section className="monthly-status-section monthly-status-section--compact">
-            <div className="monthly-status-section-title">Report Filters</div>
-            <div className="monthly-status-subpanel">
-              <div className="monthly-status-subpanel-title">Configure Filters</div>
-              <div className="monthly-status-toggle-row">
-                <span>Configure Filters</span>
-                <div className="monthly-status-yesno">
-                  {['YES', 'NO'].map((value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      className={`monthly-status-toggle-chip${draft.configureFilters === value ? ' monthly-status-toggle-chip--active' : ''}`}
-                      onClick={() => onUpdate({ ...draft, configureFilters: value })}
-                    >
-                      {value}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
           </section>
         </div>
@@ -938,7 +895,17 @@ const SummaryReportsPage = () => {
   const [collapsedReportIds, setCollapsedReportIds] = useState([])
   const [toast, setToast] = useState(null)
   const [detailModal, setDetailModal] = useState(null)
-  const [monthlyStatusConfig, setMonthlyStatusConfig] = useState(readMonthlyStatusConfig)
+  const [monthlyStatusConfig, setMonthlyStatusConfig] = useState(DEFAULT_MONTHLY_STATUS_CONFIG)
+  const [monthlyCustomersConfig, setMonthlyCustomersConfig] = useState(DEFAULT_MONTHLY_CUSTOMERS_CONFIG)
+  const [monthlyDealsConfig, setMonthlyDealsConfig] = useState(DEFAULT_MONTHLY_DEALS_CONFIG)
+
+  useEffect(() => {
+    summaryReportSettingsApi.getSettings().then(data => {
+      if (data[MONTHLY_STATUS_STORAGE_KEY]) setMonthlyStatusConfig({ ...DEFAULT_MONTHLY_STATUS_CONFIG, ...data[MONTHLY_STATUS_STORAGE_KEY] })
+      if (data[MONTHLY_CUSTOMERS_STORAGE_KEY]) setMonthlyCustomersConfig({ ...DEFAULT_MONTHLY_CUSTOMERS_CONFIG, ...data[MONTHLY_CUSTOMERS_STORAGE_KEY] })
+      if (data[MONTHLY_DEALS_STORAGE_KEY]) setMonthlyDealsConfig({ ...DEFAULT_MONTHLY_DEALS_CONFIG, ...data[MONTHLY_DEALS_STORAGE_KEY] })
+    }).catch(e => console.error("Failed to load summary settings", e))
+  }, [])
   const [monthlyStatusDraft, setMonthlyStatusDraft] = useState(null)
   const splitBtnRef = useRef(null)
   const toastTimer = useRef(null)
@@ -997,33 +964,55 @@ const SummaryReportsPage = () => {
     })
 
     return baseReports.map((report) => {
-      if (report.id !== MONTHLY_STATUS_REPORT_ID) return report
+      let config = null
+      let labelStatus = ''
+      let labelOwner = ''
+
+      if (report.id === MONTHLY_STATUS_REPORT_ID) {
+        config = monthlyStatusConfig
+        labelStatus = 'Account Status'
+        labelOwner = 'Account Owner'
+      } else if (report.id === MONTHLY_CUSTOMERS_REPORT_ID) {
+        config = monthlyCustomersConfig
+        labelStatus = 'Customer Status'
+        labelOwner = 'Customer Owner'
+      } else if (report.id === MONTHLY_DEALS_REPORT_ID) {
+        config = monthlyDealsConfig
+        labelStatus = 'Deal Status'
+        labelOwner = 'Deal Owner'
+      }
+
+      if (!config) return report
+
+      const countByValue = report.id === MONTHLY_STATUS_REPORT_ID
+        ? formatToggleSummary(config.statusAll, config.selectedStatuses)
+        : report.lines.find(l => l.key === 'countBy')?.value || 'All Statuses'
 
       return {
         ...report,
-        visibility: monthlyStatusConfig.visibility,
+        visibility: config.visibility,
         lines: [
           {
             key: 'filters',
             label: 'Filters',
-            value: monthlyStatusConfig.configureFilters === 'YES'
-              ? `${monthlyStatusConfig.timeField} ${monthlyStatusConfig.timePeriod}`
+            value: config.configureFilters === 'YES'
+              ? `${config.timeField} ${config.timePeriod}`
               : 'Configure Filters: No',
           },
           {
             key: 'countBy',
-            label: 'Count By Account Status',
-            value: formatToggleSummary(monthlyStatusConfig.statusAll, monthlyStatusConfig.selectedStatuses),
+            label: `Count By ${labelStatus}`,
+            value: countByValue,
           },
           {
             key: 'compareBy',
-            label: 'Compare By Account Owner',
-            value: `${monthlyStatusConfig.compareBy} - All Account Owners`,
+            label: `Compare By ${labelOwner}`,
+            value: `${config.compareBy} - ${config.selectedOwner === 'All' ? `All ${labelOwner}s` : config.selectedOwner}`,
           },
         ],
       }
     })
-  }, [accounts, availableUsers, customers, deals, monthlyStatusConfig, user?.name])
+  }, [accounts, availableUsers, customers, deals, monthlyStatusConfig, monthlyCustomersConfig, monthlyDealsConfig, user?.name])
 
   const visibleReports = useMemo(() => (
     reports.filter((report) => report.entityType === activeCategory)
@@ -1044,14 +1033,16 @@ const SummaryReportsPage = () => {
       records: customers,
       availableUsers,
       reportName: 'Monthly Customers',
+      config: monthlyCustomersConfig,
     }),
     Deals: buildSummaryMatrixExportData({
       entityType: 'Deals',
       records: deals,
       availableUsers,
       reportName: 'Monthly Deals',
+      config: monthlyDealsConfig,
     }),
-  }), [availableUsers, customers, deals])
+  }), [availableUsers, customers, deals, monthlyCustomersConfig, monthlyDealsConfig])
 
   const handleNewSummaryReport = (option) => {
     setActiveCategory(option.category)
@@ -1207,11 +1198,17 @@ const SummaryReportsPage = () => {
   }
 
   const handleOpenMonthlyStatusSettings = (report) => {
-    if (report.id !== MONTHLY_STATUS_REPORT_ID) return
+    let baseConfig = null
+    if (report.id === MONTHLY_STATUS_REPORT_ID) baseConfig = monthlyStatusConfig
+    else if (report.id === MONTHLY_CUSTOMERS_REPORT_ID) baseConfig = monthlyCustomersConfig
+    else if (report.id === MONTHLY_DEALS_REPORT_ID) baseConfig = monthlyDealsConfig
+
+    if (!baseConfig) return
+    
     setMonthlyStatusDraft({
-      ...monthlyStatusConfig,
-      selectedStatuses: [...monthlyStatusConfig.selectedStatuses],
-      selectedOwners: [...monthlyStatusConfig.selectedOwners],
+      ...baseConfig,
+      _reportId: report.id,
+      selectedStatuses: baseConfig.selectedStatuses ? [...baseConfig.selectedStatuses] : undefined,
     })
   }
 
@@ -1226,7 +1223,7 @@ const SummaryReportsPage = () => {
       return
     }
 
-    if (report.id === MONTHLY_STATUS_REPORT_ID) {
+    if (report.id === MONTHLY_STATUS_REPORT_ID || report.id === MONTHLY_CUSTOMERS_REPORT_ID || report.id === MONTHLY_DEALS_REPORT_ID) {
       handleOpenMonthlyStatusSettings(report)
       return
     }
@@ -1240,7 +1237,7 @@ const SummaryReportsPage = () => {
       return
     }
 
-    if (report.id === MONTHLY_STATUS_REPORT_ID) {
+    if (report.id === MONTHLY_STATUS_REPORT_ID || report.id === MONTHLY_CUSTOMERS_REPORT_ID || report.id === MONTHLY_DEALS_REPORT_ID) {
       handleOpenMonthlyStatusSettings(report)
       return
     }
@@ -1259,18 +1256,26 @@ const SummaryReportsPage = () => {
   const handleSaveMonthlyStatusSettings = () => {
     if (!monthlyStatusDraft) return
 
-    const normalizedConfig = {
-      ...monthlyStatusDraft,
-      statusAll: monthlyStatusDraft.statusAll || monthlyStatusDraft.selectedStatuses.length === MONTHLY_STATUS_OPTIONS.length,
-      ownerAll: monthlyStatusDraft.ownerAll || monthlyStatusDraft.selectedOwners.length === monthlyStatusOwnerOptions.length,
-      selectedStatuses: monthlyStatusDraft.statusAll ? [...MONTHLY_STATUS_OPTIONS] : monthlyStatusDraft.selectedStatuses,
-      selectedOwners: monthlyStatusDraft.ownerAll ? [...monthlyStatusOwnerOptions] : monthlyStatusDraft.selectedOwners,
+    const normalizedConfig = { ...monthlyStatusDraft }
+    
+    if (normalizedConfig.selectedStatuses) {
+      normalizedConfig.statusAll = normalizedConfig.statusAll || normalizedConfig.selectedStatuses.length === MONTHLY_STATUS_OPTIONS.length
+      normalizedConfig.selectedStatuses = normalizedConfig.statusAll ? [...MONTHLY_STATUS_OPTIONS] : normalizedConfig.selectedStatuses
     }
 
-    setMonthlyStatusConfig(normalizedConfig)
-    window.localStorage.setItem(MONTHLY_STATUS_STORAGE_KEY, JSON.stringify(normalizedConfig))
+    if (monthlyStatusDraft._reportId === MONTHLY_STATUS_REPORT_ID) {
+      setMonthlyStatusConfig(normalizedConfig)
+      window.localStorage.setItem(MONTHLY_STATUS_STORAGE_KEY, JSON.stringify(normalizedConfig))
+    } else if (monthlyStatusDraft._reportId === MONTHLY_CUSTOMERS_REPORT_ID) {
+      setMonthlyCustomersConfig(normalizedConfig)
+      window.localStorage.setItem(MONTHLY_CUSTOMERS_STORAGE_KEY, JSON.stringify(normalizedConfig))
+    } else if (monthlyStatusDraft._reportId === MONTHLY_DEALS_REPORT_ID) {
+      setMonthlyDealsConfig(normalizedConfig)
+      window.localStorage.setItem(MONTHLY_DEALS_STORAGE_KEY, JSON.stringify(normalizedConfig))
+    }
+
     setMonthlyStatusDraft(null)
-    addNotification('success', 'Monthly Status saved', 'Summary Report settings were updated successfully.')
+    addNotification('success', 'Report Settings saved', 'Summary Report settings were updated successfully.')
   }
 
   const handleQuotationAction = useCallback((key, quotation) => {
@@ -1310,12 +1315,21 @@ const SummaryReportsPage = () => {
       <Toast toast={toast} />
       <QuotationDetailModal modal={detailModal} onClose={() => setDetailModal(null)} />
       <MonthlyStatusSettingsPanel
-        draft={monthlyStatusDraft}
-        ownerOptions={monthlyStatusOwnerOptions}
-        onClose={handleCloseMonthlyStatusSettings}
-        onSave={handleSaveMonthlyStatusSettings}
-        onUpdate={setMonthlyStatusDraft}
-      />
+          draft={monthlyStatusDraft}
+          ownerOptions={monthlyStatusDraft?._reportId === MONTHLY_CUSTOMERS_REPORT_ID 
+            ? dedupeByNormalizedValue([...availableUsers.map(u => u.name), ...customers.map(c => c.customerOwner)])
+            : monthlyStatusDraft?._reportId === MONTHLY_DEALS_REPORT_ID
+              ? dedupeByNormalizedValue([...availableUsers.map(u => u.name), ...deals.map(d => d.dealOwner)])
+              : monthlyStatusOwnerOptions}
+          statusOptions={monthlyStatusDraft?._reportId === MONTHLY_CUSTOMERS_REPORT_ID
+            ? dedupeByNormalizedValue(customers.map(c => getSummaryMatrixStatus(c, 'Customers'))).sort((a,b) => a.localeCompare(b))
+            : monthlyStatusDraft?._reportId === MONTHLY_DEALS_REPORT_ID
+              ? dedupeByNormalizedValue(deals.map(d => getSummaryMatrixStatus(d, 'Deals'))).sort((a,b) => a.localeCompare(b))
+              : MONTHLY_STATUS_OPTIONS}
+          onClose={handleCloseMonthlyStatusSettings}
+          onSave={handleSaveMonthlyStatusSettings}
+          onUpdate={setMonthlyStatusDraft}
+        />
       <div className="summary-reports-topbar">
         <h1>Summary</h1>
         <div className="summary-reports-topbar-actions">
@@ -1366,7 +1380,6 @@ const SummaryReportsPage = () => {
         <main className="summary-reports-content">
           <div className="summary-reports-center-heading">
             <h2>{activeCategory} Summary</h2>
-            <span>{reportGeneratedOn}</span>
           </div>
           <section className="summary-reports-panel">
             {activeCategory === 'Quotations' ? (

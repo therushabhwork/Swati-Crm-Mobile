@@ -1542,6 +1542,7 @@ const AdminUserManagementPage = () => {
   const [editingUser, setEditingUser] = useState(null)
   const [formData, setFormData] = useState(initialFormState)
   const [formError, setFormError] = useState('')
+  const [formErrors, setFormErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [groupForm, setGroupForm] = useState(initialGroupFormState)
   const [typeForm, setTypeForm] = useState(initialTypeFormState)
@@ -2072,16 +2073,29 @@ const AdminUserManagementPage = () => {
   const handleManageUsersSubmit = async (event) => {
     event.preventDefault()
     setFormError('')
+    setFormErrors({})
     setSubmitting(true)
 
     try {
-      if (!formData.name.trim() || !formData.email.trim()) {
-        setFormError('Name and email are required.')
-        return
-      }
+      const nextErrors = {}
+      if (!formData.name.trim()) nextErrors.name = 'Required'
+      if (!formData.email.trim()) nextErrors.email = 'Required'
+      if (!formData.company) nextErrors.company = 'Required'
+      if (!formData.role) nextErrors.role = 'Required'
+      if (!editingUser && !formData.password.trim()) nextErrors.password = 'Required'
 
-      if (!editingUser && !formData.password.trim()) {
-        setFormError('Password is required for a new user.')
+      if (Object.keys(nextErrors).length > 0) {
+        setFormErrors(nextErrors)
+        setFormError('Please complete all required fields.')
+        setSubmitting(false)
+        setTimeout(() => {
+          const firstInvalid = document.querySelector('.input-error, .admin-user-management-error')
+          if (firstInvalid) {
+            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            const input = firstInvalid.querySelector('input, select')
+            if (input) input.focus()
+          }
+        }, 100)
         return
       }
 
@@ -2343,6 +2357,7 @@ const AdminUserManagementPage = () => {
               onChange={(event) => handleUserFormChange('name', event.target.value)}
               fullWidth
               required
+              error={formErrors.name}
               className="admin-user-management-form-field"
             />
             <Select
@@ -2355,6 +2370,7 @@ const AdminUserManagementPage = () => {
               onChange={(event) => handleUserFormChange('company', event.target.value)}
               fullWidth
               required
+              error={formErrors.company}
               className="admin-user-management-form-field"
             />
             <Select

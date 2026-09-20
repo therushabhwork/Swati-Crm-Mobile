@@ -100,6 +100,11 @@ const formatTodoDateTime = (value) => {
   })
 }
 
+const isCompletedTodoStatus = (value) => {
+  const normalized = String(value || '').trim().toLowerCase()
+  return ['complete', 'completed', 'done', 'closed', 'resolved', 'cancelled', 'canceled', 'deleted'].includes(normalized)
+}
+
 const buildStatusSummary = (records, getValue, fallbackLabels = [], maxItems = 6) => {
   const counts = records.reduce((accumulator, record) => {
     const key = formatStatusLabel(getValue(record), '')
@@ -205,7 +210,7 @@ const DashboardTabModal = ({
 const AdminPanel = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { accounts, deals, supportRequests, tasks = [], refreshData, addNotification } = useData()
+  const { accounts, deals, quotations = [], supportRequests, tasks = [], refreshData, addNotification } = useData()
   const { user, socket } = useAuth()
   const [dashboardTabs, setDashboardTabs] = useState(() => getDashboardTabs())
   const [activeSection, setActiveSection] = useState('home')
@@ -221,6 +226,11 @@ const AdminPanel = () => {
   const [reminderStatesById, setReminderStatesById] = useState(() => getAdminReminderStates())
   const menuRef = useClickOutside(() => setOpenMenuState(null))
   const customers = useMemo(() => customerService.getCustomers(), [])
+  const visibleQuotations = useMemo(() => (
+    Array.isArray(quotations)
+      ? quotations.filter((quotation) => !quotation.isDeleted && !isCompletedTodoStatus(quotation.deletedStatus))
+      : []
+  ), [quotations])
   const isAdmin = user?.role === 'admin'
 
   const fetchTodoReplies = useCallback(async () => {
@@ -529,28 +539,33 @@ const AdminPanel = () => {
         }),
       }))
 
-    const replyItems = todoReplies.slice(0, 8).map((reply, index) => {
-      const requestId = reply.support_request_id || reply.supportRequestId || reply.relatedEntityId || ''
-      const matchedRequest = supportRequests.find((request) => (
-        [request.id, request.mongoId, request._id, request.legacyId].some((value) => String(value || '') === String(requestId || ''))
+    const replyItems = todoReplies
+      .filter((reply) => !isCompletedTodoStatus(
+        reply.status || reply.replyStatus || reply.todoStatus || reply.requestStatus
       ))
-      const targetRequestId = matchedRequest?.id || requestId
-      return {
-        id: `reply-${reply._id || reply.id || index}`,
-        type: 'Reply',
-        title: reply.sender_email || reply.senderEmail || 'Support Reply',
-        meta: formatTodoDateTime(reply.created_at || reply.createdAt),
-        message: reply.message || '-',
-        date: reply.created_at || reply.createdAt,
-        onClick: () => navigate('/admin/tickets', {
-          state: {
-            activeTab: 'replied',
-            expandedTicketId: targetRequestId,
-            supportRequestId: targetRequestId,
-          },
-        }),
-      }
-    })
+      .slice(0, 8)
+      .map((reply, index) => {
+        const requestId = reply.support_request_id || reply.supportRequestId || reply.relatedEntityId || ''
+        const matchedRequest = supportRequests.find((request) => (
+          [request.id, request.mongoId, request._id, request.legacyId].some((value) => String(value || '') === String(requestId || ''))
+        ))
+        const targetRequestId = matchedRequest?.id || requestId
+        return {
+          id: `reply-${reply._id || reply.id || index}`,
+          type: 'Reply',
+          title: reply.sender_email || reply.senderEmail || 'Support Reply',
+          meta: formatTodoDateTime(reply.created_at || reply.createdAt),
+          message: reply.message || '-',
+          date: reply.created_at || reply.createdAt,
+          onClick: () => navigate('/admin/tickets', {
+            state: {
+              activeTab: 'replied',
+              expandedTicketId: targetRequestId,
+              supportRequestId: targetRequestId,
+            },
+          }),
+        }
+      })
 
     return [...replyItems, ...reminderItems]
       .sort((left, right) => new Date(right.date || 0).getTime() - new Date(left.date || 0).getTime())
@@ -643,13 +658,44 @@ const AdminPanel = () => {
               onClick={() => navigate('/admin/quotation-manager/view')}
               onKeyDown={(event) => event.key === 'Enter' && navigate('/admin/quotation-manager/view')}
             >
-              <div className="ap-stat-count">-</div>
+              <div className="ap-stat-count">{visibleQuotations.length}</div>
               <div className="ap-stat-label">
                 <FaUsers className="ap-stat-icon" />
                 <span>Quotation Manager</span>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Upcoming Tasks Section Replicated from Dashboard */}
+        <div className="ap-todo-panel ap-upcoming-panel">
+          <div className="md-card__header" style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h3 className="md-card__title" style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-color)' }}>Upcoming Tasks</h3>
+              <p className="md-card__subtitle" style={{ margin: '4px 0 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                {tasks.filter(t => t.status === 'pending').length} pending
+              </p>
+            </div>
+            <button type="button" className="md-link-btn" onClick={() => navigate('/admin/tasks')} style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontWeight: '500' }}>View all</button>
+          </div>
+          <ul className="md-list" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {upcomingTasks.length === 0 ? (
+              <li className="md-list__empty" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No pending tasks</li>
+            ) : upcomingTasks.map((task) => (
+              <li key={task.id} className="md-list__item" style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}>
+                <span className="md-avatar md-avatar--orange" style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'rgba(255, 152, 0, 0.1)', color: '#ff9800', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '16px', fontSize: '1.1rem' }}>
+                  <FaTasks />
+                </span>
+                <div className="md-list__main" style={{ flex: 1 }}>
+                  <span className="md-list__title" style={{ display: 'block', fontWeight: '500', color: 'var(--text-color)', marginBottom: '4px' }}>{task.title}</span>
+                  <span className="md-list__meta" style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Due {formatDate(task.dueDate)}</span>
+                </div>
+                <span className={`md-chip md-chip--${getStatusColor(task.priority)}`} style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase' }}>
+                  {task.priority}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
@@ -698,37 +744,6 @@ const AdminPanel = () => {
         )}
       </div>
       
-      {/* Upcoming Tasks Section Replicated from Dashboard */}
-      <div className="ap-todo-panel" style={{ marginTop: '20px' }}>
-        <div className="md-card__header" style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h3 className="md-card__title" style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-color)' }}>Upcoming Tasks</h3>
-            <p className="md-card__subtitle" style={{ margin: '4px 0 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              {tasks.filter(t => t.status === 'pending').length} pending
-            </p>
-          </div>
-          <button type="button" className="md-link-btn" onClick={() => navigate('/admin/tasks')} style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontWeight: '500' }}>View all</button>
-        </div>
-        <ul className="md-list" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {upcomingTasks.length === 0 ? (
-            <li className="md-list__empty" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No pending tasks</li>
-          ) : upcomingTasks.map((task) => (
-            <li key={task.id} className="md-list__item" style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}>
-              <span className="md-avatar md-avatar--orange" style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'rgba(255, 152, 0, 0.1)', color: '#ff9800', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '16px', fontSize: '1.1rem' }}>
-                <FaTasks />
-              </span>
-              <div className="md-list__main" style={{ flex: 1 }}>
-                <span className="md-list__title" style={{ display: 'block', fontWeight: '500', color: 'var(--text-color)', marginBottom: '4px' }}>{task.title}</span>
-                <span className="md-list__meta" style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Due {formatDate(task.dueDate)}</span>
-              </div>
-              <span className={`md-chip md-chip--${getStatusColor(task.priority)}`} style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase' }}>
-                {task.priority}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
     </div>
   )
 

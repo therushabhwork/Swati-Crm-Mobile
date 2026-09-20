@@ -1,7 +1,9 @@
 import React from 'react'
 import './Input.css'
 
-const Input = ({ 
+import { forwardRef } from 'react'
+
+const Input = forwardRef(({ 
   label,
   error,
   helperText,
@@ -9,7 +11,7 @@ const Input = ({
   fullWidth = false,
   className = '',
   ...props 
-}) => {
+}, ref) => {
   const classes = [
     'input-wrapper',
     fullWidth && 'input-full-width',
@@ -22,12 +24,12 @@ const Input = ({
       {label && <label className="input-label">{label}</label>}
       <div className="input-container">
         {icon && <span className="input-icon">{icon}</span>}
-        <input className="input-field" {...props} />
+        <input ref={ref} className="input-field" {...props} />
       </div>
       {error && <span className="input-error-text">{error}</span>}
       {helperText && !error && <span className="input-helper-text">{helperText}</span>}
     </div>
   )
-}
+})
 
 export default Input

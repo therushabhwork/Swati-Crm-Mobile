@@ -37,7 +37,7 @@ import './MyGroupAccounts.css'
 import { matchesSectionSearch } from '../../../utils/sectionSearch'
 
 const DEFAULT_ROWS_PER_PAGE = 10
-const SIX_ROW_ACCOUNT_VARIANTS = new Set(['viewAll', 'myAccounts', 'searchAccount'])
+const SIX_ROW_ACCOUNT_VARIANTS = new Set(['viewAll', 'myGroup', 'myAccounts', 'searchAccount'])
 const REQUIRED_ACCOUNT_TABLE_COLUMN_KEYS = ['projectName', 'accountOwner']
 const EXACT_ACCOUNT_LIST_VARIANTS = new Set(['viewAll', 'myGroup', 'myAccounts', 'searchAccount'])
 const PLAIN_ACCOUNT_OWNER_VARIANTS = new Set(['myGroup', 'myAccounts', 'searchAccount'])

@@ -86,11 +86,11 @@ const initialFormData = {
 }
 
 const requiredMessages = {
-  accountName: 'Account Name: Please provide Account Name',
-  accountOwner: 'Account Owner: Please select Account Owner',
-  accountSource: 'Account Source: Please select Account Source',
-  state: 'State: Please provide State',
-  industryType: 'Industry type: Please select Industry type',
+  accountName: 'Please provide Account Name',
+  accountOwner: 'Please select Account Owner',
+  accountSource: 'Please select Account Source',
+  state: 'Please provide State',
+  industryType: 'Please select Industry type',
 }
 
 const fieldGroups = {
@@ -213,6 +213,15 @@ const AddAccountWizard = () => {
     })
   }
 
+  const handleBlur = (name, value) => {
+    if (requiredMessages[name] && (!value || !String(value).trim())) {
+      setErrors((prev) => ({ ...prev, [name]: requiredMessages[name] }))
+      setValidationNotice((prev) => (
+        prev.includes(requiredMessages[name]) ? prev : [...prev, requiredMessages[name]]
+      ))
+    }
+  }
+
   const handleStepChange = (targetStep) => {
     if (targetStep <= currentStep) {
       setCurrentStep(targetStep)
@@ -228,8 +237,6 @@ const AddAccountWizard = () => {
     if (validateStep(currentStep)) {
       setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1))
       setValidationNotice([])
-    } else {
-      addNotification('error', 'Required Fields', 'Please complete all required fields marked as required.')
     }
   }
 
@@ -333,6 +340,7 @@ const AddAccountWizard = () => {
         type={field.type}
         value={formData[field.name]}
         onChange={handleChange}
+        onBlur={handleBlur}
         required={field.required}
         options={field.options}
         error={errors[field.name]}
@@ -351,6 +359,13 @@ const AddAccountWizard = () => {
         onSubmit={handleSubmit}
         className="add-account-landscape-form"
       >
+        <div className="add-account-landscape-heading">
+          <div>
+            <span>Add Account</span>
+            <h1>Account Creation</h1>
+          </div>
+        </div>
+
         <WizardStepper
           steps={steps}
           currentStep={currentStep}

@@ -34,7 +34,7 @@ import { ACCOUNT_OWNER_OPTIONS } from '../../../features/accounts/config/account
 import './MyGroupAccounts.css'
 
 const DEFAULT_ROWS_PER_PAGE = 10
-const SIX_ROW_ACCOUNT_VARIANTS = new Set(['viewAll', 'myAccounts', 'searchAccount'])
+const SIX_ROW_ACCOUNT_VARIANTS = new Set(['viewAll', 'myGroup', 'myAccounts', 'searchAccount'])
 const REQUIRED_ACCOUNT_TABLE_COLUMN_KEYS = ['projectName', 'accountOwner']
 const EXACT_ACCOUNT_LIST_VARIANTS = new Set(['viewAll', 'myGroup', 'myAccounts', 'searchAccount'])
 const DEFAULT_CONVERTED_FILTER_RULE = () => ({

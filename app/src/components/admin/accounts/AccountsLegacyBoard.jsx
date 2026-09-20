@@ -249,6 +249,7 @@ const AccountsLegacyBoard = ({
                 {columns.map((column) => {
                   const cellValue = renderCellValue(column, row)
                   const cellContent = cellValue
+                  const clickableContent = String(cellValue || '').trim() || 'Open'
 
                   return (
                     <td key={column.key}>
@@ -266,7 +267,7 @@ const AccountsLegacyBoard = ({
                                 onAccountOpen(row)
                               }}
                             >
-                              {cellContent}
+                              {clickableContent}
                             </button>
                             <button
                               type="button"
@@ -301,7 +302,7 @@ const AccountsLegacyBoard = ({
                               onAccountOpen(row)
                             }}
                           >
-                            {cellContent}
+                            {clickableContent}
                           </button>
                         )
                       ) : (

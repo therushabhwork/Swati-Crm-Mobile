@@ -119,12 +119,13 @@ const initialFormData = {
 }
 
 const requiredMessages = {
-  accountName: 'Account Name: Please provide Account Name',
-  accountCategory: 'Vertical Name: Please select Vertical Name',
-  accountOwner: 'Account Owner: Please select Account Owner',
-  accountSource: 'Account Source: Please select Account Source',
-  state: 'State: Please provide State',
-  industryType: 'Industry type: Please select Industry type',
+  accountName: 'Please provide Account Name',
+  accountCategory: 'Please select Vertical Name',
+  accountOwner: 'Please select Account Owner',
+  state: 'Please provide State',
+  accountDate: 'Please provide Account Date',
+  accountSource: 'Please select Account Source',
+  industryType: 'Please select Industry type',
 }
 
 const fieldGroups = {
@@ -205,7 +206,6 @@ const AddAccountWizard = () => {
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState(initialFormData)
   const [errors, setErrors] = useState({})
-  const [validationNotice, setValidationNotice] = useState([])
   const [saving, setSaving] = useState(false)
   const [ownerOptions, setOwnerOptions] = useState([])
 
@@ -379,11 +379,6 @@ const AddAccountWizard = () => {
     }
 
     setErrors((prev) => ({ ...prev, ...nextErrors }))
-    setValidationNotice(
-      Object.entries(requiredMessages)
-        .filter(([field]) => nextErrors[field])
-        .map(([, message]) => message)
-    )
     return Object.keys(nextErrors).length === 0
   }
 
@@ -409,25 +404,23 @@ const AddAccountWizard = () => {
     }
 
     setErrors(collectedErrors)
-    setValidationNotice(
-      Object.entries(requiredMessages)
-        .filter(([field]) => collectedErrors[field])
-        .map(([, message]) => message)
-    )
     return collectedErrors
   }
 
   const handleChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
-    setValidationNotice((prev) =>
-      prev.filter((message) => message !== requiredMessages[name])
-    )
     setErrors((prev) => {
       if (!prev[name]) return prev
       const nextErrors = { ...prev }
       delete nextErrors[name]
       return nextErrors
     })
+  }
+
+  const handleBlur = (name, value) => {
+    if (requiredMessages[name] && !String(value || '').trim()) {
+      setErrors((prev) => ({ ...prev, [name]: requiredMessages[name] }))
+    }
   }
 
   const handleStepChange = (targetStep) => {
@@ -446,10 +439,8 @@ const AddAccountWizard = () => {
   const handleNext = () => {
     if (validateStep(currentStep)) {
       setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1))
-      setValidationNotice([])
     } else {
       triggerErrorScroll()
-      addNotification('error', 'Required Fields', 'Please complete all required fields marked as required.')
     }
   }
 
@@ -459,6 +450,8 @@ const AddAccountWizard = () => {
       if (firstInvalid) {
         const fieldContainer = firstInvalid.closest('.legacy-form-row, .legacy-form-field-stack, .add-account-landscape-field-column, .relative') || firstInvalid
         fieldContainer.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        const input = fieldContainer.querySelector('input, select, textarea')
+        if (input) input.focus()
       }
     }, 100)
   }
@@ -483,11 +476,9 @@ const AddAccountWizard = () => {
         stepWithError = 2
       }
       
-      if (currentStep !== stepWithError) {
-        setCurrentStep(stepWithError)
-      }
+      setCurrentStep(stepWithError)
       triggerErrorScroll()
-      addNotification('error', 'Required Fields', 'Please complete all required fields marked as required.')
+      addNotification('error', 'Required Fields', 'Please complete all required fields.')
       return
     }
 
@@ -652,6 +643,7 @@ const AddAccountWizard = () => {
         type={field.type}
         value={formData[field.name]}
         onChange={handleChange}
+        onBlur={handleBlur}
         required={field.required}
         options={field.options}
         error={errors[field.name]}
@@ -670,6 +662,13 @@ const AddAccountWizard = () => {
         onSubmit={handleSubmit}
         className="add-account-landscape-form"
       >
+        <div className="add-account-landscape-heading">
+          <div>
+            <span>Add Account</span>
+            <h1>Account Creation</h1>
+          </div>
+        </div>
+
         <WizardStepper
           steps={steps}
           currentStep={currentStep}
@@ -708,6 +707,11 @@ const AddAccountWizard = () => {
                   onChange={(e) => {
                     setCustomerSearch(e.target.value)
                     setSelectedCustomerId('')
+                  }}
+                  onBlur={(e) => {
+                    if (!e.target.value.trim() && !selectedCustomerId) {
+                      setErrors(prev => ({ ...prev, customer: 'Please select a customer or type a valid customer name.' }))
+                    }
                   }}
                   placeholder="Start typing the customer name (e.g. Tata, Demo)"
                   className={`w-full p-2 border rounded outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-shadow ${errors.customer ? 'border-red-500 admin-add-deal-input-error' : 'border-gray-300'}`}

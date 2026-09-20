@@ -509,3 +509,138 @@ html:not([data-theme="dark"]) .add-account-landscape-section .legacy-form-row:ha
   background: #1d2b36 !important;
   color: #f0fffd !important;
 }
+
+/* Add Account page presentation pass: transparent shell, clearer heading, tighter whitespace. */
+.add-account-landscape-page {
+  padding-top: 2rem !important;
+}
+
+.add-account-landscape-form {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  gap: 0.75rem !important;
+}
+
+.add-account-landscape-heading {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid rgba(203, 214, 230, 0.34);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.add-account-landscape-heading span {
+  display: block;
+  margin-bottom: 0.18rem;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.add-account-landscape-heading h1 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.18rem;
+  font-weight: 850;
+}
+
+.add-account-landscape-heading p {
+  display: none !important;
+}
+
+.add-account-landscape-stepper.wizard-stepper,
+.add-account-landscape-section,
+.add-account-landscape-footer {
+  background: rgba(255, 255, 255, 0.34) !important;
+  border-color: rgba(203, 214, 230, 0.38) !important;
+  box-shadow: none !important;
+}
+
+.add-account-landscape-section {
+  padding: 1rem !important;
+}
+
+.add-account-landscape-stepper .wizard-stepper__track {
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)) !important;
+}
+
+.add-account-landscape-stepper .wizard-stepper__step {
+  grid-template-columns: 1.65rem minmax(0, 1fr) !important;
+  min-height: 2.65rem !important;
+  padding: 0.42rem 0.5rem !important;
+}
+
+.add-account-landscape-stepper .wizard-stepper__index {
+  width: 1.55rem !important;
+  height: 1.55rem !important;
+  font-size: 0.72rem !important;
+}
+
+.add-account-landscape-stepper .wizard-stepper__kicker {
+  font-size: 0.62rem !important;
+}
+
+.add-account-landscape-stepper .wizard-stepper__label {
+  font-size: 0.78rem !important;
+  white-space: normal !important;
+}
+
+.add-account-landscape-section > div:first-child > p {
+  display: none !important;
+}
+
+.add-account-landscape-section .mb-4.flex.items-center,
+.add-account-landscape-section .mt-2.text-sm {
+  background: rgba(255, 255, 255, 0.28) !important;
+  border-color: rgba(203, 214, 230, 0.38) !important;
+}
+
+.add-account-landscape-section .mb-6.relative {
+  max-width: 28rem;
+}
+
+.add-account-landscape-section .mb-6.relative > label {
+  color: var(--text-primary) !important;
+  font-size: 0.86rem !important;
+  font-weight: 750 !important;
+}
+
+.add-account-landscape-section .mb-6.relative input[type="text"] {
+  width: 100% !important;
+  min-height: 2.35rem !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+}
+
+[data-theme="dark"] .add-account-landscape-heading,
+[data-theme="dark"] .add-account-landscape-stepper.wizard-stepper,
+[data-theme="dark"] .add-account-landscape-section,
+[data-theme="dark"] .add-account-landscape-footer {
+  background: rgba(18, 32, 42, 0.72) !important;
+  border-color: rgba(240, 255, 253, 0.34) !important;
+  color: #f0fffd !important;
+}
+
+[data-theme="dark"] .add-account-landscape-stepper.wizard-stepper,
+[data-theme="dark"] .add-account-landscape-section,
+[data-theme="dark"] .add-account-landscape-footer {
+  background: rgba(18, 32, 42, 0.48) !important;
+}
+
+[data-theme="dark"] .add-account-landscape-heading h1,
+[data-theme="dark"] .add-account-landscape-heading span,
+[data-theme="dark"] .add-account-landscape-heading p {
+  color: #f0fffd !important;
+}
+
+@media (max-width: 760px) {
+  .add-account-landscape-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

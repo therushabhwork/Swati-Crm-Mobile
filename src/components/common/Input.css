@@ -90,3 +90,7 @@
 [data-theme="dark"] .input-field {
   background: var(--surface-raised);
 }
+
+.input-error .input-label {
+  color: var(--color-danger);
+}

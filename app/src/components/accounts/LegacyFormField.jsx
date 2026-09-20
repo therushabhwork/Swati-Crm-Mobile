@@ -36,6 +36,7 @@ const LegacyFormField = ({
   name,
   value,
   onChange,
+  onBlur,
   type = 'text',
   required = false,
   error = '',
@@ -53,6 +54,12 @@ const LegacyFormField = ({
     onChange(name, event.target.value)
   }
 
+  const handleBlur = (event) => {
+    if (typeof onBlur === 'function') {
+      onBlur(name, event.target.value)
+    }
+  }
+
   const normalizedValue = normalizeOptionValue(value)
   const normalizedOptions = normalizeOptions(options)
   const hasSelectedOption = normalizedOptions.some((option) => option.value === normalizedValue)
@@ -68,6 +75,7 @@ const LegacyFormField = ({
         rows={textareaRows}
         value={value}
         onChange={handleChange}
+        onBlur={handleBlur}
         placeholder={placeholder}
         className={`${inputClasses} min-h-[74px] resize-none leading-5 ${className} ${fieldClassName}`.trim()}
       />
@@ -77,6 +85,7 @@ const LegacyFormField = ({
         name={name}
         value={normalizedValue}
         onChange={handleChange}
+        onBlur={handleBlur}
         className={`${inputClasses} min-h-[38px] appearance-none ${className} ${fieldClassName}`.trim()}
       >
         <option value="">Select</option>
@@ -93,6 +102,7 @@ const LegacyFormField = ({
         type={type}
         value={value}
         onChange={handleChange}
+        onBlur={handleBlur}
         placeholder={placeholder}
         className={`${inputClasses} min-h-[38px] ${className} ${fieldClassName}`.trim()}
       />

@@ -2288,6 +2288,64 @@ select.add-user-wizard-input {
   opacity: 1;
 }
 
+/* Manage Users neat layout pass. */
+.manage-users-card-shell {
+  border-radius: 12px !important;
+}
+
+.manage-users-card-shell .card-body {
+  padding: 14px !important;
+}
+
+.manage-users-toolbar {
+  padding: 12px !important;
+  border: 1px solid rgba(203, 214, 230, 0.86) !important;
+  border-radius: 10px !important;
+  background: rgba(255, 255, 255, 0.76) !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06) !important;
+}
+
+.manage-users-search input,
+.manage-users-filter-select,
+.manage-users-actions-button,
+.manage-users-visibility-button {
+  height: 36px !important;
+  border-radius: 7px !important;
+}
+
+.manage-users-grid {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.manage-users-card-item {
+  min-height: 100%;
+  border-radius: 10px !important;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.07) !important;
+}
+
+.manage-users-card-head {
+  padding: 12px !important;
+}
+
+.manage-users-card-fields {
+  padding: 10px 12px !important;
+}
+
+.manage-users-card-row {
+  grid-template-columns: 88px minmax(0, 1fr) !important;
+  min-height: 31px !important;
+}
+
+.manage-users-card-actions {
+  padding: 10px 12px 12px !important;
+}
+
+[data-theme="dark"] .manage-users-toolbar {
+  background: rgba(18, 32, 42, 0.72) !important;
+  border-color: rgba(240, 255, 253, 0.34) !important;
+}
+
 /* Light mode border-only table treatment for Users pages. Red is border-only, never a heading fill. */
 html:not([data-theme="dark"]) .admin-users-page :is(.table-container, .manage-users-table, .manage-user-groups-table),
 html:not([data-theme="dark"]) .user-management-page :is(.table-container, .manage-users-table, .manage-user-groups-table) {

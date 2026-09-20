@@ -279,7 +279,7 @@
   .layout-column--sidebar,
   .layout-column--right {
     position: sticky;
-    top: calc(var(--header-height) + 12px);
+    top: calc(var(--header-height) + 44px);
     max-height: calc(100vh - var(--header-height) - 8px);
   }
 
@@ -424,4 +424,25 @@
   }
 
   .layout-main { min-height: calc(100vh - 0.6rem); border-radius: 16px; }
+}
+
+/* CRM transparent shell pass: remove side panel chrome while preserving layout spacing. */
+:is(.layout--admin, .layout--user) .layout-body {
+  padding-top: calc(var(--header-height) + 44px) !important;
+}
+
+:is(.layout--admin, .layout--user) :where(
+  .layout-column,
+  .layout-column--sidebar,
+  .layout-column--right,
+  .layout-main-shell,
+  .layout-main,
+  .layout-main-inner,
+  .layout-content-frame
+) {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
 }
