@@ -523,6 +523,7 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
                         type="text"
                         value={searchTerm}
                         onChange={(event) => setSearchTerm(event.target.value)}
+                        onKeyDown={(event) => event.key === 'Enter' && handleQuickSearch()}
                         placeholder="Search for Accounts, Customer, Deal, Project here ..."
                       />
                     </div>
@@ -532,47 +533,6 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
                       <span>Search</span>
                     </button>
                   </div>
-
-                  {searchTerm.trim() ? (
-                    <div className="hdr-search-results" aria-live="polite">
-                      <div className="hdr-search-results-summary">
-                        Search Results <span>{totalSearchResults}</span>
-                      </div>
-
-                      {searchSections.map((section) => (
-                        <section key={section.label} className="hdr-search-results-section">
-                          <div className="hdr-search-results-heading">
-                            <span>{section.label}</span>
-                            <strong>{section.results.length}</strong>
-                          </div>
-
-                          {section.results.slice(0, 5).map((result) => (
-                            <button
-                              key={result.id}
-                              type="button"
-                              className="hdr-search-result"
-                              onClick={() => handleOpenSearchResult(result)}
-                            >
-                              <span className="hdr-search-result-title">{result.title}</span>
-                              {result.subtitle ? <span className="hdr-search-result-meta">{result.subtitle}</span> : null}
-                            </button>
-                          ))}
-                        </section>
-                      ))}
-
-                      {totalSearchResults === 0 ? (
-                        <p className="hdr-search-results-empty">No matching records found.</p>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  <button
-                    type="button"
-                    className="hdr-popover-link-btn hdr-popover-link-btn--center"
-                    onClick={handleOpenAdvancedSearch}
-                  >
-                    Advanced Search <span>&raquo;</span>
-                  </button>
                 </div>
               )}
             </div>

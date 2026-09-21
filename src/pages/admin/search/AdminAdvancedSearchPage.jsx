@@ -512,7 +512,6 @@ const AdminAdvancedSearchPage = () => {
       { key: 'customerName', label: 'Customer Name' },
     ],
     projects: [
-      { key: 'projectCode', label: 'Project Code', isRecordNumber: true, onClick: (row) => handleOpenProject(row.id) },
       { key: 'projectName', label: 'Project Name', isRecordNumber: true, onClick: (row) => handleOpenProject(row.id) },
       { key: 'accountName', label: 'Account Name' },
       { key: 'consultantName', label: 'Consultant' },
