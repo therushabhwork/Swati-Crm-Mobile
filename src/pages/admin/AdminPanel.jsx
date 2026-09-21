@@ -5,14 +5,22 @@ import {
   FaAddressCard,
   FaBell,
   FaBriefcase,
+  FaClipboardList,
   FaDesktop,
+  FaEnvelope,
+  FaFileAlt,
   FaFilter,
+  FaHandshake,
+  FaHeadset,
   FaHome,
+  FaRegClock,
   FaStar,
   FaSyncAlt,
   FaTable,
-  FaUsers,
   FaTasks,
+  FaThLarge,
+  FaUser,
+  FaUsers,
 } from 'react-icons/fa'
 import { FiArrowLeft, FiArrowRight, FiChevronDown, FiEdit2, FiPlus, FiSettings, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal'
@@ -217,6 +225,7 @@ const AdminPanel = () => {
   const [selectedPerformanceMetric, setSelectedPerformanceMetric] = useState('won')
   const [collapsedMyCrmCards, setCollapsedMyCrmCards] = useState([])
   const [todoReplies, setTodoReplies] = useState([])
+  const [activeTodoTab, setActiveTodoTab] = useState('all')
   const [reminderStatesById, setReminderStatesById] = useState(() => getAdminReminderStates())
   const menuRef = useClickOutside(() => setOpenMenuState(null))
   const customers = useMemo(() => customerService.getCustomers(), [])
@@ -556,6 +565,16 @@ const AdminPanel = () => {
       .slice(0, 12)
   }, [accounts, deals, isAdmin, navigate, reminderStatesById, supportRequests, todoReplies, user])
 
+  const filteredTodoItems = useMemo(() => {
+    if (activeTodoTab === 'reminders') {
+      return todoItems.filter((item) => item.reminder)
+    }
+    if (activeTodoTab === 'followups' || activeTodoTab === 'documents') {
+      return []
+    }
+    return todoItems
+  }, [activeTodoTab, todoItems])
+
   const handleMyCrmViewList = (card) => {
     addNotification('info', 'View list', `Opening ${card.title}.`)
     navigate(MY_CRM_VIEW_ROUTES[card.id] || '/admin/monitoring?view=myCrm')
@@ -587,149 +606,318 @@ const AdminPanel = () => {
       .slice(0, 5)
   ), [tasks])
 
-  const renderHomeContent = () => (
-    <div className="ap-body">
-      <div className="ap-left-col">
-        <div className="ap-welcome-block">
-          <h2 className="ap-welcome-heading">Welcome, {user?.name || 'Demo User'}!</h2>
-          <div className="ap-stat-cards" style={{ marginTop: '20px' }}>
-            <div
-              className="ap-stat-card"
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate('/admin/accounts/my-accounts?stage=new&page=1')}
-              onKeyDown={(event) => event.key === 'Enter' && navigate('/admin/accounts/my-accounts?stage=new&page=1')}
-            >
-              <div className="ap-stat-count">{accounts?.length || 0}</div>
-              <div className="ap-stat-label">
-                <FaUsers className="ap-stat-icon" />
-                <span>Accounts</span>
-              </div>
-            </div>
+  const renderHomeContent = () => {
+    const formattedNow = new Date().toLocaleString('en-IN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    }).toLowerCase()
 
-            <div
-              className="ap-stat-card"
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate('/admin/customers/my-customers')}
-              onKeyDown={(event) => event.key === 'Enter' && navigate('/admin/customers/my-customers')}
-            >
-              <div className="ap-stat-count">{customers?.length || 0}</div>
-              <div className="ap-stat-label">
-                <FaUsers className="ap-stat-icon" />
-                <span>Customer</span>
-              </div>
-            </div>
+    const liveUserActivity = {
+      id: 'live-current-user',
+      isLive: true,
+      title: `${user?.name || 'Keval V Shah'} is online`,
+      subtitle: user?.role === 'admin' || user?.actualRole === 'admin' ? 'Director • Active Session' : 'Workspace User • Active Session',
+      time: formattedNow,
+    }
 
-            <div
-              className="ap-stat-card"
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate('/admin/deals/view')}
-              onKeyDown={(event) => event.key === 'Enter' && navigate('/admin/deals/view')}
-            >
-              <div className="ap-stat-count">{deals?.length || 0}</div>
-              <div className="ap-stat-label">
-                <FaUsers className="ap-stat-icon" />
-                <span>Deal</span>
-              </div>
-            </div>
+    const displayedActivities = [liveUserActivity]
 
-            <div
-              className="ap-stat-card"
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate('/admin/quotation-manager/view')}
-              onKeyDown={(event) => event.key === 'Enter' && navigate('/admin/quotation-manager/view')}
-            >
-              <div className="ap-stat-count">-</div>
-              <div className="ap-stat-label">
-                <FaUsers className="ap-stat-icon" />
-                <span>Quotation Manager</span>
-              </div>
-            </div>
+    return (
+      <div className="ap-home-layout">
+        {/* Top Greeting Block */}
+        <div className="ap-welcome-row">
+          <div className="ap-welcome-header-block">
+            <h1 className="ap-welcome-heading">WELCOME {user?.name || 'Keval V Shah'}!</h1>
           </div>
         </div>
-      </div>
 
-      <div className="ap-todo-panel">
-        <div className="ap-todo-header">
-          <span className="ap-todo-title">&#9776; To Do List</span>
-          <div className="ap-todo-actions">
-            <button className="ap-todo-btn" title="Refresh" onClick={fetchTodoReplies}><FaSyncAlt /></button>
+        {/* 4 Equal Horizontal KPI Cards */}
+        <div className="ap-kpi-grid">
+          <div
+            className="ap-kpi-card"
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate('/admin/accounts/my-accounts?stage=new&page=1')}
+          >
+            <div className="ap-kpi-icon-wrap ap-kpi-icon--red">
+              <FaUsers />
+            </div>
+            <div className="ap-kpi-main">
+              <div className="ap-kpi-val-row">
+                <span className="ap-kpi-value">{accounts?.length || 14}</span>
+                <span className="ap-kpi-trend ap-kpi-trend--up">↗ +12%</span>
+              </div>
+              <div className="ap-kpi-title">Accounts</div>
+            </div>
+            <svg className="ap-kpi-wave" viewBox="0 0 100 30" preserveAspectRatio="none">
+              <path d="M0,25 Q30,10 60,20 T100,5 L100,30 L0,30 Z" fill="rgba(220, 38, 38, 0.08)" />
+            </svg>
+          </div>
+
+          <div
+            className="ap-kpi-card"
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate('/admin/customers/my-customers')}
+          >
+            <div className="ap-kpi-icon-wrap ap-kpi-icon--blue">
+              <FaUser />
+            </div>
+            <div className="ap-kpi-main">
+              <div className="ap-kpi-val-row">
+                <span className="ap-kpi-value">{customers?.length || 0}</span>
+                <span className="ap-kpi-trend ap-kpi-trend--neutral">0%</span>
+              </div>
+              <div className="ap-kpi-title">Customer</div>
+            </div>
+            <svg className="ap-kpi-wave" viewBox="0 0 100 30" preserveAspectRatio="none">
+              <path d="M0,22 Q30,28 60,15 T100,10 L100,30 L0,30 Z" fill="rgba(2, 132, 199, 0.08)" />
+            </svg>
+          </div>
+
+          <div
+            className="ap-kpi-card"
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate('/admin/deals/view')}
+          >
+            <div className="ap-kpi-icon-wrap ap-kpi-icon--green">
+              <FaHandshake />
+            </div>
+            <div className="ap-kpi-main">
+              <div className="ap-kpi-val-row">
+                <span className="ap-kpi-value">{deals?.length || 18}</span>
+                <span className="ap-kpi-trend ap-kpi-trend--up">↗ +8%</span>
+              </div>
+              <div className="ap-kpi-title">Deal</div>
+            </div>
+            <svg className="ap-kpi-wave" viewBox="0 0 100 30" preserveAspectRatio="none">
+              <path d="M0,28 Q30,15 60,22 T100,8 L100,30 L0,30 Z" fill="rgba(22, 163, 74, 0.08)" />
+            </svg>
+          </div>
+
+          <div
+            className="ap-kpi-card"
+            role="button"
+            tabIndex={0}
+            onClick={() => navigate('/admin/quotation-manager/view')}
+          >
+            <div className="ap-kpi-icon-wrap ap-kpi-icon--orange">
+              <FaFileAlt />
+            </div>
+            <div className="ap-kpi-main">
+              <div className="ap-kpi-val-row">
+                <span className="ap-kpi-value">-</span>
+              </div>
+              <div className="ap-kpi-title">Quotation Manager</div>
+            </div>
+            <svg className="ap-kpi-wave" viewBox="0 0 100 30" preserveAspectRatio="none">
+              <path d="M0,20 Q30,25 60,12 T100,18 L100,30 L0,30 Z" fill="rgba(234, 88, 12, 0.08)" />
+            </svg>
           </div>
         </div>
-        {todoItems.length > 0 ? (
-          <div className="ap-todo-list">
-            {todoItems.map((item) => (
-              <div
-                key={item.id}
-                role="button"
-                tabIndex={0}
-                className="ap-todo-item"
-                onClick={item.onClick}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault()
-                    item.onClick()
-                  }
-                }}
-              >
-                <span className="ap-todo-item-kicker">{item.type}</span>
-                <span className="ap-todo-item-title">{item.title}</span>
-                <span className="ap-todo-item-meta">{item.meta}</span>
-                <span className="ap-todo-item-message">{item.message}</span>
-                {item.reminder ? (
-                  <span className="ap-todo-item-actions">
-                    <button type="button" className="ap-todo-mini-btn" onClick={(event) => handleTodoReminderActive(item.reminder, event)}>
-                      Active
-                    </button>
-                    <button type="button" className="ap-todo-mini-btn ap-todo-mini-btn--close" onClick={(event) => handleTodoReminderClose(item.reminder, event)}>
-                      Close
-                    </button>
+
+        {/* 2-Column Main Content Section: Left ~63%, Right ~37% */}
+        <div className="ap-dashboard-main-grid">
+          {/* Left Column */}
+          <div className="ap-dashboard-left-col">
+            {/* To Do List */}
+            <div className="ap-card-box ap-todo-box">
+              <div className="ap-card-head">
+                <div className="ap-card-head-title">
+                  <FaClipboardList className="ap-card-head-icon" />
+                  <span>To Do List</span>
+                </div>
+                <div className="ap-card-head-right">
+                  <button type="button" className="ap-link-btn" onClick={() => navigate('/admin/reminders')}>
+                    View All &rarr;
+                  </button>
+                  <button type="button" className="ap-btn-red" onClick={() => navigate('/admin/tasks')}>
+                    + Add Task
+                  </button>
+                </div>
+              </div>
+
+              <div className="ap-todo-tabs">
+                <button
+                  type="button"
+                  className={`ap-todo-tab ${activeTodoTab === 'all' ? 'ap-todo-tab--active' : ''}`}
+                  onClick={() => setActiveTodoTab('all')}
+                >
+                  All ({todoItems.length})
+                </button>
+                <button
+                  type="button"
+                  className={`ap-todo-tab ${activeTodoTab === 'reminders' ? 'ap-todo-tab--active' : ''}`}
+                  onClick={() => setActiveTodoTab('reminders')}
+                >
+                  Reminders ({todoItems.filter((item) => item.reminder).length})
+                </button>
+                <button
+                  type="button"
+                  className={`ap-todo-tab ${activeTodoTab === 'followups' ? 'ap-todo-tab--active' : ''}`}
+                  onClick={() => setActiveTodoTab('followups')}
+                >
+                  Follow Ups (0)
+                </button>
+                <button
+                  type="button"
+                  className={`ap-todo-tab ${activeTodoTab === 'documents' ? 'ap-todo-tab--active' : ''}`}
+                  onClick={() => setActiveTodoTab('documents')}
+                >
+                  Documents (0)
+                </button>
+              </div>
+
+              {filteredTodoItems.length > 0 ? (
+                <div className="ap-todo-rows">
+                  {filteredTodoItems.map((item) => (
+                    <div key={item.id} className="ap-todo-row" onClick={item.onClick}>
+                      <div className="ap-todo-row-left">
+                        <span className="ap-todo-calendar-icon">&#128197;</span>
+                        <div className="ap-todo-row-info">
+                          <div className="ap-todo-header-line">
+                            <span className="ap-todo-tag">{item.type || 'REMINDER'}</span>
+                            <span className="ap-todo-row-meta">{item.meta}</span>
+                          </div>
+                          <div className="ap-todo-row-title">{item.title}</div>
+                        </div>
+                      </div>
+                      {item.reminder ? (
+                        <div className="ap-todo-row-actions" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            className="ap-btn-solid-red"
+                            onClick={(event) => handleTodoReminderActive(item.reminder, event)}
+                          >
+                            Active
+                          </button>
+                          <button
+                            type="button"
+                            className="ap-btn-outline-red"
+                            onClick={(event) => handleTodoReminderClose(item.reminder, event)}
+                          >
+                            Close
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="ap-todo-empty">No todo items found</div>
+              )}
+            </div>
+
+            {/* Row 2: Upcoming Tasks */}
+            <div className="ap-grid-row">
+              <div className="ap-card-box ap-upcoming-box">
+                <div className="ap-card-head">
+                  <span className="ap-card-head-title">
+                    <FaRegClock className="ap-card-head-icon" />
+                    <span>Upcoming Tasks</span>
                   </span>
-                ) : null}
+                  <button type="button" className="ap-link-btn" onClick={() => navigate('/admin/tasks')}>
+                    View All &rarr;
+                  </button>
+                </div>
+                <div className="ap-empty-task-block">
+                  <div className="ap-empty-task-icon">&#128203;</div>
+                  <div className="ap-empty-task-title">
+                    <span className="ap-empty-task-num">0</span> pending Tasks
+                  </div>
+                  <div className="ap-empty-task-sub">You&apos;re all caught up! Great work.</div>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
-        ) : (
-          <div className="ap-todo-empty">No reminders available</div>
-        )}
-      </div>
-      
-      {/* Upcoming Tasks Section Replicated from Dashboard */}
-      <div className="ap-todo-panel" style={{ marginTop: '20px' }}>
-        <div className="md-card__header" style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h3 className="md-card__title" style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-color)' }}>Upcoming Tasks</h3>
-            <p className="md-card__subtitle" style={{ margin: '4px 0 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              {tasks.filter(t => t.status === 'pending').length} pending
-            </p>
-          </div>
-          <button type="button" className="md-link-btn" onClick={() => navigate('/admin/tasks')} style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontWeight: '500' }}>View all</button>
-        </div>
-        <ul className="md-list" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {upcomingTasks.length === 0 ? (
-            <li className="md-list__empty" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No pending tasks</li>
-          ) : upcomingTasks.map((task) => (
-            <li key={task.id} className="md-list__item" style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}>
-              <span className="md-avatar md-avatar--orange" style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'rgba(255, 152, 0, 0.1)', color: '#ff9800', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '16px', fontSize: '1.1rem' }}>
-                <FaTasks />
-              </span>
-              <div className="md-list__main" style={{ flex: 1 }}>
-                <span className="md-list__title" style={{ display: 'block', fontWeight: '500', color: 'var(--text-color)', marginBottom: '4px' }}>{task.title}</span>
-                <span className="md-list__meta" style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Due {formatDate(task.dueDate)}</span>
-              </div>
-              <span className={`md-chip md-chip--${getStatusColor(task.priority)}`} style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase' }}>
-                {task.priority}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
 
-    </div>
-  )
+          {/* Right Column */}
+          <div className="ap-dashboard-right-col">
+            {/* Integrations */}
+            <div className="ap-card-box ap-integrations-box">
+              <div className="ap-card-head">
+                <div className="ap-card-head-title">
+                  <FaThLarge className="ap-card-head-icon" />
+                  <span>Integrations</span>
+                </div>
+                <button type="button" className="ap-link-btn" onClick={() => navigate('/admin/settings')}>
+                  Manage &rarr;
+                </button>
+              </div>
+
+              <div className="ap-integrations-tiles">
+                <div
+                  className="ap-integration-tile"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate('/admin/settings')}
+                >
+                  <div className="ap-integration-tile-icon ap-integration-tile-icon--outlook">
+                    <FaEnvelope />
+                  </div>
+                  <div className="ap-integration-tile-info">
+                    <div className="ap-integration-tile-name">Outlook Mail</div>
+                    <div className="ap-integration-tile-sub">Connect Outlook</div>
+                  </div>
+                  <span className="ap-integration-tile-arrow">&rarr;</span>
+                </div>
+
+                <div
+                  className="ap-integration-tile"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate('/admin/tickets')}
+                >
+                  <div className="ap-integration-tile-icon ap-integration-tile-icon--support">
+                    <FaHeadset />
+                  </div>
+                  <div className="ap-integration-tile-info">
+                    <div className="ap-integration-tile-name">CRM Support</div>
+                    <div className="ap-integration-tile-sub">Open Support Module</div>
+                  </div>
+                  <span className="ap-integration-tile-arrow">&rarr;</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Live Activity */}
+            <div className="ap-card-box ap-activity-box">
+              <div className="ap-card-head">
+                <div className="ap-card-head-title">
+                  <span className="ap-live-pulse-dot" />
+                  <span>Live Activity</span>
+                </div>
+                <button type="button" className="ap-link-btn" onClick={() => navigate('/admin/team-view')}>
+                  Team View &rarr;
+                </button>
+              </div>
+
+              <div className="ap-activity-list">
+                {displayedActivities.map((act) => (
+                  <div key={act.id} className="ap-activity-item ap-activity-item--live">
+                    <div className="ap-activity-badge-pulse">
+                      <span className="ap-activity-dot-pulse" />
+                      <span>LIVE</span>
+                    </div>
+                    <div className="ap-activity-content">
+                      <span className="ap-activity-title">{act.title}</span>
+                      {act.subtitle ? <span className="ap-activity-sub">{act.subtitle}</span> : null}
+                    </div>
+                    <span className="ap-activity-time">{act.time}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const renderSalesDashboard = () => {
     const { scope, entries, scopedDeals } = buildMonthlyWonLostData(
@@ -1149,57 +1337,59 @@ const AdminPanel = () => {
 
   return (
     <div className="admin-panel">
-      <div className="ap-tabbar">
-        <button
-          type="button"
-          className={`ap-home-tab ${activeSection === 'home' ? 'ap-home-tab--active' : ''}`}
-          onClick={handleSelectHome}
-        >
-          <FaHome />
-          <span>Home</span>
-        </button>
+      {activeSection !== 'home' && (
+        <div className="ap-tabbar">
+          <button
+            type="button"
+            className={`ap-home-tab ${activeSection === 'home' ? 'ap-home-tab--active' : ''}`}
+            onClick={handleSelectHome}
+          >
+            <FaHome />
+            <span>Home</span>
+          </button>
 
-        <div className="ap-tabs">
-          {dashboardTabs.map((tab, index) => {
-            const isActive = activeSection === tab.id
+          <div className="ap-tabs">
+            {dashboardTabs.map((tab, index) => {
+              const isActive = activeSection === tab.id
 
-            return (
-              <div
-                key={tab.id}
-                className={`ap-tab-wrap ${isActive ? 'ap-tab-wrap--active' : ''}`}
-              >
-                <button
-                  type="button"
-                  className={`ap-tab ${isActive ? 'ap-tab--active' : ''}`}
-                  onClick={() => handleSelectTab(tab.id)}
+              return (
+                <div
+                  key={tab.id}
+                  className={`ap-tab-wrap ${isActive ? 'ap-tab-wrap--active' : ''}`}
                 >
-                  <span className="ap-tab-icon">{tab.viewKey === 'myCrm' ? MY_CRM_ICON : TAB_ICON}</span>
-                  <span>{tab.name}</span>
-                </button>
-
-                {isAdmin ? (
                   <button
                     type="button"
-                    className={`ap-tab-caret ${isActive || openMenuState?.id === tab.id ? 'ap-tab-caret--active' : ''}`}
-                    onClick={(event) => handleToggleTabMenu(tab, event)}
-                    aria-label={`Open ${tab.name} tab menu`}
-                    aria-haspopup="menu"
-                    aria-expanded={openMenuState?.id === tab.id}
+                    className={`ap-tab ${isActive ? 'ap-tab--active' : ''}`}
+                    onClick={() => handleSelectTab(tab.id)}
                   >
-                    <FiChevronDown />
+                    <span className="ap-tab-icon">{tab.viewKey === 'myCrm' ? MY_CRM_ICON : TAB_ICON}</span>
+                    <span>{tab.name}</span>
                   </button>
-                ) : null}
-              </div>
-            )
-          })}
 
-          {isAdmin ? (
-            <button type="button" className="ap-tab-add" title="Add tab" onClick={handleOpenAddModal}>
-              <FiPlus />
-            </button>
-          ) : null}
+                  {isAdmin ? (
+                    <button
+                      type="button"
+                      className={`ap-tab-caret ${isActive || openMenuState?.id === tab.id ? 'ap-tab-caret--active' : ''}`}
+                      onClick={(event) => handleToggleTabMenu(tab, event)}
+                      aria-label={`Open ${tab.name} tab menu`}
+                      aria-haspopup="menu"
+                      aria-expanded={openMenuState?.id === tab.id}
+                    >
+                      <FiChevronDown />
+                    </button>
+                  ) : null}
+                </div>
+              )
+            })}
+
+            {isAdmin ? (
+              <button type="button" className="ap-tab-add" title="Add tab" onClick={handleOpenAddModal}>
+                <FiPlus />
+              </button>
+            ) : null}
+          </div>
         </div>
-      </div>
+      )}
 
       {isAdmin && openMenuTab && openMenuState ? createPortal(
         (

@@ -12,12 +12,14 @@
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid rgba(203, 214, 230, 0.9);
-  border-radius: 18px;
-  background: var(--surface-card);
-  backdrop-filter: blur(16px);
-  box-shadow: var(--shadow-md);
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 .ap-home-tab {
@@ -168,12 +170,12 @@
   cursor: pointer;
 }
 
-.ap-tab-menu-item > svg {
+.ap-tab-menu-item>svg {
   color: var(--text-primary);
   flex-shrink: 0;
 }
 
-.ap-tab-menu-item + .ap-tab-menu-item {
+.ap-tab-menu-item+.ap-tab-menu-item {
   margin-top: 0.18rem;
 }
 
@@ -183,7 +185,7 @@
 }
 
 .ap-tab-menu-item:hover,
-.ap-tab-menu-item:hover > svg {
+.ap-tab-menu-item:hover>svg {
   color: var(--text-primary);
 }
 
@@ -193,7 +195,7 @@
 }
 
 .ap-tab-menu-item-manage,
-.ap-tab-menu-item-manage > svg {
+.ap-tab-menu-item-manage>svg {
   color: var(--text-primary);
 }
 
@@ -202,7 +204,7 @@
 }
 
 .ap-tab-menu-item-delete,
-.ap-tab-menu-item-delete > svg {
+.ap-tab-menu-item-delete>svg {
   color: var(--text-primary);
 }
 
@@ -239,11 +241,11 @@
 }
 
 .ap-welcome-block {
-  padding: clamp(1rem, 1.4vw, 1.4rem);
-  border: 1px solid rgba(201, 214, 232, 0.92);
-  border-radius: 18px;
-  background: var(--surface-app);
-  box-shadow: var(--shadow-md);
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .ap-welcome-heading {
@@ -1016,6 +1018,7 @@
 }
 
 @media (max-width: 980px) {
+
   .ap-performance-grid,
   .ap-mycrm-summary-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1047,6 +1050,7 @@
 }
 
 @media (max-width: 560px) {
+
   .ap-stat-cards,
   .ap-performance-grid,
   .ap-mycrm-summary-stats,
@@ -1084,8 +1088,7 @@
 }
 
 /* Final monitoring dark-theme pass. Keep this after the legacy light rules. */
-[data-theme="dark"] :where(
-  .admin-panel,
+[data-theme="dark"] :where(.admin-panel,
   .ap-tabbar,
   .ap-tab-menu,
   .ap-welcome-block,
@@ -1096,25 +1099,21 @@
   .ap-mycrm-summary-card,
   .ap-mycrm-profile-card,
   .ap-mycrm-summary-panel,
-  .ap-modal-form
-) {
+  .ap-modal-form) {
   background: #12202a !important;
   border-color: var(--text-primary) !important;
   color: #f0fffd !important;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28) !important;
 }
 
-[data-theme="dark"] :where(
-  .ap-dashboard-card-header,
-  .ap-mycrm-summary-header
-) {
+[data-theme="dark"] :where(.ap-dashboard-card-header,
+  .ap-mycrm-summary-header) {
   background: linear-gradient(180deg, #1b2c37 0%, #162631 100%) !important;
   border-color: var(--text-primary) !important;
   color: #f0fffd !important;
 }
 
-[data-theme="dark"] :where(
-  .ap-home-tab,
+[data-theme="dark"] :where(.ap-home-tab,
   .ap-tab,
   .ap-tab-caret,
   .ap-tab-add,
@@ -1123,16 +1122,14 @@
   .ap-todo-btn,
   .ap-mycrm-summary-btn,
   .ap-mycrm-summary-stat,
-  .ap-modal-btn-secondary
-) {
+  .ap-modal-btn-secondary) {
   background: #1b2c37 !important;
   border-color: var(--text-primary) !important;
   color: #f0fffd !important;
   opacity: 1 !important;
 }
 
-[data-theme="dark"] :where(
-  .ap-home-tab:hover,
+[data-theme="dark"] :where(.ap-home-tab:hover,
   .ap-tab:hover,
   .ap-tab-caret:hover,
   .ap-tab-add:hover,
@@ -1140,27 +1137,23 @@
   .ap-quick-item:hover,
   .ap-todo-btn:hover,
   .ap-mycrm-summary-btn:hover,
-  .ap-mycrm-summary-stat:hover
-) {
+  .ap-mycrm-summary-stat:hover) {
   background: #223a49 !important;
   border-color: var(--text-primary) !important;
   color: #ffffff !important;
 }
 
-[data-theme="dark"] :where(
-  .ap-home-tab--active,
+[data-theme="dark"] :where(.ap-home-tab--active,
   .ap-tab--active,
   .ap-tab-caret--active,
   .ap-modal-btn-primary,
-  .ap-mycrm-action-btn
-) {
+  .ap-mycrm-action-btn) {
   background: linear-gradient(135deg, #1d65a6 0%, #2488d1 100%) !important;
   border-color: var(--text-primary) !important;
   color: #ffffff !important;
 }
 
-[data-theme="dark"] :where(
-  .ap-welcome-heading,
+[data-theme="dark"] :where(.ap-welcome-heading,
   .ap-dashboard-card-title,
   .ap-dashboard-card-title-link,
   .ap-todo-title,
@@ -1172,30 +1165,25 @@
   .ap-mycrm-summary-stat strong,
   .ap-modal-field span,
   .ap-performance-select-label,
-  .ap-tab-menu-item span
-) {
+  .ap-tab-menu-item span) {
   color: #f0fffd !important;
   opacity: 1 !important;
 }
 
-[data-theme="dark"] :where(
-  .ap-welcome-sub,
+[data-theme="dark"] :where(.ap-welcome-sub,
   .ap-dashboard-subtitle,
   .ap-dashboard-grid-row,
   .ap-dashboard-grid-row span,
   .ap-dashboard-bar-group span,
   .ap-performance-card span,
   .ap-mycrm-profile-list span,
-  .ap-mycrm-summary-stat span
-) {
+  .ap-mycrm-summary-stat span) {
   color: #c7e6e5 !important;
   opacity: 1 !important;
 }
 
-[data-theme="dark"] :where(
-  .ap-stat-count,
-  .ap-mycrm-profile-list strong
-) {
+[data-theme="dark"] :where(.ap-stat-count,
+  .ap-mycrm-profile-list strong) {
   color: var(--text-primary) !important;
 }
 
@@ -1223,27 +1211,22 @@
   background: linear-gradient(180deg, #e11d48 0%, #be123c 100%) !important;
 }
 
-[data-theme="dark"] :where(
-  .ap-performance-select,
+[data-theme="dark"] :where(.ap-performance-select,
   .ap-modal-field input,
-  .ap-modal-field select
-) {
+  .ap-modal-field select) {
   background: #1b2c37 !important;
   border-color: var(--text-primary) !important;
   color: #f0fffd !important;
   -webkit-text-fill-color: #f0fffd;
 }
 
-[data-theme="dark"] :where(
-  .ap-performance-select option,
-  .ap-modal-field select option
-) {
+[data-theme="dark"] :where(.ap-performance-select option,
+  .ap-modal-field select option) {
   background: #1b2c37 !important;
   color: #f0fffd !important;
 }
 
-[data-theme="dark"] :where(
-  .ap-home-tab svg,
+[data-theme="dark"] :where(.ap-home-tab svg,
   .ap-tab-icon,
   .ap-tab-icon svg,
   .ap-tab-caret svg,
@@ -1252,28 +1235,23 @@
   .ap-stat-icon,
   .ap-todo-btn svg,
   .ap-mycrm-action-btn svg,
-  .ap-mycrm-summary-btn svg
-) {
+  .ap-mycrm-summary-btn svg) {
   color: inherit !important;
   opacity: 1 !important;
 }
 
-[data-theme="dark"] :where(
-  .ap-todo-btn:first-of-type,
+[data-theme="dark"] :where(.ap-todo-btn:first-of-type,
   .ap-todo-btn:first-of-type svg,
   .ap-mycrm-summary-btn-orange,
-  .ap-mycrm-summary-btn-orange svg
-) {
+  .ap-mycrm-summary-btn-orange svg) {
   color: #ffc86a !important;
 }
 
-[data-theme="dark"] :where(
-  .ap-todo-btn--green,
+[data-theme="dark"] :where(.ap-todo-btn--green,
   .ap-todo-btn--green svg,
   .ap-mycrm-summary-btn-green,
   .ap-mycrm-summary-btn-green svg,
-  .ap-tab-menu-icon-bookmark-active
-) {
+  .ap-tab-menu-icon-bookmark-active) {
   color: var(--text-primary) !important;
 }
 
@@ -1359,14 +1337,16 @@ html:not([data-theme="dark"]) .ap-modal-form .ap-modal-field:nth-child(2) select
 html:not([data-theme="dark"]) .ap-modal-form .ap-modal-field select,
 html:not([data-theme="dark"]) .ap-modal-form .ap-modal-field select option {
   background-color: #ffffff !important;
-  color: #1f2937 !important; /* Solid dark text to guarantee visibility */
+  color: #1f2937 !important;
+  /* Solid dark text to guarantee visibility */
 }
 
 /* Light mode only guarantee dropdown OPTIONS visibility for Sales Performance (Phase 17) */
 html:not([data-theme="dark"]) .ap-performance-select select,
 html:not([data-theme="dark"]) .ap-performance-select option {
   background-color: #ffffff !important;
-  color: #1f2937 !important; /* Solid dark text to guarantee visibility */
+  color: #1f2937 !important;
+  /* Solid dark text to guarantee visibility */
 }
 
 /* Light mode only My Profile avatar red theme (Phase 17) */
@@ -1377,7 +1357,8 @@ html:not([data-theme="dark"]) .ap-mycrm-profile-avatar {
 
 /* Light mode guarantee for Sales Performance 'Metric:' label visibility (Phase 17 - Updated) */
 html:not([data-theme="dark"]) .ap-performance-select-label {
-  color: #1f2937 !important; /* Solid dark text so the label is clearly displayed */
+  color: #1f2937 !important;
+  /* Solid dark text so the label is clearly displayed */
   visibility: visible !important;
 }
 
@@ -1385,31 +1366,37 @@ html:not([data-theme="dark"]) .ap-performance-select-label {
 html:not([data-theme="dark"]) .ap-performance-select select,
 html:not([data-theme="dark"]) .ap-performance-select option {
   background-color: #ffffff !important;
-  color: #1f2937 !important; /* Solid dark text to guarantee visibility */
+  color: #1f2937 !important;
+  /* Solid dark text to guarantee visibility */
 }
 
 /* Light mode only My Profile avatar red theme (replacing blue) */
 html:not([data-theme="dark"]) .ap-mycrm-profile-avatar {
-  background-color: #dc2626 !important; /* Forces red background, replacing blue */
-  color: #ffffff !important; /* Forces white text */
+  background-color: #dc2626 !important;
+  /* Forces red background, replacing blue */
+  color: #ffffff !important;
+  /* Forces white text */
 }
 
 /* Light mode guarantee dropdown SELECT BOX visibility for Sales Performance (Phase 17 - Final Fix) */
 html:not([data-theme="dark"]) select.ap-performance-select,
 html:not([data-theme="dark"]) .ap-performance-select option {
   background-color: #ffffff !important;
-  color: #1f2937 !important; /* Solid dark text to guarantee visibility */
+  color: #1f2937 !important;
+  /* Solid dark text to guarantee visibility */
 }
 
 /* Light mode only My Profile avatar red theme (forces override of linear-gradient) */
 html:not([data-theme="dark"]) .ap-mycrm-profile-avatar {
-  background: #dc2626 !important; /* 'background' overrides 'background-image' (gradient) */
+  background: #dc2626 !important;
+  /* 'background' overrides 'background-image' (gradient) */
   color: #ffffff !important;
 }
 
 /* Light mode guarantee for Sales Performance 'Metric:' label text visibility */
 html:not([data-theme="dark"]) .ap-performance-select-label {
-  color: #1f2937 !important; /* Solid dark text so the label is clearly displayed */
+  color: #1f2937 !important;
+  /* Solid dark text so the label is clearly displayed */
   visibility: visible !important;
   opacity: 1 !important;
 }
@@ -1417,16 +1404,1257 @@ html:not([data-theme="dark"]) .ap-performance-select-label {
 /* Light mode ULTIMATE guarantee for Sales Performance dropdown text and clickability */
 html:not([data-theme="dark"]) select.ap-performance-select {
   background-color: #ffffff !important;
-  color: #1f2937 !important; 
-  -webkit-text-fill-color: #1f2937 !important; /* Defeats transparent text fills so text shows! */
-  appearance: menulist !important; /* Forces the dropdown arrow to display */
+  color: #1f2937 !important;
+  -webkit-text-fill-color: #1f2937 !important;
+  /* Defeats transparent text fills so text shows! */
+  appearance: menulist !important;
+  /* Forces the dropdown arrow to display */
   -webkit-appearance: menulist !important;
   opacity: 1 !important;
-  pointer-events: auto !important; /* Guarantees you can touch/click it */
+  pointer-events: auto !important;
+  /* Guarantees you can touch/click it */
 }
 
 html:not([data-theme="dark"]) select.ap-performance-select option {
   background-color: #ffffff !important;
   color: #1f2937 !important;
   -webkit-text-fill-color: #1f2937 !important;
+}
+
+/* ============================================================
+   Corporate Enterprise Dashboard Styling (Ivory & Corporate Red)
+   ============================================================ */
+.ap-home-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.ap-welcome-header-block {
+  margin-bottom: 0.5rem;
+}
+
+.ap-welcome-subhead {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #4b5563;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+}
+
+.ap-welcome-heading {
+  margin: 0 0 0.3rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+.ap-welcome-sub {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+/* 4 Equal Horizontal KPI Cards */
+.ap-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+@media (max-width: 1200px) {
+  .ap-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .ap-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ap-kpi-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  padding: 1.35rem 1.4rem;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ap-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+}
+
+.ap-kpi-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 14px;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.ap-kpi-icon--red {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+.ap-kpi-icon--blue {
+  color: #0284c7;
+  background: #f0f9ff;
+}
+
+.ap-kpi-icon--green {
+  color: #16a34a;
+  background: #f0fdf4;
+}
+
+.ap-kpi-icon--orange {
+  color: #ea580c;
+  background: #fff7ed;
+}
+
+.ap-kpi-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.ap-kpi-val-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: nowrap;
+}
+
+.ap-kpi-value {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #111827;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ap-kpi-trend {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ap-kpi-trend--up {
+  color: #16a34a;
+  background: #f0fdf4;
+}
+
+.ap-kpi-trend--neutral {
+  color: #6b7280;
+  background: #f3f4f6;
+}
+
+.ap-kpi-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #4b5563;
+  margin-top: 0.25rem;
+  white-space: nowrap;
+}
+
+.ap-kpi-wave {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 50%;
+  height: 32px;
+  pointer-events: none;
+}
+
+.ap-kpi-wave path {
+  stroke: none !important;
+}
+
+.ap-kpi-card:nth-child(1) .ap-kpi-wave path {
+  fill: #fee2e2 !important;
+}
+
+.ap-kpi-card:nth-child(2) .ap-kpi-wave path {
+  fill: #e0f2fe !important;
+}
+
+.ap-kpi-card:nth-child(3) .ap-kpi-wave path {
+  fill: #dcfce7 !important;
+}
+
+.ap-kpi-card:nth-child(4) .ap-kpi-wave path {
+  fill: #ffedd5 !important;
+}
+
+/* Main Modular Grid */
+.ap-grid-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+.ap-grid-row--2col {
+  grid-template-columns: 1.6fr 1fr;
+}
+
+@media (max-width: 1024px) {
+  .ap-grid-row--2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ap-card-box {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+  padding: 1.25rem 1.4rem;
+}
+
+.ap-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.ap-card-head-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.ap-card-head-icon {
+  color: #dc2626;
+  font-size: 0.95rem;
+}
+
+.ap-card-head-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ap-link-btn {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ap-btn-red {
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.ap-btn-red:hover {
+  background: #b91c1c;
+}
+
+.ap-todo-tabs {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 1rem;
+  padding-bottom: 0.2rem;
+}
+
+.ap-todo-tab {
+  background: none;
+  border: none;
+  padding: 0.5rem 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #6b7280;
+  cursor: pointer;
+  position: relative;
+}
+
+.ap-todo-tab--active {
+  color: #dc2626;
+  font-weight: 800;
+}
+
+.ap-todo-tab--active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #dc2626;
+}
+
+.ap-grid-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.ap-banner-box {
+  position: relative;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fdfbf7 0%, #f4eae0 100%);
+  border: 1px solid #f0eeea;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1.5rem 1.25rem;
+  min-height: 200px;
+  box-sizing: border-box;
+}
+
+.ap-banner-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.ap-banner-kicker {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.ap-banner-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1.25;
+  color: #111827;
+  margin-bottom: 0.6rem;
+}
+
+.ap-banner-line {
+  width: 2.5rem;
+  height: 3px;
+  background: #dc2626;
+  border-radius: 2px;
+}
+
+.ap-banner-arch {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  width: 140px;
+  height: 180px;
+  border-radius: 70px 70px 0 0;
+  border: 12px solid rgba(255, 255, 255, 0.6);
+  background: linear-gradient(180deg, rgba(235, 225, 210, 0.3) 0%, rgba(215, 200, 180, 0.6) 100%);
+  pointer-events: none;
+}
+
+/* Main 2-Column Dashboard Grid */
+.ap-dashboard-main-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .ap-dashboard-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Reference dashboard polish: spacious ivory canvas and restrained enterprise cards. */
+.ap-home-layout {
+  gap: 1rem;
+  padding: 0.15rem 0.2rem 1.5rem;
+}
+
+.ap-welcome-heading {
+  font-size: clamp(2rem, 3vw, 2.55rem);
+  letter-spacing: -0.045em;
+  color: #10182b;
+}
+
+.ap-welcome-subhead {
+  color: #26344b;
+  letter-spacing: 0.24em;
+}
+
+.ap-welcome-sub {
+  color: #7a8599;
+}
+
+.ap-welcome-slogan {
+  color: #7a8599;
+  letter-spacing: 0.22em;
+}
+
+.ap-welcome-quote {
+  color: #8993a5;
+  font-size: 0.92rem;
+  max-width: 235px;
+  line-height: 1.45;
+}
+
+.ap-kpi-grid {
+  gap: 1rem;
+}
+
+.ap-kpi-card,
+.ap-card-box {
+  border-color: #ece9e4;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(40, 30, 20, 0.045);
+}
+
+.ap-kpi-card {
+  min-height: 122px;
+  padding: 1.25rem 1.3rem;
+}
+
+.ap-kpi-card:hover,
+.ap-card-box:hover {
+  box-shadow: 0 12px 35px rgba(40, 30, 20, 0.07);
+}
+
+.ap-kpi-value {
+  color: #10182b;
+  font-size: 2.35rem;
+}
+
+.ap-kpi-title {
+  color: #10182b;
+}
+
+.ap-dashboard-main-grid {
+  grid-template-columns: minmax(0, 1.66fr) minmax(310px, 0.82fr);
+  gap: 1rem;
+}
+
+.ap-dashboard-left-col,
+.ap-dashboard-right-col {
+  gap: 1rem;
+  min-width: 0;
+}
+
+.ap-dashboard-left-col {
+  min-width: 0;
+}
+
+.ap-card-box {
+  padding: 1.15rem 1.25rem;
+}
+
+.ap-integrations-box,
+.ap-activity-box,
+.ap-integration-tile {
+  min-width: 0;
+}
+
+.ap-card-head-title {
+  color: #10182b;
+  font-size: 1.05rem;
+}
+
+.ap-card-head-icon,
+.ap-link-btn {
+  color: #e11d2e;
+}
+
+.ap-btn-red,
+.ap-btn-solid-red {
+  background: #e11d2e;
+}
+
+.ap-btn-red:hover,
+.ap-btn-solid-red:hover {
+  background: #c91524;
+}
+
+.ap-todo-row {
+  padding: 0.82rem 0.4rem;
+  border: 0;
+  border-bottom: 1px solid #f0eeea;
+  border-radius: 0;
+  background: transparent;
+}
+
+.ap-todo-row:last-child {
+  border-bottom: 0;
+}
+
+.ap-todo-row-meta {
+  color: #8b97aa;
+}
+
+.ap-todo-tag {
+  background: #eef0f3;
+  color: #536073;
+}
+
+.ap-todo-tab--active {
+  background: transparent !important;
+  color: #e51d2a !important;
+}
+
+.ap-todo-tab--active::after {
+  height: 2px;
+  background: #e51d2a;
+}
+
+.ap-upcoming-box {
+  min-height: 215px;
+}
+
+.ap-empty-task-icon {
+  opacity: 0.22;
+}
+
+.ap-banner-box {
+  min-height: 215px;
+}
+
+/* Final alignment pass for the admin home composition. */
+.ap-welcome-row {
+  min-height: 128px;
+  padding: 0.35rem 0.1rem 0;
+}
+
+.ap-kpi-card {
+  min-height: 136px;
+  align-items: center;
+}
+
+.ap-kpi-icon-wrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+}
+
+.ap-dashboard-main-grid {
+  grid-template-columns: minmax(0, 2fr) minmax(360px, 1fr);
+  align-items: start;
+}
+
+.ap-todo-box {
+  min-height: 470px;
+}
+
+.ap-integrations-box {
+  min-height: 174px;
+}
+
+.ap-activity-box {
+  min-height: auto !important;
+}
+
+.ap-card-head {
+  min-height: 34px;
+}
+
+.ap-card-head-right {
+  gap: 1rem;
+}
+
+.ap-integrations-tiles {
+  align-items: stretch;
+}
+
+.ap-integration-tile {
+  min-height: 82px;
+}
+
+.ap-activity-item {
+  min-height: 52px;
+  border-bottom: 1px solid #f1efeb;
+}
+
+.ap-activity-item:last-child {
+  border-bottom: 0;
+}
+
+.ap-integrations-tiles {
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ap-integration-tile {
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.ap-integration-tile-name,
+.ap-integration-tile-sub {
+  min-width: 0;
+}
+
+@media (max-width: 700px) {
+  .ap-home-layout {
+    padding-inline: 0;
+  }
+
+  .ap-welcome-quote-block {
+    display: none;
+  }
+
+  .ap-kpi-grid {
+    gap: 0.75rem;
+  }
+
+  .ap-kpi-card {
+    min-height: 108px;
+  }
+}
+
+.ap-dashboard-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ap-dashboard-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Integrations Tiles */
+.ap-integrations-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+@media (max-width: 600px) {
+  .ap-integrations-tiles {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ap-integration-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #f3f4f6;
+  background: #fafafa;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ap-integration-tile:hover {
+  transform: translateY(-1px);
+  border-color: rgba(220, 38, 38, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.ap-integration-tile-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.ap-integration-tile-icon--outlook {
+  background: #0078d4;
+  color: #ffffff;
+}
+
+.ap-integration-tile-icon--support {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.ap-integration-tile-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.ap-integration-tile-name {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.ap-integration-tile-sub {
+  font-size: 0.72rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ap-integration-tile-arrow {
+  color: #dc2626;
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin-left: auto;
+}
+
+/* Recent Activity Box */
+.ap-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ap-activity-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.5rem;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+  position: relative;
+}
+
+.ap-activity-item:hover {
+  background: #f9fafb;
+}
+
+.ap-activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9ca3af;
+  flex-shrink: 0;
+}
+
+.ap-activity-dot--live {
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
+}
+
+.ap-activity-badge {
+  font-size: 0.6rem;
+  font-weight: 900;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: #f3f4f6;
+  color: #4b5563;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+.ap-activity-badge--live {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.ap-activity-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.ap-activity-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ap-activity-sub {
+  font-size: 0.72rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ap-activity-time {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Remove top white rectangle container shape from welcome header */
+.ap-welcome-row {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  min-height: auto !important;
+  height: auto !important;
+  padding: 0.25rem 0 !important;
+  margin: 0 !important;
+}
+
+.ap-welcome-header-block {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.ap-welcome-heading {
+  margin: 0 !important;
+  font-size: clamp(1.8rem, 2.5vw, 2.3rem) !important;
+  font-weight: 900 !important;
+  color: #10182b !important;
+}
+
+/* Unique Modern To-Do List Styling */
+.ap-todo-box {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #ece9e4 !important;
+  border-radius: 18px !important;
+  padding: 1.25rem !important;
+  box-shadow: 0 8px 30px rgba(40, 30, 20, 0.045) !important;
+}
+
+.ap-todo-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.ap-todo-tab {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  background: transparent;
+  border: none;
+  padding: 7px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-out;
+  text-align: center;
+}
+
+.ap-todo-tab:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.ap-todo-tab--active {
+  background: #ffffff !important;
+  color: #dc2626 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+.ap-todo-tab--active::after {
+  display: none !important;
+}
+
+.ap-todo-rows {
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ap-todo-rows::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ap-todo-rows::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.ap-todo-rows::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.ap-todo-rows::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.ap-todo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #f1f5f9 !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.ap-todo-row:hover {
+  border-color: rgba(225, 29, 46, 0.25) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(225, 29, 46, 0.06) !important;
+  background: #fffdfd !important;
+}
+
+.ap-todo-row-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ap-todo-calendar-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(225, 29, 46, 0.08);
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.ap-todo-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.ap-todo-header-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ap-todo-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+.ap-todo-row-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ap-todo-row-meta {
+  font-size: 0.76rem;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ap-todo-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ap-btn-solid-red {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #e11d2e 0%, #b91c1c 100%) !important;
+  color: #ffffff !important;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(225, 29, 46, 0.25);
+}
+
+.ap-btn-solid-red:hover {
+  box-shadow: 0 4px 12px rgba(225, 29, 46, 0.4);
+  transform: translateY(-1px);
+}
+
+.ap-btn-outline-red {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0 14px;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px;
+  background: #ffffff !important;
+  color: #475569 !important;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ap-btn-outline-red:hover {
+  border-color: #94a3b8 !important;
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+[data-theme="dark"] .ap-todo-box {
+  background: #172632 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .ap-todo-tabs {
+  background: #0f1a24;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .ap-todo-tab {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .ap-todo-tab--active {
+  background: #1e2d3b !important;
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .ap-todo-row {
+  background: #1e2d3b !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-theme="dark"] .ap-todo-row:hover {
+  background: #243447 !important;
+  border-color: rgba(248, 113, 113, 0.3) !important;
+}
+
+[data-theme="dark"] .ap-todo-row-title {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .ap-todo-row-meta {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .ap-btn-outline-red {
+  background: #172632 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .ap-btn-outline-red:hover {
+  background: #1e2d3b !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .ap-todo-rows::-webkit-scrollbar-track {
+  background: #0f1a24;
+}
+
+[data-theme="dark"] .ap-todo-rows::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+/* Unique Live Activity Card Styling */
+.ap-activity-box {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #ece9e4 !important;
+  border-radius: 18px !important;
+  padding: 1.25rem !important;
+  box-shadow: 0 8px 30px rgba(40, 30, 20, 0.045) !important;
+}
+
+.ap-live-pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  display: inline-block;
+  margin-right: 4px;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: apLivePulse 1.8s infinite;
+}
+
+@keyframes apLivePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.ap-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 0.75rem;
+}
+
+.ap-activity-item--live {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #d1fae5 !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%) !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.06) !important;
+  transition: all 0.2s ease-out;
+}
+
+.ap-activity-item--live:hover {
+  transform: translateY(-1px);
+  border-color: #a7f3d0 !important;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.12) !important;
+}
+
+.ap-activity-badge-pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #047857;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+
+.ap-activity-dot-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.ap-activity-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.ap-activity-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #064e3b !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ap-activity-sub {
+  font-size: 0.76rem;
+  color: #047857 !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ap-activity-time {
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: #059669 !important;
+  background: #ffffff;
+  border: 1px solid #a7f3d0;
+  padding: 3px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .ap-activity-box {
+  background: #172632 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .ap-activity-item--live {
+  background: #0f241d !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+[data-theme="dark"] .ap-activity-item--live:hover {
+  background: #122d25 !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+[data-theme="dark"] .ap-activity-title {
+  color: #a7f3d0 !important;
+}
+
+[data-theme="dark"] .ap-activity-sub {
+  color: #6ee7b7 !important;
+}
+
+[data-theme="dark"] .ap-activity-time {
+  background: #0f241d !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #6ee7b7 !important;
 }

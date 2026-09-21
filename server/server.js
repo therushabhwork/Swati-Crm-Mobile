@@ -68,14 +68,23 @@ app.disable('x-powered-by')
 const defaultOrigins = [
   env.clientUrl,
   'http://localhost:3000',
+  'http://localhost:3001',
   'http://localhost:5173',
   'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
   'http://127.0.0.1:5173',
 ]
 const allowedOrigins = Array.from(new Set([
   ...defaultOrigins,
   ...env.corsOrigins,
 ].filter(Boolean)))
+
+const isAllowedCorsOrigin = (origin) => {
+  if (!origin) return true
+  if (allowedOrigins.includes(origin)) return true
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) return true
+  return false
+}
 
 const helmet = tryRequire('helmet')
 if (helmet) {
@@ -90,7 +99,12 @@ app.use('/api', (_req, res, next) => {
 })
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    if (isAllowedCorsOrigin(origin)) {
+      return callback(null, true)
+    }
+    return callback(null, true)
+  },
   credentials: true,
 }))
 

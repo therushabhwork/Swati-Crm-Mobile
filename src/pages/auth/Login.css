@@ -12,11 +12,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #FAF6EE;
-  background-image: url('/login-bg.png');
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
+  background-color: #FAF7F1 !important;
+  background-image: url('/bg-pattern.png') !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
   overflow: hidden;
   padding: 32px 16px;
   box-sizing: border-box;
@@ -1293,12 +1294,143 @@
   object-fit: contain !important;
   object-position: center !important;
   /* This scale will zoom the image to overcome any built-in empty space */
+  width: 300px !important;
+  height: auto !important;
+  max-width: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  /* This scale will zoom the image to overcome any built-in empty space */
   transform: scale(2.2) !important; 
   transform-origin: center center !important;
 }
+
+/* Target login composition: centered brand, airy ivory canvas, compact control stack. */
+/* Target login composition: centered brand, airy canvas, compact control stack with rounded corners. */
+.login-page-container {
+  padding: 24px 16px;
+  background-image: url('/bg-pattern.png') !important;
+  background-position: center !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
+.login-desktop-card {
+  max-width: 420px !important;
+  width: 100% !important;
+  padding: 34px 30px !important;
+  background: #ffffff !important;
+  border-radius: 32px !important;
+  border: 1px solid rgba(235, 230, 222, 0.95) !important;
+  box-shadow: 0 16px 45px rgba(40, 30, 20, 0.08) !important;
+  box-sizing: border-box !important;
+}
+
+.login-card-header {
+  margin-bottom: 24px !important;
+}
+
+.login-logo-badge {
+  width: 120px !important;
+  height: 120px !important;
+  padding: 10px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  box-shadow: 0 8px 24px rgba(40, 30, 20, 0.08) !important;
+}
+
+.login-card-title {
+  margin-top: 16px !important;
+  font-size: 1.85rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.035em !important;
+  color: #10182b !important;
+}
+
+.login-role-tabs {
+  margin-top: 14px !important;
+  border-radius: 9999px !important;
+  padding: 4px !important;
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+
+.login-role-tab {
+  border-radius: 9999px !important;
+  padding: 7px 18px !important;
+  font-size: 13.5px !important;
+}
+
+.login-card-form {
+  gap: 16px !important;
+}
+
+.login-pill-input-wrap {
+  height: 58px !important;
+  border-radius: 20px !important;
+  padding-inline: 20px !important;
+  background: rgba(250, 248, 245, 0.95) !important;
+  border: 1px solid rgba(226, 218, 207, 0.95) !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+.login-pill-input {
+  font-size: 15px !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  width: 100% !important;
+}
+
+.login-pill-input::placeholder {
+  color: #6b7280 !important;
+  -webkit-text-fill-color: #6b7280 !important;
+  opacity: 0.85 !important;
+}
+
+.login-pill-input:-webkit-autofill,
+.login-pill-input:-webkit-autofill:hover,
+.login-pill-input:-webkit-autofill:focus,
+.login-pill-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #faf8f5 inset !important;
+  -webkit-text-fill-color: #111827 !important;
+  color: #111827 !important;
+  box-shadow: 0 0 0 1000px #faf8f5 inset !important;
+}
+
+.login-field-error {
+  font-size: 12.5px !important;
+  color: #dc2626 !important;
+  margin-top: 6px !important;
+  padding-left: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.login-pill-submit-btn {
+  height: 58px !important;
+  border-radius: 20px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  background: linear-gradient(180deg, #b20d18 0%, #8e0a13 100%) !important;
+  box-shadow: 0 10px 24px rgba(178, 13, 24, 0.28) !important;
+}
+
+.login-pill-submit-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #c9111e 0%, #9e0c16 100%) !important;
+  box-shadow: 0 12px 28px rgba(178, 13, 24, 0.35) !important;
+}
+
 @media (max-width: 480px) {
-  .login-brand-image.login-brand-image--lumos {
-    width: 240px !important;
-    transform: scale(1.8) !important; 
-  }
+  .login-desktop-card { padding: 26px 20px !important; max-width: 92% !important; }
+  .login-logo-badge { width: 104px !important; height: 104px !important; }
+  .login-card-title { font-size: 1.6rem !important; }
+  .login-pill-input-wrap,
+  .login-pill-submit-btn { height: 54px !important; border-radius: 18px !important; }
 }

@@ -262,6 +262,91 @@ const SalesDashboard = () => {
               <p>
                 Track pipeline performance with clean filters, clear totals, and aligned deal views.
               </p>
+
+              <div
+                ref={dropdownRef}
+                className="sales-dropdown-container"
+              >
+                <button
+                  type="button"
+                  className="sales-dropdown-toggle"
+                  onClick={() => setIsDropdownOpen((currentValue) => !currentValue)}
+                  aria-expanded={isDropdownOpen}
+                  aria-haspopup="menu"
+                  aria-label="Open dashboard controls"
+                >
+                  <span className="sales-dropdown-toggle-copy">
+                    <span className="sales-dropdown-toggle-kicker">Control Center</span>
+                    <span className="sales-dropdown-toggle-label">Tune dashboard filters</span>
+                  </span>
+                  <span className="sales-dropdown-toggle-icon">
+                    <FaChevronDown className={isDropdownOpen ? 'open' : ''} />
+                  </span>
+                </button>
+
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <motion.div
+                      className="sales-dropdown-menu"
+                      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      {menuSections.map((section, sectionIndex) => {
+                        const SectionIcon = section.icon
+
+                        return (
+                          <div key={section.key} className="dropdown-section">
+                            <div className="dropdown-section-title">
+                              <SectionIcon />
+                              <span>{section.title}</span>
+                            </div>
+
+                            <div className="dropdown-items">
+                              {section.options.map((option) => (
+                                <button
+                                  key={option.value}
+                                  type="button"
+                                  className={`dropdown-item ${section.currentValue === option.value ? 'active' : ''}`}
+                                  onClick={() => applyControl(section.onSelect, option.value)}
+                                >
+                                  <span className="dropdown-item-copy">
+                                    <span className="dropdown-item-label">{option.label}</span>
+                                    <span className="dropdown-item-meta">{option.meta}</span>
+                                  </span>
+                                  {section.currentValue === option.value ? (
+                                    <span className="dropdown-item-state">Live</span>
+                                  ) : null}
+                                </button>
+                              ))}
+                            </div>
+
+                            {sectionIndex < menuSections.length - 1 ? (
+                              <div className="dropdown-divider" />
+                            ) : null}
+                          </div>
+                        )
+                      })}
+
+                      <div className="dropdown-footer">
+                        <span className="dropdown-footer-copy">
+                          {`${stats.totalDeals} ${stats.totalDeals === 1 ? 'deal' : 'deals'} visible`}
+                          {' | '}
+                          {formatCurrency(stats.totalValue)}
+                        </span>
+                        <button
+                          type="button"
+                          className="dropdown-reset-pill"
+                          onClick={resetControls}
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
             <div className="sales-header-signals">
@@ -273,94 +358,6 @@ const SalesDashboard = () => {
               ))}
             </div>
           </div>
-        </motion.div>
-
-        <motion.div
-          ref={dropdownRef}
-          className="sales-dropdown-container"
-          initial={{ opacity: 0, x: 16 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ ...sectionMotion, delay: 0.08 }}
-        >
-          <button
-            type="button"
-            className="sales-dropdown-toggle"
-            onClick={() => setIsDropdownOpen((currentValue) => !currentValue)}
-            aria-expanded={isDropdownOpen}
-            aria-haspopup="menu"
-            aria-label="Open dashboard controls"
-          >
-            <span className="sales-dropdown-toggle-copy">
-              <span className="sales-dropdown-toggle-kicker">Control Center</span>
-              <span className="sales-dropdown-toggle-label">Tune dashboard filters</span>
-            </span>
-            <span className="sales-dropdown-toggle-icon">
-              <FaChevronDown className={isDropdownOpen ? 'open' : ''} />
-            </span>
-          </button>
-
-          <AnimatePresence>
-            {isDropdownOpen && (
-              <motion.div
-                className="sales-dropdown-menu"
-                initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              >
-                {menuSections.map((section, sectionIndex) => {
-                  const SectionIcon = section.icon
-
-                  return (
-                    <div key={section.key} className="dropdown-section">
-                      <div className="dropdown-section-title">
-                        <SectionIcon />
-                        <span>{section.title}</span>
-                      </div>
-
-                      <div className="dropdown-items">
-                        {section.options.map((option) => (
-                          <button
-                            key={option.value}
-                            type="button"
-                            className={`dropdown-item ${section.currentValue === option.value ? 'active' : ''}`}
-                            onClick={() => applyControl(section.onSelect, option.value)}
-                          >
-                            <span className="dropdown-item-copy">
-                              <span className="dropdown-item-label">{option.label}</span>
-                              <span className="dropdown-item-meta">{option.meta}</span>
-                            </span>
-                            {section.currentValue === option.value ? (
-                              <span className="dropdown-item-state">Live</span>
-                            ) : null}
-                          </button>
-                        ))}
-                      </div>
-
-                      {sectionIndex < menuSections.length - 1 ? (
-                        <div className="dropdown-divider" />
-                      ) : null}
-                    </div>
-                  )
-                })}
-
-                <div className="dropdown-footer">
-                  <span className="dropdown-footer-copy">
-                    {`${stats.totalDeals} ${stats.totalDeals === 1 ? 'deal' : 'deals'} visible`}
-                    {' | '}
-                    {formatCurrency(stats.totalValue)}
-                  </span>
-                  <button
-                    type="button"
-                    className="dropdown-reset-pill"
-                    onClick={resetControls}
-                  >
-                    Reset
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </motion.div>
       </div>
 
@@ -400,37 +397,44 @@ const SalesDashboard = () => {
                 data={dealsByStage}
                 margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <defs>
+                  <linearGradient id="pipelineBarGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#e11d2e" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#c60016" stopOpacity={0.9} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(226, 232, 240, 0.8)" />
                 <XAxis 
                   dataKey="stage" 
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: '#64748b', fontSize: 12 }}
+                  tick={{ fill: '#475569', fontSize: 12, fontWeight: 700 }}
                   dy={10}
                 />
                 <YAxis 
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: '#64748b', fontSize: 12 }}
+                  tick={{ fill: '#475569', fontSize: 12, fontWeight: 700 }}
                   allowDecimals={false}
                 />
                 <Tooltip 
-                  cursor={{ fill: '#f1f5f9' }}
+                  cursor={{ fill: 'rgba(198, 0, 22, 0.05)' }}
                   contentStyle={{ 
-                    borderRadius: '8px', 
-                    border: 'none',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    borderRadius: '12px', 
+                    border: '1px solid rgba(198, 0, 22, 0.2)',
+                    boxShadow: '0 10px 25px rgba(198, 0, 22, 0.12)',
                     backgroundColor: '#ffffff',
-                    color: '#0f172a'
+                    color: '#111827',
+                    padding: '10px 14px'
                   }}
-                  itemStyle={{ color: '#0f9f9a', fontWeight: 600 }}
+                  itemStyle={{ color: '#c60016', fontWeight: 800 }}
                 />
                 <Bar 
                   dataKey="count" 
-                  fill="#0f9f9a" 
-                  radius={[4, 4, 0, 0]} 
-                  barSize={40}
-                  animationDuration={1500}
+                  fill="url(#pipelineBarGrad)" 
+                  radius={[8, 8, 0, 0]} 
+                  barSize={38}
+                  animationDuration={1200}
                 />
               </BarChart>
             </ResponsiveContainer>

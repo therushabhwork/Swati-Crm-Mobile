@@ -367,7 +367,7 @@ const login = async ({ username, password, role, rememberMe }, requestMeta = {})
     throw new AppError('Invalid role for this portal.', 403)
   }
 
-  const canUseUserPortal = isStandardRole(user.role) || (isPrivilegedRole(user.role) && user.canActAsUser)
+  const canUseUserPortal = isStandardRole(user.role) || isPrivilegedRole(user.role)
   if (role === 'user' && !canUseUserPortal) {
     throw new AppError('Invalid role for this portal.', 403)
   }

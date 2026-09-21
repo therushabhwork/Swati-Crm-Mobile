@@ -72,26 +72,19 @@ const LumosRailMark = () => (
 )
 
 const SidebarTopCard = ({ isAdmin, isCollapsed, displayName, user }) => {
-  const normalizedUser = String(user?.email || user?.username || user?.name || '').trim().toLowerCase()
-  const isKeval = normalizedUser === 'keval@swatiswitchgears.com' || normalizedUser === 'keval v shah'
-  const company = String(user?.company || '').trim().toLowerCase()
-  const LUMOS_USERS = ["sahana prasenjit", "kuldeep nayi", "manish patel", "vishal vandra", "amiha purohit", "vihal memaria", "jaydip chavda", "dhara", "demo"];
-  const isLumos = company.includes("lumos") || LUMOS_USERS.includes(normalizedUser) || normalizedUser.includes("@lumossolution.com") || normalizedUser.includes("@gmail.com")
-
   return (
-    <div className="sb-top-card" style={{ padding: '20px 16px', background: 'transparent', borderBottom: 'none' }}>
-      <div style={{ display: 'flex', gap: '16px', alignItems: 'center', justifyContent: 'center', width: '100%', opacity: isCollapsed ? 0.5 : 1, transition: 'opacity 0.2s ease' }}>
-        {(isKeval || !isLumos) && (
-          <img 
-            src={swatiLogo} 
-            alt="Swati Switchgears Logo" 
-            style={{ 
-              maxWidth: isKeval ? '45%' : '100%', 
-              height: 'auto',
-              maxHeight: '65px', 
-              objectFit: 'contain',
-            }} 
-          />
+    <div className="sb-top-card">
+      <div className="sb-brand-header">
+        <img 
+          src={swatiLogo} 
+          alt="Swati Logo" 
+          className="sb-brand-logo"
+        />
+        {!isCollapsed && (
+          <div className="sb-brand-text">
+            <span className="sb-brand-title">SWATI</span>
+            <span className="sb-brand-subtitle">POWERING A BRIGHTER TOMORROW</span>
+          </div>
         )}
       </div>
     </div>
@@ -318,38 +311,14 @@ const Sidebar = ({ isAdmin = false }) => {
           <SidebarTopCard isAdmin={false} isCollapsed={isSidebarCollapsed} displayName={displayName} user={user} />
 
           <div className="sb-view-toolbar" aria-label="Sidebar view options">
-            {USER_SIDEBAR_TOOLBAR.slice(0, 2).map((item) => {
+            {USER_SIDEBAR_TOOLBAR.map((item) => {
               const Icon = item.icon
 
               return (
                 <NavLink
                   key={item.key}
                   to={item.to}
-                  className={({ isActive }) => `sb-view-toolbar-button sb-view-toolbar-button--active ${isActive ? 'sb-view-toolbar-button--route-active' : ''}`}
-                  title={item.title}
-                  aria-label={item.ariaLabel}
-                >
-                  <Icon />
-                </NavLink>
-              )
-            })}
-            <button
-              type="button"
-              className={`sb-view-toolbar-button sb-view-toolbar-button--active ${isSidebarCollapsed ? 'sb-view-toolbar-button--route-active' : ''}`}
-              title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-              aria-label={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-              onClick={toggleSidebarCollapse}
-            >
-              <FaList />
-            </button>
-            {USER_SIDEBAR_TOOLBAR.slice(2).map((item) => {
-              const Icon = item.icon
-
-              return (
-                <NavLink
-                  key={item.key}
-                  to={item.to}
-                  className={({ isActive }) => `sb-view-toolbar-button sb-view-toolbar-button--active ${isActive ? 'sb-view-toolbar-button--route-active' : ''}`}
+                  className={({ isActive }) => `sb-view-toolbar-button ${isActive ? 'sb-view-toolbar-button--route-active' : ''}`}
                   title={item.title}
                   aria-label={item.ariaLabel}
                 >
@@ -371,7 +340,7 @@ const Sidebar = ({ isAdmin = false }) => {
                   className={({ isActive }) => `sb-link sb-link--team ${isActive ? 'sb-link--active' : ''}`}
                   title={link.label}
                 >
-                  <Icon className="sb-link-icon" />
+                  <span className="sb-link-icon"><Icon /></span>
                   {link.key === 'calendar' ? null : <span>{link.label}</span>}
                 </NavLink>
               )
@@ -379,7 +348,7 @@ const Sidebar = ({ isAdmin = false }) => {
           </div>
 
           <div className="sb-nav-section">
-            <SectionLabel isCollapsed={isSidebarCollapsed}>Core modules</SectionLabel>
+            <SectionLabel isCollapsed={isSidebarCollapsed}>MODULES</SectionLabel>
 
             <SidebarGroup
               icon={<FaUsers />}
@@ -440,7 +409,7 @@ const Sidebar = ({ isAdmin = false }) => {
                   className={({ isActive }) => `sb-plain-link ${isActive ? 'sb-plain-link--active' : ''}`}
                   title={link.label}
                 >
-                  <Icon className="sb-plain-icon" />
+                  <span className="sb-plain-icon"><Icon /></span>
                   <span>{link.label}</span>
                 </NavLink>
               )
@@ -475,7 +444,7 @@ const Sidebar = ({ isAdmin = false }) => {
         <div className="sb-view-toolbar" aria-label="Sidebar view options">
           <NavLink
             to="/admin/data-manager"
-            className={({ isActive }) => `sb-view-toolbar-button sb-view-toolbar-button--active ${isActive ? 'sb-view-toolbar-button--route-active' : ''}`}
+            className={({ isActive }) => `sb-view-toolbar-button ${isActive ? 'sb-view-toolbar-button--route-active' : ''}`}
             title="Data Manager"
             aria-label="Data Manager"
           >
@@ -483,7 +452,7 @@ const Sidebar = ({ isAdmin = false }) => {
           </NavLink>
           <NavLink
             to="/admin/calendar"
-            className={({ isActive }) => `sb-view-toolbar-button sb-view-toolbar-button--active ${isActive ? 'sb-view-toolbar-button--route-active' : ''}`}
+            className={({ isActive }) => `sb-view-toolbar-button ${isActive ? 'sb-view-toolbar-button--route-active' : ''}`}
             title="Calendar"
             aria-label="Calendar"
           >
@@ -491,21 +460,12 @@ const Sidebar = ({ isAdmin = false }) => {
           </NavLink>
           <NavLink
             to="/admin/monitoring"
-            className={({ isActive }) => `sb-view-toolbar-button sb-view-toolbar-button--active ${isActive ? 'sb-view-toolbar-button--route-active' : ''}`}
+            className={({ isActive }) => `sb-view-toolbar-button ${isActive ? 'sb-view-toolbar-button--route-active' : ''}`}
             title="Dashboard"
             aria-label="Dashboard"
           >
             <FaDesktop />
           </NavLink>
-          <button
-            type="button"
-            className={`sb-view-toolbar-button sb-view-toolbar-button--active ${isSidebarCollapsed ? 'sb-view-toolbar-button--route-active' : ''}`}
-            title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-            aria-label={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-            onClick={toggleSidebarCollapse}
-          >
-            <FaList />
-          </button>
         </div>
 
         <div className="sb-nav-section">
@@ -515,7 +475,7 @@ const Sidebar = ({ isAdmin = false }) => {
             className={({ isActive }) => `sb-link sb-link--team ${isActive ? 'sb-link--active' : ''}`}
             title="Dashboard"
           >
-            <FaDesktop className="sb-link-icon" />
+            <span className="sb-link-icon"><FaDesktop /></span>
             <span>Dashboard</span>
           </NavLink>
 
@@ -524,14 +484,14 @@ const Sidebar = ({ isAdmin = false }) => {
             className={({ isActive }) => `sb-link sb-link--team ${isActive || isTeamViewRoute ? 'sb-link--active' : ''}`}
             title="Team View"
           >
-            <FaUsers className="sb-link-icon" />
+            <span className="sb-link-icon"><FaUsers /></span>
             <span>Team View</span>
           </NavLink>
 
         </div>
 
         <div className="sb-nav-section">
-          <SectionLabel isCollapsed={isSidebarCollapsed}>Core modules</SectionLabel>
+          <SectionLabel isCollapsed={isSidebarCollapsed}>MODULES</SectionLabel>
           <SidebarGroup
             icon={<FaUsers />}
             label="Accounts"
@@ -629,7 +589,7 @@ const Sidebar = ({ isAdmin = false }) => {
             className={({ isActive }) => `sb-link sb-workspace-tool-link ${isActive ? 'sb-link--active' : ''}`}
             title="Charts"
           >
-            <FaChartPie className="sb-link-icon" />
+            <span className="sb-link-icon"><FaChartPie /></span>
             <span>Charts</span>
           </NavLink>
 
@@ -638,7 +598,7 @@ const Sidebar = ({ isAdmin = false }) => {
             className={({ isActive }) => `sb-link sb-workspace-tool-link ${isActive ? 'sb-link--active' : ''}`}
             title="View Settings"
           >
-            <FaTh className="sb-link-icon" />
+            <span className="sb-link-icon"><FaTh /></span>
             <span>View Settings</span>
           </NavLink>
 
@@ -659,7 +619,7 @@ const Sidebar = ({ isAdmin = false }) => {
             className={({ isActive }) => `sb-link sb-workspace-tool-link ${isActive ? 'sb-link--active' : ''}`}
             title="Data Manager"
           >
-            <FaCloud className="sb-link-icon" />
+            <span className="sb-link-icon"><FaCloud /></span>
             <span>Data Manager</span>
           </NavLink>
 
@@ -669,7 +629,7 @@ const Sidebar = ({ isAdmin = false }) => {
               className={({ isActive }) => `sb-plain-link ${isActive || isPasswordResetRoute ? 'sb-plain-link--active' : ''}`}
               title="Password Reset Requests"
             >
-              <FaKey className="sb-plain-icon" />
+              <span className="sb-plain-icon"><FaKey /></span>
               <span>Password Reset Requests</span>
             </NavLink>
           ) : null}
@@ -690,6 +650,17 @@ const Sidebar = ({ isAdmin = false }) => {
               <span className="sb-today-count">{todayCustomers}</span>
               <FaUserCircle className="sb-today-icon" />
               <span className="sb-today-label">New Customers</span>
+            </div>
+          </div>
+        )}
+
+        {!isSidebarCollapsed && (
+          <div className="sb-brand-footer">
+            <div className="sb-brand-footer-line" />
+            <div className="sb-brand-footer-text">
+              <span>PEOPLE</span>
+              <span>SOLUTIONS</span>
+              <span>GROWTH</span>
             </div>
           </div>
         )}

@@ -1,4 +1,5 @@
 node_modules
+mongodb-local/
 
 # AI Agent Workflows & Skills
 .agents/

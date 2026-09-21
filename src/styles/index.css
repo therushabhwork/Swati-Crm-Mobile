@@ -1,5 +1,206 @@
 @import "tailwindcss";
 
+/* Shared visual language for the user and admin CRM shells.
+   Presentation-only overrides: no data, routing, or service behavior. */
+body {
+  background: #faf7f1 url('/bg-pattern.png') center / cover fixed no-repeat;
+}
+
+.layout,
+.login-page-container {
+  background-color: #faf7f1 !important;
+  background-image: url('/bg-pattern.png') !important;
+  background-position: center !important;
+  background-size: cover !important;
+}
+
+.layout::before,
+.login-page-container::before,
+.layout::after,
+.login-page-container::after {
+  display: none !important;
+}
+
+.layout-body,
+.login-desktop-card { z-index: 1; }
+
+.layout-main-inner,
+.layout-content-frame { background: transparent !important; }
+
+.sidebar,
+.right-panel {
+  background: rgba(255, 255, 255, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.86) !important;
+  box-shadow: 0 12px 34px rgba(86, 63, 45, 0.07) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.layout--admin .header,
+.layout--user .header,
+.header {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Keep the reference's decorative circles extremely quiet on admin pages. */
+.layout.layout--admin::before,
+.layout.layout--admin::after {
+  display: none !important;
+  opacity: 0;
+}
+
+html.is-admin body::before { display: none !important; }
+
+html.is-admin body,
+html.is-admin #root,
+html.is-admin .layout--admin {
+  background-color: #faf7f1 !important;
+  background-image: url('/bg-pattern.png') !important;
+  background-position: center !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+}
+
+html.is-admin .layout--admin::before,
+html.is-admin .layout--admin::after,
+html.is-admin .layout--admin .header::before,
+html.is-admin .layout--admin .header::after,
+html.is-admin .layout--admin .header-panel::before,
+html.is-admin .layout--admin .header-panel::after {
+  display: none !important;
+  content: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* ============================================================
+   TARGETED WHITE ICON OVERRIDE FOR SOLID RED BACKGROUND CONTROLS
+   Ensures pure white icons only on elements with solid red backgrounds.
+   Does not override icons on light/pink backgrounds.
+   ============================================================ */
+
+/* 1. Solid Red Circle Buttons (Back Button & Red Badges) */
+:where(.hdr-back-btn, .hdr-user-avatar-pill, .hdr-badge--red, .btn--danger, .btn--red, .add-task-btn, .support-request-view-toolbar-button-red) {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+:where(.hdr-back-btn, .btn--danger, .btn--red, .add-task-btn, .support-request-view-toolbar-button-red) :where(svg, svg *, path, circle, rect, line, polyline, polygon) {
+  color: #ffffff !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* 2. Sidebar View Toolbar Active Route (Solid Red Box) */
+.sidebar--admin .sb-view-toolbar-button--route-active,
+.sidebar--admin .sb-view-toolbar-button:active {
+  background: #dc2626 !important;
+  border-color: #b91c1c !important;
+  color: #ffffff !important;
+}
+
+.sidebar--admin .sb-view-toolbar-button--route-active svg,
+.sidebar--admin .sb-view-toolbar-button--route-active svg * {
+  color: #ffffff !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* 3. Inactive Sidebar View Toolbar Buttons (White background -> Dark Icon) */
+.sb-view-toolbar-button:not(.sb-view-toolbar-button--route-active) {
+  color: #374151 !important;
+}
+
+.sb-view-toolbar-button:not(.sb-view-toolbar-button--route-active) svg,
+.sb-view-toolbar-button:not(.sb-view-toolbar-button--route-active) svg * {
+  color: #374151 !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: #374151 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* 4. Sidebar Link Active State (Light Pink Background -> Red Icon & Red Text) */
+.sidebar--admin .sb-link--active,
+.sidebar--admin .sb-group-trigger--route-active {
+  background: #fdebec !important;
+  border-color: #fca5a5 !important;
+  color: #b91c1c !important;
+}
+
+.sidebar--admin .sb-link--active :where(svg, svg *, .sb-link-icon *, .sb-group-icon *),
+.sidebar--admin .sb-group-trigger--route-active :where(svg, svg *, .sb-link-icon *, .sb-group-icon *) {
+  color: #ffffff !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Keep the sidebar focused on navigation; hide the auxiliary Today widget. */
+html.is-admin .sidebar--admin .sb-today-section {
+  display: none !important;
+}
+
+.layout.layout--admin {
+  --header-height: 68px;
+  --sidebar-width: 270px;
+  --app-gutter: 8px;
+  --grid-gap: 20px;
+}
+
+.sidebar { border-radius: 22px !important; }
+
+.md-card,
+.ud-card,
+.ud-stat-card,
+.sales-stat-card,
+.login-pill-input-wrap {
+  background: rgba(255, 255, 255, 0.74) !important;
+  border: 1px solid rgba(255, 255, 255, 0.88) !important;
+  box-shadow: 0 14px 35px rgba(86, 63, 45, 0.08) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.md-card:hover,
+.ud-card:hover,
+.ud-stat-card:hover { box-shadow: 0 18px 40px rgba(86, 63, 45, 0.12) !important; }
+
+.md-btn--primary,
+.login-pill-submit-btn,
+.sales-header .btn-primary,
+.ud-todo-mini-btn {
+  background: linear-gradient(135deg, #d71920, #9f0f16) !important;
+  border-color: #b20d18 !important;
+}
+
+.login-bg-shape { display: block !important; opacity: 0.68; }
+.login-bg-shape--top-right { background: rgba(231, 190, 168, 0.18) !important; }
+.login-bg-shape--mid-left { background: rgba(231, 190, 168, 0.16) !important; }
+.login-bg-shape--bottom { background: rgba(221, 207, 185, 0.18) !important; }
+
+@media (max-width: 720px) {
+  .layout::before, .login-page-container::before { width: 190px; height: 190px; right: -70px; }
+  .layout::after, .login-page-container::after { width: 170px; height: 170px; left: -75px; }
+}
+
 /* CSS Reset */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -11,17 +212,17 @@
    DESIGN TOKENS - Premium SaaS CRM (No Animations)
    ============================================================ */
 :root {
-  /* Brand — Slate/Charcoal Day Theme */
+  /* Brand — Corporate Red & Charcoal Premium Theme */
   --color-primary: #111827;
-  --color-primary-hover: #374151;
-  --color-primary-soft: rgba(17, 24, 39, 0.05);
-  --color-primary-border: rgba(17, 24, 39, 0.15);
+  --color-primary-hover: #1f2937;
+  --color-primary-soft: rgba(220, 38, 38, 0.06);
+  --color-primary-border: rgba(220, 38, 38, 0.2);
   --color-primary-strong: #000000;
 
-  --color-accent-admin: #2563eb;
-  --color-accent-admin-soft: rgba(37, 99, 235, 0.1);
-  --color-accent-user: #059669;
-  --color-accent-user-soft: rgba(5, 150, 105, 0.1);
+  --color-accent-admin: #dc2626;
+  --color-accent-admin-soft: #fef2f2;
+  --color-accent-user: #dc2626;
+  --color-accent-user-soft: #fef2f2;
 
   /* Status */
   --color-success: #16a34a;
@@ -33,15 +234,15 @@
   --color-danger: #dc2626;
   --color-danger-soft: #fef2f2;
   --color-danger-border: #fecaca;
-  --color-info: #2563eb;
-  --color-info-soft: #eff6ff;
-  --color-info-border: #bfdbfe;
+  --color-info: #0284c7;
+  --color-info-soft: #f0f9ff;
+  --color-info-border: #bae6fd;
 
   /* Neutral ramp */
-  --color-gray-50: #fbfbfc;
-  --color-gray-100: #f3f4f6;
-  --color-gray-200: #e5e7eb;
-  --color-gray-300: #d1d5db;
+  --color-gray-50: #faf7f1;
+  --color-gray-100: #f3efe6;
+  --color-gray-200: #e5dfd3;
+  --color-gray-300: #d1c9b8;
   --color-gray-400: #9ca3af;
   --color-gray-500: #6b7280;
   --color-gray-600: #4b5563;
@@ -49,13 +250,13 @@
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
 
-  /* Surfaces - Premium Minimal */
-  --surface-app: #FAF6EE;
-  --body-bg: #FAF6EE;
+  /* Surfaces - Corporate Warm Ivory */
+  --surface-app: #FAF7F1;
+  --body-bg: #FAF7F1;
   --surface-card: #ffffff;
   --surface-raised: #ffffff;
-  --surface-muted: #F5EFE4;
-  --surface-sunken: #FAF6EE;
+  --surface-muted: #F3EFE6;
+  --surface-sunken: #FAF7F1;
   --surface-inverse: #111827;
 
   /* Glass - Removed */
@@ -275,11 +476,11 @@
    Base styles
    ============================================================ */
 html {
-  font-size: 16px;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  background-color: #FAF6EE;
+  background-color: #FAF7F1;
 }
 
 body {
@@ -290,12 +491,12 @@ body {
   font-size: 14px;
   line-height: 1.55;
   color: var(--text-primary);
-  background-color: #FAF6EE;
-  background-image: url('/login-bg.png');
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-color: #FAF7F1;
+  background-image: url('/bg-pattern.png') !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
   animation: none;
 }
 
@@ -307,12 +508,12 @@ body::after {
 #root {
   min-height: 100vh;
   position: relative;
-  background-color: #FAF6EE;
-  background-image: url('/login-bg.png');
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-color: transparent !important;
+  background-image: url('/bg-pattern.png') !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
 }
 
 #root::before,
@@ -323,9 +524,10 @@ body::after {
 .layout,
 .layout--admin,
 .layout--user,
-.lp-page {
-  background-color: #FAF6EE !important;
-  background-image: url('/login-bg.png') !important;
+.lp-page,
+.login-page-container {
+  background-color: transparent !important;
+  background-image: url('/bg-pattern.png') !important;
   background-size: cover !important;
   background-position: center center !important;
   background-repeat: no-repeat !important;
@@ -341,7 +543,9 @@ body::after {
 .admin-panel,
 .dashboard-page,
 .workspace-page,
-.landing-page {
+.landing-page,
+.lp-body,
+.lp-content-shell {
   background: transparent !important;
   background-color: transparent !important;
 }
@@ -2484,11 +2688,13 @@ html.is-user:not([data-theme="dark"]) .layout--user .ud-page {
 }
 
 html.is-user:not([data-theme="dark"]) .header.header--user {
-  border-bottom-color: #DCE3E8 !important;
-  background: rgba(255, 255, 255, 0.96) !important;
-  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-bottom-color: transparent !important;
+  background: transparent !important;
+  background-color: transparent !important;
   background-image: none !important;
-  box-shadow: 0 8px 22px rgba(17, 24, 39, 0.06) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 html.is-user:not([data-theme="dark"]) .header.header--user .header-action-cluster > .hdr-message-wrap > button.hdr-icon-btn,
@@ -6273,3 +6479,92 @@ html:not([data-theme="dark"]) body .admin-customers-page .admin-customers-wizard
   -webkit-text-fill-color: #dc2626 !important;
   font-weight: 700 !important;
 }
+
+/* Global Launchpad shell override: remove outer container boxes, borders, and solid backgrounds across User and Admin portals */
+.sidebar,
+.right-panel,
+.layout-main,
+.layout-stage,
+.layout-main-shell,
+.layout-content-frame,
+.ap-tabbar,
+.ap-welcome-block,
+.ud-page,
+.ud-header,
+.dashboard-header,
+.crm-header-box {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Remove all decorative corner shapes, background blobs, auras across User and Admin portals */
+html,
+body,
+#root,
+.layout,
+.layout--admin,
+.layout--user,
+.layout-stage,
+.layout-main-shell,
+.layout-content-frame,
+.ap-page,
+.ud-page,
+.lp-page {
+  background-color: #FAF7F1 !important;
+  background-image: url('/bg-pattern.png') !important;
+  background-position: center !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Subtle transparent watermark radial shape in top right background (5-8% opacity) */
+body::before {
+  content: '';
+  position: fixed;
+  top: -120px;
+  right: -120px;
+  width: 550px;
+  height: 550px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(234, 110, 80, 0.07) 0%, rgba(250, 247, 241, 0) 70%);
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(40px);
+}
+
+/* Remove pseudo-element shapes and circular blobs across User & Admin */
+.layout-aura,
+.layout-aura--one,
+.layout-aura--two,
+.layout-aura--three,
+.layout-main::before,
+.layout-main::after,
+.layout-main-beacon,
+.sidebar::before,
+.sidebar::after,
+.right-panel::before,
+.right-panel::after,
+.header::before,
+.header::after,
+.ap-welcome-block::before,
+.ap-welcome-block::after,
+.ap-tabbar::before,
+.ap-tabbar::after,
+.ud-page::before,
+.ud-page::after,
+.ud-header::before,
+.ud-header::after,
+.ap-stat-card::after,
+.ud-stat-card::after {
+  display: none !important;
+  content: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+
+

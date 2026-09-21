@@ -1251,7 +1251,6 @@ html:not([data-theme="dark"]) .header--admin .hdr-user-menu .hdr-dropdown-item {
 }
 
 [data-theme="dark"] :where(
-  .header,
   .hdr-shell,
   .hdr-bar,
   .hdr-popover-panel,
@@ -1531,3 +1530,236 @@ html:not([data-theme="dark"]) .header.header--admin .header-action-cluster > .hd
   opacity: 1 !important;
   visibility: visible !important;
 }
+
+/* ============================================================
+   Corporate Header Pill & Avatar Styles
+   ============================================================ */
+.header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.header-panel--actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  margin-left: auto !important;
+  width: auto !important;
+  max-width: 100% !important;
+}
+
+.header-action-cluster {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 0.65rem !important;
+  flex-wrap: nowrap !important;
+}
+
+.hdr-search-pill-bar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.65rem !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(229, 231, 235, 0.9) !important;
+  border-radius: 9999px !important;
+  padding: 0.45rem 1.1rem !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02) !important;
+  width: clamp(240px, 26vw, 400px) !important;
+}
+
+.hdr-search-pill-icon {
+  color: #9ca3af !important;
+  font-size: 0.95rem !important;
+  flex-shrink: 0 !important;
+}
+
+.hdr-search-pill-input {
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  font-size: 0.85rem !important;
+  color: #111827 !important;
+  width: 100% !important;
+}
+
+.hdr-search-pill-input::placeholder {
+  color: #9ca3af !important;
+  font-size: 0.82rem !important;
+}
+
+/* Action Circle Buttons */
+.hdr-icon-btn--circle {
+  width: 2.4rem !important;
+  height: 2.4rem !important;
+  min-width: 2.4rem !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(229, 231, 235, 0.9) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #b91c1c !important;
+  position: relative !important;
+  cursor: pointer !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.header--admin .hdr-icon-btn.hdr-icon-btn--circle {
+  background: #ffffff !important;
+  border: 1px solid rgba(220, 38, 38, 0.4) !important;
+  color: #dc2626 !important;
+  -webkit-text-fill-color: #dc2626 !important;
+}
+
+.header--admin .hdr-icon-btn.hdr-icon-btn--circle svg,
+.header--admin .hdr-icon-btn.hdr-icon-btn--circle svg * {
+  color: #dc2626 !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: #dc2626 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.header--user .hdr-icon-btn.hdr-icon-btn--circle {
+  background: #ffffff !important;
+  border: 1px solid rgba(229, 231, 235, 0.9) !important;
+  color: #374151 !important;
+  -webkit-text-fill-color: #374151 !important;
+}
+
+.header--user .hdr-icon-btn.hdr-icon-btn--circle svg,
+.header--user .hdr-icon-btn.hdr-icon-btn--circle svg * {
+  color: #374151 !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: #374151 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.hdr-icon-btn--circle:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Red Background Circle Buttons (Back button & Red Icons) - PURE WHITE ICONS FOR BOTH USER & ADMIN */
+:where(.header, .header--admin, .header--user) .hdr-back-btn,
+:where(.header, .header--admin, .header--user) .hdr-icon-btn--green-solid.hdr-back-btn,
+:where(.header, .header--admin, .header--user) .hdr-icon-btn--red-solid {
+  width: 2.4rem !important;
+  height: 2.4rem !important;
+  min-width: 2.4rem !important;
+  border-radius: 50% !important;
+  background: #b91c1c !important;
+  background-color: #b91c1c !important;
+  background-image: none !important;
+  border: 1px solid #991b1b !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 6px rgba(185, 28, 28, 0.3) !important;
+  cursor: pointer !important;
+}
+
+:where(.header, .header--admin, .header--user) .hdr-back-btn svg,
+:where(.header, .header--admin, .header--user) .hdr-back-btn svg *,
+:where(.header, .header--admin, .header--user) .hdr-icon-btn--green-solid.hdr-back-btn svg,
+:where(.header, .header--admin, .header--user) .hdr-icon-btn--green-solid.hdr-back-btn svg *,
+:where(.header, .header--admin, .header--user) [class*="red"] svg,
+:where(.header, .header--admin, .header--user) [class*="red"] svg * {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.hdr-badge--red {
+  position: absolute !important;
+  top: -2px !important;
+  right: -2px !important;
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 0.62rem !important;
+  font-weight: 800 !important;
+  width: 1.05rem !important;
+  height: 1.05rem !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid #ffffff !important;
+}
+
+.hdr-user-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.65rem !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  padding: 0.2rem 0.4rem !important;
+}
+
+.hdr-user-avatar-pill {
+  width: 2.4rem !important;
+  height: 2.4rem !important;
+  border-radius: 50% !important;
+  background: #b91c1c !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 800 !important;
+  font-size: 0.85rem !important;
+  letter-spacing: 0.04em !important;
+  flex-shrink: 0 !important;
+}
+
+.hdr-user-meta-info {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  text-align: left !important;
+}
+
+.hdr-user-meta-info .hdr-username {
+  font-size: 0.85rem !important;
+  font-weight: 800 !important;
+  color: #111827 !important;
+  line-height: 1.2 !important;
+}
+
+.hdr-user-meta-info .hdr-user-role {
+  font-size: 0.7rem !important;
+  color: #6b7280 !important;
+  line-height: 1.1 !important;
+}
+
+/* Guarantee 100% header background transparency across all themes and layouts */
+html body #root .header,
+html body #root .header.header--admin,
+html body #root .header.header--user,
+html body #root .layout .header {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-bottom: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+

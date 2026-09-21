@@ -446,18 +446,78 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
   return (
     <>
       <header className={`header ${isAdmin ? 'header--admin' : 'header--user'}`}>
-        <div className="header-panel header-panel--center">
-        </div>
-
         <div className="header-panel header-panel--actions">
           <div className="header-action-cluster">
+            <div className="header-panel header-panel--center" ref={searchWrapRef}>
+              <div className="hdr-search-pill-bar">
+                <FaSearch className="hdr-search-pill-icon" />
+                <input
+                  type="text"
+                  className="hdr-search-pill-input"
+                  value={searchTerm}
+                  onChange={(event) => {
+                    setSearchTerm(event.target.value)
+                    if (!searchPanelOpen) setSearchPanelOpen(true)
+                  }}
+                  onFocus={() => setSearchPanelOpen(true)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') handleQuickSearch()
+                  }}
+                  placeholder="Search accounts, deals, customers..."
+                />
+              </div>
+
+              {searchPanelOpen && searchTerm.trim() ? (
+                <div className="hdr-popover-panel hdr-search-panel">
+                  <div className="hdr-search-results" aria-live="polite">
+                    <div className="hdr-search-results-summary">
+                      Search Results <span>{totalSearchResults}</span>
+                    </div>
+
+                    {searchSections.map((section) => (
+                      <section key={section.label} className="hdr-search-results-section">
+                        <div className="hdr-search-results-heading">
+                          <span>{section.label}</span>
+                          <strong>{section.results.length}</strong>
+                        </div>
+
+                        {section.results.slice(0, 5).map((result) => (
+                          <button
+                            key={result.id}
+                            type="button"
+                            className="hdr-search-result"
+                            onClick={() => handleOpenSearchResult(result)}
+                          >
+                            <span className="hdr-search-result-title">{result.title}</span>
+                            {result.subtitle ? <span className="hdr-search-result-meta">{result.subtitle}</span> : null}
+                          </button>
+                        ))}
+                      </section>
+                    ))}
+
+                    {totalSearchResults === 0 ? (
+                      <p className="hdr-search-results-empty">No matching records found.</p>
+                    ) : null}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="hdr-popover-link-btn hdr-popover-link-btn--center"
+                    onClick={handleOpenAdvancedSearch}
+                  >
+                    Advanced Search <span>&raquo;</span>
+                  </button>
+                </div>
+              ) : null}
+            </div>
+
             <div className="hdr-message-wrap" ref={reminderWrapRef}>
               <button
-                className={`hdr-icon-btn hdr-icon-btn--orange ${isAdmin ? 'hdr-icon-btn--admin-alert' : ''}`}
+                className={`hdr-icon-btn hdr-icon-btn--circle ${isAdmin ? 'hdr-icon-btn--admin-alert' : ''}`}
                 title="Reminders"
                 onClick={handleOpenReminderPanel}
               >
-                <span className="hdr-badge">{reminderCount}</span>
+                <span className="hdr-badge hdr-badge--red">{reminderCount}</span>
                 <FaBell />
               </button>
 
@@ -476,7 +536,7 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
 
             <div className="hdr-message-wrap" ref={quickAddWrapRef}>
               <button
-                className={`hdr-icon-btn hdr-icon-btn--green ${isAdmin ? 'hdr-icon-btn--admin-quick-add' : ''}`}
+                className={`hdr-icon-btn hdr-icon-btn--circle ${isAdmin ? 'hdr-icon-btn--admin-quick-add' : ''}`}
                 title="Add New"
                 onClick={handleOpenQuickAdd}
               >
@@ -505,77 +565,9 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
               )}
             </div>
 
-            <div className="hdr-message-wrap" ref={searchWrapRef}>
-              <button className="hdr-icon-btn hdr-icon-btn--ghost" title="Search" onClick={handleOpenSearchPanel}>
-                <FaSearch />
-              </button>
-
-              {searchPanelOpen && (
-                <div className="hdr-popover-panel hdr-search-panel">
-                  <div className="hdr-search-input-row">
-                    <div className="hdr-search-input-wrap">
-                      <FaSearch className="hdr-search-input-icon" />
-                      <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(event) => setSearchTerm(event.target.value)}
-                        placeholder="Search for Accounts, Customer, Deal, Project here ..."
-                      />
-                    </div>
-
-                    <button type="button" className="hdr-search-submit-btn" onClick={handleQuickSearch}>
-                      <FaSearch />
-                      <span>Search</span>
-                    </button>
-                  </div>
-
-                  {searchTerm.trim() ? (
-                    <div className="hdr-search-results" aria-live="polite">
-                      <div className="hdr-search-results-summary">
-                        Search Results <span>{totalSearchResults}</span>
-                      </div>
-
-                      {searchSections.map((section) => (
-                        <section key={section.label} className="hdr-search-results-section">
-                          <div className="hdr-search-results-heading">
-                            <span>{section.label}</span>
-                            <strong>{section.results.length}</strong>
-                          </div>
-
-                          {section.results.slice(0, 5).map((result) => (
-                            <button
-                              key={result.id}
-                              type="button"
-                              className="hdr-search-result"
-                              onClick={() => handleOpenSearchResult(result)}
-                            >
-                              <span className="hdr-search-result-title">{result.title}</span>
-                              {result.subtitle ? <span className="hdr-search-result-meta">{result.subtitle}</span> : null}
-                            </button>
-                          ))}
-                        </section>
-                      ))}
-
-                      {totalSearchResults === 0 ? (
-                        <p className="hdr-search-results-empty">No matching records found.</p>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  <button
-                    type="button"
-                    className="hdr-popover-link-btn hdr-popover-link-btn--center"
-                    onClick={handleOpenAdvancedSearch}
-                  >
-                    Advanced Search <span>&raquo;</span>
-                  </button>
-                </div>
-              )}
-            </div>
-
             <div className="hdr-message-wrap" ref={messageWrapRef}>
-              <button className="hdr-icon-btn hdr-icon-btn--blue" title="Messages" onClick={handleOpenMessagePanel}>
-                <span className="hdr-badge">{messages.length}</span>
+              <button className="hdr-icon-btn hdr-icon-btn--circle" title="Messages" onClick={handleOpenMessagePanel}>
+                <span className="hdr-badge hdr-badge--red">{messages.length}</span>
                 <FaEnvelope />
               </button>
 
@@ -602,20 +594,24 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
 
             <button
               type="button"
-              className={`hdr-theme-toggle ${isDark ? 'hdr-theme-toggle--night' : 'hdr-theme-toggle--day'}`}
+              className={`hdr-icon-btn hdr-icon-btn--circle ${isDark ? 'hdr-theme-toggle--night' : 'hdr-theme-toggle--day'}`}
               onClick={toggleTheme}
               title={isDark ? 'Switch to Light' : 'Switch to Dark'}
               aria-label={isDark ? 'Switch to Light mode' : 'Switch to Dark mode'}
               aria-pressed={isDark}
             >
               {isDark ? <FaMoon /> : <FaSun />}
-              <span>{isDark ? 'Dark' : 'Light'}</span>
             </button>
 
             <div className="hdr-user-menu-wrap" ref={menuWrapRef}>
               <button className="hdr-user-btn" onClick={() => setMenuOpen((previous) => !previous)}>
-                <FaUserCircle className="hdr-avatar-icon" />
-                <span className="hdr-username">{firstName}</span>
+                <span className="hdr-user-avatar-pill">
+                  {(user?.name || 'Keval V Shah').split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase() || 'KV'}
+                </span>
+                <div className="hdr-user-meta-info">
+                  <span className="hdr-username">{user?.name || 'Keval V Shah'}</span>
+                  <span className="hdr-user-role">{user?.role === 'admin' ? 'Director' : (user?.designation || 'User')}</span>
+                </div>
                 <span className="hdr-caret"><FiChevronDown /></span>
               </button>
 

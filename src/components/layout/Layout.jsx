@@ -16,6 +16,7 @@ const Layout = ({ isAdmin = false }) => {
   const location = useLocation()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const { theme } = useTheme()
+  const showRightPanel = isAdmin && !['/admin', '/admin/', '/admin/monitoring', '/admin/dashboard'].includes(location.pathname)
 
   useEffect(() => {
     setMobileSidebarOpen(false)
@@ -30,7 +31,7 @@ const Layout = ({ isAdmin = false }) => {
   }, [location.pathname, location.search, theme, isAdmin])
 
   return (
-    <div className={`layout ${isAdmin ? 'layout--admin' : 'layout--user'}`}>
+    <div className={`layout ${isAdmin ? 'layout--admin' : 'layout--user'}${isAdmin && !showRightPanel ? ' layout--admin-no-right-panel' : ''}`}>
       <div className="layout-aura layout-aura--one" aria-hidden="true" />
       <div className="layout-aura layout-aura--two" aria-hidden="true" />
       <div className="layout-aura layout-aura--three" aria-hidden="true" />
@@ -80,7 +81,7 @@ const Layout = ({ isAdmin = false }) => {
           </motion.div>
         </div>
 
-        {isAdmin && (
+        {showRightPanel && (
           <motion.div
             className="layout-column layout-column--right"
             initial={{ opacity: 0, x: 24 }}

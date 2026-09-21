@@ -123,25 +123,29 @@ const AdminLaunchpad = () => {
           <div className="lp-content lp-content--modules-only">
             <section className="lp-modules-shell">
               <div className="lp-modules-header">
-                <div className="lp-modules-copy" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', alignItems: 'center' }}>
-                    {showSwati && <img src={swatiLogo} alt="Swati Logo" style={{ height: '120px' }} />}
-                    {showLumos && <img src={lumosLogo} alt="Lumos Logo" style={{ height: '120px' }} />}
+                <div className="lp-modules-copy">
+                  {(showSwati || showLumos) && (
+                    <div className="lp-brand-logo-strip">
+                      {showSwati && <img src={swatiLogo} alt="Swati Logo" className="lp-header-logo" />}
+                      {showLumos && <img src={lumosLogo} alt="Lumos Logo" className="lp-header-logo" />}
+                    </div>
+                  )}
+                  <div className="lp-modules-text-block">
+                    <span className="lp-modules-kicker">Admin Workspace</span>
+                    <h1 className="lp-modules-title">LaunchPad</h1>
+                    <p className="lp-modules-subtitle">
+                      Open the next CRM workspace and choose which module should load first after login.
+                    </p>
                   </div>
-                  <span className="lp-modules-kicker">Admin Workspace</span>
-                  <h1 className="lp-modules-title">LaunchPad</h1>
-                  <p className="lp-modules-subtitle">
-                    Open the next CRM workspace and choose which module should load first after login.
-                  </p>
                 </div>
                 <div className="lp-modules-meta">
                   <div className="lp-modules-meta-item">
-                    <span>Modules</span>
-                    <strong>{launchpadModules.length}</strong>
+                    <span className="lp-meta-label">Modules</span>
+                    <strong className="lp-meta-value">{launchpadModules.length}</strong>
                   </div>
                   <div className="lp-modules-meta-item">
-                    <span>Default Module</span>
-                    <strong>{defaultModuleLabel}</strong>
+                    <span className="lp-meta-label">Default Module</span>
+                    <strong className="lp-meta-value">{defaultModuleLabel}</strong>
                   </div>
                 </div>
               </div>
@@ -158,7 +162,7 @@ const AdminLaunchpad = () => {
                       variants={cardMotion}
                       initial="hidden"
                       animate="visible"
-                      className={`lp-card lp-card--featured lp-card--${module.accent}`}
+                      className={`lp-card lp-card--featured lp-card--${module.accent}${isDefault ? ' lp-card--default-active' : ''}`}
                     >
                       <button
                         type="button"
@@ -195,7 +199,7 @@ const AdminLaunchpad = () => {
                           variants={cardMotion}
                           initial="hidden"
                           animate="visible"
-                          className={`lp-card lp-card--${module.accent}`}
+                          className={`lp-card lp-card--${module.accent}${isDefault ? ' lp-card--default-active' : ''}`}
                         >
                           <button
                             type="button"
