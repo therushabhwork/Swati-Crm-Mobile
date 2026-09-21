@@ -862,6 +862,29 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
     }
   }
 
+  const handleExportSingleQuotation = (quotation) => {
+    const dataRow = {
+      'Quotation No': quotation.quotationNumber,
+      'Title': quotation.title,
+      'Account': quotation.accountName,
+      'Status': quotation.status,
+      'Date': quotation.date ? new Date(quotation.date).toLocaleDateString() : '-',
+      'Value': quotation.totalAmount,
+      'Currency': quotation.amountCurrency,
+    }
+    const columns = Object.keys(dataRow).map((key) => ({ key, label: key, width: 25 }))
+    exportExcelWorkbook({
+      title: 'Quotation Export',
+      subtitle: `Quotation ${quotation.quotationNumber}`,
+      columns,
+      rows: [dataRow],
+      sheetName: 'Quotation',
+      filename: `Quotation-${quotation.quotationNumber}.xlsx`,
+      creator: user?.name || 'System',
+    })
+    showToast('success', 'Quotation exported to Excel.')
+  }
+
   const handleDeleteViewedQuotation = async () => {
     if (!viewRow?.id) return
     const confirmed = window.confirm('Are you sure you want to delete this Quotation?')
@@ -957,6 +980,27 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
         </div>
 
         <div className="aqp-tab-actions">
+          <ExcelExportMenuButton
+            label="Export"
+            title="Export actions"
+            className="aqp-export-menu"
+            buttonClassName="aqp-btn aqp-btn--white"
+            menuClassName="aqp-export-dropdown"
+            items={[
+              {
+                key: 'export-csv',
+                label: 'Export to CSV',
+                badge: 'CSV',
+                onClick: () => handleExportRows('csv'),
+              },
+              {
+                key: 'export-excel',
+                label: 'Export to Excel .xlsx',
+                badge: 'XLSX',
+                onClick: () => handleExportRows('excel'),
+              },
+            ]}
+          />
           <button type="button" className="aqp-btn aqp-btn--gray" onClick={openUploadQuotationModal}>
             <FaUpload className="aqp-btn-icon" />
             Upload Quotation
@@ -970,25 +1014,6 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
 
       <div className="aqp-content-wrapper">
         <div className="aqp-main-content">
-          <div className="aqp-report-controls">
-            <div className="aqp-report-controls-left">
-              <div className="aqp-report-export">
-                <ExcelExportMenuButton
-                  label="Export"
-                  title="Export quotation manager"
-                  items={[
-                    {
-                      key: 'quotation-manager-excel',
-                      label: 'Export to Excel',
-                      badge: 'XLSX',
-                      onClick: () => handleExportRows('excel'),
-                    },
-                  ]}
-                />
-              </div>
-            </div>
-          </div>
-
           <div className="aqp-table-wrap">
         <table className="aqp-table">
           <thead>
@@ -1566,6 +1591,21 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
                 <FaPrint className="aqp-btn-icon" />
                 Print
               </button>
+              <ExcelExportMenuButton
+                label="Excel"
+                title="Export quotation to Excel"
+                className="quotation-view-export"
+                buttonClassName="aqp-btn aqp-btn--gray"
+                menuClassName="quotation-view-export-menu"
+                items={[
+                  {
+                    key: 'quotation-single-excel',
+                    label: 'Export to Excel .xlsx',
+                    badge: 'XLSX',
+                    onClick: () => handleExportSingleQuotation(viewDocument),
+                  },
+                ]}
+              />
             </div>
           </div>
           <div className="aqp-view-quotation-document">

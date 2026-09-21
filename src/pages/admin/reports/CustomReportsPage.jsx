@@ -19,7 +19,11 @@ import {
   FaTrash,
 } from 'react-icons/fa'
 import { useAuth } from '../../../context/AuthContext'
-import { exportExcelWorkbook } from '../../../utils/excelExport'
+import { useData } from '../../../context/DataContext'
+import { exportExcelWorkbook, exportCsvWorkbook } from '../../../utils/excelExport'
+import { customerService } from '../../../services/customerService'
+import { jsPDF } from 'jspdf'
+import 'jspdf-autotable'
 import {
   CUSTOM_REPORT_CONTEXTS,
   getCustomReportContext,
@@ -38,25 +42,13 @@ const TEMPLATE_FILTERS = [
   { key: 'all', label: 'All' },
   { key: 'account', label: 'Accounts' },
   { key: 'customer', label: 'Customers' },
-  { key: 'sr', label: 'SR' },
-  { key: 'closed_sr', label: 'Closed SR' },
   { key: 'deal', label: 'Deals' },
-  { key: 'quotation', label: 'Quotations' },
-  { key: 'geo_tracking', label: 'Geo Tracking' },
-  { key: 'remark', label: 'Remark' },
-  { key: 'daily_status', label: 'Daily Status' },
 ]
 
 const ADD_TEMPLATE_CONTEXT_OPTIONS = [
   'account',
   'customer',
-  'sr',
-  'closed_sr',
   'deal',
-  'quotation',
-  'geo_tracking',
-  'remark',
-  'daily_status',
 ]
 
 const NEW_REPORT_CONTEXT_OPTIONS = [
@@ -218,7 +210,7 @@ const getReportGroupBy = (report) => (
     : ''
 )
 
-const ReportCard = ({ report, onViewWeb, onExport }) => {
+const ReportCard = ({ report, onViewWeb, onExport, isKevalOrAdmin }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const menuRef = useRef(null)
 
@@ -241,30 +233,39 @@ const ReportCard = ({ report, onViewWeb, onExport }) => {
         <div className="cr-list-actions" ref={menuRef} style={{ position: 'relative' }}>
           {getReportType(report) && <span className="cr-list-card-type">{getReportType(report)}</span>}
           <span className="cr-list-card-divider" style={{ color: '#d0d8e4', margin: '0 0.25rem' }}>|</span>
-          <button 
-            type="button" 
-            title="Settings" 
-            className="cr-settings-btn cr-cog-btn" 
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-          >
-            <FaCog />
-          </button>
-          
-          {dropdownOpen && (
-            <div className="cr-card-dropdown-menu" style={{ padding: '0', minWidth: '170px' }}>
-              <button type="button" className="cr-dropdown-item" onClick={() => { setDropdownOpen(false); onExport(report, 'csv') }}>
-                <FaFileCsv className="cr-dropdown-export-icon" />
-                <span className="cr-dropdown-export-label">Export to CSV</span>
+          {isKevalOrAdmin ? (
+            <>
+              <button 
+                type="button" 
+                title="Settings" 
+                className="cr-settings-btn cr-cog-btn" 
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                <FaCog />
               </button>
-              <button type="button" className="cr-dropdown-item" onClick={() => { setDropdownOpen(false); onExport(report, 'excel') }}>
-                <FaFileExcel className="cr-dropdown-export-icon" />
-                <span className="cr-dropdown-export-label">Export to Excel</span>
-              </button>
-              <button type="button" className="cr-dropdown-item" onClick={() => { setDropdownOpen(false); onExport(report, 'pdf') }}>
-                <FaFilePdf className="cr-dropdown-export-icon" />
-                <span className="cr-dropdown-export-label">Export to PDF</span>
-              </button>
-            </div>
+              
+              {dropdownOpen && (
+                <div className="cr-card-dropdown-menu" style={{ padding: '0', minWidth: '170px' }}>
+                  <button type="button" className="cr-dropdown-item" onClick={() => { setDropdownOpen(false); onExport(report, 'csv') }}>
+                    <FaFileCsv className="cr-dropdown-export-icon" />
+                    <span className="cr-dropdown-export-label">Export to CSV</span>
+                  </button>
+                  <button type="button" className="cr-dropdown-item" onClick={() => { setDropdownOpen(false); onExport(report, 'excel') }}>
+                    <FaFileExcel className="cr-dropdown-export-icon" />
+                    <span className="cr-dropdown-export-label">Export to Excel</span>
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <button 
+              type="button" 
+              title="View Report" 
+              className="cr-settings-btn cr-eye-btn" 
+              onClick={() => onViewWeb(report)}
+            >
+              <FaEye />
+            </button>
           )}
         </div>
       </header>
@@ -386,7 +387,13 @@ const SplitDropdown = ({ label, options, isOpen, buttonRef, onToggle, onSelect }
 const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { accounts = [], deals = [], convertedDeals = [], quotations = [] } = useData()
+  const customers = useMemo(() => customerService.getCustomers() || [], [])
   const isAdmin = user?.role === 'admin'
+  const isKevalOrAdmin = isAdmin || 
+    (user?.name && user.name.toLowerCase().includes('keval')) || 
+    (user?.username && user.username.toLowerCase().includes('keval')) || 
+    (user?.email && user.email.toLowerCase().includes('keval'))
   const addRef = useRef(null)
   const newRef = useRef(null)
   const [activeFilter, setActiveFilter] = useState('all')
@@ -501,22 +508,119 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
     setTemplates(getAdminReportTemplates())
   }
 
-  const handleExport = (report) => {
+  const handleExport = (report, format = 'excel') => {
     const reportName = report.reportName || report.title || 'Custom Report'
-    const fields = getReportFields(report).split(',').map(f => f.trim())
+    const groupName = getReportGroupName(report)
+    const isDailyStatus = groupName === 'Daily Status' || String(reportName).includes('Daily Status')
     
-    exportExcelWorkbook({
-      filename: `${reportName}.xlsx`,
-      title: reportName,
-      sheetName: 'Report Data',
-      compact: false,
-      columns: fields.map(field => ({
-        key: field,
-        label: field,
-        width: 25
-      })),
-      rows: [],
+    const isToday = (dateString) => {
+      if (!dateString) return false
+      const date = new Date(dateString)
+      if (isNaN(date)) return false
+      const today = new Date()
+      return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()
+    }
+    
+    const filterByDate = (arr, dateField) => isDailyStatus ? arr.filter(item => isToday(item[dateField] || item.createdAt)) : arr
+
+    const allDeals = [...deals, ...convertedDeals]
+
+    let dataSets = []
+    const mapAccount = (item) => ({
+      'Account No.': item.accountNumber || '-',
+      'Account Date': item.accountDate ? new Date(item.accountDate).toLocaleDateString('en-GB') : '-',
+      'Account Name': item.name || '-',
+      'Account Owner': item.accountOwnerName || item.accountOwner || item.raw?.accountOwner || '-',
+      'Account Status': item.status || '-',
+      'Account State': item.accountState || '-',
+      'Account Source': item.accountSource || '-',
+      'Contact Person': item.contactPerson || '-',
+      'Phone': item.phone || '-',
+      'Email': item.email || '-',
+      'Latest Remark': item.latestRemark || '-',
+      'PO Value': item.poValue || '-',
+      'Job No': item.jobNo || '-',
+      'Created At': item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB') : '-',
     })
+
+    const mapDeal = (item) => ({
+      'Deal Name': item.dealName || item.name || '-',
+      'Account Name': item.accountName || '-',
+      'Deal Owner': item.ownerName || item.owner || '-',
+      'Stage': item.stage || '-',
+      'Status': item.status || '-',
+      'Deal Value': item.dealValue || '-',
+      'Expected Close Date': item.expectedCloseDate ? new Date(item.expectedCloseDate).toLocaleDateString('en-GB') : '-',
+      'Added On': item.addedOn ? new Date(item.addedOn).toLocaleDateString('en-GB') : '-',
+      'Created At': item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB') : '-',
+    })
+
+    const mapCustomer = (item) => ({
+      'Customer Name': item.name || item.customerName || '-',
+      'Customer Code': item.customerCode || '-',
+      'Owner': item.ownerName || item.owner || '-',
+      'Status': item.status || '-',
+      'Mobile': item.mobile || item.phone || '-',
+      'Email': item.email || '-',
+      'City': item.city || '-',
+      'Created At': item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB') : '-',
+    })
+    
+    const mapQuotation = (item) => ({
+      'Quotation No': item.quotationNo || '-',
+      'Date': item.date ? new Date(item.date).toLocaleDateString('en-GB') : '-',
+      'Account': item.accountName || '-',
+      'Deal': item.dealName || '-',
+      'Grand Total': item.grandTotal || '-',
+      'Status': item.status || '-',
+    })
+
+    if (activeFilter === 'all') {
+      dataSets = [
+        ...filterByDate(allDeals, 'addedOn').map(item => ({ 'Data Type': 'Deal', ...mapDeal(item) })),
+        ...filterByDate(accounts, 'accountDate').map(item => ({ 'Data Type': 'Account', ...mapAccount(item) })),
+        ...filterByDate(customers, 'createdAt').map(item => ({ 'Data Type': 'Customer', ...mapCustomer(item) })),
+        ...filterByDate(quotations, 'date').map(item => ({ 'Data Type': 'Quotation', ...mapQuotation(item) })),
+      ]
+    } else if (activeFilter === 'account') {
+      dataSets = filterByDate(accounts, 'accountDate').map(mapAccount)
+    } else if (activeFilter === 'deal') {
+      dataSets = filterByDate(allDeals, 'addedOn').map(mapDeal)
+    } else if (activeFilter === 'customer') {
+      dataSets = filterByDate(customers, 'createdAt').map(mapCustomer)
+    }
+
+    const allKeys = new Set()
+    dataSets.forEach(row => Object.keys(row).forEach(k => allKeys.add(k)))
+    
+    let columns = Array.from(allKeys).map(k => ({ 
+      key: k, 
+      label: k, 
+      width: 25 
+    }))
+
+    if (columns.length === 0) {
+      columns = [{ key: 'Status', label: 'Status', width: 25 }]
+      dataSets = [{ Status: 'No records found' }]
+    }
+
+    if (format === 'csv') {
+      exportCsvWorkbook({
+        filename: `${reportName}-${activeFilter}-${new Date().toISOString().slice(0, 10)}.csv`,
+        title: `${reportName} - ${activeFilter.toUpperCase()}`,
+        sheetName: 'Custom Report',
+        columns,
+        rows: dataSets,
+      })
+    } else {
+      exportExcelWorkbook({
+        filename: `${reportName}-${activeFilter}-${new Date().toISOString().slice(0, 10)}.xlsx`,
+        title: `${reportName} - ${activeFilter.toUpperCase()}`,
+        sheetName: 'Custom Report',
+        columns,
+        rows: dataSets,
+      })
+    }
   }
 
   return (
@@ -579,6 +683,7 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
                     report={report}
                     onViewWeb={setWebReport}
                     onExport={handleExport}
+                    isKevalOrAdmin={isKevalOrAdmin}
                   />
                 ))}
               </div>

@@ -37,7 +37,11 @@ import './SummaryReportsPage.css'
 
 const CATEGORY_ITEMS = ['Accounts', 'Customers', 'Deals']
 const MONTHLY_STATUS_STORAGE_KEY = 'crm-summary-monthly-status'
-const MONTHLY_STATUS_REPORT_ID = 'summary-accounts-monthly-status'
+const MONTHLY_STATUS_REPORT_IDS = [
+  'summary-accounts-monthly-status',
+  'summary-customers-monthly-status',
+  'summary-deals-monthly-status',
+]
 const MONTHLY_STATUS_OPTIONS = [
   'New',
   'Follow-up',
@@ -55,6 +59,8 @@ const MONTHLY_STATUS_OPTIONS = [
   'Priority 1',
   'Priority 2',
 ]
+const CUSTOMERS_STATUS_OPTIONS = ['New', 'Follow Up', 'Closed']
+const DEALS_STATUS_OPTIONS = ['New', 'Won', 'Lost', 'Closed']
 const MONTHLY_STATUS_OWNERS = [
   'Atish Shah',
   'Bhavesh Prajapati',
@@ -166,7 +172,14 @@ const shouldIncludeMonthlyStatusRecord = (record, config, now = new Date()) => {
   return true
 }
 
-const resolveMonthlyStatusLabel = (record) => {
+const resolveMonthlyStatusLabel = (record, reportId) => {
+  if (reportId === 'summary-customers-monthly-status') {
+    return normalizeLabel(record.customerStatus) ? String(record.customerStatus || 'New').trim() : ''
+  }
+  if (reportId === 'summary-deals-monthly-status') {
+    return normalizeLabel(record.status) ? String(record.status || 'New').trim() : ''
+  }
+
   const stageLabel = MONTHLY_STATUS_STAGE_LABEL_LOOKUP[String(record.stage || '').trim().toLowerCase()]
   if (stageLabel) return stageLabel
 
@@ -182,36 +195,55 @@ const resolveMonthlyStatusLabel = (record) => {
 const buildMonthlyStatusOwnerOptions = (normalizedRecords = [], availableUsers = []) => dedupeByNormalizedValue([
   ...MONTHLY_STATUS_OWNERS,
   ...availableUsers,
-  ...normalizedRecords.map((record) => String(record.accountOwner || record.addedBy || '').trim()),
+  ...normalizedRecords.map((record) => String(record.accountOwner || record.dealOwner || record.customerOwner || record.ownerName || record.addedBy || '').trim()),
 ].map(normalizeOwnerDisplayValue))
 
 const buildMonthlyStatusExportData = (
+  reportId,
   normalizedRecords = [],
   config = DEFAULT_MONTHLY_STATUS_CONFIG,
   ownerOptions = MONTHLY_STATUS_OWNERS,
 ) => {
+  const isCustomers = reportId === 'summary-customers-monthly-status'
+  const isDeals = reportId === 'summary-deals-monthly-status'
+  const entityStatusOptions = isCustomers 
+    ? CUSTOMERS_STATUS_OPTIONS 
+    : isDeals 
+      ? DEALS_STATUS_OPTIONS 
+      : MONTHLY_STATUS_OPTIONS
+
   const activeStatuses = dedupeByNormalizedValue(
-    config.statusAll ? MONTHLY_STATUS_OPTIONS : config.selectedStatuses,
+    config.statusAll ? entityStatusOptions : config.selectedStatuses,
   )
   const selectedStatusSet = new Set(activeStatuses.map((entry) => normalizeLabel(entry)))
-  const configuredOwners = dedupeByNormalizedValue(ownerOptions)
+  const activeOwners = dedupeByNormalizedValue(
+    config.ownerAll ? ownerOptions : (config.selectedOwners || []),
+  ).map(normalizeOwnerDisplayValue)
+  const selectedOwnerSet = new Set(activeOwners.map((entry) => normalizeLabel(entry)))
 
   const filteredRecords = normalizedRecords.filter((record) => {
     if (!shouldIncludeMonthlyStatusRecord(record, config)) return false
 
-    const statusLabel = resolveMonthlyStatusLabel(record)
+    const statusLabel = resolveMonthlyStatusLabel(record, reportId)
     if (!statusLabel || !selectedStatusSet.has(normalizeLabel(statusLabel))) {
       return false
+    }
+
+    const ownerLabel = normalizeOwnerDisplayValue(String(record.accountOwner || record.dealOwner || record.customerOwner || record.ownerName || record.addedBy || 'Unassigned').trim() || 'Unassigned')
+    if (!config.ownerAll && config.selectedOwners?.length > 0) {
+      if (!selectedOwnerSet.has(normalizeLabel(ownerLabel))) {
+        return false
+      }
     }
 
     return true
   })
 
   const recordOwners = filteredRecords.map((record) => (
-    normalizeOwnerDisplayValue(String(record.accountOwner || record.addedBy || 'Unassigned').trim() || 'Unassigned')
+    normalizeOwnerDisplayValue(String(record.accountOwner || record.dealOwner || record.customerOwner || record.ownerName || record.addedBy || 'Unassigned').trim() || 'Unassigned')
   ))
   const owners = dedupeByNormalizedValue([
-    ...configuredOwners.map(normalizeOwnerDisplayValue),
+    ...activeOwners,
     ...recordOwners,
   ])
 
@@ -220,13 +252,8 @@ const buildMonthlyStatusExportData = (
     return lookup
   }, {})
 
-  const visibleRows = MONTHLY_STATUS_EXPORT_ROW_CONFIG.filter((entry) => (
-    selectedStatusSet.has(normalizeLabel(entry.label))
-    || entry.aliases?.some((alias) => selectedStatusSet.has(normalizeLabel(alias)))
-  ))
-
-  const matrixRows = visibleRows.map((entry) => ({
-    status: entry.label,
+  const matrixRows = activeStatuses.map((status) => ({
+    status: status,
     counts: owners.reduce((lookup, owner) => {
       lookup[owner] = 0
       return lookup
@@ -240,11 +267,11 @@ const buildMonthlyStatusExportData = (
   }, {})
 
   filteredRecords.forEach((record) => {
-    const statusLabel = resolveMonthlyStatusLabel(record)
+    const statusLabel = resolveMonthlyStatusLabel(record, reportId)
     const statusRow = matrixByStatus[normalizeLabel(statusLabel)]
     if (!statusRow) return
 
-    const ownerKey = normalizeLabel(record.accountOwner || record.addedBy || 'Unassigned')
+    const ownerKey = normalizeLabel(record.accountOwner || record.dealOwner || record.customerOwner || record.ownerName || record.addedBy || 'Unassigned')
     const ownerLabel = normalizedOwnerLookup[ownerKey]
     if (!ownerLabel) return
 
@@ -253,7 +280,7 @@ const buildMonthlyStatusExportData = (
   })
 
   const columns = [
-    { key: 'accountStatus', label: 'Account Status', width: 24 },
+    { key: 'accountStatus', label: 'Status', width: 24 },
     ...owners.map((owner) => ({
       key: owner,
       label: owner,
@@ -361,6 +388,7 @@ const SummaryReportCard = ({
   report,
   isCollapsed,
   onView,
+  onPreview,
   onRefresh,
   onOpenSettings,
   onEdit,
@@ -378,9 +406,6 @@ const SummaryReportCard = ({
         <div className="summary-report-card-actions">
           <button type="button" className="summary-report-icon-btn summary-report-icon-btn-settings" title="Settings" onClick={onOpenSettings}>
             <FaCog />
-          </button>
-          <button type="button" className="summary-report-icon-btn summary-report-icon-btn-edit" title="Edit report" onClick={onEdit}>
-            <FaEdit />
           </button>
           <button type="button" className="summary-report-icon-btn summary-report-icon-btn-delete" title="Delete report" onClick={onDelete}>
             <FaTrash />
@@ -400,8 +425,8 @@ const SummaryReportCard = ({
               },
             ]}
           />
-          <button type="button" className="summary-report-icon-btn summary-report-icon-btn-green" title="View list" onClick={onView}>
-            <FaTable />
+          <button type="button" className="summary-report-icon-btn summary-report-icon-btn-info" title="Preview Table" onClick={onPreview}>
+            <FaEye />
           </button>
           <button type="button" className="summary-report-icon-btn summary-report-icon-btn-orange" title="Refresh" onClick={onRefresh}>
             <FaSyncAlt />
@@ -459,6 +484,7 @@ const SummaryReportCard = ({
 const MonthlyStatusSettingsPanel = ({
   draft,
   ownerOptions,
+  statusOptions = MONTHLY_STATUS_OPTIONS,
   onClose,
   onSave,
   onUpdate,
@@ -466,11 +492,14 @@ const MonthlyStatusSettingsPanel = ({
   if (!draft) return null
 
   const handleStatusToggle = (status) => {
-    const nextStatuses = toggleConfigValue(draft.selectedStatuses, status, MONTHLY_STATUS_OPTIONS)
     onUpdate({
       ...draft,
-      statusAll: nextStatuses.length === MONTHLY_STATUS_OPTIONS.length,
-      selectedStatuses: nextStatuses.length > 0 ? nextStatuses : draft.selectedStatuses,
+      statusAll: false,
+      selectedStatuses: toggleConfigValue(
+        draft.statusAll ? statusOptions : draft.selectedStatuses,
+        status,
+        statusOptions,
+      ),
     })
   }
 
@@ -526,18 +555,39 @@ const MonthlyStatusSettingsPanel = ({
           <section className="monthly-status-section">
             <div className="monthly-status-section-title">Count By</div>
             <p className="monthly-status-note">Report will be generated with all Account details selected below.</p>
+            <label className="monthly-status-field" style={{ marginBottom: '16px' }}>
+              <span>Owner</span>
+              <select
+                value={draft.ownerAll ? 'ALL' : (draft.selectedOwners?.[0] || 'ALL')}
+                onChange={(event) => {
+                  const val = event.target.value
+                  if (val === 'ALL') {
+                    onUpdate({ ...draft, ownerAll: true, selectedOwners: [...ownerOptions] })
+                  } else {
+                    onUpdate({ ...draft, ownerAll: false, selectedOwners: [val] })
+                  }
+                }}
+              >
+                <option value="ALL">All Owner</option>
+                {ownerOptions.map((owner) => (
+                  <option key={owner} value={owner}>
+                    {owner}
+                  </option>
+                ))}
+              </select>
+            </label>
             <div className="monthly-status-toggle-row">
-              <span>Select Account Status</span>
+              <span>Select Status</span>
               <button
                 type="button"
                 className={`monthly-status-toggle-chip${draft.statusAll ? ' monthly-status-toggle-chip--active' : ''}`}
-                onClick={() => onUpdate({ ...draft, statusAll: true, selectedStatuses: [...MONTHLY_STATUS_OPTIONS] })}
+                onClick={() => onUpdate({ ...draft, statusAll: true, selectedStatuses: [...statusOptions] })}
               >
                 All
               </button>
             </div>
             <div className="monthly-status-chip-grid">
-              {MONTHLY_STATUS_OPTIONS.map((status) => {
+              {statusOptions.map((status) => {
                 const isActive = draft.statusAll || draft.selectedStatuses.some((entry) => normalizeLabel(entry) === normalizeLabel(status))
                 return (
                   <button
@@ -550,81 +600,6 @@ const MonthlyStatusSettingsPanel = ({
                   </button>
                 )
               })}
-            </div>
-          </section>
-
-          <section className="monthly-status-section">
-            <div className="monthly-status-section-title">Compare By</div>
-            <label className="monthly-status-field">
-              <span>Compare By</span>
-              <select value={draft.compareBy} onChange={(event) => onUpdate({ ...draft, compareBy: event.target.value })}>
-                <option value="Account Owner">Account Owner</option>
-              </select>
-            </label>
-            <div className="monthly-status-toggle-row">
-              <span>Select Account Owner</span>
-              <button
-                type="button"
-                className={`monthly-status-toggle-chip${draft.ownerAll ? ' monthly-status-toggle-chip--active' : ''}`}
-                onClick={() => onUpdate({ ...draft, ownerAll: true, selectedOwners: [...ownerOptions] })}
-              >
-                All
-              </button>
-            </div>
-            <div className="monthly-status-chip-grid">
-              {ownerOptions.map((owner) => {
-                const isActive = draft.ownerAll || draft.selectedOwners.some((entry) => normalizeLabel(entry) === normalizeLabel(owner))
-                return (
-                  <button
-                    key={owner}
-                    type="button"
-                    className={`monthly-status-chip${isActive ? ' monthly-status-chip--active' : ''}`}
-                    onClick={() => handleOwnerToggle(owner)}
-                  >
-                    {owner}
-                  </button>
-                )
-              })}
-            </div>
-          </section>
-
-          <section className="monthly-status-section monthly-status-section--compact">
-            <div className="monthly-status-section-title">Time Period</div>
-            <div className="monthly-status-field-grid">
-              <label className="monthly-status-field">
-                <span>Field</span>
-                <select value={draft.timeField} onChange={(event) => onUpdate({ ...draft, timeField: event.target.value })}>
-                  <option value="Added On">Added On</option>
-                </select>
-              </label>
-              <label className="monthly-status-field">
-                <span>Period</span>
-                <select value={draft.timePeriod} onChange={(event) => onUpdate({ ...draft, timePeriod: event.target.value })}>
-                  <option value="This Month">This Month</option>
-                </select>
-              </label>
-            </div>
-          </section>
-
-          <section className="monthly-status-section monthly-status-section--compact">
-            <div className="monthly-status-section-title">Report Filters</div>
-            <div className="monthly-status-subpanel">
-              <div className="monthly-status-subpanel-title">Configure Filters</div>
-              <div className="monthly-status-toggle-row">
-                <span>Configure Filters</span>
-                <div className="monthly-status-yesno">
-                  {['YES', 'NO'].map((value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      className={`monthly-status-toggle-chip${draft.configureFilters === value ? ' monthly-status-toggle-chip--active' : ''}`}
-                      onClick={() => onUpdate({ ...draft, configureFilters: value })}
-                    >
-                      {value}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
           </section>
         </div>
@@ -817,6 +792,12 @@ const SummaryReportsPage = () => {
   const splitBtnRef = useRef(null)
   const toastTimer = useRef(null)
 
+  const showToast = useCallback((type, msg) => {
+    setToast({ type, msg })
+    clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 2800)
+  }, [])
+
   useEffect(() => {
     const handleOutside = (e) => {
       if (splitBtnRef.current && !splitBtnRef.current.contains(e.target)) {
@@ -871,28 +852,27 @@ const SummaryReportsPage = () => {
     })
 
     return baseReports.map((report) => {
-      if (report.id !== MONTHLY_STATUS_REPORT_ID) return report
+      if (!MONTHLY_STATUS_REPORT_IDS.includes(report.id)) return report
+
+      const countByLabel = report.entityType === 'Customers' 
+        ? 'Count By Customer Status'
+        : report.entityType === 'Deals'
+          ? 'Count By Deal Status'
+          : 'Count By Account Status'
 
       return {
         ...report,
         visibility: monthlyStatusConfig.visibility,
         lines: [
           {
-            key: 'filters',
-            label: 'Filters',
-            value: monthlyStatusConfig.configureFilters === 'YES'
-              ? `${monthlyStatusConfig.timeField} ${monthlyStatusConfig.timePeriod}`
-              : 'Configure Filters: No',
+            key: 'owner',
+            label: 'Owner',
+            value: formatToggleSummary(monthlyStatusConfig.ownerAll, monthlyStatusConfig.selectedOwners),
           },
           {
             key: 'countBy',
-            label: 'Count By Account Status',
+            label: countByLabel,
             value: formatToggleSummary(monthlyStatusConfig.statusAll, monthlyStatusConfig.selectedStatuses),
-          },
-          {
-            key: 'compareBy',
-            label: 'Compare By Account Owner',
-            value: `${monthlyStatusConfig.compareBy} - All Account Owners`,
           },
         ],
       }
@@ -903,14 +883,110 @@ const SummaryReportsPage = () => {
     reports.filter((report) => report.entityType === activeCategory)
   ), [activeCategory, reports])
 
-  const monthlyStatusExportData = useMemo(
-    () => buildMonthlyStatusExportData(
-      normalizedAccountsBoard.records,
-      monthlyStatusConfig,
-      monthlyStatusOwnerOptions,
-    ),
-    [monthlyStatusConfig, monthlyStatusOwnerOptions, normalizedAccountsBoard.records],
-  )
+  const generateExportData = useCallback((report) => {
+    const isCustomers = report.id === 'summary-customers-monthly-status'
+    const isDeals = report.id === 'summary-deals-monthly-status'
+    const records = isCustomers ? customers : (isDeals ? deals : normalizedAccountsBoard.records)
+    return buildMonthlyStatusExportData(report.id, records, monthlyStatusConfig, monthlyStatusOwnerOptions)
+  }, [customers, deals, normalizedAccountsBoard.records, monthlyStatusConfig, monthlyStatusOwnerOptions])
+
+  const handlePreviewData = useCallback((report) => {
+    if (MONTHLY_STATUS_REPORT_IDS.includes(report.id)) {
+      const exportData = generateExportData(report)
+      
+      const newWindow = window.open('', '_blank')
+      if (!newWindow) {
+        showToast('error', 'Please allow popups to view the report.')
+        return
+      }
+
+      const html = `
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <title>${exportData.reportName}</title>
+            <style>
+              body { 
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+                padding: 40px; 
+                background-color: #525659; 
+                margin: 0;
+                user-select: none;
+                -webkit-user-select: none;
+                transition: opacity 0.2s;
+              }
+              .pdf-page { 
+                background-color: #fff; 
+                padding: 60px; 
+                margin: 0 auto; 
+                max-width: 1000px; 
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+                min-height: 800px;
+                overflow-x: auto;
+              }
+              .table-responsive { overflow-x: auto; white-space: nowrap; }
+              h2 { text-align: center; color: #1a1a1a; margin-top: 0; margin-bottom: 30px; font-size: 24px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+              th, td { border: 1px solid #d1d5db; padding: 12px 16px; text-align: left; color: #374151; }
+              th { background-color: #f3f4f6; color: #111827; font-weight: 600; border-bottom: 2px solid #9ca3af; }
+              tr:nth-child(even) { background-color: #f9fafb; }
+              @media print {
+                body { display: none !important; }
+              }
+            </style>
+          </head>
+          <body oncontextmenu="return false;">
+            <div class="pdf-page">
+              <h2>${exportData.reportName}</h2>
+              <div class="table-responsive">
+                <table>
+                  <thead>
+                    <tr>
+                      ${exportData.columns.map(col => `<th>${col.label}</th>`).join('')}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${exportData.tableRows.map(row => `
+                      <tr>
+                        ${exportData.columns.map(col => `<td>${row[col.key] != null ? row[col.key] : ''}</td>`).join('')}
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <script>
+              document.addEventListener('contextmenu', e => e.preventDefault());
+              document.addEventListener('keydown', function(e) {
+                if (
+                  e.key === 'PrintScreen' || 
+                  (e.ctrlKey && e.key === 'p') || 
+                  (e.ctrlKey && e.key === 's') || 
+                  (e.metaKey && e.shiftKey && (e.key === 's' || e.key === 'S' || e.key === '4'))
+                ) {
+                  e.preventDefault();
+                  document.body.style.opacity = '0';
+                  alert('Screenshots and printing are disabled for security.');
+                  setTimeout(() => { document.body.style.opacity = '1'; }, 2000);
+                }
+              });
+              window.addEventListener('blur', () => {
+                document.body.style.opacity = '0';
+              });
+              window.addEventListener('focus', () => {
+                document.body.style.opacity = '1';
+              });
+              document.addEventListener('selectstart', e => e.preventDefault());
+            </script>
+          </body>
+        </html>
+      `
+      
+      newWindow.document.write(html)
+      newWindow.document.close()
+    }
+  }, [generateExportData, showToast])
 
   const handleNewSummaryReport = (option) => {
     setActiveCategory(option.category)
@@ -930,12 +1006,6 @@ const SummaryReportsPage = () => {
       navigate(buildAddDealReportTemplateUrl())
     }
   }
-
-  const showToast = useCallback((type, msg) => {
-    setToast({ type, msg })
-    clearTimeout(toastTimer.current)
-    toastTimer.current = setTimeout(() => setToast(null), 2800)
-  }, [])
 
   const handleSelectCategory = (category) => {
     setActiveCategory(category)
@@ -964,23 +1034,33 @@ const SummaryReportsPage = () => {
   ), [])
 
   const handleSummaryExportAction = useCallback((actionKey, report) => {
-    if (report.id === MONTHLY_STATUS_REPORT_ID) {
+    if (MONTHLY_STATUS_REPORT_IDS.includes(report.id)) {
+      if (actionKey === 'excel') {
+        const userNames = [user?.name, user?.ownerDisplayName, user?.username, user?.email, user?.ownerCode]
+        const isAdminOnly = userNames.some((userName) => isSameCrmOwner(userName, 'Keval V Shah'))
+        if (!isAdminOnly) {
+          showToast('error', 'admin can access')
+          return
+        }
+      }
+
+      const exportData = generateExportData(report)
       const monthlyStatusMetadata = [
-        { label: 'Generated On', value: monthlyStatusExportData.generatedOn },
-        { label: 'Summary Report Name', value: monthlyStatusExportData.reportName },
-        { label: 'Comparison', value: monthlyStatusExportData.comparison },
-        { label: 'Report Filter', value: monthlyStatusExportData.reportFilter },
-        { label: 'Total Records', value: String(monthlyStatusExportData.totalRecords) },
+        { label: 'Generated On', value: exportData.generatedOn },
+        { label: 'Summary Report Name', value: exportData.reportName },
+        { label: 'Comparison', value: exportData.comparison },
+        { label: 'Report Filter', value: exportData.reportFilter },
+        { label: 'Total Records', value: String(exportData.totalRecords) },
       ]
 
       if (actionKey === 'excel') {
         exportExcelWorkbook({
-          title: monthlyStatusExportData.title,
+          title: exportData.title,
           subtitle: '',
           metadata: monthlyStatusMetadata,
-          columns: monthlyStatusExportData.columns,
-          rows: monthlyStatusExportData.tableRows,
-          sheetName: monthlyStatusExportData.reportName,
+          columns: exportData.columns,
+          rows: exportData.tableRows,
+          sheetName: exportData.reportName,
           filename: buildReportFilename(report, 'xlsx'),
         })
         addNotification('success', 'Excel exported', `${report.title} was exported to Excel.`)
@@ -1017,6 +1097,12 @@ const SummaryReportsPage = () => {
     }
 
     if (actionKey === 'excel') {
+      const userNames = [user?.name, user?.ownerDisplayName, user?.username, user?.email, user?.ownerCode]
+      const isAdminOnly = userNames.some((userName) => isSameCrmOwner(userName, 'Keval V Shah'))
+      if (!isAdminOnly) {
+        showToast('error', 'admin can access')
+        return
+      }
       exportExcelWorkbook({
         ...summaryExportOptions,
         filename: buildReportFilename(report, 'xlsx'),
@@ -1024,7 +1110,7 @@ const SummaryReportsPage = () => {
       addNotification('success', 'Excel exported', `${report.title} was exported to Excel.`)
       showToast('success', `${report.title} exported to Excel.`)
     }
-  }, [addNotification, buildReportFilename, monthlyStatusExportData, showToast])
+  }, [addNotification, buildReportFilename, generateExportData, showToast, user])
 
   const handleToggleSummaryCollapse = (reportId) => {
     setCollapsedReportIds((currentValue) => (
@@ -1044,9 +1130,10 @@ const SummaryReportsPage = () => {
   }
 
   const handleOpenMonthlyStatusSettings = (report) => {
-    if (report.id !== MONTHLY_STATUS_REPORT_ID) return
+    if (!MONTHLY_STATUS_REPORT_IDS.includes(report.id)) return
     setMonthlyStatusDraft({
       ...monthlyStatusConfig,
+      activeReportId: report.id,
       selectedStatuses: [...monthlyStatusConfig.selectedStatuses],
       selectedOwners: [...monthlyStatusConfig.selectedOwners],
     })
@@ -1063,7 +1150,7 @@ const SummaryReportsPage = () => {
       return
     }
 
-    if (report.id === MONTHLY_STATUS_REPORT_ID) {
+    if (MONTHLY_STATUS_REPORT_IDS.includes(report.id)) {
       handleOpenMonthlyStatusSettings(report)
       return
     }
@@ -1077,7 +1164,7 @@ const SummaryReportsPage = () => {
       return
     }
 
-    if (report.id === MONTHLY_STATUS_REPORT_ID) {
+    if (MONTHLY_STATUS_REPORT_IDS.includes(report.id)) {
       handleOpenMonthlyStatusSettings(report)
       return
     }
@@ -1095,12 +1182,20 @@ const SummaryReportsPage = () => {
 
   const handleSaveMonthlyStatusSettings = () => {
     if (!monthlyStatusDraft) return
+    const activeReportId = monthlyStatusDraft.activeReportId
+    const isCustomers = activeReportId === 'summary-customers-monthly-status'
+    const isDeals = activeReportId === 'summary-deals-monthly-status'
+    const statusOptions = isCustomers 
+      ? CUSTOMERS_STATUS_OPTIONS 
+      : isDeals 
+        ? DEALS_STATUS_OPTIONS 
+        : MONTHLY_STATUS_OPTIONS
 
     const normalizedConfig = {
       ...monthlyStatusDraft,
-      statusAll: monthlyStatusDraft.statusAll || monthlyStatusDraft.selectedStatuses.length === MONTHLY_STATUS_OPTIONS.length,
+      statusAll: monthlyStatusDraft.statusAll || monthlyStatusDraft.selectedStatuses.length === statusOptions.length,
       ownerAll: monthlyStatusDraft.ownerAll || monthlyStatusDraft.selectedOwners.length === monthlyStatusOwnerOptions.length,
-      selectedStatuses: monthlyStatusDraft.statusAll ? [...MONTHLY_STATUS_OPTIONS] : monthlyStatusDraft.selectedStatuses,
+      selectedStatuses: monthlyStatusDraft.statusAll ? [...statusOptions] : monthlyStatusDraft.selectedStatuses,
       selectedOwners: monthlyStatusDraft.ownerAll ? [...monthlyStatusOwnerOptions] : monthlyStatusDraft.selectedOwners,
     }
 
@@ -1142,13 +1237,24 @@ const SummaryReportsPage = () => {
     }
   }, [showToast, navigate])
 
+  const activeDraftReportId = monthlyStatusDraft?.activeReportId || MONTHLY_STATUS_REPORT_IDS[0]
+  const isDraftCustomers = activeDraftReportId === 'summary-customers-monthly-status'
+  const isDraftDeals = activeDraftReportId === 'summary-deals-monthly-status'
+  const draftStatusOptions = isDraftCustomers 
+    ? CUSTOMERS_STATUS_OPTIONS 
+    : isDraftDeals 
+      ? DEALS_STATUS_OPTIONS 
+      : MONTHLY_STATUS_OPTIONS
+
   return (
     <div className="summary-reports-page">
       <Toast toast={toast} />
       <QuotationDetailModal modal={detailModal} onClose={() => setDetailModal(null)} />
+
       <MonthlyStatusSettingsPanel
         draft={monthlyStatusDraft}
         ownerOptions={monthlyStatusOwnerOptions}
+        statusOptions={draftStatusOptions}
         onClose={handleCloseMonthlyStatusSettings}
         onSave={handleSaveMonthlyStatusSettings}
         onUpdate={setMonthlyStatusDraft}
@@ -1223,6 +1329,7 @@ const SummaryReportsPage = () => {
                   onEdit={() => handleEditReport(report)}
                   onDelete={() => handleDeleteReport(report)}
                   onExportAction={handleSummaryExportAction}
+                  onPreview={() => handlePreviewData(report)}
                   onView={() => handleViewSummary(report)}
                   onRefresh={() => handleRefreshSummary(report)}
                   onToggleCollapse={() => handleToggleSummaryCollapse(report.id)}
