@@ -1473,6 +1473,12 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
   const { searchTerm, setSearchTerm, filteredItems: searchedDeals } = useSearch(drilldownScopedDeals, searchKeys)
 
   useEffect(() => {
+    if (typeof refreshData === 'function') {
+      refreshData()
+    }
+  }, [location.pathname])
+
+  useEffect(() => {
     const query = new URLSearchParams(location.search).get('query') || ''
     if (normalizeSearchValue(query) !== normalizeSearchValue(searchTerm)) {
       setSearchTerm(query)

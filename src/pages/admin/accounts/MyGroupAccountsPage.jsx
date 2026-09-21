@@ -27,8 +27,8 @@ import { getUserWiseLeadsBoardData } from '../../../features/adminAccounts/selec
 import { getWeeklyReportsAllBoardData } from '../../../features/adminAccounts/selectors/getWeeklyReportsAllBoardData'
 import { getDailyFreshLeadsBoardData } from '../../../features/adminAccounts/selectors/getDailyFreshLeadsBoardData'
 import { getNoFollowLeadsBoardData } from '../../../features/adminAccounts/selectors/getNoFollowLeadsBoardData'
-import { buildAdminDealDetailUrl } from '../../../features/adminDeals/config/adminDealViews'
 import { leadApi } from '../../../services/leadApi'
+import { dealApi } from '../../../services/dealApi'
 import { authService } from '../../../services/authService'
 import { getCityForUser } from '../../../features/adminAccounts/config/cityFilters'
 import { getCrmOwnerOptions } from '../../../features/users/crmUserDirectory';
@@ -818,9 +818,60 @@ const activeStageParam = searchParams.get('stage')
       || value.startsWith('kevalvshah@')
     ))
   }, [user?.email, user?.name, user?.username])
+  const [fetchedBackendAccount, setFetchedBackendAccount] = useState(null)
+
+  useEffect(() => {
+    if (!selectedAccountId) {
+      setFetchedBackendAccount(null)
+      return
+    }
+
+    let isMounted = true
+
+    const fetchAccountData = async () => {
+      try {
+        const lead = await leadApi.getLeadById(selectedAccountId)
+        if (!isMounted || !lead || !lead.id) return
+
+        let linkedDeal = null
+        try {
+          linkedDeal = await dealApi.getConvertedDealForAccount(lead.id)
+        } catch (e) {
+          // ignore if no linked deal
+        }
+
+        const normalizedLead = {
+          ...lead,
+          raw: lead,
+          dealId: linkedDeal?.id || lead.dealId || lead.raw?.dealId || null,
+          convertedDealId: linkedDeal?.id || lead.convertedDealId || null,
+          isConverted: Boolean(linkedDeal?.id || lead.isConverted),
+        }
+
+        const formattedRecord = getAccountById([normalizedLead], selectedAccountId)
+        if (isMounted && formattedRecord) {
+          setFetchedBackendAccount(formattedRecord)
+        }
+      } catch (err) {
+        console.error('Account lookup from MongoDB:', err)
+      }
+    }
+
+    fetchAccountData()
+
+    return () => {
+      isMounted = false
+    }
+  }, [selectedAccountId])
+
+  const localAccount = useMemo(
+    () => getAccountById(boardData.records, selectedAccountId) || getAccountById(accounts, selectedAccountId),
+    [boardData.records, accounts, selectedAccountId]
+  )
+
   const selectedAccount = useMemo(
-    () => getAccountById(boardData.records, selectedAccountId),
-    [boardData.records, selectedAccountId]
+    () => localAccount || fetchedBackendAccount,
+    [localAccount, fetchedBackendAccount]
   )
 
   const updateUrlState = useCallback((updates, replace = false) => {
@@ -846,18 +897,6 @@ const activeStageParam = searchParams.get('stage')
       updateUrlState({ page: currentPage }, true)
     }
   }, [currentPage, searchParams, updateUrlState])
-
-  useEffect(() => {
-    if (selectedAccountId && !selectedAccount) {
-      updateUrlState({ accountId: null }, true)
-    }
-  }, [selectedAccount, selectedAccountId, updateUrlState])
-
-  useEffect(() => {
-    if (showStageTabs && selectedAccount && selectedAccount[selectedTabField] !== activeStage) {
-      updateUrlState({ accountId: null }, true)
-    }
-  }, [activeStage, selectedAccount, selectedTabField, showStageTabs, updateUrlState])
 
   useEffect(() => {
     setFilters(buildInitialFilters(columns))

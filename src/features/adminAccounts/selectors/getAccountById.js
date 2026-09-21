@@ -8,6 +8,6 @@ export const getAccountById = (recordsOrAccounts, accountId) => {
       ? recordsOrAccounts
       : getAccountsBoardData(recordsOrAccounts).records
 
-  return records.find((record) => record.id === accountId) || null
+  return records.find((record) => String(record.id) === String(accountId)) || null
 }
 

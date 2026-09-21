@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FaCalendarAlt,
@@ -21,6 +21,7 @@ import {
 import { useAuth } from '../../../context/AuthContext'
 import { useData } from '../../../context/DataContext'
 import { exportExcelWorkbook, exportCsvWorkbook } from '../../../utils/excelExport'
+import apiClient from '../../../services/apiClient'
 import { customerService } from '../../../services/customerService'
 import { jsPDF } from 'jspdf'
 import 'jspdf-autotable'
@@ -508,7 +509,297 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
     setTemplates(getAdminReportTemplates())
   }
 
-  const handleExport = (report, format = 'excel') => {
+  const handleViewWeb = useCallback(async (report) => {
+    const reportName = report.reportName || report.title || 'Custom Report'
+    const groupName = getReportGroupName(report)
+    const isDailyStatus = groupName === 'Daily Status' || String(reportName).toLowerCase().includes('daily')
+    const targetCategory = report.categoryKey || activeFilter || 'all'
+
+    // Open new window immediately to avoid popup blocker
+    const newWindow = window.open('', '_blank')
+    if (!newWindow) {
+      alert('Please allow popups to view the report.')
+      return
+    }
+
+    newWindow.document.write('<!DOCTYPE html><html><head><title>Loading...</title></head><body style="background:#525659;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;"><div>Loading Report Data from MongoDB...</div></body></html>')
+    newWindow.document.close()
+
+    const isToday = (dateString) => {
+      if (!dateString) return false
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return false
+      const today = new Date()
+      return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()
+    }
+
+    const isCurrentUser = (ownerStr, assignedId, creatorId) => {
+      if (assignedId && String(assignedId) === String(user?.id)) return true
+      if (creatorId && String(creatorId) === String(user?.id)) return true
+      if (!ownerStr) return false
+      const lowerOwner = String(ownerStr).toLowerCase()
+      return Boolean(
+        (user?.name && lowerOwner.includes(user.name.toLowerCase())) ||
+        (user?.username && lowerOwner.includes(user.username.toLowerCase())) ||
+        (user?.ownerCode && lowerOwner.includes(String(user.ownerCode).toLowerCase()))
+      )
+    }
+
+    let allDeals = []
+    let allAccounts = []
+    let allCustomers = []
+
+    try {
+      const fetchPromises = []
+      if (targetCategory === 'all' || targetCategory === 'deal') {
+        fetchPromises.push(apiClient.get('/deals', { params: { limit: 100000 } }).then(res => {
+          allDeals = res?.data?.data || res?.data || []
+        }).catch(e => console.error(e)))
+      }
+      if (targetCategory === 'all' || targetCategory === 'account') {
+        fetchPromises.push(apiClient.get('/leads', { params: { limit: 100000 } }).then(res => {
+          allAccounts = res?.data?.data || res?.data || []
+        }).catch(e => console.error(e)))
+      }
+      if (targetCategory === 'all' || targetCategory === 'customer') {
+        fetchPromises.push(apiClient.get('/customers', { params: { limit: 100000 } }).then(res => {
+          allCustomers = res?.data?.data || res?.data || []
+        }).catch(e => console.error(e)))
+      }
+      await Promise.all(fetchPromises)
+    } catch (err) {
+      console.error('Error fetching report data:', err)
+    }
+
+    let columns = []
+    let rows = []
+
+    if (targetCategory === 'account') {
+      columns = [
+        { key: 'accountNumber', label: 'Account No.' },
+        { key: 'name', label: 'Account Name' },
+        { key: 'accountDate', label: 'Account Date' },
+        { key: 'accountCategory', label: 'Account Category' },
+        { key: 'accountOwner', label: 'Account Owner' },
+        { key: 'status', label: 'Account Status' },
+        { key: 'accountSource', label: 'Account Source' },
+        { key: 'contactPerson', label: 'Contact Person' },
+        { key: 'phone', label: 'Phone' },
+        { key: 'email', label: 'Email' },
+      ]
+      let list = allAccounts
+      if (isDailyStatus) {
+        list = list.filter(item => isCurrentUser(item.accountOwnerName || item.accountOwner || item.ownerName || item.raw?.accountOwner, item.assignedTo || item.ownerUserId, item.createdBy) && isToday(item.accountDate || item.createdAt))
+      }
+      rows = list.map(item => ({
+        accountNumber: item.accountNumber || item.accountNo || item.id || '-',
+        name: item.name || item.customerName || '-',
+        accountDate: item.accountDate ? new Date(item.accountDate).toLocaleDateString('en-GB') : '-',
+        accountCategory: item.accountCategory || '-',
+        accountOwner: item.accountOwnerName || item.accountOwner || item.raw?.accountOwner || '-',
+        status: item.status || '-',
+        accountSource: item.accountSource || '-',
+        contactPerson: item.contactPerson || '-',
+        phone: item.phone || '-',
+        email: item.email || '-',
+      }))
+    } else if (targetCategory === 'customer') {
+      columns = [
+        { key: 'customerNumber', label: 'Customer No.' },
+        { key: 'name', label: 'Customer Name' },
+        { key: 'company', label: 'Company' },
+        { key: 'city', label: 'City' },
+        { key: 'phone', label: 'Phone' },
+        { key: 'email', label: 'Email' },
+        { key: 'status', label: 'Status' },
+        { key: 'assignedTo', label: 'Assigned To' },
+      ]
+      let list = allCustomers
+      if (isDailyStatus) {
+        list = list.filter(item => isCurrentUser(item.assignedToName || item.ownerName || item.owner, item.assignedTo || item.ownerUserId, item.createdBy) && isToday(item.createdAt || item.addedDate))
+      }
+      rows = list.map(item => ({
+        customerNumber: item.customerNumber || item.customerNo || item.id || '-',
+        name: item.name || item.customerName || '-',
+        company: item.company || item.companyName || '-',
+        city: item.city || item.location || '-',
+        phone: item.phone || '-',
+        email: item.email || '-',
+        status: item.status || '-',
+        assignedTo: item.assignedToName || item.ownerName || item.owner || '-',
+      }))
+    } else if (targetCategory === 'deal') {
+      columns = [
+        { key: 'dealNumber', label: 'Deal No.' },
+        { key: 'dealName', label: 'Deal Name' },
+        { key: 'dealDate', label: 'Deal Date' },
+        { key: 'dealOwner', label: 'Deal Owner' },
+        { key: 'dealType', label: 'Deal Type' },
+        { key: 'status', label: 'Deal Status' },
+        { key: 'dealValue', label: 'Deal Value' },
+        { key: 'projectName', label: 'Project Name' },
+        { key: 'consultantName', label: 'Consultant Name' },
+      ]
+      let list = allDeals
+      if (isDailyStatus) {
+        list = list.filter(item => isCurrentUser(item.dealOwnerName || item.dealOwner || item.ownerName || item.owner, item.assignedTo || item.ownerUserId, item.createdBy) && isToday(item.dealDate || item.quotationDate || item.createdAt))
+      }
+      rows = list.map(item => ({
+        dealNumber: item.dealNumber || item.id || '-',
+        dealName: item.dealName || item.name || item.title || '-',
+        dealDate: (item.dealDate || item.quotationDate || item.createdAt) ? new Date(item.dealDate || item.quotationDate || item.createdAt).toLocaleDateString('en-GB') : '-',
+        dealOwner: item.dealOwnerName || item.dealOwner || item.ownerName || item.owner || '-',
+        dealType: item.dealType || item.stage || '-',
+        status: item.status || item.stage || '-',
+        dealValue: item.dealValue || item.value || item.amount || '-',
+        projectName: item.projectName || item.project || '-',
+        consultantName: item.consultantName || '-',
+      }))
+    } else {
+      columns = [
+        { key: 'type', label: 'Type' },
+        { key: 'number', label: 'No.' },
+        { key: 'name', label: 'Name / Title' },
+        { key: 'owner', label: 'Owner / Assigned' },
+        { key: 'date', label: 'Date' },
+        { key: 'status', label: 'Status' },
+        { key: 'details', label: 'Details' },
+      ]
+      let accountsList = allAccounts
+      let dealsList = allDeals
+      let customersList = allCustomers
+
+      if (isDailyStatus) {
+        accountsList = accountsList.filter(item => isCurrentUser(item.accountOwnerName || item.accountOwner || item.ownerName || item.raw?.accountOwner, item.assignedTo || item.ownerUserId, item.createdBy) && isToday(item.accountDate || item.createdAt))
+        dealsList = dealsList.filter(item => isCurrentUser(item.dealOwnerName || item.dealOwner || item.ownerName || item.owner, item.assignedTo || item.ownerUserId, item.createdBy) && isToday(item.dealDate || item.quotationDate || item.createdAt))
+        customersList = customersList.filter(item => isCurrentUser(item.assignedToName || item.ownerName || item.owner, item.assignedTo || item.ownerUserId, item.createdBy) && isToday(item.createdAt || item.addedDate))
+      }
+
+      rows = [
+        ...accountsList.map(item => ({
+          type: 'Account',
+          number: item.accountNumber || item.accountNo || item.id || '-',
+          name: item.name || item.customerName || '-',
+          owner: item.accountOwnerName || item.accountOwner || item.raw?.accountOwner || '-',
+          date: item.accountDate ? new Date(item.accountDate).toLocaleDateString('en-GB') : (item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB') : '-'),
+          status: item.status || '-',
+          details: item.contactPerson || item.phone || item.email || '-',
+        })),
+        ...dealsList.map(item => ({
+          type: 'Deal',
+          number: item.dealNumber || item.id || '-',
+          name: item.dealName || item.name || item.title || '-',
+          owner: item.dealOwnerName || item.dealOwner || item.ownerName || item.owner || '-',
+          date: item.dealDate ? new Date(item.dealDate).toLocaleDateString('en-GB') : (item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB') : '-'),
+          status: item.status || item.stage || '-',
+          details: item.projectName || (item.dealValue ? `₹${item.dealValue}` : '-'),
+        })),
+        ...customersList.map(item => ({
+          type: 'Customer',
+          number: item.customerNumber || item.customerNo || item.id || '-',
+          name: item.name || item.customerName || '-',
+          owner: item.assignedToName || item.ownerName || item.owner || '-',
+          date: item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB') : '-',
+          status: item.status || '-',
+          details: item.company || item.city || item.phone || '-',
+        })),
+      ]
+    }
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <title>${reportName}</title>
+          <style>
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+              padding: 40px; 
+              background-color: #525659; 
+              margin: 0;
+              user-select: none;
+              -webkit-user-select: none;
+              transition: opacity 0.2s;
+            }
+            .pdf-page { 
+              background-color: #fff; 
+              padding: 60px; 
+              margin: 0 auto; 
+              max-width: 1100px; 
+              box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+              min-height: 800px;
+              overflow-x: auto;
+            }
+            .table-responsive { overflow-x: auto; white-space: nowrap; }
+            h2 { text-align: center; color: #1a1a1a; margin-top: 0; margin-bottom: 24px; font-size: 24px; }
+            .report-meta-info { text-align: center; color: #6b7280; font-size: 13px; margin-bottom: 24px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+            th, td { border: 1px solid #d1d5db; padding: 10px 14px; text-align: left; color: #374151; }
+            th { background-color: #f3f4f6; color: #111827; font-weight: 600; border-bottom: 2px solid #9ca3af; }
+            tr:nth-child(even) { background-color: #f9fafb; }
+            .empty-text { text-align: center; padding: 30px; color: #6b7280; font-style: italic; }
+            @media print {
+              body { display: none !important; }
+            }
+          </style>
+        </head>
+        <body oncontextmenu="return false;">
+          <div class="pdf-page">
+            <h2>${reportName}</h2>
+            <div class="report-meta-info">
+              ${isDailyStatus ? "Today's Activity Report" : 'Consolidated Report'} | Total Records: ${rows.length}
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    ${columns.map(col => `<th>${col.label}</th>`).join('')}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rows.length === 0 ? `<tr><td colspan="${columns.length}" class="empty-text">No records found matching report criteria</td></tr>` : rows.map(row => `
+                    <tr>
+                      ${columns.map(col => `<td>${row[col.key] != null ? row[col.key] : '-'}</td>`).join('')}
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <script>
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('keydown', function(e) {
+              if (
+                e.key === 'PrintScreen' || 
+                (e.ctrlKey && e.key === 'p') || 
+                (e.ctrlKey && e.key === 's') || 
+                (e.metaKey && e.shiftKey && (e.key === 's' || e.key === 'S' || e.key === '4'))
+              ) {
+                e.preventDefault();
+                document.body.style.opacity = '0';
+                alert('Screenshots and printing are disabled for security.');
+                setTimeout(() => { document.body.style.opacity = '1'; }, 2000);
+              }
+            });
+            window.addEventListener('blur', () => {
+              document.body.style.opacity = '0';
+            });
+            window.addEventListener('focus', () => {
+              document.body.style.opacity = '1';
+            });
+            document.addEventListener('selectstart', e => e.preventDefault());
+          </script>
+        </body>
+      </html>
+    `
+
+    newWindow.document.open()
+    newWindow.document.write(html)
+    newWindow.document.close()
+  }, [activeFilter, user])
+
+  const handleExport = async (report, format = 'excel') => {
     const reportName = report.reportName || report.title || 'Custom Report'
     const groupName = getReportGroupName(report)
     const isDailyStatus = groupName === 'Daily Status' || String(reportName).includes('Daily Status')
@@ -523,7 +814,33 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
     
     const filterByDate = (arr, dateField) => isDailyStatus ? arr.filter(item => isToday(item[dateField] || item.createdAt)) : arr
 
-    const allDeals = [...deals, ...convertedDeals]
+    let allDeals = []
+    let allAccounts = []
+    let allCustomers = []
+    let allQuotations = quotations
+
+    try {
+      const fetchPromises = []
+      if (activeFilter === 'all' || activeFilter === 'deal') {
+         fetchPromises.push(apiClient.get('/deals', { params: { limit: 100000 } }).then(res => {
+             const d = res?.data?.data || res?.data || []
+             allDeals = d
+         }).catch(e => console.error(e)))
+      }
+      if (activeFilter === 'all' || activeFilter === 'account') {
+         fetchPromises.push(apiClient.get('/leads', { params: { limit: 100000 } }).then(res => {
+             allAccounts = res?.data?.data || res?.data || []
+         }).catch(e => console.error(e)))
+      }
+      if (activeFilter === 'all' || activeFilter === 'customer') {
+         fetchPromises.push(apiClient.get('/customers', { params: { limit: 100000 } }).then(res => {
+             allCustomers = res?.data?.data || res?.data || []
+         }).catch(e => console.error(e)))
+      }
+      await Promise.all(fetchPromises)
+    } catch(err) {
+      console.error(err)
+    }
 
     let dataSets = []
     const mapAccount = (item) => ({
@@ -578,16 +895,16 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
     if (activeFilter === 'all') {
       dataSets = [
         ...filterByDate(allDeals, 'addedOn').map(item => ({ 'Data Type': 'Deal', ...mapDeal(item) })),
-        ...filterByDate(accounts, 'accountDate').map(item => ({ 'Data Type': 'Account', ...mapAccount(item) })),
-        ...filterByDate(customers, 'createdAt').map(item => ({ 'Data Type': 'Customer', ...mapCustomer(item) })),
-        ...filterByDate(quotations, 'date').map(item => ({ 'Data Type': 'Quotation', ...mapQuotation(item) })),
+        ...filterByDate(allAccounts, 'accountDate').map(item => ({ 'Data Type': 'Account', ...mapAccount(item) })),
+        ...filterByDate(allCustomers, 'createdAt').map(item => ({ 'Data Type': 'Customer', ...mapCustomer(item) })),
+        ...filterByDate(allQuotations, 'date').map(item => ({ 'Data Type': 'Quotation', ...mapQuotation(item) })),
       ]
     } else if (activeFilter === 'account') {
-      dataSets = filterByDate(accounts, 'accountDate').map(mapAccount)
+      dataSets = filterByDate(allAccounts, 'accountDate').map(mapAccount)
     } else if (activeFilter === 'deal') {
       dataSets = filterByDate(allDeals, 'addedOn').map(mapDeal)
     } else if (activeFilter === 'customer') {
-      dataSets = filterByDate(customers, 'createdAt').map(mapCustomer)
+      dataSets = filterByDate(allCustomers, 'createdAt').map(mapCustomer)
     }
 
     const allKeys = new Set()
@@ -681,7 +998,7 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
                   <ReportCard
                     key={report.id}
                     report={report}
-                    onViewWeb={setWebReport}
+                    onViewWeb={handleViewWeb}
                     onExport={handleExport}
                     isKevalOrAdmin={isKevalOrAdmin}
                   />

@@ -153,7 +153,7 @@ const listWithFilters = async (actor, filters = {}, { companyWide = false, scope
     : Math.min(5000, Math.max(1, Number.parseInt(rawLimit, 10) || 5000))
 
   const filter = mergeFilters(
-    buildScopedMongoFilter({
+    companyWide ? {} : buildScopedMongoFilter({
       actor,
       ownerFields: ['ownerUserId', 'assignedTo', 'createdBy', 'owner_user_id', 'assigned_to', 'created_by'],
       companyWide,

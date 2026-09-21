@@ -154,7 +154,7 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
   const isConverted = Boolean(account.isConverted || account.dealId || account.convertedDealId || account.convertedFromAccount)
 
   const normalized = {
-    id: String(account.id || accountNumber),
+    id: String(account.id || account._id || accountNumber),
     accountNumber,
     name: account.name || account.accountName || account.customerName || 'Untitled Account',
     accountCategory: titleize(account.accountCategory || account.customerType || account.industryType || account.industry || 'Prospect'),

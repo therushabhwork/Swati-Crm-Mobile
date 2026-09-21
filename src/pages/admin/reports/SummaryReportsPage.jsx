@@ -30,6 +30,7 @@ import {
 } from '../../../features/adminReports/reportTemplateStorage'
 import { authService } from '../../../services/authService'
 import { customerService } from '../../../services/customerService'
+import apiClient from '../../../services/apiClient'
 import { exportExcelWorkbook } from '../../../utils/excelExport'
 import { ExcelExportMenuButton } from '../../../components/common/ExcelExportButton'
 import { getCrmOwnerDisplay, isSameCrmOwner } from '../../../features/users/crmUserDirectory'
@@ -202,7 +203,7 @@ const buildMonthlyStatusExportData = (
   reportId,
   normalizedRecords = [],
   config = DEFAULT_MONTHLY_STATUS_CONFIG,
-  ownerOptions = MONTHLY_STATUS_OWNERS,
+  availableUsersFull = [],
 ) => {
   const isCustomers = reportId === 'summary-customers-monthly-status'
   const isDeals = reportId === 'summary-deals-monthly-status'
@@ -216,112 +217,102 @@ const buildMonthlyStatusExportData = (
     config.statusAll ? entityStatusOptions : config.selectedStatuses,
   )
   const selectedStatusSet = new Set(activeStatuses.map((entry) => normalizeLabel(entry)))
-  const activeOwners = dedupeByNormalizedValue(
-    config.ownerAll ? ownerOptions : (config.selectedOwners || []),
-  ).map(normalizeOwnerDisplayValue)
-  const selectedOwnerSet = new Set(activeOwners.map((entry) => normalizeLabel(entry)))
+  
+  const usersByName = availableUsersFull.reduce((acc, user) => {
+    acc[normalizeLabel(user.name)] = user
+    return acc
+  }, {})
 
   const filteredRecords = normalizedRecords.filter((record) => {
-    if (!shouldIncludeMonthlyStatusRecord(record, config)) return false
-
     const statusLabel = resolveMonthlyStatusLabel(record, reportId)
     if (!statusLabel || !selectedStatusSet.has(normalizeLabel(statusLabel))) {
       return false
     }
-
-    const ownerLabel = normalizeOwnerDisplayValue(String(record.accountOwner || record.dealOwner || record.customerOwner || record.ownerName || record.addedBy || 'Unassigned').trim() || 'Unassigned')
-    if (!config.ownerAll && config.selectedOwners?.length > 0) {
-      if (!selectedOwnerSet.has(normalizeLabel(ownerLabel))) {
-        return false
-      }
-    }
-
     return true
   })
 
-  const recordOwners = filteredRecords.map((record) => (
+  const recordOwnerNames = filteredRecords.map((record) => (
     normalizeOwnerDisplayValue(String(record.accountOwner || record.dealOwner || record.customerOwner || record.ownerName || record.addedBy || 'Unassigned').trim() || 'Unassigned')
   ))
-  const owners = dedupeByNormalizedValue([
-    ...activeOwners,
-    ...recordOwners,
+
+  const ownerNames = dedupeByNormalizedValue([
+    ...availableUsersFull.map(u => normalizeOwnerDisplayValue(u.name)),
+    ...recordOwnerNames,
   ])
 
-  const normalizedOwnerLookup = owners.reduce((lookup, owner) => {
-    lookup[normalizeLabel(owner)] = owner
-    return lookup
-  }, {})
+  const matrixRows = ownerNames.map((ownerName) => {
+    const user = usersByName[normalizeLabel(ownerName)] || {}
+    return {
+      ownerName: ownerName,
+      ownerCode: user.ownerCode || '',
+      email: user.email || '',
+      counts: activeStatuses.reduce((lookup, status) => {
+        lookup[status] = 0
+        return lookup
+      }, {}),
+      total: 0,
+    }
+  })
 
-  const matrixRows = activeStatuses.map((status) => ({
-    status: status,
-    counts: owners.reduce((lookup, owner) => {
-      lookup[owner] = 0
-      return lookup
-    }, {}),
-    total: 0,
-  }))
-
-  const matrixByStatus = matrixRows.reduce((lookup, row) => {
-    lookup[normalizeLabel(row.status)] = row
+  const matrixByOwner = matrixRows.reduce((lookup, row) => {
+    lookup[normalizeLabel(row.ownerName)] = row
     return lookup
   }, {})
 
   filteredRecords.forEach((record) => {
     const statusLabel = resolveMonthlyStatusLabel(record, reportId)
-    const statusRow = matrixByStatus[normalizeLabel(statusLabel)]
-    if (!statusRow) return
+    const normalizedStatus = normalizeLabel(statusLabel)
+    
+    const statusKey = activeStatuses.find(s => normalizeLabel(s) === normalizedStatus)
+    if (!statusKey) return
 
     const ownerKey = normalizeLabel(record.accountOwner || record.dealOwner || record.customerOwner || record.ownerName || record.addedBy || 'Unassigned')
-    const ownerLabel = normalizedOwnerLookup[ownerKey]
-    if (!ownerLabel) return
+    const ownerRow = matrixByOwner[ownerKey]
+    if (!ownerRow) return
 
-    statusRow.counts[ownerLabel] += 1
-    statusRow.total += 1
+    ownerRow.counts[statusKey] += 1
+    ownerRow.total += 1
   })
 
   const columns = [
-    { key: 'accountStatus', label: 'Status', width: 24 },
-    ...owners.map((owner) => ({
-      key: owner,
-      label: owner,
+    { key: 'ownerName', label: 'Owner Name', width: 24 },
+    { key: 'ownerCode', label: 'Owner Code', width: 15 },
+    { key: 'email', label: 'Email', width: 30 },
+    ...activeStatuses.map((status) => ({
+      key: status,
+      label: status,
       align: 'center',
       type: 'integer',
-      width: Math.max(14, owner.length + 2),
+      width: Math.max(12, status.length + 2),
     })),
     { key: 'total', label: 'Total', align: 'center', type: 'integer', width: 12 },
   ]
 
   const tableRows = matrixRows.map((row) => ({
-    accountStatus: row.status,
-    ...owners.reduce((lookup, owner) => {
-      lookup[owner] = row.counts[owner] || 0
+    ownerName: row.ownerName,
+    ownerCode: row.ownerCode,
+    email: row.email,
+    ...activeStatuses.reduce((lookup, status) => {
+      lookup[status] = row.counts[status] || 0
       return lookup
     }, {}),
     total: row.total,
   }))
 
-  const totalsRow = {
-    accountStatus: 'Total',
-    ...owners.reduce((lookup, owner) => {
-      lookup[owner] = matrixRows.reduce((sum, row) => sum + Number(row.counts[owner] || 0), 0)
-      return lookup
-    }, {}),
-    total: filteredRecords.length,
-  }
+  const baseExportTitle = isCustomers 
+    ? 'Customers Status Report' 
+    : isDeals 
+      ? 'Deals Status Report' 
+      : 'Accounts Status Report'
 
   return {
-    title: 'CRM Summary',
-    reportName: config.reportName || 'Monthly Status',
-    comparison: 'Account Status vs Account Owner',
-    reportFilter: config.configureFilters === 'YES'
-      ? `${config.timeField} ${config.timePeriod}`
-      : 'All Records',
+    reportName: baseExportTitle,
     generatedOn: formatSummaryGeneratedOn(new Date()),
-    owners,
-    rows: matrixRows,
-    columns,
-    tableRows: [...tableRows, totalsRow],
+    comparison: config.statusAll ? 'All Statuses' : 'Selected Statuses',
+    reportFilter: 'All Time',
     totalRecords: filteredRecords.length,
+    columns,
+    tableRows,
   }
 }
 
@@ -815,11 +806,12 @@ const SummaryReportsPage = () => {
   }, [location.search])
 
   const customers = useMemo(() => customerService.getCustomers(), [])
+  const availableUsersFull = useMemo(() => authService.getAvailableUsers(), [])
   const availableUsers = useMemo(() => (
-    authService.getAvailableUsers()
+    availableUsersFull
       .map((entry) => entry.name)
       .filter((name) => name && name !== 'System Administrator')
-  ), [])
+  ), [availableUsersFull])
   const normalizedAccountsBoard = useMemo(
     () => getAccountsBoardData(accounts),
     [accounts],
@@ -883,16 +875,32 @@ const SummaryReportsPage = () => {
     reports.filter((report) => report.entityType === activeCategory)
   ), [activeCategory, reports])
 
-  const generateExportData = useCallback((report) => {
+  const generateExportDataAsync = useCallback(async (report) => {
     const isCustomers = report.id === 'summary-customers-monthly-status'
     const isDeals = report.id === 'summary-deals-monthly-status'
-    const records = isCustomers ? customers : (isDeals ? deals : normalizedAccountsBoard.records)
-    return buildMonthlyStatusExportData(report.id, records, monthlyStatusConfig, monthlyStatusOwnerOptions)
-  }, [customers, deals, normalizedAccountsBoard.records, monthlyStatusConfig, monthlyStatusOwnerOptions])
+    
+    let records = []
+    try {
+      if (isCustomers) {
+        const res = await apiClient.get('/customers', { params: { limit: 100000 } })
+        records = res?.data?.data || res?.data || []
+      } else if (isDeals) {
+        const res = await apiClient.get('/deals', { params: { limit: 100000 } })
+        records = res?.data?.data || res?.data || []
+      } else {
+        const res = await apiClient.get('/leads', { params: { limit: 100000 } })
+        records = res?.data?.data || res?.data || []
+      }
+    } catch (e) {
+      console.error('Error fetching data for export:', e)
+    }
 
-  const handlePreviewData = useCallback((report) => {
+    return buildMonthlyStatusExportData(report.id, records, monthlyStatusConfig, availableUsersFull)
+  }, [monthlyStatusConfig, availableUsersFull])
+
+  const handlePreviewData = useCallback(async (report) => {
     if (MONTHLY_STATUS_REPORT_IDS.includes(report.id)) {
-      const exportData = generateExportData(report)
+      const exportData = await generateExportDataAsync(report)
       
       const newWindow = window.open('', '_blank')
       if (!newWindow) {
@@ -986,7 +994,7 @@ const SummaryReportsPage = () => {
       newWindow.document.write(html)
       newWindow.document.close()
     }
-  }, [generateExportData, showToast])
+  }, [generateExportDataAsync, showToast])
 
   const handleNewSummaryReport = (option) => {
     setActiveCategory(option.category)
@@ -1033,7 +1041,7 @@ const SummaryReportsPage = () => {
     `${String(report.title || 'summary-report').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')}.${extension}`
   ), [])
 
-  const handleSummaryExportAction = useCallback((actionKey, report) => {
+  const handleSummaryExportAction = useCallback(async (actionKey, report) => {
     if (MONTHLY_STATUS_REPORT_IDS.includes(report.id)) {
       if (actionKey === 'excel') {
         const userNames = [user?.name, user?.ownerDisplayName, user?.username, user?.email, user?.ownerCode]
@@ -1044,7 +1052,7 @@ const SummaryReportsPage = () => {
         }
       }
 
-      const exportData = generateExportData(report)
+      const exportData = await generateExportDataAsync(report)
       const monthlyStatusMetadata = [
         { label: 'Generated On', value: exportData.generatedOn },
         { label: 'Summary Report Name', value: exportData.reportName },
@@ -1110,7 +1118,7 @@ const SummaryReportsPage = () => {
       addNotification('success', 'Excel exported', `${report.title} was exported to Excel.`)
       showToast('success', `${report.title} exported to Excel.`)
     }
-  }, [addNotification, buildReportFilename, generateExportData, showToast, user])
+  }, [addNotification, buildReportFilename, generateExportDataAsync, showToast, user])
 
   const handleToggleSummaryCollapse = (reportId) => {
     setCollapsedReportIds((currentValue) => (

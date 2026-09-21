@@ -199,16 +199,15 @@ const emitConvertedDealRealtime = (action, convertedDeal, actor) => {
 
 module.exports = {
   ...baseService,
-  get: (actor, id) => baseService.get(applyStrictIsolation(actor), id),
-  search: (actor, query) => baseService.search(applyStrictIsolation(actor), query),
+  get: (actor, id) => baseService.get(actor, id),
+  search: (actor, query) => baseService.search(actor, query),
   validation: {
     create: dealCreate,
     update: dealUpdate,
   },
   list: async (actor, filters = {}) => {
-    const isolatedActor = applyStrictIsolation(actor)
-    const scope = await resolveCrmGroupScope(isolatedActor)
-    return dealRepository.listWithFilters(scope.actor, filters, scope.queryOptions)
+    const scope = await resolveCrmGroupScope(actor)
+    return dealRepository.listWithFilters(scope.actor, filters, { companyWide: true, ...scope.queryOptions })
   },
   getConvertedFromAccount: async (actor, accountId) => {
     const scope = await resolveCrmGroupScope(actor)
