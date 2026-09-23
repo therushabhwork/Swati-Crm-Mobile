@@ -22,6 +22,7 @@ import { useAuth } from '../../../context/AuthContext'
 import { useData } from '../../../context/DataContext'
 import { exportExcelWorkbook, exportCsvWorkbook } from '../../../utils/excelExport'
 import apiClient from '../../../services/apiClient'
+import reportApi from '../../../services/reportApi'
 import { customerService } from '../../../services/customerService'
 import { jsPDF } from 'jspdf'
 import 'jspdf-autotable'
@@ -37,37 +38,129 @@ import {
   getAdminReportTemplates,
   subscribeAdminReportTemplates,
 } from '../../../features/adminReports/reportTemplateStorage'
+import { ACCOUNT_REPORT_FIELD_OPTIONS } from '../../../features/adminReports/accountReportTemplateConfig'
+import { DEAL_REPORT_FIELD_OPTIONS } from '../../../features/adminReports/dealReportTemplateConfig'
+import { QUOTATION_REPORT_FIELD_OPTIONS } from '../../../features/adminReports/quotationReportTemplateConfig'
+import { CUSTOMER_REPORT_FIELD_OPTIONS } from '../../../features/adminReports/customerReportTemplateConfig'
 import './CustomReportsPage.css'
+
+const resolveLabel = (type, key) => {
+  const customLabel = getCustomReportFieldLabel(type, key)
+  if (customLabel) return customLabel
+  if (type === 'account') {
+    return ACCOUNT_REPORT_FIELD_OPTIONS.find(f => f.key === key)?.label || key
+  }
+  if (type === 'deal') {
+    return DEAL_REPORT_FIELD_OPTIONS.find(f => f.key === key)?.label || key
+  }
+  if (type === 'quotation') {
+    return QUOTATION_REPORT_FIELD_OPTIONS.find(f => f.key === key)?.label || key
+  }
+  if (type === 'customer') {
+    return CUSTOMER_REPORT_FIELD_OPTIONS.find(f => f.key === key)?.label || key
+  }
+  return key
+}
+
+const normalizeEntityKey = (value = 'account') => {
+  const key = String(value || 'account').toLowerCase().trim()
+  if (key === 'accounts' || key === 'lead' || key === 'leads') return 'account'
+  if (key === 'customers') return 'customer'
+  if (key === 'deals') return 'deal'
+  if (key === 'quotations') return 'quotation'
+  return key
+}
+
+const getReportDisplayFieldKeys = (report) => {
+  if (Array.isArray(report.displayFields) && report.displayFields.length > 0) return report.displayFields
+  if (Array.isArray(report.selectedFields) && report.selectedFields.length > 0) return report.selectedFields
+  return []
+}
+
+const applyReportFilters = (data, filters) => {
+  if (!filters || !Array.isArray(filters) || filters.length === 0) return data
+  
+  return data.filter(item => {
+    let result = true
+    for (let i = 0; i < filters.length; i++) {
+      const filter = filters[i]
+      if (!filter || (!filter.field && !filter.label)) continue
+      
+      const fieldKey = filter.field || filter.label
+      const itemVal = item[fieldKey]
+      const strVal = itemVal !== null && itemVal !== undefined ? String(itemVal).toLowerCase() : ''
+      const targetVal = filter.value ? String(filter.value).toLowerCase() : ''
+      
+      let conditionMet = false
+      switch (filter.operator) {
+        case 'equals':
+        case '=':
+          conditionMet = strVal === targetVal
+          break
+        case 'not_equals':
+        case '!=':
+          conditionMet = strVal !== targetVal
+          break
+        case 'contains':
+          conditionMet = strVal.includes(targetVal)
+          break
+        case 'not_contains':
+          conditionMet = !strVal.includes(targetVal)
+          break
+        case 'starts_with':
+          conditionMet = strVal.startsWith(targetVal)
+          break
+        case 'ends_with':
+          conditionMet = strVal.endsWith(targetVal)
+          break
+        case 'greater_than':
+        case '>':
+          conditionMet = Number(itemVal) > Number(filter.value)
+          break
+        case 'less_than':
+        case '<':
+          conditionMet = Number(itemVal) < Number(filter.value)
+          break
+        case 'between':
+          conditionMet = Number(itemVal) >= Number(filter.value) && Number(itemVal) <= Number(filter.valueTo)
+          break
+        case 'is_empty':
+          conditionMet = strVal === ''
+          break
+        case 'is_not_empty':
+          conditionMet = strVal !== ''
+          break
+        default:
+          conditionMet = true
+      }
+      
+      const connector = filter.connector || (i > 0 ? 'AND' : 'AND')
+      if (i === 0) {
+        result = conditionMet
+      } else if (connector.toUpperCase() === 'OR') {
+        result = result || conditionMet
+      } else {
+        result = result && conditionMet
+      }
+    }
+    return result
+  })
+}
 
 const TEMPLATE_FILTERS = [
   { key: 'all', label: 'All' },
   { key: 'account', label: 'Accounts' },
   { key: 'customer', label: 'Customers' },
   { key: 'deal', label: 'Deals' },
+  { key: 'quotation', label: 'Quotations' },
+  { key: 'custom', label: 'Custom' },
 ]
 
 const ADD_TEMPLATE_CONTEXT_OPTIONS = [
   'account',
   'customer',
   'deal',
-]
-
-const NEW_REPORT_CONTEXT_OPTIONS = [
-  'account',
-  'customer',
-  'deal',
-  'converted_deal',
-  'project',
-  'sr',
-  'closed_sr',
-  'lead',
-  'contact',
   'quotation',
-  'converted_account',
-  'activity',
-  'task',
-  'follow_up',
-  'owner_wise_reports',
 ]
 
 const ADD_TEMPLATE_LABELS = {
@@ -172,42 +265,49 @@ const normalizeVisibility = (value) => {
 
 const getReportGroupName = (report) => {
   if (report.group) return report.group
-  const category = report.categoryKey || getCustomReportContext(report.reportContext).categoryKey
+  const category = normalizeEntityKey(report.categoryKey || report.entityType || getCustomReportContext(report.reportContext).categoryKey)
   return TEMPLATE_FILTERS.find((entry) => entry.key === category)?.label || getCustomReportContext(report.reportContext).label
 }
 
 const getReportType = (report) => report.type || report.typeLabel || report.entityType || getCustomReportContext(report.reportContext).label
 
 const getReportFields = (report) => {
+  const contextKey = normalizeEntityKey(report.entityType || report.reportContext || 'account')
+  const displayFields = getReportDisplayFieldKeys(report)
+  if (displayFields.length > 0) {
+    return displayFields
+      .map((fieldKey) => resolveLabel(contextKey, fieldKey))
+      .join(', ')
+  }
   if (report.fields) {
     if (Array.isArray(report.fields)) {
       return report.fields.map(f => typeof f === 'object' ? f.label : f).join(', ')
     }
     return report.fields
   }
-  return (report.selectedFields || [])
-    .map((fieldKey) => getCustomReportFieldLabel(report.reportContext, fieldKey))
-    .join(', ') || '-'
+  return '-'
 }
 
 const getReportFilters = (report) => {
   if (report.filtersText || typeof report.filters === 'string') return report.filtersText || report.filters
+  const contextKey = normalizeEntityKey(report.entityType || report.reportContext || 'account')
   const filters = Array.isArray(report.filters) ? report.filters : []
+  if (filters.length === 0) return ''
   return filters
-    .filter((filter) => filter.field)
+    .filter((filter) => filter && (filter.field || filter.label))
     .map((filter, index) => [
-      index > 0 ? filter.connector : '',
-      getCustomReportFieldLabel(report.reportContext, filter.field),
-      filter.operator,
-      filter.value,
-      filter.operator === 'between' ? filter.valueTo : '',
+      index > 0 ? (filter.connector || 'AND') : '',
+      getCustomReportFieldLabel(contextKey, filter.field) || filter.field || filter.label,
+      filter.operator || '=',
+      filter.value || '',
+      filter.operator === 'between' ? (filter.valueTo || '') : '',
     ].filter(Boolean).join(' '))
     .join('; ')
 }
 
 const getReportGroupBy = (report) => (
   report.groupBy
-    ? getCustomReportFieldLabel(report.reportContext, report.groupBy)
+    ? resolveLabel(normalizeEntityKey(report.entityType || report.reportContext || 'account'), report.groupBy)
     : ''
 )
 
@@ -228,7 +328,7 @@ const ReportCard = ({ report, onViewWeb, onExport, isKevalOrAdmin }) => {
       <header className="cr-list-card-header">
         <div className="cr-list-card-title-row">
           <button type="button" className="cr-list-card-title" onClick={() => onViewWeb(report)}>
-            {report.title || report.reportName}
+            {report.name || report.title || report.reportName}
           </button>
         </div>
         <div className="cr-list-actions" ref={menuRef} style={{ position: 'relative' }}>
@@ -294,11 +394,11 @@ const ReportCard = ({ report, onViewWeb, onExport, isKevalOrAdmin }) => {
         <div className="cr-list-card-right">
           <div className="cr-list-row">
             <FaCreditCard />
-            <span><strong>Description-</strong> {report.description || `${getReportType(report)} Report Template`}</span>
+            <span><strong>Description-</strong> {report.description || '-'}</span>
           </div>
           <div className="cr-list-row">
             <FaCalendarAlt />
-            <span><strong>Created By-</strong> {report.createdBy || 'Admin'} <strong>On-</strong> {formatStoredDate(report.createdOn)}</span>
+            <span><strong>Created By-</strong> {report.creatorName || report.createdBy || 'Admin'} <strong>On-</strong> {formatStoredDate(report.createdAt || report.createdOn)}</span>
           </div>
           <div className="cr-list-row">
             <FaEye />
@@ -391,25 +491,87 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
   const { accounts = [], deals = [], convertedDeals = [], quotations = [] } = useData()
   const customers = useMemo(() => customerService.getCustomers() || [], [])
   const isAdmin = user?.role === 'admin'
-  const isKevalOrAdmin = isAdmin || 
-    (user?.name && user.name.toLowerCase().includes('keval')) || 
+  const isKeval = (user?.name && user.name.toLowerCase().includes('keval')) || 
     (user?.username && user.username.toLowerCase().includes('keval')) || 
     (user?.email && user.email.toLowerCase().includes('keval'))
+  const isKevalOrAdmin = isAdmin || isKeval
   const addRef = useRef(null)
-  const newRef = useRef(null)
   const [activeFilter, setActiveFilter] = useState('all')
+  const [activeCustomSubFilter, setActiveCustomSubFilter] = useState('account')
   const [activeManagementTab, setActiveManagementTab] = useState(isAdmin ? 'all' : 'shared')
   const [addOpen, setAddOpen] = useState(false)
-  const [newOpen, setNewOpen] = useState(false)
   const [templates, setTemplates] = useState(() => getAdminReportTemplates())
+  const [backendTemplates, setBackendTemplates] = useState([])
+  const [generatedReports, setGeneratedReports] = useState([])
   const [webReport, setWebReport] = useState(null)
 
   useEffect(() => subscribeAdminReportTemplates(() => setTemplates(getAdminReportTemplates())), [])
 
+  const loadBackendReportsData = useCallback(async () => {
+    try {
+      const tplData = await reportApi.getReportTemplates()
+      if (Array.isArray(tplData)) {
+        setBackendTemplates(tplData.map(tpl => ({
+          ...tpl,
+          id: String(tpl._id || tpl.id),
+          name: tpl.name || tpl.reportName || '-',
+          title: tpl.name || tpl.reportName || '-',
+          reportName: tpl.name || tpl.reportName || '-',
+          entityType: tpl.entityType || 'Account',
+          categoryKey: normalizeEntityKey(tpl.entityType || 'account'),
+          reportContext: normalizeEntityKey(tpl.entityType || 'account'),
+          displayFields: Array.isArray(tpl.displayFields) ? tpl.displayFields : (Array.isArray(tpl.selectedFields) ? tpl.selectedFields : []),
+          filters: Array.isArray(tpl.filters) ? tpl.filters : [],
+          description: tpl.description || '',
+          createdBy: tpl.creatorName || tpl.createdBy || '-',
+          creatorName: tpl.creatorName || tpl.createdBy || '-',
+          createdOn: tpl.createdAt || tpl.createdOn,
+          createdAt: tpl.createdAt || tpl.createdOn,
+          visibility: tpl.visibility || 'All',
+          isBackend: true,
+          userDefined: true,
+          systemReport: false,
+        })))
+      }
+    } catch (error) {
+      console.error('Failed to fetch backend templates:', error)
+    }
+
+    try {
+      const rptData = await reportApi.getGeneratedReports()
+      if (Array.isArray(rptData) && rptData.length > 0) {
+        setGeneratedReports(rptData.map(rpt => ({
+          ...rpt,
+          id: String(rpt._id || rpt.id),
+          name: rpt.reportName || rpt.name || '-',
+          title: rpt.reportName || rpt.name || '-',
+          reportName: rpt.reportName || rpt.name || '-',
+          entityType: rpt.entityType || 'Account',
+          categoryKey: normalizeEntityKey(rpt.entityType || 'account'),
+          reportContext: normalizeEntityKey(rpt.entityType || 'account'),
+          displayFields: Array.isArray(rpt.displayFields) ? rpt.displayFields : (Array.isArray(rpt.selectedFields) ? rpt.selectedFields : []),
+          filters: Array.isArray(rpt.filters) ? rpt.filters : [],
+          isGenerated: true,
+          isBackend: true,
+          createdBy: rpt.creatorName || rpt.createdBy || '-',
+          creatorName: rpt.creatorName || rpt.createdBy || '-',
+          createdOn: rpt.createdAt || rpt.createdOn,
+          createdAt: rpt.createdAt || rpt.createdOn,
+          visibility: rpt.visibility || 'All',
+        })))
+      }
+    } catch (error) {
+      // Ignore gracefully if generated reports route is not defined
+    }
+  }, [])
+
+  useEffect(() => {
+    loadBackendReportsData()
+  }, [loadBackendReportsData])
+
   useEffect(() => {
     const handleOutside = (event) => {
       if (addRef.current && !addRef.current.contains(event.target)) setAddOpen(false)
-      if (newRef.current && !newRef.current.contains(event.target)) setNewOpen(false)
     }
     document.addEventListener('mousedown', handleOutside)
     return () => document.removeEventListener('mousedown', handleOutside)
@@ -420,27 +582,55 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
     label: ADD_TEMPLATE_LABELS[key],
   })), [])
 
-  const newReportOptions = useMemo(() => NEW_REPORT_CONTEXT_OPTIONS.map((key) => ({
-    key,
-    label: getCustomReportContext(key).label,
-  })), [])
+  const customReports = useMemo(() => {
+    const combined = [
+      ...templates.filter((report) => canUserViewReportTemplate(report, user)),
+      ...backendTemplates,
+      ...generatedReports,
+    ]
+    return combined.map((report) => {
+      const entityKey = normalizeEntityKey(report.entityType || report.categoryKey || report.reportContext || 'account')
+      const baseGroup = getReportGroupName(report)
+      return {
+        ...report,
+        name: report.name || report.reportName || report.title || '-',
+        categoryKey: entityKey,
+        group: baseGroup,
+        isCustom: true,
+      }
+    })
+  }, [templates, backendTemplates, generatedReports, user])
 
-  const customReports = useMemo(() => templates
-    .filter((report) => canUserViewReportTemplate(report, user))
-    .map((report) => ({
-      ...report,
-      categoryKey: report.categoryKey || getCustomReportContext(report.reportContext).categoryKey,
-      group: getReportGroupName(report),
-    })), [templates, user])
+  const customMongoReports = useMemo(() => {
+    return [...backendTemplates, ...generatedReports].map((report) => {
+      const entityKey = normalizeEntityKey(report.entityType || report.categoryKey || report.reportContext || 'account')
+      return {
+        ...report,
+        name: report.name || report.reportName || report.title || '-',
+        categoryKey: entityKey,
+        group: getReportGroupName({ ...report, categoryKey: entityKey }),
+        isCustom: true,
+      }
+    })
+  }, [backendTemplates, generatedReports])
 
   const visibleReports = useMemo(() => {
-    const reports = [
-      ...SYSTEM_REPORTS.filter((report) => isAdmin || report.visibility === 'All'),
-      ...customReports,
-    ]
+    const baseReports = activeFilter === 'custom'
+      ? customMongoReports
+      : [
+          ...SYSTEM_REPORTS.filter((report) => isAdmin || report.visibility === 'All'),
+          ...customReports,
+        ]
 
-    return reports.filter((report) => {
-      if (activeFilter !== 'all' && report.categoryKey !== activeFilter) return false
+    return baseReports.filter((report) => {
+      const catKey = normalizeEntityKey(report.categoryKey || report.entityType || '')
+
+      if (activeFilter === 'custom') {
+        if (report.systemReport) return false
+        return normalizeEntityKey(catKey) === activeCustomSubFilter
+      }
+
+      if (activeFilter !== 'all' && catKey !== activeFilter) return false
       if (activeManagementTab === 'all') return isAdmin
       if (report.systemReport) return activeManagementTab === 'shared'
 
@@ -449,7 +639,7 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
       if (activeManagementTab === 'shared') return !isOwn
       return true
     })
-  }, [activeFilter, activeManagementTab, customReports, isAdmin, user])
+  }, [activeFilter, activeCustomSubFilter, activeManagementTab, customReports, customMongoReports, isAdmin, user])
 
   const groupedReports = useMemo(() => visibleReports.reduce((groups, report) => {
     const groupName = getReportGroupName(report)
@@ -460,25 +650,12 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
 
   const openBuilder = (contextKey, extra = '') => {
     setAddOpen(false)
-    setNewOpen(false)
     navigate(`${basePath}/custom/builder?context=${encodeURIComponent(contextKey)}${extra}`)
   }
 
   const handleAddTemplate = (contextKey) => {
     setAddOpen(false)
-    setNewOpen(false)
-    const templateRoutes = {
-      account: 'account',
-      customer: 'customer',
-      sr: 'sr',
-      closed_sr: 'closed-sr',
-      deal: 'deal',
-      quotation: 'quotation',
-      geo_tracking: 'geo-tracking',
-      remark: 'remark',
-      daily_status: 'daily-status',
-    }
-    navigate(`${basePath}/templates/${templateRoutes[contextKey] || 'account'}/new`)
+    navigate(`${basePath}/templates/account/new?context=${encodeURIComponent(contextKey)}`)
   }
 
   const handleView = (report) => {
@@ -510,10 +687,12 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
   }
 
   const handleViewWeb = useCallback(async (report) => {
-    const reportName = report.reportName || report.title || 'Custom Report'
+    const reportName = report.reportName || report.title || report.name || 'Custom Report'
     const groupName = getReportGroupName(report)
     const isDailyStatus = groupName === 'Daily Status' || String(reportName).toLowerCase().includes('daily')
-    const targetCategory = report.categoryKey || activeFilter || 'all'
+    const ctx = getCustomReportContext(report.reportContext) || {}
+    const reportCat = normalizeEntityKey(report.categoryKey || report.entityType || ctx.categoryKey || '')
+    const targetCategory = reportCat || (activeFilter === 'custom' ? 'all' : activeFilter) || 'all'
 
     // Open new window immediately to avoid popup blocker
     const newWindow = window.open('', '_blank')
@@ -522,7 +701,7 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
       return
     }
 
-    newWindow.document.write('<!DOCTYPE html><html><head><title>Loading...</title></head><body style="background:#525659;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;"><div>Loading Report Data from MongoDB...</div></body></html>')
+    newWindow.document.write('<!DOCTYPE html><html><head><title>Loading...</title></head><body style="background:#525659;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;"><div>Loading Report Data...</div></body></html>')
     newWindow.document.close()
 
     const isToday = (dateString) => {
@@ -548,6 +727,7 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
     let allDeals = []
     let allAccounts = []
     let allCustomers = []
+    let allQuotations = []
 
     try {
       const fetchPromises = []
@@ -566,95 +746,258 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
           allCustomers = res?.data?.data || res?.data || []
         }).catch(e => console.error(e)))
       }
+      if (targetCategory === 'all' || targetCategory === 'quotation') {
+        fetchPromises.push(apiClient.get('/quotations', { params: { limit: 100000 } }).then(res => {
+          allQuotations = res?.data?.data || res?.data || []
+        }).catch(e => console.error(e)))
+      }
       await Promise.all(fetchPromises)
     } catch (err) {
       console.error('Error fetching report data:', err)
     }
 
+    const finalAccounts = allAccounts.length > 0 ? allAccounts : accounts
+    const finalDeals = allDeals.length > 0 ? allDeals : deals
+    const finalCustomers = allCustomers.length > 0 ? allCustomers : customers
+    const finalQuotations = allQuotations.length > 0 ? allQuotations : quotations
+
     let columns = []
     let rows = []
 
+    const mapItem = (item, type) => {
+      const dateStr = (val) => {
+        if (!val) return '-'
+        const d = new Date(val)
+        return isNaN(d.getTime()) ? String(val) : d.toLocaleDateString('en-GB')
+      }
+
+      if (type === 'account') {
+        const rawOwner = item.accountOwnerName || item.accountOwner || item.ownerName || item.owner || item.raw?.accountOwner || '-'
+        const rawName = item.name || item.customerName || item.accountName || '-'
+        const rawStatus = item.status || item.accountStatus || '-'
+        const rawNo = item.accountNumber || item.accountNo || item.id || '-'
+        const rawDate = dateStr(item.accountDate || item.date || item.createdAt)
+        const rawCategory = item.accountCategory || item.category || '-'
+        const rawSource = item.accountSource || item.source || '-'
+
+        return {
+          ...item,
+          accountNumber: rawNo,
+          accountNo: rawNo,
+          id: rawNo,
+          name: rawName,
+          accountName: rawName,
+          customerName: item.customerName || rawName,
+          accountDate: rawDate,
+          date: rawDate,
+          accountCategory: rawCategory,
+          category: rawCategory,
+          accountOwner: rawOwner,
+          accountOwnerName: rawOwner,
+          owner: rawOwner,
+          status: rawStatus,
+          accountStatus: rawStatus,
+          accountSource: rawSource,
+          source: rawSource,
+          contactPerson: item.contactPerson || '-',
+          phone: item.phone || item.mobile || '-',
+          mobile: item.phone || item.mobile || '-',
+          email: item.email || '-',
+          projectName: item.projectName || item.project || '-',
+          project: item.projectName || item.project || '-',
+          location: item.location || item.city || '-',
+          city: item.location || item.city || '-',
+          reasonForLost: item.reasonForLost || '-',
+          latestRemark: item.latestRemark || item.remarks || '-',
+          remarks: item.latestRemark || item.remarks || '-',
+          poValue: item.poValue || '-',
+          jobNo: item.jobNo || '-',
+          addedBy: item.addedBy || item.creatorName || item.createdBy || '-',
+          createdAt: dateStr(item.createdAt),
+        }
+      }
+
+      if (type === 'customer') {
+        const rawNo = item.customerNumber || item.customerNo || item.id || '-'
+        const rawName = item.name || item.customerName || '-'
+        const rawOwner = item.assignedToName || item.ownerName || item.owner || '-'
+        const rawPhone = item.phone || item.mobile || '-'
+
+        return {
+          ...item,
+          customerNumber: rawNo,
+          customerNo: rawNo,
+          id: rawNo,
+          name: rawName,
+          customerName: rawName,
+          company: item.company || item.companyName || '-',
+          companyName: item.company || item.companyName || '-',
+          city: item.city || item.location || '-',
+          location: item.city || item.location || '-',
+          phone: rawPhone,
+          mobile: rawPhone,
+          email: item.email || '-',
+          status: item.status || '-',
+          assignedTo: rawOwner,
+          assignedToName: rawOwner,
+          owner: rawOwner,
+          ownerName: rawOwner,
+          createdAt: dateStr(item.createdAt),
+        }
+      }
+
+      if (type === 'deal') {
+        const rawNo = item.dealNumber || item.id || '-'
+        const rawName = item.dealName || item.name || item.title || '-'
+        const rawOwner = item.dealOwnerName || item.dealOwner || item.ownerName || item.owner || '-'
+        const rawDate = dateStr(item.dealDate || item.quotationDate || item.createdAt)
+        const rawValue = item.dealValue || item.value || item.amount || '-'
+
+        return {
+          ...item,
+          dealNumber: rawNo,
+          id: rawNo,
+          dealName: rawName,
+          name: rawName,
+          title: rawName,
+          dealDate: rawDate,
+          date: rawDate,
+          dealOwner: rawOwner,
+          dealOwnerName: rawOwner,
+          owner: rawOwner,
+          ownerName: rawOwner,
+          dealType: item.dealType || item.stage || '-',
+          stage: item.stage || item.dealType || '-',
+          status: item.status || item.stage || '-',
+          dealValue: rawValue,
+          value: rawValue,
+          amount: rawValue,
+          projectName: item.projectName || item.project || '-',
+          project: item.projectName || item.project || '-',
+          consultantName: item.consultantName || '-',
+          expectedCloseDate: dateStr(item.expectedCloseDate),
+          addedOn: dateStr(item.addedOn),
+          createdAt: dateStr(item.createdAt),
+        }
+      }
+
+      if (type === 'quotation') {
+        const rawNo = item.quotationNo || item.quotationNumber || item.id || '-'
+        const rawDate = dateStr(item.date || item.quotationDate || item.createdAt)
+        const rawAccount = item.accountName || item.customerName || item.name || '-'
+        const rawDeal = item.dealName || item.title || '-'
+        const rawTotal = item.grandTotal || item.total || item.amount || '-'
+
+        return {
+          ...item,
+          quotationNo: rawNo,
+          quotationNumber: rawNo,
+          id: rawNo,
+          date: rawDate,
+          accountName: rawAccount,
+          dealName: rawDeal,
+          grandTotal: rawTotal,
+          total: rawTotal,
+          amount: rawTotal,
+          status: item.status || '-',
+          createdAt: dateStr(item.createdAt),
+        }
+      }
+
+      return item
+    }
+
+    const fieldsList = getReportDisplayFieldKeys(report)
+
     if (targetCategory === 'account') {
-      columns = [
-        { key: 'accountNumber', label: 'Account No.' },
-        { key: 'name', label: 'Account Name' },
-        { key: 'accountDate', label: 'Account Date' },
-        { key: 'accountCategory', label: 'Account Category' },
-        { key: 'accountOwner', label: 'Account Owner' },
-        { key: 'status', label: 'Account Status' },
-        { key: 'accountSource', label: 'Account Source' },
-        { key: 'contactPerson', label: 'Contact Person' },
-        { key: 'phone', label: 'Phone' },
-        { key: 'email', label: 'Email' },
-      ]
-      let list = allAccounts
+      if (fieldsList.length > 0) {
+        columns = fieldsList.map(key => ({ key, label: resolveLabel('account', key) }))
+      } else {
+        columns = [
+          { key: 'accountNumber', label: 'Account No.' },
+          { key: 'name', label: 'Account Name' },
+          { key: 'accountDate', label: 'Account Date' },
+          { key: 'accountCategory', label: 'Account Category' },
+          { key: 'accountOwner', label: 'Account Owner' },
+          { key: 'status', label: 'Account Status' },
+          { key: 'accountSource', label: 'Account Source' },
+          { key: 'contactPerson', label: 'Contact Person' },
+          { key: 'phone', label: 'Phone' },
+          { key: 'email', label: 'Email' },
+        ]
+      }
+      let list = finalAccounts
       if (isDailyStatus) {
         list = list.filter(item => isCurrentUser(item.accountOwnerName || item.accountOwner || item.ownerName || item.raw?.accountOwner, item.assignedTo || item.ownerUserId, item.createdBy) && isToday(item.accountDate || item.createdAt))
       }
-      rows = list.map(item => ({
-        accountNumber: item.accountNumber || item.accountNo || item.id || '-',
-        name: item.name || item.customerName || '-',
-        accountDate: item.accountDate ? new Date(item.accountDate).toLocaleDateString('en-GB') : '-',
-        accountCategory: item.accountCategory || '-',
-        accountOwner: item.accountOwnerName || item.accountOwner || item.raw?.accountOwner || '-',
-        status: item.status || '-',
-        accountSource: item.accountSource || '-',
-        contactPerson: item.contactPerson || '-',
-        phone: item.phone || '-',
-        email: item.email || '-',
-      }))
+      rows = list.map(item => mapItem(item, 'account'))
+      rows = applyReportFilters(rows, report.filters)
+
     } else if (targetCategory === 'customer') {
-      columns = [
-        { key: 'customerNumber', label: 'Customer No.' },
-        { key: 'name', label: 'Customer Name' },
-        { key: 'company', label: 'Company' },
-        { key: 'city', label: 'City' },
-        { key: 'phone', label: 'Phone' },
-        { key: 'email', label: 'Email' },
-        { key: 'status', label: 'Status' },
-        { key: 'assignedTo', label: 'Assigned To' },
-      ]
-      let list = allCustomers
+      if (fieldsList.length > 0) {
+        columns = fieldsList.map(key => ({ key, label: resolveLabel('customer', key) }))
+      } else {
+        columns = [
+          { key: 'customerNumber', label: 'Customer No.' },
+          { key: 'name', label: 'Customer Name' },
+          { key: 'company', label: 'Company' },
+          { key: 'city', label: 'City' },
+          { key: 'phone', label: 'Phone' },
+          { key: 'email', label: 'Email' },
+          { key: 'status', label: 'Status' },
+          { key: 'assignedTo', label: 'Assigned To' },
+        ]
+      }
+      let list = finalCustomers
       if (isDailyStatus) {
         list = list.filter(item => isCurrentUser(item.assignedToName || item.ownerName || item.owner, item.assignedTo || item.ownerUserId, item.createdBy) && isToday(item.createdAt || item.addedDate))
       }
-      rows = list.map(item => ({
-        customerNumber: item.customerNumber || item.customerNo || item.id || '-',
-        name: item.name || item.customerName || '-',
-        company: item.company || item.companyName || '-',
-        city: item.city || item.location || '-',
-        phone: item.phone || '-',
-        email: item.email || '-',
-        status: item.status || '-',
-        assignedTo: item.assignedToName || item.ownerName || item.owner || '-',
-      }))
+      rows = list.map(item => mapItem(item, 'customer'))
+      rows = applyReportFilters(rows, report.filters)
+
     } else if (targetCategory === 'deal') {
-      columns = [
-        { key: 'dealNumber', label: 'Deal No.' },
-        { key: 'dealName', label: 'Deal Name' },
-        { key: 'dealDate', label: 'Deal Date' },
-        { key: 'dealOwner', label: 'Deal Owner' },
-        { key: 'dealType', label: 'Deal Type' },
-        { key: 'status', label: 'Deal Status' },
-        { key: 'dealValue', label: 'Deal Value' },
-        { key: 'projectName', label: 'Project Name' },
-        { key: 'consultantName', label: 'Consultant Name' },
-      ]
-      let list = allDeals
+      if (fieldsList.length > 0) {
+        columns = fieldsList.map(key => ({ key, label: resolveLabel('deal', key) }))
+      } else {
+        columns = [
+          { key: 'dealNumber', label: 'Deal No.' },
+          { key: 'dealName', label: 'Deal Name' },
+          { key: 'dealDate', label: 'Deal Date' },
+          { key: 'dealOwner', label: 'Deal Owner' },
+          { key: 'dealType', label: 'Deal Type' },
+          { key: 'status', label: 'Deal Status' },
+          { key: 'dealValue', label: 'Deal Value' },
+          { key: 'projectName', label: 'Project Name' },
+          { key: 'consultantName', label: 'Consultant Name' },
+        ]
+      }
+      let list = finalDeals
       if (isDailyStatus) {
         list = list.filter(item => isCurrentUser(item.dealOwnerName || item.dealOwner || item.ownerName || item.owner, item.assignedTo || item.ownerUserId, item.createdBy) && isToday(item.dealDate || item.quotationDate || item.createdAt))
       }
-      rows = list.map(item => ({
-        dealNumber: item.dealNumber || item.id || '-',
-        dealName: item.dealName || item.name || item.title || '-',
-        dealDate: (item.dealDate || item.quotationDate || item.createdAt) ? new Date(item.dealDate || item.quotationDate || item.createdAt).toLocaleDateString('en-GB') : '-',
-        dealOwner: item.dealOwnerName || item.dealOwner || item.ownerName || item.owner || '-',
-        dealType: item.dealType || item.stage || '-',
-        status: item.status || item.stage || '-',
-        dealValue: item.dealValue || item.value || item.amount || '-',
-        projectName: item.projectName || item.project || '-',
-        consultantName: item.consultantName || '-',
-      }))
+      rows = list.map(item => mapItem(item, 'deal'))
+      rows = applyReportFilters(rows, report.filters)
+
+    } else if (targetCategory === 'quotation') {
+      if (fieldsList.length > 0) {
+        columns = fieldsList.map(key => ({ key, label: resolveLabel('quotation', key) }))
+      } else {
+        columns = [
+          { key: 'quotationNo', label: 'Quotation No' },
+          { key: 'date', label: 'Date' },
+          { key: 'accountName', label: 'Account' },
+          { key: 'dealName', label: 'Deal' },
+          { key: 'grandTotal', label: 'Grand Total' },
+          { key: 'status', label: 'Status' },
+        ]
+      }
+      let list = finalQuotations
+      if (isDailyStatus) {
+        list = list.filter(item => isCurrentUser(item.ownerName || item.owner, item.assignedTo || item.ownerUserId, item.createdBy) && isToday(item.date || item.createdAt))
+      }
+      rows = list.map(item => mapItem(item, 'quotation'))
+      rows = applyReportFilters(rows, report.filters)
+
     } else {
       columns = [
         { key: 'type', label: 'Type' },
@@ -665,9 +1008,9 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
         { key: 'status', label: 'Status' },
         { key: 'details', label: 'Details' },
       ]
-      let accountsList = allAccounts
-      let dealsList = allDeals
-      let customersList = allCustomers
+      let accountsList = finalAccounts
+      let dealsList = finalDeals
+      let customersList = finalCustomers
 
       if (isDailyStatus) {
         accountsList = accountsList.filter(item => isCurrentUser(item.accountOwnerName || item.accountOwner || item.ownerName || item.raw?.accountOwner, item.assignedTo || item.ownerUserId, item.createdBy) && isToday(item.accountDate || item.createdAt))
@@ -797,10 +1140,30 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
     newWindow.document.open()
     newWindow.document.write(html)
     newWindow.document.close()
-  }, [activeFilter, user])
+
+    // Store generated report in MongoDB reports collection
+    try {
+      await reportApi.saveGeneratedReport({
+        templateId: report._id || report.id,
+        reportName,
+        entityType: targetCategory,
+        selectedFields: columns.map((col) => col.key),
+        displayFields: columns.map((col) => col.key),
+        filters: Array.isArray(report.filters) ? report.filters : [],
+        totalRecords: rows.length,
+        createdBy: user?.name || user?.username || 'User',
+        creatorName: user?.name || user?.username || 'User',
+        visibility: report.visibility || 'All',
+        createdAt: new Date().toISOString(),
+      })
+      loadBackendReportsData()
+    } catch (saveErr) {
+      console.error('Error saving generated custom report:', saveErr)
+    }
+  }, [activeFilter, user, loadBackendReportsData, accounts, deals, customers, quotations])
 
   const handleExport = async (report, format = 'excel') => {
-    const reportName = report.reportName || report.title || 'Custom Report'
+    const reportName = report.reportName || report.title || report.name || 'Custom Report'
     const groupName = getReportGroupName(report)
     const isDailyStatus = groupName === 'Daily Status' || String(reportName).includes('Daily Status')
     
@@ -817,24 +1180,33 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
     let allDeals = []
     let allAccounts = []
     let allCustomers = []
-    let allQuotations = quotations
+    let allQuotations = []
+
+    const ctx = getCustomReportContext(report.reportContext) || {}
+    const reportCat = normalizeEntityKey(report.categoryKey || report.entityType || ctx.categoryKey || '')
+    const targetCategory = reportCat || (activeFilter === 'custom' ? 'all' : activeFilter) || 'all'
 
     try {
       const fetchPromises = []
-      if (activeFilter === 'all' || activeFilter === 'deal') {
+      if (targetCategory === 'all' || targetCategory === 'deal') {
          fetchPromises.push(apiClient.get('/deals', { params: { limit: 100000 } }).then(res => {
              const d = res?.data?.data || res?.data || []
              allDeals = d
          }).catch(e => console.error(e)))
       }
-      if (activeFilter === 'all' || activeFilter === 'account') {
+      if (targetCategory === 'all' || targetCategory === 'account') {
          fetchPromises.push(apiClient.get('/leads', { params: { limit: 100000 } }).then(res => {
              allAccounts = res?.data?.data || res?.data || []
          }).catch(e => console.error(e)))
       }
-      if (activeFilter === 'all' || activeFilter === 'customer') {
+      if (targetCategory === 'all' || targetCategory === 'customer') {
          fetchPromises.push(apiClient.get('/customers', { params: { limit: 100000 } }).then(res => {
              allCustomers = res?.data?.data || res?.data || []
+         }).catch(e => console.error(e)))
+      }
+      if (targetCategory === 'all' || targetCategory === 'quotation') {
+         fetchPromises.push(apiClient.get('/quotations', { params: { limit: 100000 } }).then(res => {
+             allQuotations = res?.data?.data || res?.data || []
          }).catch(e => console.error(e)))
       }
       await Promise.all(fetchPromises)
@@ -842,69 +1214,244 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
       console.error(err)
     }
 
+    const finalAccounts = allAccounts.length > 0 ? allAccounts : accounts
+    const finalDeals = allDeals.length > 0 ? allDeals : deals
+    const finalCustomers = allCustomers.length > 0 ? allCustomers : customers
+    const finalQuotations = allQuotations.length > 0 ? allQuotations : quotations
+
     let dataSets = []
-    const mapAccount = (item) => ({
-      'Account No.': item.accountNumber || '-',
-      'Account Date': item.accountDate ? new Date(item.accountDate).toLocaleDateString('en-GB') : '-',
-      'Account Name': item.name || '-',
-      'Account Owner': item.accountOwnerName || item.accountOwner || item.raw?.accountOwner || '-',
-      'Account Status': item.status || '-',
-      'Account State': item.accountState || '-',
-      'Account Source': item.accountSource || '-',
-      'Contact Person': item.contactPerson || '-',
-      'Phone': item.phone || '-',
-      'Email': item.email || '-',
-      'Latest Remark': item.latestRemark || '-',
-      'PO Value': item.poValue || '-',
-      'Job No': item.jobNo || '-',
-      'Created At': item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB') : '-',
-    })
+    const mapItem = (item, type) => {
+      const dateStr = (val) => {
+        if (!val) return '-'
+        const d = new Date(val)
+        return isNaN(d.getTime()) ? String(val) : d.toLocaleDateString('en-GB')
+      }
 
-    const mapDeal = (item) => ({
-      'Deal Name': item.dealName || item.name || '-',
-      'Account Name': item.accountName || '-',
-      'Deal Owner': item.ownerName || item.owner || '-',
-      'Stage': item.stage || '-',
-      'Status': item.status || '-',
-      'Deal Value': item.dealValue || '-',
-      'Expected Close Date': item.expectedCloseDate ? new Date(item.expectedCloseDate).toLocaleDateString('en-GB') : '-',
-      'Added On': item.addedOn ? new Date(item.addedOn).toLocaleDateString('en-GB') : '-',
-      'Created At': item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB') : '-',
-    })
+      if (type === 'account') {
+        const rawOwner = item.accountOwnerName || item.accountOwner || item.ownerName || item.owner || item.raw?.accountOwner || '-'
+        const rawName = item.name || item.customerName || item.accountName || '-'
+        const rawStatus = item.status || item.accountStatus || '-'
+        const rawNo = item.accountNumber || item.accountNo || item.id || '-'
+        const rawDate = dateStr(item.accountDate || item.date || item.createdAt)
+        const rawCategory = item.accountCategory || item.category || '-'
+        const rawSource = item.accountSource || item.source || '-'
 
-    const mapCustomer = (item) => ({
-      'Customer Name': item.name || item.customerName || '-',
-      'Customer Code': item.customerCode || '-',
-      'Owner': item.ownerName || item.owner || '-',
-      'Status': item.status || '-',
-      'Mobile': item.mobile || item.phone || '-',
-      'Email': item.email || '-',
-      'City': item.city || '-',
-      'Created At': item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB') : '-',
-    })
-    
-    const mapQuotation = (item) => ({
-      'Quotation No': item.quotationNo || '-',
-      'Date': item.date ? new Date(item.date).toLocaleDateString('en-GB') : '-',
-      'Account': item.accountName || '-',
-      'Deal': item.dealName || '-',
-      'Grand Total': item.grandTotal || '-',
-      'Status': item.status || '-',
-    })
+        return {
+          ...item,
+          accountNumber: rawNo,
+          accountNo: rawNo,
+          id: rawNo,
+          name: rawName,
+          accountName: rawName,
+          customerName: item.customerName || rawName,
+          accountDate: rawDate,
+          date: rawDate,
+          accountCategory: rawCategory,
+          category: rawCategory,
+          accountOwner: rawOwner,
+          accountOwnerName: rawOwner,
+          owner: rawOwner,
+          status: rawStatus,
+          accountStatus: rawStatus,
+          accountSource: rawSource,
+          source: rawSource,
+          contactPerson: item.contactPerson || '-',
+          phone: item.phone || item.mobile || '-',
+          mobile: item.phone || item.mobile || '-',
+          email: item.email || '-',
+          projectName: item.projectName || item.project || '-',
+          project: item.projectName || item.project || '-',
+          location: item.location || item.city || '-',
+          city: item.location || item.city || '-',
+          reasonForLost: item.reasonForLost || '-',
+          latestRemark: item.latestRemark || item.remarks || '-',
+          remarks: item.latestRemark || item.remarks || '-',
+          poValue: item.poValue || '-',
+          jobNo: item.jobNo || '-',
+          addedBy: item.addedBy || item.creatorName || item.createdBy || '-',
+          createdAt: dateStr(item.createdAt),
+        }
+      }
 
-    if (activeFilter === 'all') {
+      if (type === 'customer') {
+        const rawNo = item.customerNumber || item.customerNo || item.id || '-'
+        const rawName = item.name || item.customerName || '-'
+        const rawOwner = item.assignedToName || item.ownerName || item.owner || '-'
+        const rawPhone = item.phone || item.mobile || '-'
+
+        return {
+          ...item,
+          customerNumber: rawNo,
+          customerNo: rawNo,
+          id: rawNo,
+          name: rawName,
+          customerName: rawName,
+          company: item.company || item.companyName || '-',
+          companyName: item.company || item.companyName || '-',
+          city: item.city || item.location || '-',
+          location: item.city || item.location || '-',
+          phone: rawPhone,
+          mobile: rawPhone,
+          email: item.email || '-',
+          status: item.status || '-',
+          assignedTo: rawOwner,
+          assignedToName: rawOwner,
+          owner: rawOwner,
+          ownerName: rawOwner,
+          createdAt: dateStr(item.createdAt),
+        }
+      }
+
+      if (type === 'deal') {
+        const rawNo = item.dealNumber || item.id || '-'
+        const rawName = item.dealName || item.name || item.title || '-'
+        const rawOwner = item.dealOwnerName || item.dealOwner || item.ownerName || item.owner || '-'
+        const rawDate = dateStr(item.dealDate || item.quotationDate || item.createdAt)
+        const rawValue = item.dealValue || item.value || item.amount || '-'
+
+        return {
+          ...item,
+          dealNumber: rawNo,
+          id: rawNo,
+          dealName: rawName,
+          name: rawName,
+          title: rawName,
+          dealDate: rawDate,
+          date: rawDate,
+          dealOwner: rawOwner,
+          dealOwnerName: rawOwner,
+          owner: rawOwner,
+          ownerName: rawOwner,
+          dealType: item.dealType || item.stage || '-',
+          stage: item.stage || item.dealType || '-',
+          status: item.status || item.stage || '-',
+          dealValue: rawValue,
+          value: rawValue,
+          amount: rawValue,
+          projectName: item.projectName || item.project || '-',
+          project: item.projectName || item.project || '-',
+          consultantName: item.consultantName || '-',
+          expectedCloseDate: dateStr(item.expectedCloseDate),
+          addedOn: dateStr(item.addedOn),
+          createdAt: dateStr(item.createdAt),
+        }
+      }
+
+      if (type === 'quotation') {
+        const rawNo = item.quotationNo || item.quotationNumber || item.id || '-'
+        const rawDate = dateStr(item.date || item.quotationDate || item.createdAt)
+        const rawAccount = item.accountName || item.customerName || item.name || '-'
+        const rawDeal = item.dealName || item.title || '-'
+        const rawTotal = item.grandTotal || item.total || item.amount || '-'
+
+        return {
+          ...item,
+          quotationNo: rawNo,
+          quotationNumber: rawNo,
+          id: rawNo,
+          date: rawDate,
+          accountName: rawAccount,
+          dealName: rawDeal,
+          grandTotal: rawTotal,
+          total: rawTotal,
+          amount: rawTotal,
+          status: item.status || '-',
+          createdAt: dateStr(item.createdAt),
+        }
+      }
+
+      return item
+    }
+
+    const mapForExport = (item, type) => {
+      const mapped = mapItem(item, type)
+      const displayFields = getReportDisplayFieldKeys(report)
+
+      if (displayFields.length > 0) {
+        const out = {}
+        displayFields.forEach(key => {
+          const label = resolveLabel(type, key) || key
+          out[label] = mapped[key] !== undefined && mapped[key] !== null ? mapped[key] : (item[key] != null ? item[key] : '-')
+        })
+        return out
+      }
+      
+      // Fallback for system reports
+      if (type === 'account') {
+        return {
+          'Account No.': mapped.accountNumber,
+          'Account Date': mapped.accountDate,
+          'Account Name': mapped.name,
+          'Account Owner': mapped.accountOwner,
+          'Account Status': mapped.status,
+          'Account State': mapped.accountState || '-',
+          'Account Source': mapped.accountSource,
+          'Contact Person': mapped.contactPerson,
+          'Phone': mapped.phone,
+          'Email': mapped.email,
+          'Latest Remark': mapped.latestRemark,
+          'PO Value': mapped.poValue,
+          'Job No': mapped.jobNo,
+          'Created At': mapped.createdAt,
+        }
+      } else if (type === 'deal') {
+        return {
+          'Deal Name': mapped.dealName,
+          'Account Name': mapped.accountName || '-',
+          'Deal Owner': mapped.dealOwner,
+          'Stage': mapped.stage || '-',
+          'Status': mapped.status,
+          'Deal Value': mapped.dealValue,
+          'Expected Close Date': mapped.expectedCloseDate,
+          'Added On': mapped.addedOn,
+          'Created At': mapped.createdAt,
+        }
+      } else if (type === 'customer') {
+        return {
+          'Customer Name': mapped.name,
+          'Customer Code': mapped.customerCode || '-',
+          'Owner': mapped.assignedTo,
+          'Status': mapped.status,
+          'Mobile': mapped.mobile || mapped.phone,
+          'Email': mapped.email,
+          'City': mapped.city,
+          'Created At': mapped.createdAt,
+        }
+      } else if (type === 'quotation') {
+        return {
+          'Quotation No': mapped.quotationNo || '-',
+          'Date': mapped.date ? new Date(mapped.date).toLocaleDateString('en-GB') : '-',
+          'Account': mapped.accountName || '-',
+          'Deal': mapped.dealName || '-',
+          'Grand Total': mapped.grandTotal || '-',
+          'Status': mapped.status || '-',
+        }
+      }
+      return mapped
+    }
+
+    const processCategoryList = (list, type, dateField) => {
+      let filtered = filterByDate(list, dateField)
+      let mapped = filtered.map(item => ({...item, ...mapItem(item, type)}))
+      mapped = applyReportFilters(mapped, report.filters)
+      return mapped.map(item => mapForExport(item, type))
+    }
+
+    if (targetCategory === 'all') {
       dataSets = [
-        ...filterByDate(allDeals, 'addedOn').map(item => ({ 'Data Type': 'Deal', ...mapDeal(item) })),
-        ...filterByDate(allAccounts, 'accountDate').map(item => ({ 'Data Type': 'Account', ...mapAccount(item) })),
-        ...filterByDate(allCustomers, 'createdAt').map(item => ({ 'Data Type': 'Customer', ...mapCustomer(item) })),
-        ...filterByDate(allQuotations, 'date').map(item => ({ 'Data Type': 'Quotation', ...mapQuotation(item) })),
+        ...processCategoryList(finalDeals, 'deal', 'addedOn').map(item => ({ 'Data Type': 'Deal', ...item })),
+        ...processCategoryList(finalAccounts, 'account', 'accountDate').map(item => ({ 'Data Type': 'Account', ...item })),
+        ...processCategoryList(finalCustomers, 'customer', 'createdAt').map(item => ({ 'Data Type': 'Customer', ...item })),
+        ...processCategoryList(finalQuotations, 'quotation', 'date').map(item => ({ 'Data Type': 'Quotation', ...item })),
       ]
-    } else if (activeFilter === 'account') {
-      dataSets = filterByDate(allAccounts, 'accountDate').map(mapAccount)
-    } else if (activeFilter === 'deal') {
-      dataSets = filterByDate(allDeals, 'addedOn').map(mapDeal)
-    } else if (activeFilter === 'customer') {
-      dataSets = filterByDate(allCustomers, 'createdAt').map(mapCustomer)
+    } else if (targetCategory === 'account') {
+      dataSets = processCategoryList(finalAccounts, 'account', 'accountDate')
+    } else if (targetCategory === 'deal') {
+      dataSets = processCategoryList(finalDeals, 'deal', 'addedOn')
+    } else if (targetCategory === 'customer') {
+      dataSets = processCategoryList(finalCustomers, 'customer', 'createdAt')
+    } else if (targetCategory === 'quotation') {
+      dataSets = processCategoryList(finalQuotations, 'quotation', 'date')
     }
 
     const allKeys = new Set()
@@ -938,6 +1485,25 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
         rows: dataSets,
       })
     }
+
+    try {
+      await reportApi.saveGeneratedReport({
+        templateId: report._id || report.id,
+        reportName,
+        entityType: targetCategory,
+        selectedFields: getReportDisplayFieldKeys(report),
+        displayFields: getReportDisplayFieldKeys(report),
+        filters: Array.isArray(report.filters) ? report.filters : [],
+        totalRecords: dataSets.length,
+        createdBy: user?.name || user?.username || 'User',
+        creatorName: user?.name || user?.username || 'User',
+        visibility: report.visibility || 'All',
+        createdAt: new Date().toISOString(),
+      })
+      loadBackendReportsData()
+    } catch (saveErr) {
+      console.error('Error saving exported custom report:', saveErr)
+    }
   }
 
   return (
@@ -946,22 +1512,16 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
         <h1>Custom Reports</h1>
         <div className="cr-list-topbar-actions">
           <button type="button" className="cr-list-help">Need Help?</button>
-          <SplitDropdown
-            label="Add Report Template"
-            options={addTemplateOptions}
-            isOpen={addOpen}
-            buttonRef={addRef}
-            onToggle={() => { setAddOpen((value) => !value); setNewOpen(false) }}
-            onSelect={handleAddTemplate}
-          />
-          <SplitDropdown
-            label="New Report"
-            options={newReportOptions}
-            isOpen={newOpen}
-            buttonRef={newRef}
-            onToggle={() => { setNewOpen((value) => !value); setAddOpen(false) }}
-            onSelect={(contextKey) => openBuilder(contextKey)}
-          />
+          {isKeval && (
+            <SplitDropdown
+              label="Add Report Template"
+              options={addTemplateOptions}
+              isOpen={addOpen}
+              buttonRef={addRef}
+              onToggle={() => { setAddOpen((value) => !value) }}
+              onSelect={handleAddTemplate}
+            />
+          )}
         </div>
       </header>
 
@@ -975,14 +1535,54 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
           <div className="cr-list-sidebar-title"><FaTable /> Templates</div>
           <div className="cr-list-sidebar-items">
             {TEMPLATE_FILTERS.map((filter) => (
-              <button
-                key={filter.key}
-                type="button"
-                className={activeFilter === filter.key ? 'active' : ''}
-                onClick={() => setActiveFilter(filter.key)}
-              >
-                {filter.label}
-              </button>
+              <React.Fragment key={filter.key}>
+                <button
+                  type="button"
+                  className={activeFilter === filter.key ? 'active' : ''}
+                  onClick={() => {
+                    setActiveFilter(filter.key)
+                    if (filter.key === 'custom') setActiveCustomSubFilter('account')
+                  }}
+                >
+                  {filter.label}
+                </button>
+                {filter.key === 'custom' && activeFilter === 'custom' && (
+                  <div className="cr-list-sidebar-subitems" style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.25rem', marginBottom: '0.5rem' }}>
+                    <button
+                      type="button"
+                      className={`cr-list-subitem-btn ${activeCustomSubFilter === 'account' ? 'active-subitem' : ''}`}
+                      style={{ textAlign: 'left', background: activeCustomSubFilter === 'account' ? '#e3f2fd' : 'none', border: 'none', padding: '0.4rem 0.6rem', borderRadius: '4px', cursor: 'pointer', color: activeCustomSubFilter === 'account' ? '#1976d2' : '#444', fontWeight: activeCustomSubFilter === 'account' ? '600' : 'normal', fontSize: '0.85rem' }}
+                      onClick={() => setActiveCustomSubFilter('account')}
+                    >
+                      Accounts
+                    </button>
+                    <button
+                      type="button"
+                      className={`cr-list-subitem-btn ${activeCustomSubFilter === 'customer' ? 'active-subitem' : ''}`}
+                      style={{ textAlign: 'left', background: activeCustomSubFilter === 'customer' ? '#e3f2fd' : 'none', border: 'none', padding: '0.4rem 0.6rem', borderRadius: '4px', cursor: 'pointer', color: activeCustomSubFilter === 'customer' ? '#1976d2' : '#444', fontWeight: activeCustomSubFilter === 'customer' ? '600' : 'normal', fontSize: '0.85rem' }}
+                      onClick={() => setActiveCustomSubFilter('customer')}
+                    >
+                      Customers
+                    </button>
+                    <button
+                      type="button"
+                      className={`cr-list-subitem-btn ${activeCustomSubFilter === 'deal' ? 'active-subitem' : ''}`}
+                      style={{ textAlign: 'left', background: activeCustomSubFilter === 'deal' ? '#e3f2fd' : 'none', border: 'none', padding: '0.4rem 0.6rem', borderRadius: '4px', cursor: 'pointer', color: activeCustomSubFilter === 'deal' ? '#1976d2' : '#444', fontWeight: activeCustomSubFilter === 'deal' ? '600' : 'normal', fontSize: '0.85rem' }}
+                      onClick={() => setActiveCustomSubFilter('deal')}
+                    >
+                      Deals
+                    </button>
+                    <button
+                      type="button"
+                      className={`cr-list-subitem-btn ${activeCustomSubFilter === 'quotation' ? 'active-subitem' : ''}`}
+                      style={{ textAlign: 'left', background: activeCustomSubFilter === 'quotation' ? '#e3f2fd' : 'none', border: 'none', padding: '0.4rem 0.6rem', borderRadius: '4px', cursor: 'pointer', color: activeCustomSubFilter === 'quotation' ? '#1976d2' : '#444', fontWeight: activeCustomSubFilter === 'quotation' ? '600' : 'normal', fontSize: '0.85rem' }}
+                      onClick={() => setActiveCustomSubFilter('quotation')}
+                    >
+                      Quotations
+                    </button>
+                  </div>
+                )}
+              </React.Fragment>
             ))}
           </div>
         </aside>

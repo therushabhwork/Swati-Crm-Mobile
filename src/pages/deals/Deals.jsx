@@ -5271,6 +5271,9 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
 
   return (
     <div className="deals-page">
+      <div className="deals-crm-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h1>{viewConfig.title} - {displayedDeals.length} records</h1>
+      </div>
       <Card
         title={viewConfig.title}
         subtitle={`${displayedDeals.length} deals | ${formatCurrency(totalValue)} total value. ${viewConfig.subtitle}`}

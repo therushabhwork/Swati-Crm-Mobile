@@ -257,45 +257,7 @@ const AddCustomerReportPage = () => {
           </div>
         </section>
 
-        <section className="customer-report-builder-section">
-          <div className="customer-report-builder-section-title">Report Filters</div>
-          <div className="customer-report-builder-section-body">
-            <div className="customer-report-builder-subpanel-title">Configure Filters</div>
-            <div className="customer-report-builder-filter-shell">
-              <div className="customer-report-builder-filter-caption">Additional Filters</div>
-              {formState.filters.map((filter) => (
-                <div key={filter.id} className="customer-report-builder-filter-row">
-                  <select
-                    value={filter.field}
-                    onChange={(event) => updateFilter(filter.id, { field: event.target.value })}
-                  >
-                    {CUSTOMER_REPORT_FILTER_FIELD_OPTIONS.map((option) => (
-                      <option key={option.value || 'empty-filter-field'} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                  <span className="customer-report-builder-filter-operator-label">is</span>
-                  <select
-                    value={filter.operator}
-                    onChange={(event) => updateFilter(filter.id, { operator: event.target.value })}
-                  >
-                    {CUSTOMER_REPORT_FILTER_OPERATOR_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    value={filter.value}
-                    onChange={(event) => updateFilter(filter.id, { value: event.target.value })}
-                    placeholder="Value"
-                    disabled={filter.operator === 'is_empty' || filter.operator === 'is_not_empty'}
-                  />
-                  <button type="button" className="customer-report-builder-mini-btn" onClick={addFilterRow}>+</button>
-                  <button type="button" className="customer-report-builder-mini-btn customer-report-builder-mini-btn-remove" onClick={() => removeFilterRow(filter.id)}>-</button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+
 
         <section className="customer-report-builder-section">
           <div className="customer-report-builder-section-title">Report Fields</div>

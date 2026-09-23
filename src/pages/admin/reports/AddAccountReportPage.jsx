@@ -1,19 +1,20 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   ACCOUNT_REPORT_AGGREGATE_OPTIONS,
   ACCOUNT_REPORT_CONTEXT_OPTIONS,
   ACCOUNT_REPORT_FIELD_OPTIONS,
-  ACCOUNT_REPORT_FILTER_FIELD_OPTIONS,
   ACCOUNT_REPORT_FILTER_OPERATOR_OPTIONS,
   ACCOUNT_REPORT_GROUP_BY_OPTIONS,
   ACCOUNT_REPORT_ORDER_BY_OPTIONS,
   ACCOUNT_REPORT_VISIBILITY_OPTIONS,
 } from '../../../features/adminReports/accountReportTemplateConfig'
-import { saveAdminReportTemplate } from '../../../features/adminReports/reportTemplateStorage'
-import { generateId } from '../../../utils/helpers'
+import { DEAL_REPORT_FIELD_OPTIONS } from '../../../features/adminReports/dealReportTemplateConfig'
+import { QUOTATION_REPORT_FIELD_OPTIONS } from '../../../features/adminReports/quotationReportTemplateConfig'
+import { CUSTOMER_REPORT_FIELD_OPTIONS } from '../../../features/adminReports/customerReportTemplateConfig'
 import { useAuth } from '../../../context/AuthContext'
-import ReportOutputPreview from './ReportOutputPreview'
+import { generateId } from '../../../utils/helpers'
+import apiClient from '../../../services/apiClient'
 import './AddAccountReportPage.css'
 
 const buildFilterRow = () => ({
@@ -46,15 +47,37 @@ const AddAccountReportPage = () => {
   const [selectedChosenField, setSelectedChosenField] = useState('')
   const [pageError, setPageError] = useState('')
 
+  const searchParams = new URLSearchParams(location.search)
+  const contextParam = searchParams.get('context')
+
+  useEffect(() => {
+    if (contextParam === 'deal') {
+      setFormState((prev) => ({ ...prev, entityType: 'Deal', description: 'Deal Report Template' }))
+    } else if (contextParam === 'quotation') {
+      setFormState((prev) => ({ ...prev, entityType: 'Quotation', description: 'Quotation Report Template' }))
+    } else if (contextParam === 'customer') {
+      setFormState((prev) => ({ ...prev, entityType: 'Customer', description: 'Customer Report Template' }))
+    } else {
+      setFormState((prev) => ({ ...prev, entityType: 'Account', description: 'Account Report Template' }))
+    }
+  }, [contextParam])
+
+  const currentFieldOptions = useMemo(() => {
+    if (formState.entityType === 'Deal') return DEAL_REPORT_FIELD_OPTIONS
+    if (formState.entityType === 'Quotation') return QUOTATION_REPORT_FIELD_OPTIONS
+    if (formState.entityType === 'Customer') return CUSTOMER_REPORT_FIELD_OPTIONS
+    return ACCOUNT_REPORT_FIELD_OPTIONS
+  }, [formState.entityType])
+
   const availableFields = useMemo(() => (
-    ACCOUNT_REPORT_FIELD_OPTIONS.filter((field) => !formState.selectedFields.includes(field.label))
-  ), [formState.selectedFields])
+    currentFieldOptions.filter((field) => !formState.selectedFields.includes(field.label))
+  ), [currentFieldOptions, formState.selectedFields])
 
   const selectedFieldOptions = useMemo(() => (
     formState.selectedFields.map((label) => (
-      ACCOUNT_REPORT_FIELD_OPTIONS.find((field) => field.label === label) || { key: label, label }
+      currentFieldOptions.find((field) => field.label === label) || { key: label, label }
     ))
-  ), [formState.selectedFields])
+  ), [currentFieldOptions, formState.selectedFields])
 
   const updateFilter = (filterId, updates) => {
     setFormState((currentValue) => ({
@@ -104,7 +127,7 @@ const AddAccountReportPage = () => {
     setSelectedChosenField('')
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
     setPageError('')
 
@@ -118,17 +141,23 @@ const AddAccountReportPage = () => {
       return
     }
 
+    const displayFields = formState.selectedFields.map((label) => {
+      const option = currentFieldOptions.find((f) => f.label === label)
+      return option ? option.key : label
+    })
+
     const cleanedFilters = formState.filters
       .map((filter) => ({
         ...filter,
-        field: filter.field.trim(),
-        operator: filter.operator.trim(),
-        value: filter.value.trim(),
+        field: String(filter.field || '').trim(),
+        operator: String(filter.operator || 'equals').trim(),
+        value: String(filter.value || '').trim(),
       }))
       .filter((filter) => filter.field)
 
-    saveAdminReportTemplate({
+    const payload = {
       entityType: formState.entityType,
+      name: formState.reportName.trim(),
       reportName: formState.reportName.trim(),
       description: formState.description.trim(),
       visibility: formState.visibility,
@@ -137,19 +166,24 @@ const AddAccountReportPage = () => {
       orderBy: formState.orderBy,
       aggregate: formState.aggregate,
       filters: cleanedFilters,
-      selectedFields: formState.selectedFields,
-      createdBy: user?.name || 'System Administrator',
-      createdOn: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    })
+      displayFields: displayFields,
+      selectedFields: displayFields,
+      createdBy: user?.name || user?.username || 'System Administrator',
+      creatorName: user?.name || user?.username || 'System Administrator',
+    }
 
-    navigate(reportListPath)
+    try {
+      await apiClient.post('/reports/templates', payload)
+      navigate(reportListPath)
+    } catch (error) {
+      setPageError(error.response?.data?.error || error.message || 'Failed to save report')
+    }
   }
 
   return (
     <div className="account-report-builder-page">
       <div className="account-report-builder-topbar">
-        <h1>Add Account Report</h1>
+        <h1>Add {formState.entityType} Report</h1>
         <div className="account-report-builder-topbar-actions">
           <button
             type="button"
@@ -174,10 +208,18 @@ const AddAccountReportPage = () => {
             <label>Report Context</label>
             <select
               value={formState.entityType.toLowerCase()}
-              onChange={(event) => setFormState((currentValue) => ({
-                ...currentValue,
-                entityType: event.target.value === 'account' ? 'Account' : currentValue.entityType,
-              }))}
+              onChange={(event) => {
+                const val = event.target.value;
+                setFormState((currentValue) => {
+                  const newEntity = val === 'account' ? 'Account' : val === 'deal' ? 'Deal' : val === 'quotation' ? 'Quotation' : val === 'customer' ? 'Customer' : currentValue.entityType;
+                  return {
+                    ...currentValue,
+                    entityType: newEntity,
+                    selectedFields: [],
+                    description: `${newEntity} Report Template`
+                  }
+                })
+              }}
             >
               {ACCOUNT_REPORT_CONTEXT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -276,22 +318,22 @@ const AddAccountReportPage = () => {
         </section>
 
         <section className="account-report-builder-section">
-          <div className="account-report-builder-section-title">Report Filters</div>
+          <div className="account-report-builder-section-title">Template Filters</div>
           <div className="account-report-builder-section-body">
-            <div className="account-report-builder-subpanel-title">Configure Filters</div>
             <div className="account-report-builder-filter-shell">
-              <div className="account-report-builder-filter-caption">Additional Filters</div>
+              <div className="account-report-builder-filter-caption">Filter records before generating this report</div>
               {formState.filters.map((filter) => (
-                <div key={filter.id} className="account-report-builder-filter-row">
+                <div className="account-report-builder-filter-row" key={filter.id}>
                   <select
                     value={filter.field}
                     onChange={(event) => updateFilter(filter.id, { field: event.target.value })}
                   >
-                    {ACCOUNT_REPORT_FILTER_FIELD_OPTIONS.map((option) => (
-                      <option key={option.value || 'empty-filter-field'} value={option.value}>{option.label}</option>
+                    <option value="">Select Field</option>
+                    {currentFieldOptions.map((field) => (
+                      <option key={field.key} value={field.key}>{field.label}</option>
                     ))}
                   </select>
-                  <span className="account-report-builder-filter-operator-label">opt</span>
+                  <span className="account-report-builder-filter-operator-label">is</span>
                   <select
                     value={filter.operator}
                     onChange={(event) => updateFilter(filter.id, { operator: event.target.value })}

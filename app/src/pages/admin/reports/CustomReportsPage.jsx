@@ -397,6 +397,7 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
   const addRef = useRef(null)
   const newRef = useRef(null)
   const [activeFilter, setActiveFilter] = useState('all')
+  const [activeCustomSubFilter, setActiveCustomSubFilter] = useState('all')
   const [activeManagementTab, setActiveManagementTab] = useState(isAdmin ? 'all' : 'shared')
   const [addOpen, setAddOpen] = useState(false)
   const [newOpen, setNewOpen] = useState(false)
@@ -439,7 +440,9 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
     ]
 
     return reports.filter((report) => {
-      if (activeFilter !== 'all' && report.categoryKey !== activeFilter) return false
+      if (activeFilter === 'custom' && !report.isBackend) return false
+      if (activeFilter === 'custom' && activeCustomSubFilter !== 'all' && String(report.categoryKey).toLowerCase() !== activeCustomSubFilter) return false
+      if (activeFilter !== 'all' && activeFilter !== 'custom' && String(report.categoryKey).toLowerCase() !== activeFilter) return false
       if (activeManagementTab === 'all') return isAdmin
       if (report.systemReport) return activeManagementTab === 'shared'
 
@@ -448,7 +451,7 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
       if (activeManagementTab === 'shared') return !isOwn
       return true
     })
-  }, [activeFilter, activeManagementTab, customReports, isAdmin, user])
+  }, [activeFilter, activeCustomSubFilter, activeManagementTab, customReports, isAdmin, user])
 
   const groupedReports = useMemo(() => visibleReports.reduce((groups, report) => {
     const groupName = getReportGroupName(report)
@@ -658,14 +661,26 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
           <div className="cr-list-sidebar-title"><FaTable /> Templates</div>
           <div className="cr-list-sidebar-items">
             {TEMPLATE_FILTERS.map((filter) => (
-              <button
-                key={filter.key}
-                type="button"
-                className={activeFilter === filter.key ? 'active' : ''}
-                onClick={() => setActiveFilter(filter.key)}
-              >
-                {filter.label}
-              </button>
+              <React.Fragment key={filter.key}>
+                <button
+                  type="button"
+                  className={activeFilter === filter.key ? 'active' : ''}
+                  onClick={() => {
+                    setActiveFilter(filter.key)
+                    if (filter.key === 'custom') setActiveCustomSubFilter('all')
+                  }}
+                >
+                  {filter.label}
+                </button>
+                {filter.key === 'custom' && activeFilter === 'custom' && (
+                  <div className="cr-list-sidebar-subitems" style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.25rem' }}>
+                    <button type="button" style={{ textAlign: 'left', background: 'none', border: 'none', padding: '0.5rem', cursor: 'pointer', color: activeCustomSubFilter === 'all' ? '#d32f2f' : '#333', fontWeight: activeCustomSubFilter === 'all' ? '600' : 'normal', fontSize: '0.9rem' }} onClick={() => setActiveCustomSubFilter('all')}>All Custom</button>
+                    <button type="button" style={{ textAlign: 'left', background: 'none', border: 'none', padding: '0.5rem', cursor: 'pointer', color: activeCustomSubFilter === 'account' ? '#d32f2f' : '#333', fontWeight: activeCustomSubFilter === 'account' ? '600' : 'normal', fontSize: '0.9rem' }} onClick={() => setActiveCustomSubFilter('account')}>Accounts</button>
+                    <button type="button" style={{ textAlign: 'left', background: 'none', border: 'none', padding: '0.5rem', cursor: 'pointer', color: activeCustomSubFilter === 'customer' ? '#d32f2f' : '#333', fontWeight: activeCustomSubFilter === 'customer' ? '600' : 'normal', fontSize: '0.9rem' }} onClick={() => setActiveCustomSubFilter('customer')}>Customers</button>
+                    <button type="button" style={{ textAlign: 'left', background: 'none', border: 'none', padding: '0.5rem', cursor: 'pointer', color: activeCustomSubFilter === 'deal' ? '#d32f2f' : '#333', fontWeight: activeCustomSubFilter === 'deal' ? '600' : 'normal', fontSize: '0.9rem' }} onClick={() => setActiveCustomSubFilter('deal')}>Deals</button>
+                  </div>
+                )}
+              </React.Fragment>
             ))}
           </div>
         </aside>

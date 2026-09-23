@@ -199,7 +199,7 @@ function App() {
                 <Route path="accounts/no-follow-leads" element={<MyGroupAccountsPage variantKey="noFollowLeads" />} />
                 <Route path="accounts/actions/:actionKey" element={<AccountActionPlaceholderPage />} />
                 <Route path="customers" element={<Navigate to="/customers/search" replace />} />
-                <Route path="customers/add" element={<AdminCustomersPage variantKey="add" basePath="/customers" showActionMenu={false} ownerOptionsOverride={getCrmOwnerOptions()} />} />
+
                 <Route path="customers/search" element={<AdminCustomersPage variantKey="search" basePath="/customers" ownerOptionsOverride={getCrmOwnerOptions()} />} />
                 <Route path="customers/my-customers" element={<AdminCustomersPage variantKey="myCustomers" basePath="/customers" ownerOptionsOverride={getCrmOwnerOptions()} />} />
                 <Route path="customers/view/:customerId" element={<AdminCustomersPage variantKey="view" basePath="/customers" ownerOptionsOverride={getCrmOwnerOptions()} />} />
@@ -308,7 +308,7 @@ function App() {
                 <Route path="accounts/user-wise-leads" element={<MyGroupAccountsPage variantKey="userWiseLeads" />} />
 
                 <Route path="accounts/actions/:actionKey" element={<AccountActionPlaceholderPage />} />
-                <Route path="customers/add" element={<AdminCustomersPage variantKey="add" />} />
+
                 <Route path="customers/search" element={<AdminCustomersPage variantKey="search" />} />
                 <Route path="customers/my-customers" element={<AdminCustomersPage variantKey="myCustomers" />} />
                 <Route path="customers/view/:customerId" element={<AdminCustomersPage variantKey="view" />} />

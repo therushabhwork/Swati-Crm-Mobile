@@ -1,9 +1,15 @@
 import { format } from 'date-fns'
 import { generateId, storage } from '../../utils/helpers'
 import { getCustomReportContext, getCustomReportFieldLabel } from './customReportDefinitions'
+import reportApi from '../../services/reportApi'
+import { ACCOUNT_REPORT_FIELD_OPTIONS } from './accountReportTemplateConfig'
+import { CUSTOMER_REPORT_FIELD_OPTIONS } from './customerReportTemplateConfig'
+import { DEAL_REPORT_FIELD_OPTIONS } from './dealReportTemplateConfig'
+import { getQuotationReportFieldOptions } from './quotationReportTemplateConfig'
 
 export const ADMIN_REPORT_TEMPLATES_STORAGE_KEY = 'crm_admin_report_templates'
 const ADMIN_REPORT_TEMPLATES_EVENT = 'crm-admin-report-templates:changed'
+
 
 const normalizeFilter = (filter = {}) => ({
   id: String(filter.id || generateId('RTF')),
@@ -19,6 +25,27 @@ const normalizeSortLevel = (sortLevel = {}) => ({
   field: String(sortLevel.field || ''),
   direction: String(sortLevel.direction || 'asc'),
 })
+
+const getTemplateFieldOptions = (template = {}) => {
+  const entityType = String(template.entityType || template.typeLabel || '').toLowerCase()
+  if (entityType === 'customer') return CUSTOMER_REPORT_FIELD_OPTIONS
+  if (entityType === 'deal') return DEAL_REPORT_FIELD_OPTIONS
+  if (entityType === 'quotation') return getQuotationReportFieldOptions(template.reportContext || 'account')
+  return ACCOUNT_REPORT_FIELD_OPTIONS
+}
+
+const normalizeTemplateFieldKeys = (template = {}) => {
+  const fieldOptions = getTemplateFieldOptions(template)
+  const selectedFields = Array.isArray(template.selectedFields) && template.selectedFields.length > 0
+    ? template.selectedFields
+    : (Array.isArray(template.displayFields) ? template.displayFields : [])
+
+  return selectedFields.map((field) => {
+    const fieldValue = String(field)
+    const option = fieldOptions.find((entry) => entry.key === fieldValue || entry.label === fieldValue)
+    return option?.key || fieldValue
+  })
+}
 
 const normalizeTemplate = (template = {}) => ({
   id: String(template.id || generateId('RPT')),
@@ -171,6 +198,28 @@ export const saveAdminReportTemplate = (templateDefinition) => {
 
   storage.set(ADMIN_REPORT_TEMPLATES_STORAGE_KEY, nextTemplates)
   broadcastTemplatesChanged()
+
+  try {
+    const payload = {
+      name: templateToSave.reportName || templateToSave.name || 'Custom Report Template',
+      reportName: templateToSave.reportName || templateToSave.name || 'Custom Report Template',
+      entityType: templateToSave.entityType || templateToSave.typeLabel || 'Account',
+      description: templateToSave.description || '',
+      visibility: templateToSave.visibility || 'All',
+      groupBy: templateToSave.groupBy || '',
+      orderBy: templateToSave.orderBy || '',
+      aggregate: templateToSave.aggregate || '',
+      filters: Array.isArray(templateToSave.filters) ? templateToSave.filters : [],
+      displayFields: normalizeTemplateFieldKeys(templateToSave),
+      selectedFields: normalizeTemplateFieldKeys(templateToSave),
+    }
+    reportApi.createReportTemplate(payload).catch((err) => {
+      console.error('Failed to sync report template to MongoDB:', err)
+    })
+  } catch (syncErr) {
+    console.error('Error syncing report template:', syncErr)
+  }
+
   return templateToSave
 }
 
@@ -179,6 +228,14 @@ export const deleteAdminReportTemplate = (templateId) => {
   const nextTemplates = existingTemplates.filter((template) => template.id !== String(templateId || ''))
   storage.set(ADMIN_REPORT_TEMPLATES_STORAGE_KEY, nextTemplates)
   broadcastTemplatesChanged()
+
+  try {
+    reportApi.deleteReportTemplate(templateId).catch((err) => {
+      console.error('Failed to delete report template from MongoDB:', err)
+    })
+  } catch (err) {
+    // Ignore
+  }
 }
 
 export const subscribeAdminReportTemplates = (callback) => {

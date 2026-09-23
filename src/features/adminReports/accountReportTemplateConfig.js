@@ -8,6 +8,9 @@ const toOption = (value, label = value) => ({
 
 export const ACCOUNT_REPORT_CONTEXT_OPTIONS = [
   toOption('account', 'Account'),
+  toOption('deal', 'Deal'),
+  toOption('customer', 'Customer'),
+  toOption('quotation', 'Quotation'),
 ]
 
 export const ACCOUNT_REPORT_VISIBILITY_OPTIONS = [

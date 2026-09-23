@@ -519,7 +519,7 @@ const Sidebar = ({ isAdmin = false }) => {
             isCollapsed={isSidebarCollapsed}
             onToggle={() => setCustomersOpen((previous) => !previous)}
           >
-            <SubLink to="/admin/customers/add" label="Add Customer" />
+
             <SubLink to="/admin/customers/search" label="Search Customer" />
             <SubLink to="/admin/customers/my-customers" label="My Customers" />
           </SidebarGroup>

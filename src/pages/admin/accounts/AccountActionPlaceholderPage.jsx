@@ -72,6 +72,7 @@ const AccountActionPlaceholderPage = () => {
   const [documentType, setDocumentType] = useState(documentTypes[0])
   const [documentName, setDocumentName] = useState('')
   const [documentNote, setDocumentNote] = useState('')
+  const [documentFile, setDocumentFile] = useState(null)
   const [emailSubject, setEmailSubject] = useState('')
   const [emailMessage, setEmailMessage] = useState('')
   const [formError, setFormError] = useState('')
@@ -196,6 +197,7 @@ const AccountActionPlaceholderPage = () => {
     setDocumentType(documentTypes[0])
     setDocumentName('')
     setDocumentNote('')
+    setDocumentFile(null)
     setEmailSubject(`Regarding ${selectedAccount.name}`)
     setEmailMessage('')
     setFormError('')
@@ -304,8 +306,23 @@ const AccountActionPlaceholderPage = () => {
         assignedUserId: owner?.id || selectedAccount.raw?.assignedUserId || null,
       }
     } else if (actionKey === 'add-document') {
-      if (!documentName.trim()) {
-        setFormError('Document name is required.')
+      if (!documentFile) {
+        setFormError('Document file is required.')
+        return
+      }
+
+      setIsSavingAction(true)
+      let base64File = ''
+      try {
+        base64File = await new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.readAsDataURL(documentFile)
+          reader.onload = () => resolve(reader.result)
+          reader.onerror = (error) => reject(error)
+        })
+      } catch (error) {
+        setFormError('Failed to read file.')
+        setIsSavingAction(false)
         return
       }
 
@@ -315,12 +332,13 @@ const AccountActionPlaceholderPage = () => {
           {
             id: `DOC-${Date.now()}`,
             type: documentType,
-            name: documentName.trim(),
+            name: documentName,
             note: documentNote.trim(),
+            fileData: base64File,
             addedOn: new Date().toISOString(),
           },
         ],
-        latestRemark: `Document added: ${documentName.trim()}`,
+        latestRemark: `Document added: ${documentName}`,
       }
     } else if (actionKey === 'send-mail') {
       if (!selectedAccount.email) {
@@ -516,8 +534,17 @@ const AccountActionPlaceholderPage = () => {
             </select>
           </label>
           <label className="admin-accounts-bulk-field">
-            Document Name
-            <input type="text" value={documentName} onChange={(event) => setDocumentName(event.target.value)} placeholder="Proposal.pdf" />
+            Document Upload
+            <input type="file" accept=".pdf,.jpeg,.jpg,.png,.svg,.xlsx,.csv" onChange={(event) => {
+              const file = event.target.files[0]
+              if (file) {
+                setDocumentFile(file)
+                setDocumentName(file.name)
+              } else {
+                setDocumentFile(null)
+                setDocumentName('')
+              }
+            }} />
           </label>
           <label className="admin-accounts-bulk-field admin-accounts-action-field-full">
             Document Note

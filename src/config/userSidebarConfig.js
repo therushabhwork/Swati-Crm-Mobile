@@ -72,7 +72,7 @@ export const USER_SIDEBAR_GROUPS = [
     icon: FaUserTie,
     routePrefix: '/customers',
     items: [
-      { label: 'Add Customer', to: '/customers/add' },
+
       { label: 'Search Customer', to: '/customers/search' },
       { label: 'My Customers', to: '/customers/my-customers' },
     ],

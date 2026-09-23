@@ -174,6 +174,8 @@ export const getQuotationReportFieldOptions = (context = 'account') => (
   getQuotationReportFieldGroups(context).flatMap((group) => group.fields)
 )
 
+export const QUOTATION_REPORT_FIELD_OPTIONS = getQuotationReportFieldOptions('account')
+
 const buildSelectOptions = (context) => ([
   toOption('', 'Select'),
   ...getQuotationReportFieldOptions(context).map((field) => toOption(field.key, field.label)),

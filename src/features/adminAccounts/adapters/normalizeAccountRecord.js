@@ -153,11 +153,17 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
   const convertedContextNumber = account.convertedContextNumber || account.convertedReferenceNumber || account.customerRefNo || ''
   const isConverted = Boolean(account.isConverted || account.dealId || account.convertedDealId || account.convertedFromAccount)
 
+  const rawAccountCategory = account.accountCategory || ''
+  const parsedAccountCategory = rawAccountCategory.toLowerCase() === 'prospect' ? '' : rawAccountCategory
+
+  const rawCustomerType = account.customerType || ''
+  const parsedCustomerType = rawCustomerType.toLowerCase() === 'prospect' ? '' : titleize(rawCustomerType)
+
   const normalized = {
     id: String(account.id || account._id || accountNumber),
     accountNumber,
     name: account.name || account.accountName || account.customerName || 'Untitled Account',
-    accountCategory: titleize(account.accountCategory || account.customerType || account.industryType || account.industry || 'Prospect'),
+    accountCategory: parsedAccountCategory,
     projectName: account.projectName || titleize(account.productCategory) || 'General Enquiry',
     reasonForLost,
     accountDate: account.accountDate || fallbackDate,
@@ -182,7 +188,7 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
     state: titleize(account.state || ''),
     industryType: titleize(account.industryType || account.industry || ''),
     customerName: account.customerName || '',
-    customerType: titleize(account.customerType || ''),
+    customerType: parsedCustomerType,
     productCategory: titleize(account.productCategory || ''),
     customerRefNo: account.customerRefNo || '',
     customerRefDate: account.customerRefDate || '',

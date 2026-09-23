@@ -73,7 +73,7 @@ const ADD_TASK_ACTION = '__add_task__'
 
 const ADMIN_QUICK_ADD_ITEMS = [
   { label: 'Add Account', icon: FaBriefcase, route: '/admin/accounts/new' },
-  { label: 'Add Customer', icon: FaUsers, route: '/admin/customers/add' },
+
   { label: 'Add Deal', icon: FaThumbsUp, route: '/admin/deals/add' },
   { label: 'Add Support Request', icon: FaHandsHelping, route: '/admin/support-requests/add' },
   { label: 'Add Reminder', icon: FiBell, action: ADD_REMINDER_ACTION },
@@ -83,7 +83,7 @@ const ADMIN_QUICK_ADD_ITEMS = [
 
 const STANDARD_QUICK_ADD_ITEMS = [
   { label: 'Add Account', icon: FaBriefcase, route: '/accounts/new' },
-  { label: 'Add Customer', icon: FaUsers, route: '/customers/add' },
+
   { label: 'Add Support Request', icon: FaHandsHelping, route: '/support-requests/add' },
   { label: 'Add Reminder', icon: FiBell, action: ADD_REMINDER_ACTION },
   { label: 'Add Task', icon: FaTasks, action: ADD_TASK_ACTION },

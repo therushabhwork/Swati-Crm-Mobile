@@ -65,13 +65,7 @@ const ACTIONS = [
     adminPath: '/admin/accounts/new',
     userPath: '/accounts/new',
   },
-  {
-    key: 'add-customer',
-    label: 'Add Customer',
-    icon: FaUserTie,
-    adminPath: '/admin/customers/add',
-    userPath: '/customers/add',
-  },
+
   {
     key: 'add-deal',
     label: 'Add Deal',
