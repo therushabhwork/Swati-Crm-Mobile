@@ -593,6 +593,105 @@ const MyGroupAccountsPage = ({ variantKey = 'myGroup' }) => {
   const [ownerFilter, setOwnerFilter] = useState('All')
   const lastAccountUpdateToastRef = useRef({ key: '', at: 0 })
 
+  const fileInputRef = useRef(null)
+  const [importing, setImporting] = useState(false)
+
+  const handleImportFileChange = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setImporting(true)
+    try {
+      const XLSX = await import('xlsx')
+      const buffer = await file.arrayBuffer()
+      const workbook = XLSX.read(buffer, { type: 'array' })
+      const firstSheetName = workbook.SheetNames[0]
+      const worksheet = workbook.Sheets[firstSheetName]
+      
+      const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' })
+      
+      let headerRowIndex = -1
+      for (let i = 0; i < Math.min(rawRows.length, 20); i++) {
+        const row = rawRows[i] || []
+        const rowString = row.join(' ').toLowerCase()
+        if (rowString.includes('account name') || rowString.includes('mobile') || rowString.includes('status') || rowString.includes('account category') || rowString.includes('contact person')) {
+          headerRowIndex = i
+          break
+        }
+      }
+      
+      if (headerRowIndex === -1) {
+        addNotification('warning', 'Import Failed', 'Could not detect column headers in the Excel file. Please ensure it has columns like "Account Name".')
+        setImporting(false)
+        return
+      }
+
+      const headers = rawRows[headerRowIndex].map(h => String(h || '').trim())
+      const dataRows = rawRows.slice(headerRowIndex + 1)
+      
+      const mappedRecords = dataRows.map(rowArray => {
+        const record = {}
+        headers.forEach((header, index) => {
+          if (!header) return
+          // Ensure empty or null is treated exactly as an empty string to match excel layout safely
+          const value = rowArray[index] !== undefined && rowArray[index] !== null ? rowArray[index] : ''
+          const lowerHeader = header.toLowerCase()
+          
+          if (lowerHeader.includes('account no') || lowerHeader === 'accountno') {
+            return;
+          }
+          
+          if (lowerHeader === 'account name' || lowerHeader === 'name') record.accountName = value
+          else if (lowerHeader === 'account date') record.accountDate = value
+          else if (lowerHeader === 'account category') record.accountCategory = value
+          else if (lowerHeader === 'contact person') record.contactPerson = value
+          else if (lowerHeader === 'mobile' || lowerHeader === 'phone' || lowerHeader === 'mobile no') record.mobile = value
+          else if (lowerHeader === 'email id' || lowerHeader === 'email') record.email = value
+          else if (lowerHeader === 'alternate phone') record.alternatePhone = value
+          else if (lowerHeader === 'alternate email') record.alternateEmail = value
+          else if (lowerHeader === 'customer type') record.customerType = value
+          else if (lowerHeader === 'project name') record.projectName = value
+          else if (lowerHeader === 'product category') record.productCategory = value
+          else if (lowerHeader === 'state') record.state = value
+          else if (lowerHeader === 'location') record.location = value
+          else if (lowerHeader === 'industry type') record.industryType = value
+          else if (lowerHeader === 'customer ref. no.' || lowerHeader === 'customer ref no' || lowerHeader === 'customer ref. no') record.customerRefNo = value
+          else if (lowerHeader === 'consultant name') record.consultantName = value
+          else if (lowerHeader === 'po value') record.poValue = value
+          else if (lowerHeader === 'user group') record.userGroup = value
+          else if (lowerHeader === 'account owner') record.accountOwnerName = value // Just for display reference, ownerCode will be assigned by token backend
+          else if (lowerHeader === 'account status' || lowerHeader === 'status') record.status = value
+          else record[header] = value
+        })
+        return record
+      }).filter(record => record.accountName || record.mobile || record.email || record.accountCategory || record.location)
+
+      if (mappedRecords.length === 0) {
+        addNotification('warning', 'Import Failed', 'No valid records found in the Excel file after skipping headers.')
+        setImporting(false)
+        return
+      }
+
+      // We just send the parsed JSON records to the backend for direct insert
+      const result = await leadApi.importDirectAccounts(mappedRecords)
+      
+      if (result && result.success) {
+        addNotification('success', 'Import Successful', result.message || `Imported accounts successfully.`)
+        await refreshData()
+      } else {
+        addNotification('error', 'Import Failed', 'Failed to import accounts.')
+      }
+    } catch (error) {
+      console.error('Import error:', error)
+      addNotification('error', 'Import Failed', error.response?.data?.message || error.message || 'An error occurred during import.')
+    } finally {
+      setImporting(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
   const boardData = useMemo(() => {
     const nextBoardData = (
       variantKey === 'myAccounts'
@@ -1472,6 +1571,27 @@ const activeStageParam = searchParams.get('stage')
                 Refresh
               </Button>
             ) : null}
+            
+            {variantKey === 'myGroup' || variantKey === 'myAccounts' || variantKey === 'searchAccount' || variantKey === 'viewAll' ? (
+              <>
+                <input
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  ref={fileInputRef}
+                  style={{ display: 'none' }}
+                  onChange={handleImportFileChange}
+                />
+                <Button
+                  variant="outline"
+                  size="small"
+                  onClick={() => fileInputRef.current?.click()}
+                  loading={importing}
+                >
+                  Import
+                </Button>
+              </>
+            ) : null}
+
             {showExportButton ? (
               <AccountsExportButton
                 currentStageRows={filteredRows}

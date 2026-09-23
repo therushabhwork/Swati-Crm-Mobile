@@ -26,6 +26,11 @@ const formatAddedByDisplay = (value, row = {}) => row.addedBy || row.addedByDisp
 const formatLegacyBoardDate = (value) => {
   if (!value) return emptyValue
 
+  // Check if it's already in DD-MM-YYYY format
+  if (typeof value === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(value)) {
+    return value
+  }
+
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return emptyValue
 

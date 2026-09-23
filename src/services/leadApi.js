@@ -6,7 +6,7 @@ import { normalizeConvertedDealRecord } from './convertedDealApi'
 const getPayload = (response) => response?.data ?? response ?? null
 
 const normalizeLeadRecord = (lead = {}) => {
-  const rawAccountOwner = lead.accountOwner || lead.ownerName || lead.owner_user_name || ''
+  const rawAccountOwner = lead.accountOwnerName || lead.accountOwner || lead.ownerName || lead.owner_user_name || ''
   const accountOwner = getCanonicalCrmUserName(rawAccountOwner) || String(rawAccountOwner || '').trim()
   const accountOwnerCode = getCrmOwnerCode(accountOwner)
   const accountNumber = lead.accountNumber || lead.accountNo || lead.account_no || accountOwnerCode || ''
@@ -90,6 +90,11 @@ export const leadApi = {
 
   async bulkReassign(payload) {
     const response = await apiClient.post('/leads/bulk/reassign', payload)
+    return getPayload(response)
+  },
+
+  async importDirectAccounts(records) {
+    const response = await apiClient.post('/leads/import-direct', records)
     return getPayload(response)
   },
 }

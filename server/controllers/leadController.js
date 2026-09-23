@@ -108,6 +108,64 @@ const bulkReassign = async (req, res, next) => {
   }
 }
 
+const importDirect = async (req, res, next) => {
+  try {
+    const { getMongoModel } = require('../models/mongoModels')
+    const Lead = getMongoModel('leads')
+
+    const records = req.body || []
+    if (!Array.isArray(records)) {
+      return res.status(400).json({ success: false, message: 'Invalid records format' })
+    }
+
+    const ownerUserId = req.user.id || req.user._id
+    const ownerCode = req.user.ownerCode || req.user.owner_code
+    const companyId = req.user.companyId || 'default'
+
+    const { getNextLegacyId } = require('../models/mongoModels')
+
+    const inserts = await Promise.all(records.map(async (record) => {
+      // 1. Create a shallow copy so we can safely delete keys
+      const sanitizedRecord = { ...record }
+
+      // 2. Strip out all internal/database fields that could cause duplicate key (500) errors
+      delete sanitizedRecord._id
+      delete sanitizedRecord.id
+      delete sanitizedRecord.legacyId
+      delete sanitizedRecord.__v
+      delete sanitizedRecord.createdAt
+      delete sanitizedRecord.updatedAt
+
+      const nextLegacyId = await getNextLegacyId('leads')
+
+      // 3. Strictly map the raw data directly into the DB and inject only ownership
+      return {
+        ...sanitizedRecord,
+        id: nextLegacyId,
+        legacyId: nextLegacyId,
+        companyId,
+        ownerUserId,
+        ownerCode,
+        createdBy: ownerUserId,
+        status: sanitizedRecord.status || 'new',
+        formData: sanitizedRecord // Inject fields into formData so mapLeadRow reads them correctly
+        // Purposely leaving accountNo out if they mapped it from excel, we don't care
+      }
+    }))
+
+    if (inserts.length > 0) {
+      await Lead.insertMany(inserts)
+    }
+
+    res.json({
+      success: true,
+      message: `Successfully imported ${inserts.length} accounts.`,
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
 module.exports = {
   listLeads,
   getLeadById,
@@ -118,4 +176,5 @@ module.exports = {
   convertLeadToDeal,
   bulkAddRemark,
   bulkReassign,
+  importDirect,
 }

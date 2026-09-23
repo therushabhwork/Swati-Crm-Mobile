@@ -116,7 +116,7 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
   const stage = resolveStage(account)
   const stageMeta = stageLookup[stage] || stageLookup[DEFAULT_ACCOUNT_STAGE]
   const fallbackDate = account.createdAt || new Date().toISOString()
-  const rawAccountOwner = account.accountOwner || account.ownerName || account.raw?.accountOwner || account.raw?.ownerName || ownerByUserId[account.userId] || 'Unassigned'
+  const rawAccountOwner = account.accountOwnerName || account.accountOwner || account.ownerName || account.raw?.accountOwner || account.raw?.ownerName || ownerByUserId[account.userId] || 'Unassigned'
   const accountOwner = getCanonicalCrmUserName(rawAccountOwner) || titleize(rawAccountOwner)
   const accountOwnerCode = String(
     account.accountOwnerCode
