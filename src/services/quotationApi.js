@@ -107,6 +107,11 @@ export const quotationApi = {
     return normalizeQuotationRecord(response.data)
   },
 
+  async approveQuotation(id, payload = {}) {
+    const response = await apiClient.post(`/quotations/${encodeURIComponent(id)}/approve`, payload)
+    return normalizeQuotationRecord(response.data)
+  },
+
   async deleteQuotation(id) {
     const response = await apiClient.delete(`/quotations/${encodeURIComponent(id)}`)
     return response.data

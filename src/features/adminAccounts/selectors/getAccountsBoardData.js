@@ -56,9 +56,10 @@ const resolveStoredAccountNumber = (record = {}, index = 0) => {
 }
 
 export const getAccountsBoardData = (accounts = []) => {
-  const records = accounts.map((account, index) =>
-    normalizeAccountRecord(account, index, { recordSource: 'live' })
-  ).map((record, index) => ({
+  const records = accounts
+    .map((account, index) => normalizeAccountRecord(account, index, { recordSource: 'live' }))
+    .filter(Boolean)
+    .map((record, index) => ({
       ...record,
       originalAccountNumber: record.originalAccountNumber || record.accountNumber,
       accountNumber: resolveStoredAccountNumber(record, index),

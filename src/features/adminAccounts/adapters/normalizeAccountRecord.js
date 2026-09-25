@@ -84,6 +84,13 @@ const resolveStage = (account) => {
     return explicitStage
   }
 
+  if (account.stage) {
+    const explicitStageKey = normalizeStageKey(account.stage)
+    if (stageLookup[explicitStageKey]) {
+      return explicitStageKey
+    }
+  }
+
   const normalizedStatus = normalizeStageKey(account.status || account.accountStatus || account.accountState)
   if (stageLookup[normalizedStatus]) {
     return normalizedStatus
@@ -153,20 +160,39 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
   const convertedContextNumber = account.convertedContextNumber || account.convertedReferenceNumber || account.customerRefNo || ''
   const isConverted = Boolean(account.isConverted || account.dealId || account.convertedDealId || account.convertedFromAccount)
 
-  const rawAccountCategory = account.accountCategory || ''
+  const formData = (account.formData && typeof account.formData === 'object') ? account.formData : {}
+
+  const rawAccountCategory = account.accountCategory || formData['Account Category'] || formData.accountCategory || ''
   const parsedAccountCategory = rawAccountCategory.toLowerCase() === 'prospect' ? '' : rawAccountCategory
 
-  const rawCustomerType = account.customerType || ''
+  const rawCustomerType = account.customerType || formData['Customer Type'] || formData.customerType || ''
   const parsedCustomerType = rawCustomerType.toLowerCase() === 'prospect' ? '' : titleize(rawCustomerType)
+
+  const accountNameVal = account.name || account.accountName || account.customerName || formData['Account Name'] || formData.accountName || formData.customerName || 'Untitled Account'
+  if (typeof accountNameVal === 'string' && /Report Filter/i.test(accountNameVal)) {
+    return null
+  }
+  const projectNameVal = account.projectName || formData['Project Name'] || formData.projectName || titleize(account.productCategory || formData['Product Category']) || 'General Enquiry'
+  const primaryEmailVal = primaryEmail || formData['Email'] || formData.email || formData['Alternate Email'] || ''
+  const primaryPhoneVal = primaryPhone || formData['Phone'] || formData.phone || formData['Alternate Phone'] || ''
+  const contactPersonVal = account.contactPerson || formData['Contact Person'] || primaryContact.name || ''
+  const locationVal = titleize(account.location || formData['Location'] || '')
+  const stateVal = titleize(account.state || formData['State'] || '')
+  const industryTypeVal = titleize(account.industryType || account.industry || formData['Industry type'] || formData['Industry Type'] || '')
+  const customerRefNoVal = account.customerRefNo || formData['Customer Ref. No.'] || formData.customerRefNo || ''
+  const consultantNameVal = account.consultantName || formData['Consultant Name'] || ''
+  const poValueVal = account.poValue || formData['PO Value'] || ''
+  const productCategoryVal = titleize(account.productCategory || formData['Product Category'] || '')
+  const userGroupVal = account.userGroup || formData['User Group'] || ''
 
   const normalized = {
     id: String(account.id || account._id || accountNumber),
     accountNumber,
-    name: account.name || account.accountName || account.customerName || 'Untitled Account',
+    name: accountNameVal,
     accountCategory: parsedAccountCategory,
-    projectName: account.projectName || titleize(account.productCategory) || 'General Enquiry',
+    projectName: projectNameVal,
     reasonForLost,
-    accountDate: account.accountDate || fallbackDate,
+    accountDate: account.accountDate || formData['Account Date'] || fallbackDate,
     accountOwner,
     accountOwnerName: accountOwner,
     accountOwnerCode,
@@ -175,8 +201,8 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
     stageLabel: stageMeta.label,
     status,
     accountStatus: status,
-    email: primaryEmail,
-    phone: primaryPhone,
+    email: primaryEmailVal,
+    phone: primaryPhoneVal,
     website: account.website || '',
     source: accountSource,
     accountSource,
@@ -184,28 +210,30 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
     accountState,
     description: account.description || '',
     address: account.address || '',
-    location: titleize(account.location || ''),
-    state: titleize(account.state || ''),
-    industryType: titleize(account.industryType || account.industry || ''),
-    customerName: account.customerName || '',
+    location: locationVal,
+    state: stateVal,
+    industryType: industryTypeVal,
+    customerName: account.customerName || accountNameVal,
     customerType: parsedCustomerType,
-    productCategory: titleize(account.productCategory || ''),
-    customerRefNo: account.customerRefNo || '',
+    productCategory: productCategoryVal,
+    customerRefNo: customerRefNoVal,
     customerRefDate: account.customerRefDate || '',
-    consultantName: account.consultantName || '',
+    consultantName: consultantNameVal,
     architectName: account.architectName || '',
     pmcName: account.pmcName || '',
     projectCode: account.projectCode || '',
     projectType: titleize(account.projectType || ''),
     projectLocation: account.projectLocation || '',
-    projectValue: account.projectValue || '',
+    projectValue: account.projectValue || poValueVal || '',
     projectStatus: account.projectStatus || '',
     projectDescription: account.projectDescription || '',
-    contactPerson: account.contactPerson || primaryContact.name || '',
+    contactPerson: contactPersonVal,
     contactDesignation: account.contactDesignation || primaryContact.designation || '',
-    contactEmail: account.contactEmail || primaryContact.email || account.email || '',
-    contactPhone: account.contactPhone || primaryContact.phone || '',
-    contactMobile: account.contactMobile || primaryContact.mobile || account.phone || '',
+    contactEmail: account.contactEmail || primaryContact.email || primaryEmailVal,
+    contactPhone: account.contactPhone || primaryContact.phone || primaryPhoneVal,
+    contactMobile: account.contactMobile || primaryContact.mobile || primaryPhoneVal,
+    poValue: poValueVal,
+    userGroup: userGroupVal,
     reminderDate: account.reminderDate || '',
     reminderMode: titleize(account.reminderMode || ''),
     remark: account.remark || '',
@@ -262,7 +290,6 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
         toDrawerField('Account Category', normalized.accountCategory),
         toDrawerField('Account Status', normalized.status),
         toDrawerField('Account Owner', normalized.accountOwnerDisplay || normalized.accountOwner),
-        toDrawerField('Account State', normalized.accountState),
         toDrawerField('Account Source', normalized.accountSource),
         toDrawerField('Account Subsource', normalized.accountSubsource),
         toDrawerField('GSTIN', normalized.gstin),

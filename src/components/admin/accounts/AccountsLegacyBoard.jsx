@@ -42,6 +42,7 @@ const AccountsLegacyBoard = ({
   onConvertToDeal,
   onViewDeal,
   onDeleteAccount,
+  ownerOptions = [],
 }) => {
   const navigate = useNavigate()
   const [openMenuId, setOpenMenuId] = useState(null)
@@ -93,6 +94,12 @@ const AccountsLegacyBoard = ({
       return
     }
 
+    const isNotQuotedAccount = row.stage === 'not_quoted' || row.status === 'Not Quoted' || row.stage === 'Not Quoted'
+    if (isNotQuotedAccount && (action.key === 'generate-quotation' || action.behavior === 'quotationGenerator' || action.key === 'converted-deal' || action.key === 'convert_to_po')) {
+      addNotification('warning', 'Action Unavailable', 'This account is marked as Not Quoted. PO Conversion and Quotation Generation are disabled.')
+      return
+    }
+
     if (action.behavior === 'drawer') {
       onAccountOpen(row)
       return
@@ -103,6 +110,15 @@ const AccountsLegacyBoard = ({
       navigate(isAdminPortal ? '/admin/quotations' : '/quotations', {
         state: { openGenerator: true, preselectedAccountId: row.id, preselectedCustomer: row }
       })
+      return
+    }
+
+    if (action.behavior === 'viewQuotations' || action.key === 'view-quotations') {
+      const isAdminPortal = window.location.pathname.startsWith('/admin')
+      const targetPath = isAdminPortal ? '/admin/quotation-manager/view' : '/quotation-manager/view'
+      const accNo = encodeURIComponent(row.accountNumber || row.accountNo || '')
+      const accName = encodeURIComponent(row.name || row.customerName || '')
+      navigate(`${targetPath}?tab=accounts&accountNo=${accNo}&accountName=${accName}&accountId=${encodeURIComponent(row.id || '')}`)
       return
     }
 
@@ -202,21 +218,46 @@ const AccountsLegacyBoard = ({
                   <th className="admin-accounts-select-col">
                     <span className="admin-accounts-filter-placeholder">Select</span>
                   </th>
-                  {columns.map((column) => (
-                    <th key={column.key} className="admin-accounts-filter-cell">
-                      {column.searchable ? (
-                        <input
-                          type="text"
-                          className="admin-accounts-filter-input"
-                          value={filters[column.key] || ''}
-                          onChange={(event) => onFilterChange(column.key, event.target.value)}
-                          placeholder={column.filterPlaceholder || `Search ${column.label}`}
-                        />
-                      ) : (
-                        <span className="admin-accounts-filter-placeholder">-</span>
-                      )}
-                    </th>
-                  ))}
+                  {columns.map((column) => {
+                    const isOwnerCol = column.key === 'accountOwner' || column.key === 'owner' || column.key === 'accountOwnerName'
+                    const hasOptions = Array.isArray(ownerOptions) && ownerOptions.length > 0
+
+                    if (isOwnerCol && hasOptions) {
+                      return (
+                        <th key={column.key} className="admin-accounts-filter-cell">
+                          <select
+                            value={filters[column.key] || ''}
+                            onChange={(event) => onFilterChange(column.key, event.target.value)}
+                            className="admin-accounts-filter-input"
+                            style={{ padding: '2px 4px', fontSize: '0.82rem', height: '28px', cursor: 'pointer' }}
+                          >
+                            <option value="">All Owners</option>
+                            {ownerOptions.map((opt) => {
+                              const val = typeof opt === 'string' ? opt : (opt.value || opt.label)
+                              const lbl = typeof opt === 'string' ? opt : (opt.label || opt.value)
+                              return <option key={val} value={val}>{lbl}</option>
+                            })}
+                          </select>
+                        </th>
+                      )
+                    }
+
+                    return (
+                      <th key={column.key} className="admin-accounts-filter-cell">
+                        {column.searchable ? (
+                          <input
+                            type="text"
+                            className="admin-accounts-filter-input"
+                            value={filters[column.key] || ''}
+                            onChange={(event) => onFilterChange(column.key, event.target.value)}
+                            placeholder={column.filterPlaceholder || `Search ${column.label}`}
+                          />
+                        ) : (
+                          <span className="admin-accounts-filter-placeholder">-</span>
+                        )}
+                      </th>
+                    )
+                  })}
                 </tr>
               ) : (
                 <AccountsBoardFilters
@@ -224,6 +265,7 @@ const AccountsLegacyBoard = ({
                   filters={filters}
                   onFilterChange={onFilterChange}
                   showSerialNumber={showSerialNumber}
+                  ownerOptions={ownerOptions}
                 />
               )}
             </>
@@ -280,14 +322,6 @@ const AccountsLegacyBoard = ({
                               }}
                             >
                               {cellContent}
-                            </button>
-                            <button
-                              type="button"
-                              className="admin-accounts-cell-menu-trigger"
-                              onClick={(event) => toggleRowMenu(row.id, event)}
-                              aria-label={`Open actions for ${row.accountNumber}`}
-                            >
-                              <FiChevronDown />
                             </button>
 
                             {openMenuId === row.id ? (

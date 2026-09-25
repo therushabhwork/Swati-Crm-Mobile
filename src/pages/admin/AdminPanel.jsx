@@ -631,7 +631,7 @@ const AdminPanel = () => {
         {/* Top Greeting Block */}
         <div className="ap-welcome-row">
           <div className="ap-welcome-header-block">
-            <span className="ap-welcome-subhead">GOOD AFTERNOON,</span>
+            <span className="ap-welcome-subhead">Welcome,</span>
             <h1 className="ap-welcome-heading">{user?.name || 'Keval V Shah'}!</h1>
             <p className="ap-welcome-sub">Here&apos;s what&apos;s happening with your business today.</p>
           </div>

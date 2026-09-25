@@ -288,12 +288,17 @@ const mockProducts = [
 
 export const AddProductModal = ({ isOpen, onClose, onAdd }) => {
   const [showAlert, setShowAlert] = useState(true)
-  const [productGroup, setProductGroup] = useState('ELECTRICAL PANEL')
+  const [productGroup, setProductGroup] = useState('TTA')
+  const [ttaOrg, setTtaOrg] = useState('Abp')
+
+  const productGroupOptions = ['TTA', 'Non TT', 'ELECTRICAL PANEL']
+  const ttaOrgOptions = ['Abp', 'Siemens', 'L&T', 'Snyder']
 
   const handleDoubleClick = (product) => {
+    const selectedOrgPrefix = productGroup === 'TTA' ? ` (${ttaOrg})` : ''
     onAdd({
       type: 'product',
-      description: product.name,
+      description: `${product.name}${selectedOrgPrefix}`,
       quantity: '1',
       unit: 'Nos',
       rate: product.price,
@@ -301,6 +306,12 @@ export const AddProductModal = ({ isOpen, onClose, onAdd }) => {
     })
     onClose()
   }
+
+  const displayedProducts = mockProducts.map(p => ({
+    ...p,
+    group: productGroup,
+    org: productGroup === 'TTA' ? ttaOrg : '-'
+  }))
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Add Product" size="large">
@@ -312,12 +323,34 @@ export const AddProductModal = ({ isOpen, onClose, onAdd }) => {
           </div>
         )}
         
-        <div className="line-item-filter-row">
-          <span className="line-item-filter-label">Choose Product Group</span>
-          <div style={{ display: 'inline-flex', background: '#3ca8f0', color: 'white', borderRadius: '4px', overflow: 'hidden' }}>
-            <span style={{ padding: '0.5rem 1rem' }}>{productGroup}</span>
-            <span style={{ padding: '0.5rem', background: '#2986c4', cursor: 'pointer' }}><FaAngleDown /></span>
+        <div className="line-item-filter-row" style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div>
+            <span className="line-item-filter-label">Choose Product Group </span>
+            <select 
+              value={productGroup} 
+              onChange={e => setProductGroup(e.target.value)}
+              style={{ background: '#3ca8f0', color: 'white', padding: '0.5rem 1rem', borderRadius: '4px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              {productGroupOptions.map(opt => (
+                <option key={opt} value={opt} style={{ background: '#ffffff', color: '#333333' }}>{opt}</option>
+              ))}
+            </select>
           </div>
+
+          {productGroup === 'TTA' && (
+            <div>
+              <span className="line-item-filter-label">TTA Org </span>
+              <select 
+                value={ttaOrg} 
+                onChange={e => setTtaOrg(e.target.value)}
+                style={{ background: '#2986c4', color: 'white', padding: '0.5rem 1rem', borderRadius: '4px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                {ttaOrgOptions.map(org => (
+                  <option key={org} value={org} style={{ background: '#ffffff', color: '#333333' }}>{org}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="line-item-table-wrap">
@@ -339,9 +372,9 @@ export const AddProductModal = ({ isOpen, onClose, onAdd }) => {
               </tr>
             </thead>
             <tbody>
-              {mockProducts.map((p, i) => (
+              {displayedProducts.map((p, i) => (
                 <tr key={i} onDoubleClick={() => handleDoubleClick(p)} style={{ cursor: 'pointer' }}>
-                  <td>{productGroup}</td>
+                  <td>{p.group} {p.org !== '-' ? `(${p.org})` : ''}</td>
                   <td>{p.id}</td>
                   <td>{p.name}</td>
                   <td>{p.price}</td>
@@ -354,7 +387,7 @@ export const AddProductModal = ({ isOpen, onClose, onAdd }) => {
         
         <div className="line-item-pagination">
           <span style={{ background: '#3ca8f0', color: 'white', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>&#x21ba;</span>
-          <span style={{ fontSize: '0.9rem', color: '#555', marginRight: '1rem' }}>Total records: {mockProducts.length}</span>
+          <span style={{ fontSize: '0.9rem', color: '#555', marginRight: '1rem' }}>Total records: {displayedProducts.length}</span>
           <button className="line-item-page-btn">prev</button>
           <button className="line-item-page-btn active">1</button>
           <button className="line-item-page-btn">next</button>

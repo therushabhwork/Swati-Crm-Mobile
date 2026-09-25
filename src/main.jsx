@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import ErrorBoundary from './components/common/ErrorBoundary'
 import './styles/index.css'
+import './styles/user-modern.css'
 
 const STALE_BUILD_RELOAD_KEY = 'crm_stale_build_reload'
 const isStaleBuildError = (error) => {

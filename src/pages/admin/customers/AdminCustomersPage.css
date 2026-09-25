@@ -2720,3 +2720,35 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
   -webkit-text-fill-color: #dc2626 !important;
   font-weight: 700 !important;
 }
+
+.admin-customers-titlebar-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-right: 0.35rem;
+}
+
+.admin-customers-search-label {
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-customers-search-input {
+  min-width: 170px;
+  max-width: 260px;
+  height: 2.1rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--surface-card);
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  outline: none;
+}
+
+.admin-customers-search-input:focus {
+  border-color: var(--color-primary, #3b82f6);
+}

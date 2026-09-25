@@ -98,6 +98,8 @@ import {
   renderEditableQuotationValue,
   QuotationDocument,
   QuotationPdfViewer,
+  RevisionsListModal,
+  SequentialRevisionSummaryCard,
 } from './quotationShared';
 
 const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quotations' }) => {
@@ -112,7 +114,7 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
     updateQuotation,
     deleteQuotation,
     addNotification,
-    loadQuotations,
+    refreshQuotations,
   } = useData()
 
   // Access control: admins by default; user portal can opt in with safe routes.
@@ -151,6 +153,7 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
   const [rejectReason, setRejectReason] = useState('')
   const [rejectError, setRejectError] = useState('')
   const [actionLoadingId, setActionLoadingId] = useState('')
+  const [revisionsModalRow, setRevisionsModalRow] = useState(null)
   const [searchParams, setSearchParams] = useSearchParams()
   const viewQuotationId = searchParams.get('view') || ''
 
@@ -230,6 +233,86 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
       })
       .sort((left, right) => new Date(right.dateSort || 0).getTime() - new Date(left.dateSort || 0).getTime())
   }, [normalizedAccounts, quotations])
+
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')
+    const accountNameParam = searchParams.get('accountName')
+    const accountNoParam = searchParams.get('accountNo')
+    const accountIdParam = searchParams.get('accountId')
+    const viewParam = searchParams.get('view')
+
+    if (tabParam === 'accounts' || tabParam === 'account') {
+      setActiveTab('account')
+    } else if (tabParam === 'deals' || tabParam === 'deal') {
+      setActiveTab('deal')
+    }
+    if (accountNameParam || accountNoParam) {
+      setFilters((prev) => ({
+        ...prev,
+        company: accountNameParam || prev.company,
+        num: accountNoParam || prev.num,
+      }))
+    }
+
+    if (viewParam && rows.length > 0) {
+      const match = rows.find((r) => (
+        String(r.id) === String(viewParam)
+        || String(r.raw?._id) === String(viewParam)
+        || String(r.num) === String(viewParam)
+      ))
+      if (match) {
+        setViewRow(match)
+        setViewRowFromUrl(true)
+      }
+    } else if ((accountIdParam || accountNoParam || accountNameParam) && rows.length > 0 && !revisionsModalRow && !viewRow) {
+      const targetMatch = rows.find((r) => {
+        const rCustId = r.raw?.customerId || r.raw?.selectedAccountId || ''
+        const rCustNo = r.raw?.accountNumber || r.accountNumber || ''
+        const rCustName = r.company || ''
+        if (accountIdParam && String(rCustId) === String(accountIdParam)) return true
+        if (accountNoParam && String(rCustNo) === String(accountNoParam)) return true
+        if (accountNameParam && String(rCustName).toLowerCase().includes(String(accountNameParam).toLowerCase())) return true
+        return false
+      })
+      if (targetMatch) {
+        setRevisionsModalRow(targetMatch)
+      }
+    }
+  }, [searchParams, rows, revisionsModalRow, viewRow])
+
+  const handleApproveRevisionItem = async (targetRevRow) => {
+    if (!targetRevRow) return
+    const targetId = targetRevRow.raw?.id || targetRevRow.id
+    const revCode = targetRevRow.raw?.revisionCode || targetRevRow.revisionCode || 'R1'
+
+    try {
+      setActionLoadingId(targetId)
+      await quotationApi.approveQuotation(targetId, { revisionCode: revCode })
+      addNotification('success', 'Quotation Approved', `Quotation ${targetRevRow.num || targetId} (${revCode}) approved successfully.`)
+      await refreshQuotations?.()
+    } catch (err) {
+      addNotification('error', 'Approval Failed', err.response?.data?.message || err.message || 'Could not approve quotation.')
+    } finally {
+      setActionLoadingId('')
+    }
+  }
+
+  const siblingRevisions = useMemo(() => {
+    if (!revisionsModalRow) return []
+    const targetNo = revisionsModalRow.num || revisionsModalRow.raw?.quotationNumber || ''
+    const targetAccountId = revisionsModalRow.raw?.customerId || revisionsModalRow.raw?.selectedAccountId || ''
+    const targetDealId = revisionsModalRow.raw?.dealId || ''
+
+    return rows.filter((r) => {
+      const qNo = r.num || r.raw?.quotationNumber || ''
+      const qCust = r.raw?.customerId || r.raw?.selectedAccountId || ''
+      const qDeal = r.raw?.dealId || ''
+      if (targetNo && qNo === targetNo) return true
+      if (targetDealId && String(qDeal) === String(targetDealId)) return true
+      if (targetAccountId && String(qCust) === String(targetAccountId)) return true
+      return false
+    }).sort((a, b) => (a.raw?.revisionNo || 0) - (b.raw?.revisionNo || 0))
+  }, [revisionsModalRow, rows])
 
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {
@@ -504,7 +587,7 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
       }
       addNotification?.('success', 'Quotation deleted', 'Quotation deleted successfully.')
       closeQuotationView()
-      loadQuotations?.()
+      refreshQuotations?.()
     } catch (error) {
       addNotification?.('error', 'Delete failed', error?.response?.data?.message || error?.message || 'Failed to delete quotation.')
     }
@@ -942,6 +1025,22 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
 
   if (!isAuthorized) return null
 
+  if (revisionsModalRow) {
+    return (
+      <RevisionsListModal
+        isOpen={Boolean(revisionsModalRow)}
+        onClose={() => setRevisionsModalRow(null)}
+        row={revisionsModalRow}
+        allQuotations={rows}
+        onSelectRevision={(revRow) => {
+          setRevisionsModalRow(null)
+          openQuotationView(revRow)
+        }}
+        onApproveRevision={handleApproveRevisionItem}
+      />
+    )
+  }
+
   if (pdfDocument) {
     return (
       <QuotationPdfViewer
@@ -1069,7 +1168,7 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
                           className={`aqp-num-badge aqp-num-badge--button ${getActionBadgeClassName(row.status)}`}
                           onClick={(event) => {
                             event.stopPropagation()
-                            openQuotationView(row)
+                            setRevisionsModalRow(row)
                           }}
                         >
                           {row.num}
@@ -1213,6 +1312,10 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
           )}
         >
           <form id="aqp-upload-quotation-form" className="aqp-upload-form" onSubmit={handleUploadQuotationSave}>
+            <SequentialRevisionSummaryCard
+              accountRecord={selectedUploadAccount}
+              allQuotations={rows}
+            />
             <div className="aqp-upload-note">
               Please select the account from the Account List popup before saving the uploaded quotation.
             </div>
@@ -1580,6 +1683,15 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
         >
           <div className="aqp-view-top-actions">
             <div className="aqp-modal-footer-group">
+              <button
+                type="button"
+                className="aqp-btn aqp-btn--blue"
+                style={{ backgroundColor: '#16a34a', borderColor: '#15803d', color: '#ffffff' }}
+                onClick={() => handleApproveRevisionItem(viewRow)}
+              >
+                <FaCheck className="aqp-btn-icon" />
+                Approve
+              </button>
               <button type="button" className="aqp-btn aqp-btn--gray" onClick={handleDeleteViewedQuotation} aria-label="Delete quotation">
                 <FaTrash className="aqp-btn-icon" />
                 Delete

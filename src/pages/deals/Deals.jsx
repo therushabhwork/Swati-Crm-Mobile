@@ -1047,7 +1047,15 @@ const isConvertedDealRecord = (deal = {}) => Boolean(
 const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition = null }) => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { accounts, deals, convertedDeals, quotations, createDeal, updateDeal, createConvertedDeal, addNotification, refreshData } = useData()
+  const { accounts, deals: rawDeals, convertedDeals, quotations, createDeal, updateDeal, createConvertedDeal, addNotification, refreshData } = useData()
+  const deals = useMemo(() => {
+    return [...(rawDeals || [])].sort((a, b) => {
+      const timeA = new Date(a?.createdAt || a?.date || a?.dealDate || 0).getTime()
+      const timeB = new Date(b?.createdAt || b?.date || b?.dealDate || 0).getTime()
+      if (timeA !== timeB) return timeB - timeA
+      return String(b?.id || b?._id || '').localeCompare(String(a?.id || a?._id || ''), undefined, { numeric: true })
+    })
+  }, [rawDeals])
   const { user } = useAuth()
   const { isOpen, data, open, close } = useModal()
   const [hasAutoOpened, setHasAutoOpened] = useState(false)
@@ -2376,7 +2384,6 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
     if (!formData.name.trim()) nextErrors.name = 'Please provide Deal Name.'
     if (!formData.description.trim()) nextErrors.description = 'Please provide Description.'
     if (!formData.dealType.trim()) nextErrors.dealType = 'Please select Deal Type.'
-    if (!formData.dealSource.trim()) nextErrors.dealSource = 'Please select Deal Source.'
     if (!formData.expectedClosureDate) {
       nextErrors.expectedClosureDate = 'Please provide Expected Closure Date.'
     } else if (formData.dealDate && formData.expectedClosureDate < formData.dealDate) {
@@ -5396,27 +5403,11 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
                 </div>
 
                 <Select
-                  label="Deal Source *"
-                  value={formData.dealSource}
-                  onChange={(event) => handleFormFieldChange('dealSource', event.target.value)}
-                  options={DEAL_SOURCE_OPTIONS}
-                  error={formErrors.dealSource}
-                  fullWidth
-                />
-
-                <Select
                   label="Status *"
                   value={formData.status}
                   onChange={(event) => handleFormFieldChange('status', event.target.value)}
                   options={DEAL_STATUS}
                   error={formErrors.status}
-                  fullWidth
-                />
-
-                <Input
-                  label="Deal Subsource"
-                  value={formData.dealSubsource}
-                  onChange={(event) => handleFormFieldChange('dealSubsource', event.target.value)}
                   fullWidth
                 />
 

@@ -80,18 +80,23 @@ const getAccountColumnKeysWithRequiredFields = (columnKeys = [], columns = []) =
   const availableColumnKeys = columns.map((column) => column.key)
   const availableColumnKeySet = new Set(availableColumnKeys)
   const cleanColumnKeys = columnKeys.filter((key) => availableColumnKeySet.has(key))
-  const requiredColumnKeys = REQUIRED_ACCOUNT_TABLE_COLUMN_KEYS.filter((key) => availableColumnKeySet.has(key))
-  const nextColumnKeys = (cleanColumnKeys.length > 0 ? cleanColumnKeys : availableColumnKeys)
-    .filter((key) => !requiredColumnKeys.includes(key))
+  
+  let nextColumnKeys = (cleanColumnKeys.length > 0 ? cleanColumnKeys : availableColumnKeys)
+    .filter((key) => key !== 'projectName' && key !== 'accountOwner')
+
   const accountNameIndex = nextColumnKeys.indexOf('name')
   const accountNumberIndex = nextColumnKeys.indexOf('accountNumber')
-  const insertIndex = accountNameIndex >= 0
-    ? accountNameIndex + 1
-    : accountNumberIndex >= 0
-      ? accountNumberIndex + 1
-      : nextColumnKeys.length
+  const insertIndex = accountNameIndex >= 0 ? accountNameIndex + 1 : (accountNumberIndex >= 0 ? accountNumberIndex + 1 : 0)
 
-  nextColumnKeys.splice(insertIndex, 0, ...requiredColumnKeys)
+  if (availableColumnKeySet.has('projectName')) {
+    nextColumnKeys.splice(insertIndex, 0, 'projectName')
+  }
+
+  if (availableColumnKeySet.has('accountOwner')) {
+    const pIndex = nextColumnKeys.indexOf('projectName')
+    const oIndex = pIndex >= 0 ? pIndex + 1 : insertIndex
+    nextColumnKeys.splice(oIndex, 0, 'accountOwner')
+  }
 
   return nextColumnKeys
 }
@@ -262,7 +267,6 @@ const CONVERTED_ACCOUNT_FIELD_DEFINITIONS = [
   { key: 'statusAsPerOrderReceived', label: 'Status of Customer as per Order Received' },
   { key: 'statusAsPerQuotationGiven', label: 'Status Of Customer as per quotation Given' },
   { key: 'gstin', label: 'GSTIN' },
-  { key: 'stateCode', label: 'State Code' },
   { key: 'jobNo', label: 'Job No' },
   { key: 'reasonForLost', label: 'Reason For Lost' },
   { key: 'customerName', label: 'Customer Name' },
@@ -593,6 +597,23 @@ const MyGroupAccountsPage = ({ variantKey = 'myGroup' }) => {
   const [ownerFilter, setOwnerFilter] = useState('All')
   const lastAccountUpdateToastRef = useRef({ key: '', at: 0 })
 
+  const allOwnerNames = useMemo(() => {
+    const names = new Set()
+    ;(availableUsers || []).forEach((u) => {
+      const name = String(u.ownerDisplayName || u.name || u.username || u.email || '').trim()
+      if (name) names.add(name)
+    })
+    ;(dbMongoUsers || []).forEach((u) => {
+      const name = String(u.ownerDisplayName || u.name || u.username || u.email || '').trim()
+      if (name) names.add(name)
+    })
+    ;(accounts || []).forEach((acc) => {
+      const name = String(acc.accountOwnerDisplay || acc.accountOwnerName || acc.accountOwner || acc.raw?.accountOwner || '').trim()
+      if (name && name.toLowerCase() !== 'no' && name !== '-') names.add(name)
+    })
+    return Array.from(names).sort((a, b) => a.localeCompare(b))
+  }, [availableUsers, dbMongoUsers, accounts])
+
   const boardData = useMemo(() => {
     const nextBoardData = (
       variantKey === 'myAccounts'
@@ -747,28 +768,24 @@ const activeStageParam = searchParams.get('stage')
       return rule.not ? !isMatch : isMatch
     })
   }, [appliedConvertedFilterEnabled, appliedConvertedFilterRules, supportsAdvancedFilter])
+  const searchQuery = searchParams.get('query') || new URLSearchParams(location.search).get('query') || ''
+
   const filteredRows = useMemo(
     () => boardRows
       .filter((row) => matchesSectionSearch(row, [
         'accountNumber', 'accountNo', 'name', 'accountName', 'projectName',
         'accountOwner', 'accountDate', 'accountCategory', 'status', 'accountStatus',
         'accountState', 'phone', 'email', 'contactPerson', 'poValue', 'jobNo',
-      ], searchParams.get('query')))
+        'company', 'companyName', 'customerName', 'latestRemark', 'description', 'address',
+      ], searchQuery))
       .filter((row) => matchesColumnFilters(row, filters, filterColumnDefinitions))
       .filter(matchesConvertedFilterRules)
-      .filter((row) => {
-        // Find the owner of this row
-        const o = String(row.accountOwnerDisplay || row.accountOwnerName || row.accountOwner || row.raw?.accountOwner || row.raw?.ownerName || row.raw?.assignedToName || '').trim().toLowerCase();
-        
-        // Hide it completely if it's a demo or dummy account
-        return o !== 'demo' && o !== 'dummy';
-      })
       .filter((row) => {
         if (variantKey !== 'viewAll') return true
         return matchesViewAllDropdownFilters(row, cityFilter, ownerFilter)
       })
       .sort((a, b) => new Date(b.createdAt || b.accountDate || 0).getTime() - new Date(a.createdAt || a.accountDate || 0).getTime()),
-    [boardRows, filterColumnDefinitions, filters, matchesConvertedFilterRules, variantKey, cityFilter, ownerFilter]
+    [boardRows, filterColumnDefinitions, filters, matchesConvertedFilterRules, variantKey, cityFilter, ownerFilter, searchQuery]
   )
   const filteredAllStageRows = useMemo(
     () => convertedBoardRecords
@@ -776,25 +793,19 @@ const activeStageParam = searchParams.get('stage')
         'accountNumber', 'accountNo', 'name', 'accountName', 'projectName',
         'accountOwner', 'accountDate', 'accountCategory', 'status', 'accountStatus',
         'accountState', 'phone', 'email', 'contactPerson', 'poValue', 'jobNo',
-      ], searchParams.get('query')))
+        'company', 'companyName', 'customerName', 'latestRemark', 'description', 'address',
+      ], searchQuery))
       .filter((row) => matchesColumnFilters(row, filters, filterColumnDefinitions))
       .filter(matchesConvertedFilterRules)
-      .filter((row) => {
-        // Find the owner of this row
-        const o = String(row.accountOwnerDisplay || row.accountOwnerName || row.accountOwner || row.raw?.accountOwner || row.raw?.ownerName || row.raw?.assignedToName || '').trim().toLowerCase();
-        
-        // Hide it completely if it's a demo or dummy account
-        return o !== 'demo' && o !== 'dummy';
-      })
       .filter((row) => {
         if (variantKey !== 'viewAll') return true
         return matchesViewAllDropdownFilters(row, cityFilter, ownerFilter)
       })
       .sort((a, b) => new Date(b.createdAt || b.accountDate || 0).getTime() - new Date(a.createdAt || a.accountDate || 0).getTime()),
-    [convertedBoardRecords, filterColumnDefinitions, filters, matchesConvertedFilterRules, variantKey, cityFilter, ownerFilter]
+    [convertedBoardRecords, filterColumnDefinitions, filters, matchesConvertedFilterRules, variantKey, cityFilter, ownerFilter, searchQuery]
   )
 
-  const rowsPerPage = SIX_ROW_ACCOUNT_VARIANTS.has(variantKey) ? 6 : DEFAULT_ROWS_PER_PAGE
+  const rowsPerPage = DEFAULT_ROWS_PER_PAGE
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / rowsPerPage))
   const currentPage = Number.isFinite(requestedPage) && requestedPage > 0
     ? Math.min(requestedPage, totalPages)
@@ -1425,6 +1436,33 @@ const activeStageParam = searchParams.get('stage')
           </div>
 
           <div className="admin-accounts-board-toolbar-actions">
+            <label className="admin-accounts-toolbar-search-filter">
+              <span>Search:</span>
+              <input
+                type="text"
+                className="admin-accounts-toolbar-search-input"
+                value={searchParams.get('query') || ''}
+                onChange={(event) => updateUrlState({ query: event.target.value, page: 1 }, true)}
+                placeholder="Search Account Name, Project Name..."
+                aria-label="Search Account Name or Project Name"
+              />
+            </label>
+            {variantKey !== 'viewAll' ? (
+              <label className="admin-accounts-toolbar-owner-filter">
+                <span>Owner:</span>
+                <select
+                  className="admin-accounts-toolbar-owner-select"
+                  value={filters.accountOwner || ''}
+                  onChange={(event) => handleFilterChange('accountOwner', event.target.value)}
+                  aria-label="Filter by Owner"
+                >
+                  <option value="">All Owners</option>
+                  {allOwnerNames.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             {variantKey === 'viewAll' ? (
               <div className="mga-view-all-filter-group" aria-label="View all account filters">
                 <label className="mga-view-all-filter">
@@ -1515,6 +1553,7 @@ const activeStageParam = searchParams.get('stage')
           onConvertToDeal={handleConvertToDeal}
           onViewDeal={handleViewLinkedDeal}
           onDeleteAccount={handleDeleteAccount}
+          ownerOptions={allOwnerNames}
         />
 
         <AccountsBoardPagination

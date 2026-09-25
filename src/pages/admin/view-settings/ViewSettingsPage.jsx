@@ -30,12 +30,6 @@ const CARDS = [
     icon: FaSearch,
     iconColor: '#27ae60',
   },
-  {
-    id: 'my-views',
-    title: 'My Views',
-    icon: FaEye,
-    iconColor: '#e74c3c',
-  },
 ]
 
 const ViewSettingsPage = ({ basePath = '/admin/view-settings' }) => {

@@ -508,7 +508,6 @@ const AdminDealDetailPage = () => {
     { key: 'dealDate', label: 'Deal Date', value: renderDisplayValue(deal.dealDate ? formatDate(deal.dealDate) : '', null), rawValue: toDateInputValue(deal.dealDate), type: 'date', icon: <FaCalendarAlt /> },
     { key: 'dealValue', label: 'Deal Value', value: formatCurrency(deal.dealValue || 0), rawValue: deal.dealValue, type: 'number', icon: <FaUser /> },
     { key: 'addedBy', label: 'Added By', value: renderDisplayValue(deal.addedBy, null), readonly: true, icon: <FaUser /> },
-    { key: 'dealScore', label: 'Deal Score', value: hasDisplayValue(deal.dealScore) ? formatNumber(Number(deal.dealScore || 0)) : '0', rawValue: deal.dealScore, type: 'number', icon: <FaUser /> },
     { key: 'lastUpdated', label: 'Last Updated', value: renderDisplayValue(deal.lastUpdated ? formatDate(deal.lastUpdated, 'long') : '', null), readonly: true, icon: <FaCalendarAlt /> },
     { key: 'customerName', label: 'Customer', value: renderDisplayValue(customerLabel, null), readonly: true, icon: <FaUser /> },
     { key: 'expectedClosureDate', label: 'Expected Closure Date', value: renderDisplayValue(deal.expectedClosureDate ? formatDate(deal.expectedClosureDate) : '', null), rawValue: toDateInputValue(deal.expectedClosureDate), type: 'date', icon: <FaCalendarAlt /> },
@@ -518,8 +517,6 @@ const AdminDealDetailPage = () => {
     { key: 'dealType', label: 'Deal Type', value: deal.dealType, rawValue: deal.dealType, type: 'text' },
     { key: 'dealStatus', label: 'Deal Status', value: deal.dealStatus, rawValue: deal.dealStatus, type: 'select', options: STATUS_OPTIONS },
     { key: 'dealOwner', label: 'Deal Owner', value: deal.dealOwner, readonly: true },
-    { key: 'dealSource', label: 'Deal Source', value: deal.dealSource, rawValue: deal.dealSource, type: 'select', options: DEAL_SOURCE_SELECT_OPTIONS },
-    { key: 'dealSubsource', label: 'Deal Subsource', value: deal.dealSubsource, rawValue: deal.dealSubsource, type: 'select', options: DEAL_SUBSOURCE_SELECT_OPTIONS },
   ]
   const contactItems = [
     { key: 'contactName', label: 'Contact Name', value: deal.contactName, rawValue: deal.contactName, type: 'text', icon: <FaUser /> },

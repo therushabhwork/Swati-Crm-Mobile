@@ -189,6 +189,7 @@ const AccountDetailsPage = () => {
         state: {
           openGenerator: true,
           preselectedAccountId: account.id,
+          preselectedCustomer: account,
         },
       })
       return

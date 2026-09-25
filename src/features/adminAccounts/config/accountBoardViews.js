@@ -92,7 +92,7 @@ export const ADMIN_ACCOUNTS_BOARD_VIEWS = {
       ACCOUNT_ACTION_MAP['converted-deal'],
       ACCOUNT_ACTION_MAP['view-linked-deal'],
     ],
-    showAddAccountButton: true,
+    showAddAccountButton: false,
     titlebarActions: {
       showBulk: true,
       showFilterIcon: true,

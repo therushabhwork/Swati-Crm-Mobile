@@ -271,9 +271,42 @@ const buildPayload = async (body, actor, existing) => {
   const lineItems = normalizeLineItems(requestedLineItems || [])
   const computed = computeTotals(lineItems)
 
-  // Duplicate detection runs before quote-number allocation so rejected
-  // duplicates don't consume a sequence number.
-  if (!existing) {
+  const existingQuotations = quotationRepository.listAll
+    ? await quotationRepository.listAll()
+    : []
+
+  const candidateCustomerId = String(body.customerId ?? body.selectedAccountId ?? existing?.customerId ?? '').trim()
+  const candidateDealId = String(body.dealId ?? existing?.dealId ?? '').trim()
+  const candidateQuoteNumber = String(body.quoteNumber ?? body.quotationNumber ?? existing?.quoteNumber ?? '').trim()
+
+  const matchingQuotations = existingQuotations.filter((rec) => {
+    if (existing && String(rec.id) === String(existing.id)) return false
+    const recCustId = String(rec.customerId || rec.data?.selectedAccountId || '').trim()
+    const recDealId = String(rec.dealId || rec.data?.dealId || '').trim()
+    const recQuoteNo = String(rec.quoteNumber || rec.quotationNumber || rec.data?.quotationNumber || '').trim()
+
+    if (candidateQuoteNumber && recQuoteNo === candidateQuoteNumber) return true
+    if (candidateDealId && recDealId === candidateDealId) return true
+    if (candidateCustomerId && recCustId === candidateCustomerId) return true
+    return false
+  }).sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0))
+
+  const isExplicitRevision = Boolean(body.isRevision || body.parentQuotationId || body.revisionCode)
+  const isRevision = isExplicitRevision || (matchingQuotations.length > 0 && !existing)
+
+  let revisionNo = existing?.revisionNo || (matchingQuotations.length > 0 ? matchingQuotations.length + 1 : 1)
+  let revisionCode = existing?.revisionCode || (matchingQuotations.length > 0 ? `R${matchingQuotations.length + 1}` : 'R1')
+  if (revisionCode === 'Normal') revisionCode = 'R1'
+  let parentQuotationId = body.parentQuotationId || existing?.parentQuotationId || null
+
+  if (!existing && isRevision && matchingQuotations.length > 0) {
+    if (!parentQuotationId) {
+      parentQuotationId = matchingQuotations[0].id || matchingQuotations[0]._id
+    }
+  }
+
+  // Duplicate detection runs before quote-number allocation only if NOT a revision
+  if (!existing && !isRevision) {
     const candidateFingerprint = buildQuotationFingerprint({
       customerName: body.customerName ?? body.companyName ?? body.clientName,
       projectName: body.projectName,
@@ -325,6 +358,8 @@ const buildPayload = async (body, actor, existing) => {
   const discountAmount = body.discountAmount ?? body.discount ?? existing?.discountAmount ?? computed.discount
   const notes = body.notes ?? body.quotationNotes ?? existing?.notes ?? existing?.data?.quotationNotes ?? ''
 
+  const revisionReason = body.revisionReason || existing?.revisionReason || ''
+
   return {
     quoteNumber,
     quotationNumber: quoteNumber,
@@ -342,6 +377,10 @@ const buildPayload = async (body, actor, existing) => {
     validUntil: body.validUntil ?? existing?.validUntil ?? null,
     lineItems,
     notes,
+    revisionNo,
+    revisionCode,
+    parentQuotationId,
+    revisionReason,
     assignedTo: body.assignedTo ?? existing?.assignedTo ?? (actor.role === 'user' ? actor.id : null),
     createdBy: existing?.createdBy ?? actor.id,
     data: {
@@ -359,10 +398,111 @@ const buildPayload = async (body, actor, existing) => {
       discountAmount,
       lineItems,
       notes,
+      revisionNo,
+      revisionCode,
+      parentQuotationId,
+      revisionReason,
       quotationNotes: body.quotationNotes ?? existing?.data?.quotationNotes ?? notes,
       createdBy: existing?.createdBy ?? actor.id,
       userId: body.userId ?? existing?.data?.userId ?? existing?.createdBy ?? actor.id,
     },
+  }
+}
+
+const syncQuotationToLeadsAndDeals = async (quotationRecord) => {
+  try {
+    const { getMongoModel } = require('../models/mongoModels')
+    const Lead = getMongoModel('leads')
+    const Deal = getMongoModel('deals')
+    const quotationRepo = require('../repositories/quotationRepository')
+
+    const customerId = quotationRecord.customerId || quotationRecord.data?.selectedAccountId
+    const dealId = quotationRecord.dealId || quotationRecord.data?.dealId
+
+    const allQuotes = await quotationRepo.listAll()
+    const siblingQuotes = allQuotes.filter((q) => {
+      const qCust = String(q.customerId || q.data?.selectedAccountId || '').trim()
+      const qDeal = String(q.dealId || q.data?.dealId || '').trim()
+      const qNo = String(q.quoteNumber || q.quotationNumber || '').trim()
+      const thisNo = String(quotationRecord.quoteNumber || quotationRecord.quotationNumber || '').trim()
+
+      if (thisNo && qNo === thisNo) return true
+      if (dealId && qDeal === String(dealId).trim()) return true
+      if (customerId && qCust === String(customerId).trim()) return true
+      return false
+    }).sort((a, b) => (a.revisionNo || 0) - (b.revisionNo || 0))
+
+    const revisionAmounts = {}
+    siblingQuotes.forEach((sq) => {
+      const code = sq.revisionCode || (sq.revisionNo === 0 || sq.revisionNo === 1 ? 'R1' : `R${sq.revisionNo}`)
+      revisionAmounts[code] = sq.totalAmount || sq.amount || 0
+    })
+
+    const isApproved = String(quotationRecord.status || '').toLowerCase() === 'approved'
+
+    if (isApproved && siblingQuotes.length > 1) {
+      for (const sq of siblingQuotes) {
+        if (String(sq.id) !== String(quotationRecord.id)) {
+          try {
+            await quotationRepo.update(sq.id, { status: 'SUPERSEDED', data: { ...sq.data, status: 'SUPERSEDED' } })
+          } catch (e) {
+            // ignore
+          }
+        }
+      }
+    }
+
+    const syncPayload = {
+      latestQuotationNumber: quotationRecord.quotationNumber || quotationRecord.quoteNumber,
+      latestQuotationAmount: quotationRecord.totalAmount || quotationRecord.amount,
+      quotationRevisionCode: quotationRecord.revisionCode || 'R1',
+      quotationRevisionNo: quotationRecord.revisionNo || 1,
+      quotationRevisionAmounts: quotationRecord.quotationRevisionAmounts || revisionAmounts,
+      quotationStatus: quotationRecord.status || 'draft',
+      updatedAt: new Date().toISOString(),
+    }
+
+    if (customerId) {
+      await Lead.updateOne(
+        { $or: [{ id: customerId }, { _id: customerId }, { legacyId: customerId }] },
+        {
+          $set: {
+            'formData.latestQuotationNumber': syncPayload.latestQuotationNumber,
+            'formData.latestQuotationAmount': syncPayload.latestQuotationAmount,
+            'formData.quotationRevisionCode': syncPayload.quotationRevisionCode,
+            'formData.quotationRevisionNo': syncPayload.quotationRevisionNo,
+            'formData.quotationRevisionAmounts': syncPayload.quotationRevisionAmounts,
+            'formData.quotationStatus': syncPayload.quotationStatus,
+            latestQuotationNumber: syncPayload.latestQuotationNumber,
+            latestQuotationAmount: syncPayload.latestQuotationAmount,
+            quotationRevisionCode: syncPayload.quotationRevisionCode,
+            quotationStatus: syncPayload.quotationStatus,
+          }
+        }
+      )
+    }
+
+    if (dealId) {
+      await Deal.updateOne(
+        { $or: [{ id: dealId }, { _id: dealId }, { legacyId: dealId }] },
+        {
+          $set: {
+            'data.latestQuotationNumber': syncPayload.latestQuotationNumber,
+            'data.latestQuotationAmount': syncPayload.latestQuotationAmount,
+            'data.quotationRevisionCode': syncPayload.quotationRevisionCode,
+            'data.quotationRevisionNo': syncPayload.quotationRevisionNo,
+            'data.quotationRevisionAmounts': syncPayload.quotationRevisionAmounts,
+            'data.quotationStatus': syncPayload.quotationStatus,
+            latestQuotationNumber: syncPayload.latestQuotationNumber,
+            latestQuotationAmount: syncPayload.latestQuotationAmount,
+            quotationRevisionCode: syncPayload.quotationRevisionCode,
+            quotationStatus: syncPayload.quotationStatus,
+          }
+        }
+      )
+    }
+  } catch (syncErr) {
+    console.warn('Could not sync quotation revision to leads/deals collections:', syncErr)
   }
 }
 
@@ -382,7 +522,81 @@ const applyStrictIsolation = (actor) => {
 module.exports = {
   ...quotationService,
   create: async (actor, payload) => {
-    const result = await quotationService.create(actor, payload)
+    const allQuotes = await quotationRepository.listAll()
+    const targetCustId = String(payload.customerId || payload.selectedAccountId || payload.data?.selectedAccountId || '').trim()
+    const targetQuoteNo = String(payload.quoteNumber || payload.quotationNumber || payload.data?.quotationNumber || '').trim()
+    const targetDealId = String(payload.dealId || payload.data?.dealId || '').trim()
+
+    const existingMatch = allQuotes.find((q) => {
+      const qCust = String(q.customerId || q.data?.selectedAccountId || '').trim()
+      const qNo = String(q.quoteNumber || q.quotationNumber || '').trim()
+      const qDeal = String(q.dealId || q.data?.dealId || '').trim()
+      if (targetQuoteNo && qNo === targetQuoteNo) return true
+      if (targetDealId && qDeal === targetDealId) return true
+      if (targetCustId && qCust === targetCustId) return true
+      return false
+    })
+
+    if (existingMatch) {
+      const existingRevAmounts = existingMatch.quotationRevisionAmounts || existingMatch.data?.quotationRevisionAmounts || {}
+      const existingRevisions = Array.isArray(existingMatch.revisions)
+        ? existingMatch.revisions
+        : (Array.isArray(existingMatch.data?.revisions) ? existingMatch.data.revisions : [])
+
+      const currentRevNo = existingMatch.revisionNo || 1
+      const nextRevNo = currentRevNo + 1
+      const nextRevCode = `R${nextRevNo}`
+      const newAmount = payload.totalAmount || payload.amount || payload.data?.amount || 0
+
+      const r1Amt = existingMatch.revisionAmountR1 || existingRevAmounts.R1 || existingRevAmounts.Normal || existingMatch.totalAmount || existingMatch.amount || 0
+      const updatedRevAmounts = {
+        ...existingRevAmounts,
+        R1: r1Amt,
+        [nextRevCode]: newAmount,
+      }
+
+      const updatedRevisionsList = [...existingRevisions]
+      if (updatedRevisionsList.length === 0) {
+        updatedRevisionsList.push({
+          revisionCode: 'R1',
+          amount: r1Amt,
+          date: existingMatch.quotationDate || existingMatch.createdAt || new Date().toISOString().slice(0, 10),
+          status: existingMatch.status || 'Open',
+        })
+      }
+      updatedRevisionsList.push({
+        revisionCode: nextRevCode,
+        amount: newAmount,
+        date: new Date().toISOString().slice(0, 10),
+        status: 'Open',
+      })
+
+      const updatePayload = {
+        ...payload,
+        revisionCode: nextRevCode,
+        revisionNo: nextRevNo,
+        revisionAmountR1: r1Amt,
+        [`revisionAmount${nextRevCode}`]: newAmount,
+        quotationRevisionAmounts: updatedRevAmounts,
+        revisions: updatedRevisionsList,
+        status: 'Open',
+      }
+
+      const updatedResult = await quotationService.update(actor, existingMatch.id, updatePayload)
+      await syncQuotationToLeadsAndDeals(updatedResult)
+      return updatedResult
+    }
+
+    const initialAmount = payload.totalAmount || payload.amount || 0
+    const result = await quotationService.create(actor, {
+      ...payload,
+      revisionCode: payload.revisionCode || 'R1',
+      revisionNo: payload.revisionNo || 1,
+      revisionAmountR1: initialAmount,
+      quotationRevisionAmounts: payload.quotationRevisionAmounts || { R1: initialAmount },
+      revisions: payload.revisions || [{ revisionCode: 'R1', amount: initialAmount, date: new Date().toISOString().slice(0, 10), status: 'Open' }],
+    })
+    await syncQuotationToLeadsAndDeals(result)
     try {
       const { findUserById } = require('../repositories/userRepository')
       const assignedUserId = result.assignedTo || actor.id
@@ -414,6 +628,54 @@ module.exports = {
     } catch (err) {
       console.warn('Could not auto-create customer upon quotation generation', err)
     }
+    return result
+  },
+  approveQuotation: async (actor, id, payload = {}) => {
+    const existing = await quotationService.get(actor, id)
+    if (!existing) {
+      throw new AppError('Quotation not found.', 404)
+    }
+
+    const targetRevCode = payload.revisionCode || existing.revisionCode || 'R1'
+    const updatedRevisions = Array.isArray(existing.revisions)
+      ? [...existing.revisions]
+      : (Array.isArray(existing.data?.revisions) ? [...existing.data.revisions] : [])
+
+    if (updatedRevisions.length > 0) {
+      updatedRevisions.forEach((rev) => {
+        if (rev.revisionCode === targetRevCode || (!payload.revisionCode && rev.revisionCode === existing.revisionCode)) {
+          rev.status = 'Approved'
+        }
+      })
+    } else {
+      updatedRevisions.push({
+        revisionCode: targetRevCode,
+        amount: existing.totalAmount || existing.amount || 0,
+        date: new Date().toISOString().slice(0, 10),
+        status: 'Approved',
+      })
+    }
+
+    const updateData = {
+      status: 'Approved',
+      revisionCode: targetRevCode,
+      revisions: updatedRevisions,
+      data: {
+        ...(existing.data || {}),
+        status: 'Approved',
+        revisionCode: targetRevCode,
+        revisions: updatedRevisions,
+      },
+      updatedAt: new Date().toISOString(),
+    }
+
+    const result = await quotationService.update(actor, id, updateData)
+    await syncQuotationToLeadsAndDeals(result)
+    return result
+  },
+  update: async (actor, id, payload) => {
+    const result = await quotationService.update(actor, id, payload)
+    await syncQuotationToLeadsAndDeals(result)
     return result
   },
   list: (actor, filters = {}) => quotationService.list(applyStrictIsolation(actor), filters),

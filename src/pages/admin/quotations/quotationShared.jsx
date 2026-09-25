@@ -35,7 +35,7 @@ import { quotationApi } from '../../../services/quotationApi'
 import { ExcelExportActionButton, ExcelExportMenuButton } from '../../../components/common/ExcelExportButton'
 import './AdminQuotationsPage.css'
 
-export const PAGE_SIZE = 6
+export const PAGE_SIZE = 10
 export const ACCOUNT_LIST_PAGE_SIZE = 8
 export const ADMIN_QUOTATION_LAYOUT_STORAGE_KEY = 'crm-admin-quotation-manager-layout'
 export const ADMIN_QUOTATION_LAYOUT_VIEW_ENTITY_TYPE = 'quotation_layout_preferences'
@@ -256,12 +256,14 @@ export const validateUploadQuotationFile = (file) => {
     return 'Quote File is required.'
   }
 
-  const fileExtension = getUploadQuotationFileExtension(file.name)
-  if (!ALLOWED_UPLOAD_QUOTATION_EXTENSIONS.includes(fileExtension)) {
+  const fileName = typeof file === 'string' ? file : (file.name || file.fileName || file.quoteFileName || '')
+  const fileExtension = getUploadQuotationFileExtension(fileName)
+
+  if (fileExtension && !ALLOWED_UPLOAD_QUOTATION_EXTENSIONS.includes(fileExtension)) {
     return 'Only PDF, XLS and XLSX files are allowed.'
   }
 
-  if (file.size > MAX_UPLOAD_QUOTATION_FILE_SIZE) {
+  if (file?.size && file.size > MAX_UPLOAD_QUOTATION_FILE_SIZE) {
     return 'Quote File size must be 5 MB or less.'
   }
 
@@ -637,6 +639,9 @@ export const buildQuotationDocumentData = (quotation, linkedAccount) => {
     projectName: quotation.projectName || '-',
     clientAddressDetails,
     clientAddressLines: splitDisplayLines(clientAddressDetails === '-' ? '' : clientAddressDetails),
+    revisionCode: quotation.revisionCode || (quotation.revisionNo === 0 || quotation.revisionNo === 1 ? 'R1' : quotation.revisionNo ? `R${quotation.revisionNo}` : 'R1'),
+    revisionNo: quotation.revisionNo || 0,
+    quotationRevisionAmounts: quotation.quotationRevisionAmounts || quotation.data?.quotationRevisionAmounts || {},
     product: quotation.product || '-',
     otherProduct: quotation.otherProduct || '-',
     otherService: quotation.otherService || '-',
@@ -1514,6 +1519,12 @@ export function QuotationDocument({ documentData, editable = false, onEditField 
             <strong>{editValue('validUntil', documentData.validUntil)}</strong>
           </div>
           <div className="aqp-doc__meta-cell">
+            <span className="aqp-doc__meta-label">Revision</span>
+            <strong style={{ color: documentData.revisionCode !== 'Normal' ? '#0d9488' : '#1e293b' }}>
+              {documentData.revisionCode || 'Normal'}
+            </strong>
+          </div>
+          <div className="aqp-doc__meta-cell">
             <span className="aqp-doc__meta-label">Currency</span>
             <strong>{editValue('currency', documentData.currency)}</strong>
           </div>
@@ -1598,6 +1609,21 @@ export function QuotationDocument({ documentData, editable = false, onEditField 
           </section>
         </div>
 
+        {(documentData.revisionCode || documentData.revisionAmounts) && (
+          <div className="aqp-doc__terms" style={{ marginTop: '16px', width: '100%' }}>
+            <section className="aqp-doc__terms-card" style={{ width: '100%', gridColumn: '1 / -1' }}>
+              <h4>Quotation Revision History</h4>
+              <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginTop: '8px', fontSize: '13px' }}>
+                <div><strong>Current Revision:</strong> <span className="aqp-status-badge aqp-status-badge--info">{documentData.revisionCode || 'Normal'}</span></div>
+                <div><strong>Status:</strong> {documentData.statusLabel || documentData.status || 'Draft'}</div>
+                {documentData.revisionAmounts && typeof documentData.revisionAmounts === 'object' && Object.entries(documentData.revisionAmounts).map(([revCode, revAmt]) => (
+                  <div key={revCode}><strong>{revCode} Amount:</strong> {formatCurrency(revAmt, documentData.currency)}</div>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
+
         <div className="aqp-doc__footer">
           <strong>{documentData.organizationName}</strong>
           <br />
@@ -1615,6 +1641,7 @@ export function QuotationPdfViewer({
   onBack,
   onPrint,
   onDownload,
+  onApprove,
 }) {
   const [zoomLevel, setZoomLevel] = useState(100)
   const [moreMenuOpen, setMoreMenuOpen] = useState(false)
@@ -1660,6 +1687,18 @@ export function QuotationPdfViewer({
               <FaSearchPlus />
             </button>
           </div>
+          {onApprove ? (
+            <button
+              type="button"
+              className="aqp-pdf-action-btn"
+              style={{ backgroundColor: '#16a34a', color: '#ffffff', borderColor: '#15803d' }}
+              onClick={() => onApprove(documentData)}
+              aria-label="Approve quotation"
+            >
+              <FaCheck />
+              Approve
+            </button>
+          ) : null}
           <button type="button" className="aqp-pdf-action-btn" onClick={onPrint} aria-label="Print quotation">
             <FaPrint />
             Print
@@ -1721,4 +1760,313 @@ export function QuotationPdfViewer({
     </div>
   )
 }
+
+export function RevisionsListModal({
+  isOpen,
+  onClose,
+  row,
+  allQuotations = [],
+  onSelectRevision,
+  onApproveRevision,
+}) {
+  if (!isOpen || !row) return null
+
+  const targetAccountNo = row.raw?.customerId || row.raw?.selectedAccountId || row.raw?.accountNumber || row.accountNumber
+  const targetDealNo = row.raw?.dealId || row.dealNumber
+  const targetQuoteNo = row.num || row.quoteNumber || row.quotationNumber || row.raw?.quotationNumber || ''
+
+  const siblingRevisions = allQuotations.filter((q) => {
+    const qNum = q.num || q.quoteNumber || q.quotationNumber || q.raw?.quoteNumber || q.raw?.quotationNumber
+    const qAccount = q.raw?.customerId || q.raw?.selectedAccountId || q.raw?.accountNumber || q.accountNumber
+    const qDeal = q.raw?.dealId || q.dealNumber
+
+    if (targetQuoteNo && qNum === targetQuoteNo) return true
+    if (targetDealNo && qDeal === targetDealNo) return true
+    if (targetAccountNo && qAccount === targetAccountNo) return true
+    return false
+  }).sort((a, b) => {
+    const revA = a.raw?.revisionNo ?? a.revisionNo ?? (a.raw?.revisionCode === 'Normal' ? 1 : 1)
+    const revB = b.raw?.revisionNo ?? b.revisionNo ?? (b.raw?.revisionCode === 'Normal' ? 1 : 1)
+    return revA - revB
+  })
+
+  const recordsToProcess = siblingRevisions.length > 0 ? siblingRevisions : [row]
+
+  // Extract base quotation number e.g. "SSIPL/2026/1013" from "SSIPL/2026/1013-R1" or "SSIPL/2026/1013"
+  const rawBaseQuoteNo = (targetQuoteNo || row.num || row.quotationNumber || 'SSIPL/2026/1013').replace(/-R\d+$/i, '')
+  const companyName = row.company || row.raw?.companyName || row.raw?.customerName || row.raw?.clientName || 'Account'
+  const displayTitleQuoteNo = `${rawBaseQuoteNo}-R1`
+
+  const revisionRowsMap = new Map()
+
+  recordsToProcess.forEach((q) => {
+    const qRevisions = Array.isArray(q.raw?.revisions) && q.raw.revisions.length > 0
+      ? q.raw.revisions
+      : (Array.isArray(q.revisions) && q.revisions.length > 0 ? q.revisions : null)
+
+    const ownerName = q.owner || q.raw?.selectedAccountOwner || q.raw?.accountOwner || row.owner || '-'
+    const projName = q.project || q.raw?.projectName || row.project || '-'
+    const compName = q.company || q.raw?.companyName || q.raw?.customerName || row.company || '-'
+
+    if (qRevisions) {
+      qRevisions.forEach((revItem) => {
+        let revCode = revItem.revisionCode || (revItem.revisionNo ? `R${revItem.revisionNo}` : 'R1')
+        if (revCode === 'Normal') revCode = 'R1'
+        const formattedNum = `${rawBaseQuoteNo}-${revCode}`
+        const rawAmt = Number(revItem.amount || revItem.totalAmount || 0)
+        const amtLabel = formatCurrency(rawAmt, q.currency || 'INR')
+        const statusVal = revItem.status || q.raw?.status || q.status || 'Draft'
+        const dateVal = revItem.date || q.date || q.raw?.quotationDate || '-'
+
+        revisionRowsMap.set(revCode, {
+          key: revCode,
+          revisionCode: revCode,
+          quotationNumber: formattedNum,
+          owner: ownerName,
+          date: dateVal,
+          company: compName,
+          amount: rawAmt,
+          amountLabel: amtLabel,
+          status: statusVal,
+          project: projName,
+          rawRecord: q,
+          revItem,
+        })
+      })
+    } else {
+      let revCode = q.raw?.revisionCode || (q.raw?.revisionNo === 0 || q.raw?.revisionNo === 1 ? 'R1' : q.raw?.revisionNo ? `R${q.raw.revisionNo}` : 'R1')
+      if (revCode === 'Normal') revCode = 'R1'
+      const formattedNum = (q.num || q.quoteNumber || q.quotationNumber || '').includes('-R')
+        ? (q.num || q.quoteNumber || q.quotationNumber)
+        : `${rawBaseQuoteNo}-${revCode}`
+      const rawAmt = Number(q.amount || q.totalAmount || q.raw?.totalAmount || q.raw?.amount || 0)
+      const amtLabel = q.amountLabel || formatCurrency(rawAmt, q.currency || 'INR')
+      const statusVal = q.raw?.status || q.status || 'Draft'
+      const dateVal = q.date || q.raw?.quotationDate || '-'
+
+      revisionRowsMap.set(revCode, {
+        key: revCode,
+        revisionCode: revCode,
+        quotationNumber: formattedNum,
+        owner: ownerName,
+        date: dateVal,
+        company: compName,
+        amount: rawAmt,
+        amountLabel: amtLabel,
+        status: statusVal,
+        project: projName,
+        rawRecord: q,
+      })
+    }
+  })
+
+  const revisionRowsList = Array.from(revisionRowsMap.values()).sort((a, b) => {
+    const numA = Number(a.revisionCode.replace(/\D/g, '')) || 1
+    const numB = Number(b.revisionCode.replace(/\D/g, '')) || 1
+    return numA - numB
+  })
+
+  const allRevisionCodes = Array.from(
+    new Set(revisionRowsList.map((r) => r.revisionCode))
+  ).sort((a, b) => {
+    const numA = Number(a.replace(/\D/g, '')) || 1
+    const numB = Number(b.replace(/\D/g, '')) || 1
+    return numA - numB
+  })
+
+  if (allRevisionCodes.length === 0) {
+    allRevisionCodes.push('R1')
+  }
+
+  return (
+    <div className="aqp-page" style={{ padding: '24px', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
+        <div>
+          <button
+            type="button"
+            className="aqp-btn aqp-btn--gray"
+            style={{ marginBottom: '12px', cursor: 'pointer' }}
+            onClick={onClose}
+          >
+            &larr; Back To Quotations List
+          </button>
+          <h1 style={{ margin: 0, fontSize: '1.5rem', color: '#0f172a', fontWeight: 700 }}>
+            Revision History — {companyName} ({displayTitleQuoteNo})
+          </h1>
+          <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#64748b' }}>
+            Viewing all revision versions for <strong>{companyName}</strong>. Click any revision to view details or click Approve to approve.
+          </p>
+        </div>
+      </div>
+
+      <div style={{ background: '#ffffff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '20px', overflowX: 'auto' }}>
+        <table className="aqp-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1', textAlign: 'left' }}>
+              <th style={{ padding: '12px 14px' }}>Revision</th>
+              <th style={{ padding: '12px 14px' }}>Quotation Number</th>
+              <th style={{ padding: '12px 14px' }}>Owner</th>
+              <th style={{ padding: '12px 14px' }}>Quotation Date</th>
+              <th style={{ padding: '12px 14px' }}>Company Name</th>
+              {allRevisionCodes.map((code) => (
+                <th key={code} style={{ padding: '12px 14px', textAlign: 'right' }}>
+                  {code} Amount
+                </th>
+              ))}
+              <th style={{ padding: '12px 14px' }}>Status</th>
+              <th style={{ padding: '12px 14px' }}>Project</th>
+              <th style={{ padding: '12px 14px', textAlign: 'center' }}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {revisionRowsList.map((rev) => {
+              const isApproved = String(rev.status || '').toLowerCase() === 'approved'
+              const revRowCodeNum = Number(rev.revisionCode.replace(/\D/g, '')) || 1
+
+              return (
+                <tr
+                  key={rev.key}
+                  style={{ borderBottom: '1px solid #e2e8f0', cursor: 'pointer' }}
+                  onClick={() => onSelectRevision(rev.rawRecord)}
+                >
+                  <td style={{ padding: '12px 14px' }}>
+                    <span className="aqp-badge aqp-badge--blue" style={{ fontWeight: 600 }}>
+                      {rev.revisionCode}
+                    </span>
+                  </td>
+                  <td style={{ padding: '12px 14px', fontWeight: 600, color: '#0284c7' }}>
+                    {rev.quotationNumber}
+                  </td>
+                  <td style={{ padding: '12px 14px' }}>{rev.owner || '-'}</td>
+                  <td style={{ padding: '12px 14px' }}>{rev.date || '-'}</td>
+                  <td style={{ padding: '12px 14px' }}>{rev.company || '-'}</td>
+                  {allRevisionCodes.map((code) => {
+                    const isCurrentCellCode = rev.revisionCode === code
+                    const cellCodeNum = Number(code.replace(/\D/g, '')) || 1
+
+                    let cellVal = '-'
+                    const matchRev = revisionRowsList.find((r) => r.revisionCode === code)
+                    if (matchRev && cellCodeNum <= revRowCodeNum) {
+                      cellVal = matchRev.amountLabel
+                    }
+
+                    return (
+                      <td
+                        key={code}
+                        style={{
+                          padding: '12px 14px',
+                          textAlign: 'right',
+                          fontWeight: isCurrentCellCode ? 600 : 400,
+                          color: isCurrentCellCode ? '#0f172a' : '#64748b',
+                        }}
+                      >
+                        {cellVal}
+                      </td>
+                    )
+                  })}
+                  <td style={{ padding: '12px 14px' }}>
+                    <StatusBadge statusKey={rev.status} />
+                  </td>
+                  <td style={{ padding: '12px 14px' }}>{rev.project || '-'}</td>
+                  <td style={{ padding: '12px 14px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                      <button
+                        type="button"
+                        className="aqp-btn aqp-btn--secondary aqp-btn--sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onSelectRevision(rev.rawRecord)
+                        }}
+                      >
+                        <FaEye /> View
+                      </button>
+                      {!isApproved && onApproveRevision ? (
+                        <button
+                          type="button"
+                          className="aqp-btn aqp-btn--primary aqp-btn--sm"
+                          style={{ backgroundColor: '#16a34a', borderColor: '#15803d', color: '#ffffff' }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onApproveRevision({ ...rev.rawRecord, revisionCode: rev.revisionCode, num: rev.quotationNumber })
+                          }}
+                        >
+                          <FaCheck /> Approve
+                        </button>
+                      ) : null}
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+export function SequentialRevisionSummaryCard({
+  accountRecord,
+  dealRecord,
+  allQuotations = [],
+}) {
+  const targetAccountId = accountRecord?.id || accountRecord?.accountNumber || accountRecord?.accountNo
+  const targetDealId = dealRecord?.id || dealRecord?.dealNumber
+
+  const siblingQuotes = useMemo(() => {
+    return allQuotations.filter((q) => {
+      const qAccount = q.raw?.customerId || q.raw?.selectedAccountId || q.raw?.accountNumber || q.accountNumber
+      const qDeal = q.raw?.dealId || q.dealNumber
+
+      if (targetDealId && qDeal === targetDealId) return true
+      if (targetAccountId && qAccount === targetAccountId) return true
+      return false
+    }).sort((a, b) => (a.raw?.revisionNo ?? a.revisionNo ?? 0) - (b.raw?.revisionNo ?? b.revisionNo ?? 0))
+  }, [allQuotations, targetAccountId, targetDealId])
+
+  const existingRevisionCount = siblingQuotes.length
+  const nextRevisionCode = existingRevisionCount === 0 ? 'R1' : `R${existingRevisionCount + 1}`
+
+  const revisionAmounts = {}
+  siblingQuotes.forEach((q) => {
+    const code = q.raw?.revisionCode || (q.raw?.revisionNo === 0 || q.raw?.revisionNo === 1 ? 'R1' : `R${q.raw?.revisionNo}`)
+    const amt = q.raw?.totalAmount || q.raw?.amount || q.amount || 0
+    revisionAmounts[code] = amt
+  })
+
+  return (
+    <div style={{
+      background: '#f0fdf4',
+      border: '1px solid #bbf7d0',
+      borderRadius: '8px',
+      padding: '12px 16px',
+      marginBottom: '16px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+        <span style={{ fontWeight: 700, color: '#166534', fontSize: '0.95rem' }}>
+          Quotation Revision Target: <span style={{ textDecoration: 'underline' }}>{nextRevisionCode}</span>
+        </span>
+        {existingRevisionCount > 0 && (
+          <span style={{ fontSize: '0.8rem', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+            {existingRevisionCount} Prior Version{existingRevisionCount > 1 ? 's' : ''} Recorded
+          </span>
+        )}
+      </div>
+      {existingRevisionCount > 0 ? (
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '0.85rem', color: '#166534' }}>
+          {Object.entries(revisionAmounts).map(([code, amt]) => (
+            <div key={code} style={{ background: '#ffffff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px' }}>
+              <strong>{code} Amount (Read-only):</strong> {formatCurrency(amt, 'INR')}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{ fontSize: '0.85rem', color: '#15803d' }}>
+          This will be generated as the initial <strong>R1</strong> quotation.
+        </div>
+      )}
+    </div>
+  )
+}
+
 

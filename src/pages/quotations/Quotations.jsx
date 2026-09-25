@@ -18,6 +18,7 @@ import swatiLogo from '../../assets/swati-logo.png'
 import lumosLogo from '../../assets/lumos-logo.svg'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
+import { quotationApi } from '../../services/quotationApi'
 import { useModal } from '../../hooks'
 import Card from '../../components/common/Card'
 import Button from '../../components/common/Button'
@@ -34,6 +35,8 @@ import {
   ModalShell,
   QuotationDocument,
   QuotationPdfViewer,
+  RevisionsListModal,
+  SequentialRevisionSummaryCard,
   StatusBadge,
   buildQuotationDocumentData,
   buildVisiblePages,
@@ -215,14 +218,14 @@ const buildQuotationCustomerAccount = (customer = {}) => {
   const primaryContact = customer.contacts?.[0] || {}
 
   return {
-    id: customer.id || customer.customerNumber || `customer-${Date.now()}`,
-    accountNumber: customer.customerNumber || '',
-    name: customer.customerName || '',
+    id: customer.id || customer.customerNumber || customer.accountNumber || `customer-${Date.now()}`,
+    accountNumber: customer.accountNumber || customer.customerNumber || '',
+    name: customer.name || customer.customerName || '',
     contactPerson: primaryContact.contactPerson || customer.contactPerson || '',
-    contactDesignation: primaryContact.designation || customer.contactDesignation || '',
-    contactMobile: primaryContact.mobile || customer.contactMobile || customer.mobile || '',
-    contactPhone: primaryContact.phone || customer.contactPhone || customer.phone || '',
-    phone: primaryContact.mobile || primaryContact.phone || customer.phone || '',
+    contactDesignation: primaryContact.designation || customer.contactDesignation || customer.designation || '',
+    contactMobile: primaryContact.mobile || customer.contactMobile || customer.mobile || customer.contactPhone || customer.phone || '',
+    contactPhone: primaryContact.phone || customer.contactPhone || customer.phone || customer.mobile || '',
+    phone: primaryContact.mobile || primaryContact.phone || customer.phone || customer.mobile || '',
     contactEmail: primaryContact.email || customer.contactEmail || customer.email || '',
     email: primaryContact.email || customer.email || '',
     gstin: customer.gstin || '',
@@ -232,12 +235,12 @@ const buildQuotationCustomerAccount = (customer = {}) => {
     state: customer.state || '',
     accountCategory: customer.accountCategory || customer.customerCategory || '',
     customerCategory: customer.customerCategory || customer.accountCategory || '',
-    projectName: customer.projectName || customer.customerName || '',
+    projectName: customer.projectName || customer.customerName || customer.name || '',
     latestRemark: customer.latestRemark || customer.remark || '',
     remark: customer.remark || '',
     productCategory: customer.productCategory || customer.customerCategory || '',
-    accountOwnerName: customer.customerOwnerName || customer.customerOwnerDisplay || customer.customerOwner || '',
-    accountOwner: customer.customerOwner || '',
+    accountOwnerName: customer.accountOwnerName || customer.accountOwnerDisplay || customer.customerOwnerName || customer.customerOwnerDisplay || customer.customerOwner || customer.accountOwner || '',
+    accountOwner: customer.accountOwner || customer.customerOwner || '',
   }
 }
 
@@ -289,7 +292,7 @@ const createInitialQuotationForm = () => ({
   profileKey: '',
   profileName: '',
   quotationDate: getTodayInputValue(),
-  validUntil: addDaysToInputValue(getTodayInputValue(), 30),
+  validUntil: addDaysToInputValue(getTodayInputValue(), 7),
   currency: 'INR',
   status: 'draft',
   clientAccountNumber: '',
@@ -345,7 +348,7 @@ const buildQuotationFormFromExisting = (quotation = {}, nextQuotationNumber = ''
     ...quotation,
     quotationNumber: nextQuotationNumber || quotation.quotationNumber || '',
     quotationDate,
-    validUntil: addDaysToInputValue(quotationDate, 30),
+    validUntil: addDaysToInputValue(quotationDate, 7),
     status: 'approved',
     lineItems: clonedLineItems,
   }
@@ -551,6 +554,7 @@ const Quotations = ({ autoOpen = false }) => {
     createQuotation,
     updateQuotation,
     addNotification,
+    refreshQuotations,
     accounts,
   } = useData()
   const { user } = useAuth()
@@ -577,6 +581,7 @@ const Quotations = ({ autoOpen = false }) => {
   const [previewRow, setPreviewRow] = useState(null)
   const [viewRow, setViewRow] = useState(null)
   const [viewRowFromUrl, setViewRowFromUrl] = useState(false)
+  const [revisionsModalRow, setRevisionsModalRow] = useState(null)
   const [viewActionMenuOpen, setViewActionMenuOpen] = useState(false)
   const [accountRow, setAccountRow] = useState(null)
   const [approveRow, setApproveRow] = useState(null)
@@ -623,6 +628,10 @@ const Quotations = ({ autoOpen = false }) => {
   const [builderMessage, setBuilderMessage] = useState('')
   const [savingQuotation, setSavingQuotation] = useState(false)
   const [additionalSections, setAdditionalSections] = useState([])
+
+  const tabParam = searchParams.get('tab') || ''
+  const accountNoParam = searchParams.get('accountNo') || ''
+  const accountNameParam = searchParams.get('accountName') || ''
 
   const nextQuotationNumber = useMemo(
     () => dataService.buildQuotationNumber(dataService.getNextQuotationSequence(quotations)),
@@ -715,6 +724,32 @@ const Quotations = ({ autoOpen = false }) => {
       .map((quotation, index) => buildQuotationRow(quotation, index))
       .sort((left, right) => new Date(right.dateSort || 0).getTime() - new Date(left.dateSort || 0).getTime())
   ), [buildQuotationRow, userQuotations])
+
+  useEffect(() => {
+    if (tabParam === 'accounts' || tabParam === 'account') {
+      setActiveTab('account')
+    } else if (tabParam === 'deals' || tabParam === 'deal') {
+      setActiveTab('deal')
+    }
+    if (accountNameParam || accountNoParam) {
+      setQuotationFilters((prev) => ({
+        ...prev,
+        company: accountNameParam || prev.company,
+        num: accountNoParam || prev.num,
+      }))
+    }
+    if (viewQuotationId && quotationRows && quotationRows.length > 0) {
+      const match = quotationRows.find((q) => (
+        String(q.id) === String(viewQuotationId)
+        || String(q.raw?._id) === String(viewQuotationId)
+        || String(q.num) === String(viewQuotationId)
+      ))
+      if (match) {
+        setViewRow(match)
+        setViewRowFromUrl(true)
+      }
+    }
+  }, [searchParams, quotationRows, viewQuotationId])
 
   const filteredQuotationRows = useMemo(() => (
     quotationRows
@@ -849,12 +884,42 @@ const Quotations = ({ autoOpen = false }) => {
     }
   }, [autoOpen, close])
 
+  const handleApproveRevisionItem = async (targetRevRow) => {
+    if (!targetRevRow) return
+    const targetId = targetRevRow.raw?.id || targetRevRow.id
+    const revCode = targetRevRow.raw?.revisionCode || targetRevRow.revisionCode || 'R1'
+
+    try {
+      setActionLoadingId(targetId)
+      await quotationApi.approveQuotation(targetId, { revisionCode: revCode })
+      addNotification?.('success', 'Quotation Approved', `Quotation ${targetRevRow.num || targetId} (${revCode}) approved successfully.`)
+      await refreshQuotations?.()
+    } catch (err) {
+      addNotification?.('error', 'Approval Failed', err.response?.data?.message || err.message || 'Could not approve quotation.')
+    } finally {
+      setActionLoadingId('')
+    }
+  }
+
   useEffect(() => {
     if (!viewQuotationId) {
       if (viewRowFromUrl) {
         setViewActionMenuOpen(false)
         setViewRow(null)
         setViewRowFromUrl(false)
+      }
+
+      const accountIdParam = searchParams.get('accountId')
+      const accountNoParam = searchParams.get('accountNo')
+      if ((accountIdParam || accountNoParam) && quotationRows.length > 0 && !revisionsModalRow && !viewRow) {
+        const match = quotationRows.find((r) => {
+          const rCustId = r.raw?.customerId || r.raw?.selectedAccountId || ''
+          const rCustNo = r.raw?.accountNumber || r.accountNumber || ''
+          return (accountIdParam && String(rCustId) === String(accountIdParam)) || (accountNoParam && String(rCustNo) === String(accountNoParam))
+        })
+        if (match) {
+          setRevisionsModalRow(match)
+        }
       }
       return
     }
@@ -868,7 +933,7 @@ const Quotations = ({ autoOpen = false }) => {
 
     setViewRowFromUrl(true)
     setViewRow((currentValue) => (currentValue?.id === matchedRow.id ? currentValue : matchedRow))
-  }, [quotationRows, viewQuotationId, viewRowFromUrl])
+  }, [quotationRows, viewQuotationId, viewRowFromUrl, searchParams, revisionsModalRow, viewRow])
 
   useEffect(() => {
     const draftQuotation = location.state?.quotationDraft
@@ -1018,13 +1083,25 @@ const Quotations = ({ autoOpen = false }) => {
     const profile = getProfileByValue(profileValue)
     const quotationDate = getTodayInputValue()
 
+    const existingAccountQuotes = (Array.isArray(quotations) ? quotations : []).filter((q) => (
+      (q.selectedAccountId && account?.id && String(q.selectedAccountId) === String(account.id)) ||
+      (q.clientAccountNumber && account?.accountNumber && String(q.clientAccountNumber).trim() === String(account.accountNumber).trim())
+    ))
+
+    let computedQuoteNumber = nextQuotationNumber
+    if (existingAccountQuotes.length > 0) {
+      const baseQuote = existingAccountQuotes[0].quotationNumber || nextQuotationNumber
+      const baseClean = baseQuote.replace(/-R\d+$/i, '')
+      computedQuoteNumber = `${baseClean}-R${existingAccountQuotes.length + 1}`
+    }
+
     return {
       ...createInitialQuotationForm(),
-      quotationNumber: nextQuotationNumber,
+      quotationNumber: computedQuoteNumber,
       profileKey: profile?.value || '',
       profileName: profile?.label || '',
       quotationDate,
-      validUntil: addDaysToInputValue(quotationDate, 30),
+      validUntil: addDaysToInputValue(quotationDate, 7),
       currency: profile?.currency || 'INR',
       clientAccountNumber: account?.accountNumber || '',
       companyName: account?.name || '',
@@ -1036,7 +1113,7 @@ const Quotations = ({ autoOpen = false }) => {
       clientAddressDetails: buildClientAddressDetails(account),
       organizationName: profile?.organizationName || '',
       organizationAddress: profile?.organizationAddress || '',
-      organizationEmail: profile?.organizationEmail || '',
+      organizationEmail: user?.email || profile?.organizationEmail || '',
       organizationPhone: profile?.organizationPhone || '',
       organizationGstin: profile?.organizationGstin || '',
       organizationStateCode: profile?.organizationStateCode || '',
@@ -1624,6 +1701,22 @@ const Quotations = ({ autoOpen = false }) => {
     ))
     : []
 
+  if (revisionsModalRow) {
+    return (
+      <RevisionsListModal
+        isOpen={Boolean(revisionsModalRow)}
+        onClose={() => setRevisionsModalRow(null)}
+        row={revisionsModalRow}
+        allQuotations={quotationRows}
+        onSelectRevision={(revRow) => {
+          setRevisionsModalRow(null)
+          setViewRow(revRow)
+        }}
+        onApproveRevision={handleApproveRevisionItem}
+      />
+    )
+  }
+
   return (
     <div className="quotations-page">
       {pdfDocument ? (
@@ -1754,7 +1847,7 @@ const Quotations = ({ autoOpen = false }) => {
                                 className={`aqp-num-badge aqp-num-badge--button ${getActionBadgeClassName(row.status)}`}
                                 onClick={(event) => {
                                   event.stopPropagation()
-                                  openQuotationView(row)
+                                  setRevisionsModalRow(row)
                                 }}
                               >
                                 {row.num}
@@ -1846,6 +1939,14 @@ const Quotations = ({ autoOpen = false }) => {
         >
           <div className="aqp-view-top-actions">
             <div className="aqp-modal-footer-group">
+              <button
+                type="button"
+                className="aqp-btn aqp-btn--blue"
+                style={{ backgroundColor: '#16a34a', borderColor: '#15803d', color: '#ffffff' }}
+                onClick={() => handleApproveRevisionItem(viewRow)}
+              >
+                Approve
+              </button>
               <button type="button" className="aqp-btn aqp-btn--gray" onClick={closeQuotationView}>
                 Close
               </button>
@@ -2165,6 +2266,10 @@ const Quotations = ({ autoOpen = false }) => {
         )}
       >
         <div className="quotation-generator-form">
+          <SequentialRevisionSummaryCard
+            accountRecord={selectedAccount}
+            allQuotations={quotationRows}
+          />
           <div className="quotation-generator-section-title">Quotation</div>
           <Select
             label="Select Profile"
@@ -2403,7 +2508,7 @@ const Quotations = ({ autoOpen = false }) => {
               onClick={() => lineItemsUploadRef.current?.click()}
             >
               <FaUpload />
-              Upload Line Items
+              Upload Quotations
             </button>
             <button
               type="button"
@@ -2418,13 +2523,6 @@ const Quotations = ({ autoOpen = false }) => {
               onClick={() => setIsOtherProductModalOpen(true)}
             >
               Other Product
-            </button>
-            <button
-              type="button"
-              className="quotation-builder-top-action"
-              onClick={() => setIsOtherServiceModalOpen(true)}
-            >
-              Other Service
             </button>
           </div>
 
@@ -2536,7 +2634,7 @@ const Quotations = ({ autoOpen = false }) => {
                       <span>Organization Phone</span>
                       <input
                         value={quotationForm.organizationPhone}
-                        onChange={(event) => handleBuilderFieldChange('organizationPhone', event.target.value)}
+                        onChange={(event) => handleBuilderFieldChange('organizationPhone', event.target.value.replace(/\D/g, ''))}
                         placeholder={activeProfile?.organizationPhone || ''}
                       />
                     </label>
@@ -2589,10 +2687,6 @@ const Quotations = ({ autoOpen = false }) => {
                 <input value={clientAddressLines[2]} onChange={(event) => handleClientAddressLineChange(2, event.target.value)} />
               </label>
               <label className="quotation-builder-field">
-                <span>Address Line4</span>
-                <input value={clientAddressLines[3]} onChange={(event) => handleClientAddressLineChange(3, event.target.value)} />
-              </label>
-              <label className="quotation-builder-field">
                 <span>Telephone</span>
                 <input
                   value={quotationForm.telephone}
@@ -2626,101 +2720,7 @@ const Quotations = ({ autoOpen = false }) => {
 
 
 
-          <section className="quotation-builder-section quotation-builder-section--compact">
-            <div className="quotation-builder-blue-title quotation-builder-blue-title--with-action">
-              <span>Quote Items Table</span>
-              <Button type="button" variant="secondary" icon={<FaPlus />} onClick={handleAddLineItem}>
-                Add Item
-              </Button>
-            </div>
-            <div className="quotation-builder-table-layout">
-              <div className="quotation-builder-line-items-wrap">
-                <table className="quotation-builder-line-items-table">
-                  <thead>
-                    <tr>
-                      <th>Description</th>
-                      <th>Qty</th>
-                      <th>Unit</th>
-                      <th>Rate</th>
-                      <th>Amount</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {quotationForm.lineItems.map((lineItem) => (
-                      <tr key={lineItem.id}>
-                        <td>
-                          <input
-                            value={lineItem.description}
-                            onChange={(event) => handleLineItemChange(lineItem.id, 'description', event.target.value)}
-                            placeholder="Item description"
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={lineItem.quantity}
-                            onChange={(event) => handleLineItemChange(lineItem.id, 'quantity', event.target.value)}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            value={lineItem.unit}
-                            onChange={(event) => handleLineItemChange(lineItem.id, 'unit', event.target.value)}
-                            placeholder="Nos"
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={lineItem.rate}
-                            onChange={(event) => handleLineItemChange(lineItem.id, 'rate', event.target.value)}
-                          />
-                        </td>
-                        <td className="quotation-builder-line-amount">
-                          {formatCurrency(calculateLineItemAmount(lineItem), quotationForm.currency || 'INR')}
-                        </td>
-                        <td className="quotation-builder-line-action">
-                          <button
-                            type="button"
-                            className="quotation-builder-icon-button"
-                            onClick={() => handleRemoveLineItem(lineItem.id)}
-                            aria-label="Remove line item"
-                          >
-                            <FaTrash />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colSpan="4">Grand Total</td>
-                      <td>{formatCurrency(quotationGrandTotal, quotationForm.currency || 'INR')}</td>
-                      <td />
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
 
-              <div className="quotation-builder-summary-card">
-                <div className="quotation-builder-summary-title">Quotation Details</div>
-                <div className="quotation-builder-summary-list">
-                  <div><span>Product Tax</span><strong>{formatCurrency(quotationDetailSummary.productTax, quotationForm.currency || 'INR')}</strong></div>
-                  <div><span>Product Total</span><strong>{formatCurrency(quotationDetailSummary.productTotal, quotationForm.currency || 'INR')}</strong></div>
-                  <div><span>Other Product Total</span><strong>{formatCurrency(quotationDetailSummary.otherProductTotal, quotationForm.currency || 'INR')}</strong></div>
-                  <div><span>Quotation Total</span><strong>{formatCurrency(quotationDetailSummary.quotationTotal, quotationForm.currency || 'INR')}</strong></div>
-                  <div><span>Service Tax</span><strong>{formatCurrency(quotationDetailSummary.serviceTax, quotationForm.currency || 'INR')}</strong></div>
-                  <div><span>Service Total</span><strong>{formatCurrency(quotationDetailSummary.serviceTotal, quotationForm.currency || 'INR')}</strong></div>
-                  <div><span>Other Service Total</span><strong>{formatCurrency(quotationDetailSummary.otherServiceTotal, quotationForm.currency || 'INR')}</strong></div>
-                </div>
-              </div>
-            </div>
-          </section>
 
           {builderError ? <div className="quotation-generator-error">{builderError}</div> : null}
           {builderMessage ? <div className="quotation-builder-message">{builderMessage}</div> : null}
@@ -2735,11 +2735,6 @@ const Quotations = ({ autoOpen = false }) => {
       <AddOtherProductModal 
         isOpen={isOtherProductModalOpen} 
         onClose={() => setIsOtherProductModalOpen(false)} 
-        onAdd={handleAddModalLineItem} 
-      />
-      <AddOtherServiceModal 
-        isOpen={isOtherServiceModalOpen} 
-        onClose={() => setIsOtherServiceModalOpen(false)} 
         onAdd={handleAddModalLineItem} 
       />
     </div>

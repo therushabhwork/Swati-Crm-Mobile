@@ -346,7 +346,14 @@ export const DataProvider = ({ children }) => {
       }
 
       if (dealsResult.status === 'fulfilled') {
-        setDeals(dealsResult.value.map((entry) => enrichRealtimeRecord(SOCKET_ENTITY_TYPES.DEAL, entry)))
+        const enrichedDeals = dealsResult.value.map((entry) => enrichRealtimeRecord(SOCKET_ENTITY_TYPES.DEAL, entry))
+        const sortedLIFODeals = [...enrichedDeals].sort((a, b) => {
+          const timeA = new Date(a?.createdAt || a?.date || a?.dealDate || 0).getTime()
+          const timeB = new Date(b?.createdAt || b?.date || b?.dealDate || 0).getTime()
+          if (timeA !== timeB) return timeB - timeA
+          return String(b?.id || b?._id || '').localeCompare(String(a?.id || a?._id || ''), undefined, { numeric: true })
+        })
+        setDeals(sortedLIFODeals)
       } else {
         setDeals([])
       }

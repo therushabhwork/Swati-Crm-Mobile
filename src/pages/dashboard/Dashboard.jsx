@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   FaUsers,
   FaBriefcase,
@@ -71,7 +72,8 @@ const CHART_TOOLTIP_STYLE = {
 }
 
 const Dashboard = () => {
-  const { accounts, deals, tasks } = useData()
+  const navigate = useNavigate()
+  const { accounts, deals, tasks, reminders = [] } = useData()
   const { user } = useAuth()
 
   const stats = useMemo(() => ({
@@ -119,6 +121,45 @@ const Dashboard = () => {
       .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
       .slice(0, 5)
   ), [tasks])
+
+  const userIdentity = useMemo(() => [
+    user?.id,
+    user?.name,
+    user?.username,
+    user?.email,
+  ].filter(Boolean).map((v) => String(v).trim().toLowerCase()), [user])
+
+  const todoItems = useMemo(() => {
+    const matchesUser = (target) => {
+      if (!target) return false
+      const norm = String(target).trim().toLowerCase()
+      return userIdentity.some((id) => id === norm || norm.includes(id))
+    }
+
+    const reminderItems = (reminders || [])
+      .filter((r) => String(r.status || '').toLowerCase() !== 'closed')
+      .filter((r) => matchesUser(r.assignedTo) || matchesUser(r.createdBy) || !r.assignedTo)
+      .map((r) => ({
+        id: `reminder-${r.id}`,
+        type: r.reminderMode || 'REMINDER',
+        title: r.title || r.note || r.message || 'Reminder',
+        meta: r.reminderDate ? `${r.reminderDate}` : 'Today',
+        raw: r,
+      }))
+
+    const taskItems = (tasks || [])
+      .filter((t) => String(t.status || '').toLowerCase() === 'pending' || String(t.status || '').toLowerCase() === 'open')
+      .filter((t) => matchesUser(t.assignedTo) || matchesUser(t.createdBy) || matchesUser(t.userEmail) || matchesUser(t.ownerUserId) || !t.assignedTo)
+      .map((t) => ({
+        id: `task-${t.id || t._id}`,
+        type: t.activityType === 're-assign-account' ? 'REASSIGNMENT' : 'TASK',
+        title: t.title || t.name || 'Pending Task',
+        meta: t.dueDate ? `${t.dueDate}` : 'Pending',
+        raw: t,
+      }))
+
+    return [...reminderItems, ...taskItems].slice(0, 10)
+  }, [reminders, tasks, userIdentity])
 
   const conversionRate = stats.totalDeals
     ? Math.round((stats.wonDeals / stats.totalDeals) * 100)
@@ -279,30 +320,32 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="md-tabs">
-              <button className="md-tab md-tab-active">All (3)</button>
-              <button className="md-tab">Reminders (3)</button>
-              <button className="md-tab">Follow Ups (0)</button>
-              <button className="md-tab">Documents (0)</button>
+              <button type="button" className="md-tab md-tab-active">All ({todoItems.length})</button>
             </div>
             <ul className="md-todo-list">
-              {[1,2,3].map((item) => (
-                <li key={item} className="md-todo-item">
-                  <div className="md-todo-icon">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div className="md-todo-badge">REMINDER</div>
-                  <div className="md-todo-details">
-                    <span className="md-todo-title">abc</span>
-                    <span className="md-todo-meta">Account | 11-08-2026</span>
-                  </div>
-                  <div className="md-todo-actions">
-                    <button className="md-btn-solid-red">Active</button>
-                    <button className="md-btn-outline-red">Close</button>
-                  </div>
+              {todoItems.length === 0 ? (
+                <li className="md-todo-item" style={{ justifyContent: 'center', color: 'var(--text-muted, #6b7280)', padding: '1rem' }}>
+                  No pending To-Do items.
                 </li>
-              ))}
+              ) : (
+                todoItems.map((item) => (
+                  <li key={item.id} className="md-todo-item">
+                    <div className="md-todo-icon">
+                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div className="md-todo-badge">{String(item.type).toUpperCase()}</div>
+                    <div className="md-todo-details">
+                      <span className="md-todo-title">{item.title}</span>
+                      <span className="md-todo-meta">{item.meta}</span>
+                    </div>
+                    <div className="md-todo-actions">
+                      <button type="button" className="md-btn-solid-red" onClick={() => navigate('/reminders/my')}>Active</button>
+                    </div>
+                  </li>
+                ))
+              )}
             </ul>
           </div>
 

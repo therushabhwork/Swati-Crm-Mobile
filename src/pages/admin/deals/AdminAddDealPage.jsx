@@ -601,7 +601,6 @@ const AdminAddDealPage = ({
 
       if (!formData.dealName.trim()) nextErrors.dealName = 'Please provide Deal Name.'
       if (!formData.description.trim()) nextErrors.description = 'Please provide Description.'
-      if (!formData.dealSource.trim()) nextErrors.dealSource = 'Please select Deal Source.'
       if (!formData.dealOwner.trim()) nextErrors.dealOwner = 'Please select Deal Owner.'
       if (!formData.expectedClosureDate) {
         nextErrors.expectedClosureDate = 'Please provide Expected Closure Date.'
@@ -879,7 +878,6 @@ const AdminAddDealPage = ({
             {renderTextField('deal-name', 'Deal Name', 'dealName', { required: true })}
             {renderTextareaField('deal-description', 'Description', 'description', { required: true })}
             {renderTextField('deal-po-value', 'PO Value', 'poValue', { type: 'number' })}
-            {renderSelectField('deal-co-owners', 'Deal Co-Owners', 'dealCoOwners', getCrmOwnerOptions())}
             <div className="admin-add-deal-detail-field">
               <label htmlFor="deal-value">
                 Deal Value<span className="admin-add-deal-required">*</span>
@@ -904,7 +902,6 @@ const AdminAddDealPage = ({
               </div>
               {errors.value ? <div className="admin-add-deal-error">{errors.value}</div> : null}
             </div>
-            {renderTextField('deal-score', 'Deal Score', 'dealScore', { type: 'number' })}
             {renderTextField('deal-consultant-name', 'Consultant Name', 'consultantName')}
             {renderTextField('deal-customer-ref-no', 'Customer Ref. No.', 'customerRefNo')}
             {renderTextField('deal-project-name', 'Project Name', 'projectName')}
@@ -912,7 +909,6 @@ const AdminAddDealPage = ({
           </div>
 
           <div className="admin-add-deal-detail-col">
-            {renderSelectField('deal-source', 'Deal Source', 'dealSource', DEAL_SOURCE_OPTIONS, { required: true })}
             {renderSelectField('deal-owner', 'Deal Owner', 'dealOwner', getCrmOwnerOptions(), { required: true })}
             {renderTextareaField('deal-address', 'Address', 'address', { rows: 2 })}
             {renderSelectField('deal-city', 'City', 'city', DEAL_CITY_OPTIONS)}

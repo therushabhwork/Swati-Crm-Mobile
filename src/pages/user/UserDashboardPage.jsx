@@ -94,10 +94,23 @@ const UserDashboardPage = () => {
       .slice(0, 5)
   ), [notifications])
 
+  const userIdentity = useMemo(() => [
+    user?.id,
+    user?.name,
+    user?.username,
+    user?.email,
+  ].filter(Boolean).map((v) => String(v).trim().toLowerCase()), [user])
+
   const todoItems = useMemo(() => {
+    const matchesUser = (target) => {
+      if (!target) return false
+      const norm = String(target).trim().toLowerCase()
+      return userIdentity.some((id) => id === norm || norm.includes(id))
+    }
+
     const reminderItems = (reminders || [])
       .filter((reminder) => String(reminder.status || '').toLowerCase() !== 'closed')
-      .filter((reminder) => String(reminder.assignedTo || reminder.createdBy || '') === String(user?.id || ''))
+      .filter((reminder) => matchesUser(reminder.assignedTo) || matchesUser(reminder.createdBy) || !reminder.assignedTo)
       .slice(0, 6)
       .map((reminder) => ({
         id: `reminder-${reminder.id}`,
@@ -138,10 +151,25 @@ const UserDashboardPage = () => {
       }
     })
 
-    return [...replyItems, ...reminderItems]
+    const taskItems = (tasks || [])
+      .filter((task) => String(task.status || '').toLowerCase() === 'pending' || String(task.status || '').toLowerCase() === 'open')
+      .filter((task) => matchesUser(task.assignedTo) || matchesUser(task.createdBy) || matchesUser(task.userEmail) || matchesUser(task.ownerUserId) || !task.assignedTo)
+      .slice(0, 6)
+      .map((task) => ({
+        id: `task-${task.id || task._id}`,
+        type: task.activityType === 're-assign-account' ? 'Reassignment' : 'Task',
+        title: task.title || task.name || 'Pending Task',
+        meta: formatTodoDateTime(task.dueDate || task.createdAt),
+        message: task.description || task.note || '-',
+        date: task.dueDate || task.createdAt,
+        task,
+        onClick: () => navigate('/accounts/my-accounts'),
+      }))
+
+    return [...replyItems, ...reminderItems, ...taskItems]
       .sort((left, right) => new Date(right.date || 0).getTime() - new Date(left.date || 0).getTime())
       .slice(0, 10)
-  }, [navigate, reminders, supportRequests, todoReplies, user?.id])
+  }, [navigate, reminders, supportRequests, tasks, todoReplies, user?.id, userIdentity])
 
   const handleTodoReminderActive = (reminder, event) => {
     event?.stopPropagation()
@@ -165,7 +193,7 @@ const UserDashboardPage = () => {
   return (
     <div className="ud-page">
       <div className="ud-header">
-        <span className="ud-header-kicker">GOOD AFTERNOON,</span>
+        <span className="ud-header-kicker">Welcome,</span>
         <h1>{user?.name || 'User'}!</h1>
         <p>Here&apos;s what&apos;s happening with your business today.</p>
       </div>

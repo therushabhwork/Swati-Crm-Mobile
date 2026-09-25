@@ -451,3 +451,20 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* User Dashboard Normal Font Weight Pass */
+.user-dashboard-container,
+.user-dashboard-container *,
+.ud-header-kicker,
+.ud-stat-val,
+.ud-stat-label,
+.ud-card-title,
+.ud-table th,
+.ud-table td {
+  font-weight: 500;
+}
+
+.ud-table td span,
+.ud-meta-text {
+  font-weight: 400;
+}

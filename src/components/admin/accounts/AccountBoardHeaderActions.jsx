@@ -10,11 +10,12 @@ import {
   FiList,
   FiRefreshCw,
   FiSettings,
+  FiUpload,
   FiUserCheck,
 } from 'react-icons/fi'
+import * as XLSX from 'xlsx'
 import { useClickOutside } from '../../../hooks'
-import { exportAccountsBoardWorkbook } from '../../../features/adminAccounts/utils/exportAccountsBoard'
-import { ExcelExportMenuButton } from '../../common/ExcelExportButton'
+import { leadApi } from '../../../services/leadApi'
 import './AccountBoardHeaderActions.css'
 
 const SHOW_BULK_ACTIONS = false
@@ -41,11 +42,12 @@ const AccountBoardHeaderActions = ({
   onBulkValidationError,
 }) => {
   const actions = view.titlebarActions || {}
-  const exportHandler = exportAccountsBoardWorkbook
   const [openMenu, setOpenMenu] = useState(null)
   const [pendingColumnKeys, setPendingColumnKeys] = useState(() => visibleColumns.map((column) => column.key))
   const [pendingSourceKeys, setPendingSourceKeys] = useState(() => visibleSourceStageKeys)
   const [bulkMenuPosition, setBulkMenuPosition] = useState(null)
+  const [isImporting, setIsImporting] = useState(false)
+  const fileInputRef = useRef(null)
   const bulkTriggerRef = useRef(null)
   const closeMenu = useCallback(() => {
     setOpenMenu(null)
@@ -61,7 +63,6 @@ const AccountBoardHeaderActions = ({
     setPendingSourceKeys(visibleSourceStageKeys)
   }, [visibleSourceStageKeys])
 
-  const hasCurrentRows = currentStageRows.length > 0
   const selectedCount = selectedRows.length
   const activeMenuRef = openMenu ? menuRef : null
   const moreMenuOptions = useMemo(() => ([
@@ -83,18 +84,180 @@ const AccountBoardHeaderActions = ({
     },
   ]), [allColumns, closeMenu, onApplyVisibleColumns, onToggleFilters, showFilters])
 
-  const handleExport = (scopeKey, scopeLabel, stageLabel, rows) => {
-    if (!rows.length) return
+  const handleImportClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+      fileInputRef.current.click()
+    }
+  }
 
-    exportHandler({
-      rows,
-      scopeKey,
-      scopeLabel,
-      boardTitle: view.heroTitle,
-      stageLabel,
-      filePrefix: view.exportFilePrefix,
-    })
-    closeMenu()
+  const handleImportFileSelect = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      setIsImporting(true)
+      const data = await file.arrayBuffer()
+      const workbook = XLSX.read(data, { type: 'array' })
+      const firstSheetName = workbook.SheetNames[0]
+      const worksheet = workbook.Sheets[firstSheetName]
+      const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' })
+
+      const validRows = rawRows.filter((row) => {
+        if (!row || typeof row !== 'object') return false
+        const values = Object.values(row).map((val) => String(val || '').trim())
+        return values.some(Boolean)
+      })
+
+      if (validRows.length === 0) {
+        alert('No valid rows found in the selected file.')
+        setIsImporting(false)
+        return
+      }
+
+      const normKey = (str) => String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+
+      let existingLeads = []
+      try {
+        existingLeads = await leadApi.getLeads()
+      } catch (fetchErr) {
+        console.warn('Could not fetch existing leads prior to import cleanup:', fetchErr)
+      }
+
+      let successCount = 0
+      for (const row of validRows) {
+        const getVal = (...keys) => {
+          const rowKeys = Object.keys(row || {})
+          for (const k of keys) {
+            const kNorm = normKey(k)
+            const matchKey = rowKeys.find((rk) => normKey(rk) === kNorm)
+            if (matchKey && row[matchKey] !== undefined && row[matchKey] !== null) {
+              const val = String(row[matchKey]).trim()
+              if (val !== '') return val
+            }
+          }
+          return ''
+        }
+
+        const sanitizeEmail = (val) => {
+          if (!val) return undefined
+          const cleaned = String(val).trim()
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleaned) ? cleaned : undefined
+        }
+
+        const accountName = getVal('Account Name', 'AccountName', 'Customer Name', 'customerName', 'Name', 'name')
+        const accountDate = getVal('Account Date', 'Date', 'accountDate')
+        const accountCategory = getVal('Account Category', 'AccountCategory', 'Category', 'accountCategory')
+        const rawAccountOwner = getVal('Account Owner', 'AccountOwner', 'Owner', 'ownerName', 'accountOwner')
+        const accountOwner = rawAccountOwner || 'Jay Pandya'
+        const contactPerson = getVal('Contact Person', 'ContactPerson', 'Contact', 'contactPerson')
+        const phone = getVal('Phone', 'phone', 'Mobile', 'mobile', 'Contact Mobile')
+        const email = sanitizeEmail(getVal('Email', 'email', 'Contact Email'))
+        const alternatePhone = getVal('Alternate Phone', 'alternatePhone')
+        const alternateEmail = sanitizeEmail(getVal('Alternate Email', 'alternateEmail'))
+        const customerType = getVal('Customer Type', 'customerType')
+        const projectName = getVal('Project Name', 'ProjectName', 'Project', 'project', 'company')
+        const productCategory = getVal('Product Category', 'productCategory')
+        const state = getVal('State', 'state')
+        const location = getVal('Location', 'location', 'City', 'city')
+        const industryType = getVal('Industry type', 'Industry Type', 'IndustryType', 'Industry', 'industry')
+        const customerRefNo = getVal('Customer Ref. No.', 'Customer Ref No', 'CustomerRefNo', 'Account No.', 'Account No', 'Account Number', 'accountNumber', 'accountNo')
+        const consultantName = getVal('Consultant Name', 'consultantName')
+        const poValue = getVal('PO Value', 'poValue', 'POValue')
+        const userGroup = getVal('User Group', 'userGroup', 'UserGroup')
+
+        const displayName = accountName || customerRefNo || phone || Object.values(row).map(v => String(v || '').trim()).find(Boolean)
+        if (!displayName) continue
+        if (/Report Filter/i.test(displayName) || /Report Filter/i.test(accountName) || /Report Filter/i.test(rawAccountOwner)) continue
+
+        const matchingLead = existingLeads.find((lead) => {
+          if (!lead) return false
+          if (customerRefNo && (lead.accountNumber === customerRefNo || lead.accountNo === customerRefNo)) return true
+          if (accountName && (lead.name === accountName || lead.customerName === accountName || lead.accountName === accountName)) return true
+          return false
+        })
+
+        if (matchingLead && matchingLead.id) {
+          try {
+            await leadApi.deleteLead(matchingLead.id)
+          } catch (deleteErr) {
+            console.warn(`Could not remove matching lead ${matchingLead.id} before import:`, deleteErr)
+          }
+        }
+
+        const payload = {
+          name: displayName,
+          accountName: displayName,
+          customerName: displayName,
+          accountNumber: customerRefNo || undefined,
+          accountNo: customerRefNo || undefined,
+          customerRefNo: customerRefNo || undefined,
+          accountDate: accountDate || undefined,
+          accountCategory: accountCategory || undefined,
+          accountOwner: accountOwner,
+          ownerName: accountOwner,
+          contactPerson: contactPerson || undefined,
+          phone: phone || undefined,
+          mobile: phone || undefined,
+          email: email || undefined,
+          alternatePhone: alternatePhone || undefined,
+          alternateEmail: alternateEmail || undefined,
+          customerType: customerType || undefined,
+          projectName: projectName || undefined,
+          company: projectName || undefined,
+          productCategory: productCategory || undefined,
+          state: state || undefined,
+          location: location || undefined,
+          industryType: industryType || undefined,
+          consultantName: consultantName || undefined,
+          poValue: poValue || undefined,
+          userGroup: userGroup || undefined,
+          status: 'pending',
+          isExcelImport: true,
+          formData: {
+            'Account Name': displayName,
+            'Account Date': accountDate,
+            'Account Category': accountCategory,
+            'Account Owner': accountOwner,
+            'Contact Person': contactPerson,
+            'Phone': phone,
+            'Email': email,
+            'Alternate Phone': alternatePhone,
+            'Alternate Email': alternateEmail,
+            'Customer Type': customerType,
+            'Project Name': projectName,
+            'Product Category': productCategory,
+            'State': state,
+            'Location': location,
+            'Industry type': industryType,
+            'Customer Ref. No.': customerRefNo,
+            'Consultant Name': consultantName,
+            'PO Value': poValue,
+            'User Group': userGroup,
+          },
+        }
+
+        try {
+          await leadApi.createLead(payload)
+          successCount += 1
+        } catch (err) {
+          console.error('Failed to import row to MongoDB:', row, err)
+        }
+      }
+
+      if (onRefresh) {
+        await onRefresh()
+      }
+      alert(`Import completed successfully! ${successCount} account records stored in MongoDB.`)
+    } catch (err) {
+      console.error('Error reading import file:', err)
+      alert('Error parsing import file. Please select a valid Excel (.xlsx, .xls) or CSV (.csv) file.')
+    } finally {
+      setIsImporting(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
   }
 
   const togglePendingKey = (currentKeys, key) => (
@@ -141,6 +304,14 @@ const AccountBoardHeaderActions = ({
 
   return (
     <div className="account-board-header-actions" ref={activeMenuRef}>
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".xlsx, .xls, .csv"
+        style={{ display: 'none' }}
+        onChange={handleImportFileSelect}
+      />
+
       {SHOW_BULK_ACTIONS && actions.showBulk ? (
         <div className="account-board-header-menu-wrap">
           <button
@@ -198,33 +369,16 @@ const AccountBoardHeaderActions = ({
         </div>
       ) : null}
 
-      {actions.showExportIcon ? (
-        <ExcelExportMenuButton
-          label="Export"
-          title="Export accounts"
-          disabled={!hasCurrentRows}
-          compact
-          responsiveHideLabel
-          className="account-board-header-export-dropdown"
-          buttonClassName="account-board-header-icon-btn account-board-header-icon-btn-export account-board-header-export-trigger"
-          menuClassName="admin-accounts-export-menu"
-          items={[
-            {
-              key: 'current-view-excel',
-              label: 'Current View',
-              badge: 'XLSX',
-              onClick: () => handleExport('current-view', 'Current View', activeStageLabel, currentStageRows),
-            },
-            {
-              key: 'all-visible-excel',
-              label: 'All Visible Rows',
-              badge: 'XLSX',
-              disabled: !allRows.length,
-              onClick: () => handleExport('all-visible', 'All Visible Rows', 'All Visible Rows', allRows),
-            },
-          ]}
-        />
-      ) : null}
+      <button
+        type="button"
+        className="account-board-header-icon-btn account-board-header-icon-btn-green"
+        title="Import accounts (.xlsx, .xls, .csv)"
+        aria-label="Import accounts"
+        disabled={isImporting}
+        onClick={handleImportClick}
+      >
+        <FiUpload />
+      </button>
 
       {actions.showColumnsIcon ? (
         <div className="account-board-header-menu-wrap">

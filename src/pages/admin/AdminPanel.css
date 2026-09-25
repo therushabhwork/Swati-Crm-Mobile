@@ -2263,12 +2263,12 @@ html:not([data-theme="dark"]) select.ap-performance-select option {
 .ap-welcome-heading {
   margin: 0 !important;
   font-size: clamp(1.8rem, 2.5vw, 2.3rem) !important;
-  font-weight: 900 !important;
+  font-weight: 500 !important;
   color: #10182b !important;
 }
 
 /* Unique Modern To-Do List Styling */
-.ap-todo-box { display: flex; flex-direction: column; background: #ffffff; border: 1px solid #ece9e4 !important; border-radius: 18px !important; flex: 1; min-height: 100%; padding: 1.25rem !important;
+.ap-todo-box { display: flex; flex-direction: column; background: #ffffff; border: 1px solid #ece9e4 !important; border-radius: 18px !important; flex: 1; max-width: 540px; min-height: 100%; padding: 1.25rem !important;
   box-shadow: 0 8px 30px rgba(40, 30, 20, 0.045) !important;
 }
 
@@ -2634,6 +2634,32 @@ html:not([data-theme="dark"]) select.ap-performance-select option {
   border-color: rgba(16, 185, 129, 0.3) !important;
   color: #6ee7b7 !important;
 }
+
+/* Monitoring Page Normal Font Weight Styling Pass */
+.admin-panel,
+.admin-panel *,
+.ap-todo-item-kicker,
+.ap-todo-item-title,
+.ap-todo-item-meta,
+.ap-todo-mini-btn,
+.ap-card-title,
+.ap-stat-val,
+.ap-stat-label,
+.ap-kpi-val,
+.ap-table th,
+.ap-table td,
+.ap-activity-title,
+.ap-activity-time {
+  font-weight: 500;
+}
+
+.ap-todo-item-message,
+.ap-activity-sub,
+.ap-table td span,
+.ap-meta-text {
+  font-weight: 400;
+}
+
 
 
 

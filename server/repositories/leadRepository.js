@@ -43,6 +43,11 @@ const mapLeadRow = (record) => {
   }
 
   const mergedFormData = row.formData && typeof row.formData === 'object' ? row.formData : {}
+  const rawAccountName = row.customerName || row.accountName || row.name || mergedFormData.accountName || mergedFormData.customerName || mergedFormData.name || ''
+  if (typeof rawAccountName === 'string' && /Report Filter/i.test(rawAccountName)) {
+    return null
+  }
+
   const resolvedAccountNo = row.accountNo || mergedFormData.accountNumber || mergedFormData.accountNo || null
   const resolvedOwnerName = row.ownerName || mergedFormData.accountOwner || mergedFormData.ownerName || ''
 
@@ -88,7 +93,7 @@ const mapLeadRow = (record) => {
 
 const listAllLeads = async () => {
   const records = await Lead.find(visibleFilter).sort({ accountNo: 1, legacyId: 1 }).lean()
-  return records.map(mapLeadRow)
+  return records.map(mapLeadRow).filter(Boolean)
 }
 
 const getLeadScopeOptions = ({ scopeUserIds = null, scopeOwnerCodes = [] } = {}) => ({
@@ -114,7 +119,7 @@ const listLeadsForActor = async (actor, options = {}) => {
     .sort({ accountNo: 1, legacyId: 1 })
     .lean()
 
-  return records.map(mapLeadRow)
+  return records.map(mapLeadRow).filter(Boolean)
 }
 
 const listAssignedLeads = async (userId) => {
@@ -123,7 +128,7 @@ const listAssignedLeads = async (userId) => {
     .sort({ accountNo: 1, legacyId: 1 })
     .lean()
 
-  return records.map(mapLeadRow)
+  return records.map(mapLeadRow).filter(Boolean)
 }
 
 const listCreatedLeadsForActor = async (actor, filters = {}) => {

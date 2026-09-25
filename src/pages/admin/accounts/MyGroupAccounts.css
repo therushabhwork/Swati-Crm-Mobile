@@ -1342,6 +1342,7 @@
 .admin-accounts-workspace-layer {
   z-index: 90;
   background: var(--surface-card);
+  overflow-x: hidden;
 }
 
 .admin-accounts-workspace-layer--inline {
@@ -1349,23 +1350,26 @@
   inset: auto;
   z-index: auto;
   min-height: calc(100vh - 7rem);
+  overflow-x: hidden;
 }
 
 .admin-accounts-workspace-layer--inline .admin-accounts-workspace {
   position: relative;
   min-height: calc(100vh - 7rem);
+  overflow-x: hidden;
 }
 
 .admin-accounts-manage-action-page {
   min-height: calc(100vh - 7rem);
   background: var(--surface-card);
+  overflow-x: hidden;
 }
 
 .admin-accounts-workspace {
   inset: 0;
   width: auto;
   height: auto;
-  max-width: none;
+  max-width: 100%;
   padding: 0;
   display: flex;
   flex-direction: column;

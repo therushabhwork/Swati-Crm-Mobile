@@ -3,6 +3,9 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { authService } from '../../../services/authService'
 import { calendarApi } from '../../../services/calendarApi'
 import { customerService } from '../../../services/customerService'
+import { reminderApi } from '../../../services/reminderApi'
+import { taskApi } from '../../../services/taskApi'
+import { userApi } from '../../../services/userApi'
 import { buildCustomerReturnUrl, CUSTOMER_ACTION_MAP } from '../../../features/adminCustomers/config/customerActions'
 
 import { getCrmOwnerDisplay } from '../../../features/users/crmUserDirectory'
@@ -90,7 +93,7 @@ const CustomerActionPage = () => {
   const [remark, setRemark] = useState(customer?.remark || '')
   const [reminderDate, setReminderDate] = useState(customer?.reminderDate || getTodayDateValue())
   const [reminderMode, setReminderMode] = useState(customer?.reminderMode || 'Call')
-  const [reminderTime, setReminderTime] = useState(customer?.reminderTime || '09:00')
+  const [reminderTime, setReminderTime] = useState(customer?.reminderTime || '14:00')
   const [reminderNote, setReminderNote] = useState(customer?.reminderNote || '')
   const [customerStatus, setCustomerStatus] = useState(customer?.customerStatus || '')
   const [customerOwner, setCustomerOwner] = useState(customer?.customerOwner || ownerOptions[0]?.value || '')
@@ -99,6 +102,21 @@ const CustomerActionPage = () => {
   const [emailMessage, setEmailMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+
+  const [enableFollowup, setEnableFollowup] = useState(true)
+  const [followupTarget, setFollowupTarget] = useState('owner')
+  const [selectedUserId, setSelectedUserId] = useState('')
+  const [availableUsers, setAvailableUsers] = useState([])
+
+  useEffect(() => {
+    let isMounted = true
+    userApi.listDirectory()
+      .then((users) => {
+        if (isMounted && Array.isArray(users)) setAvailableUsers(users)
+      })
+      .catch(() => {})
+    return () => { isMounted = false }
+  }, [])
 
   useEffect(() => {
     if (action?.key !== 'generate-quotation' || !customer) {
@@ -181,7 +199,57 @@ const CustomerActionPage = () => {
         return
       }
 
-      await handleSaveCustomer({ remark: remark.trim() })
+      await handleSaveCustomer({ remark: remark.trim(), reminderDate, reminderTime })
+
+      if (enableFollowup && reminderDate) {
+        let targetUser = customer?.customerOwner || customer?.ownerUserId || ''
+        if (followupTarget === 'other' && selectedUserId) {
+          targetUser = selectedUserId
+        }
+
+        const currentUserObj = authService.getCurrentUser() || {}
+        const targetUserObj = availableUsers.find(u => String(u.id) === String(targetUser) || u.name === targetUser)
+        const targetEmail = targetUserObj?.email || ''
+
+        await reminderApi.createReminder({
+          title: `Note Remark Follow-up: ${customer.customerName || 'Customer'}`,
+          message: remark.trim(),
+          note: remark.trim(),
+          assignedTo: String(targetUser || targetUserObj?.name || ''),
+          assignedUserId: String(targetUser || targetUserObj?.id || ''),
+          assignedToUserEmail: targetEmail,
+          createdBy: currentUserObj.name || currentUserObj.username || String(currentUserObj.id || ''),
+          createdByUserId: String(currentUserObj.id || ''),
+          createdByUserEmail: currentUserObj.email || '',
+          status: 'active',
+          priority: 'medium',
+          reminderDate,
+          reminderTime: reminderTime || '14:00',
+          remindAt: `${reminderDate}T${reminderTime || '14:00'}:00`,
+          reminderMode: 'Note Remark Follow-up',
+          relatedEntityType: 'customer',
+          relatedEntityId: String(customer.id),
+          customerId: String(customer.id),
+        }).catch(err => console.warn('Failed to create customer reminder:', err))
+
+        await taskApi.createTask({
+          title: `Follow-up / Note Remark: ${customer.customerName || 'Customer'}`,
+          description: remark.trim(),
+          status: 'pending',
+          priority: 'medium',
+          dueDate: reminderDate,
+          dueTime: reminderTime || '14:00',
+          relatedEntityType: 'customer',
+          relatedEntityId: String(customer.id),
+          assignedTo: String(targetUser || targetUserObj?.id || ''),
+          assignedToName: targetUserObj?.name || String(targetUser),
+          createdBy: String(currentUserObj.id || currentUserObj.name || ''),
+          createdByName: currentUserObj.name || currentUserObj.username || '',
+          userEmail: targetEmail || currentUserObj.email || '',
+          activityType: 'note-remark-followup',
+        }).catch(err => console.warn('Failed to create customer task:', err))
+      }
+
       return
     }
 
@@ -237,16 +305,84 @@ const CustomerActionPage = () => {
       return (
         <div className="customer-action-panel">
           <div className="customer-action-panel-title">Add Note/Remarks</div>
-          <label className="customer-action-field customer-action-field-full">
-            <span>Remark</span>
+          <label className="customer-action-field customer-action-field-full mb-4">
+            <span>Remark Details *</span>
             <textarea
-              rows={7}
+              rows={5}
               value={remark}
               onChange={(event) => setRemark(event.target.value)}
               className="customer-action-input customer-action-textarea"
-              placeholder="Add note / remark here..."
+              placeholder="Add note / remark details here..."
+              required
             />
           </label>
+
+          <div className="pt-3 border-t border-gray-200 mt-2">
+            <label className="inline-flex items-center gap-2 cursor-pointer font-semibold text-slate-700 text-sm mb-3">
+              <input
+                type="checkbox"
+                checked={enableFollowup}
+                onChange={(e) => setEnableFollowup(e.target.checked)}
+                className="rounded text-blue-600 focus:ring-blue-500"
+              />
+              <span>Schedule Follow-up / Reminder</span>
+            </label>
+
+            {enableFollowup && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+                <div>
+                  <label className="block font-semibold text-slate-600 mb-1">Date *</label>
+                  <input
+                    type="date"
+                    value={reminderDate}
+                    onChange={(e) => setReminderDate(e.target.value)}
+                    className="customer-action-input w-full"
+                    required={enableFollowup}
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-600 mb-1">Time *</label>
+                  <input
+                    type="time"
+                    value={reminderTime}
+                    onChange={(e) => setReminderTime(e.target.value)}
+                    className="customer-action-input w-full"
+                    required={enableFollowup}
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-600 mb-1">To *</label>
+                  <select
+                    value={followupTarget}
+                    onChange={(e) => setFollowupTarget(e.target.value)}
+                    className="customer-action-input w-full"
+                  >
+                    <option value="owner">Customer Owner ({customer.customerOwner || 'Owner'})</option>
+                    <option value="other">Other User</option>
+                    <option value="self">Self / Creator</option>
+                  </select>
+                </div>
+                {followupTarget === 'other' && (
+                  <div>
+                    <label className="block font-semibold text-slate-600 mb-1">User *</label>
+                    <select
+                      value={selectedUserId}
+                      onChange={(e) => setSelectedUserId(e.target.value)}
+                      className="customer-action-input w-full"
+                      required
+                    >
+                      <option value="">Select User</option>
+                      {availableUsers.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name || u.username || u.email}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )
     }

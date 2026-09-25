@@ -565,67 +565,7 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, onSave, onSaveAccountFi
           </div>
         </div>
 
-        {category === 'general' ? (
-          <div className="remark-section">
-            <h3 className="section-title">Assignment</h3>
-            <div className="assignment-panel">
-              <div className="assignment-mode-list">
-                {ASSIGNMENT_MODES.map((mode) => {
-                  const isActive = assignmentMode === mode.key
 
-                  return (
-                    <div key={mode.key} className="assignment-mode-row">
-                      <span>{mode.label}</span>
-                      <div className="assignment-toggle" role="group" aria-label={mode.label}>
-                        <button
-                          type="button"
-                          className={isActive ? 'active' : ''}
-                          onClick={() => toggleAssignmentMode(mode.key)}
-                        >
-                          YES
-                        </button>
-                        <button
-                          type="button"
-                          className={!isActive ? 'active' : ''}
-                          onClick={() => {
-                            if (isActive) toggleAssignmentMode('user')
-                          }}
-                        >
-                          NO
-                        </button>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              {assignmentMode === 'user' ? (
-                <>
-                  <label className="assignment-checkbox-option assignment-checkbox-option-strong">
-                    <input type="checkbox" checked={allUsersSelected} onChange={toggleAllAssignmentUsers} />
-                    <span>Select All</span>
-                  </label>
-
-                  {renderUserGrid(assignmentUsers)}
-                </>
-              ) : null}
-
-              {assignmentMode === 'type' ? (
-                <section className="assignment-group-box assignment-group-box-wide">
-                  <h4>User Types</h4>
-                  {renderLabelGrid(assignmentUserTypes, selectedTypeSet, setSelectedAssignmentTypes)}
-                </section>
-              ) : null}
-
-              {assignmentMode === 'group' ? (
-                <section className="assignment-group-box assignment-group-box-wide">
-                  <h4>User Groups</h4>
-                  {renderLabelGrid(assignmentUserGroups, selectedGroupSet, setSelectedAssignmentGroups)}
-                </section>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
 
         {/* Remark Content */}
         <div className={`remark-section${category === 'feedback' ? ' remark-section--compact-feedback' : ''}`}>

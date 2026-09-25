@@ -219,10 +219,9 @@ const Sidebar = ({ isAdmin = false }) => {
 
   const accountMenuItems = useMemo(() => ([
     { label: 'Add Account', to: '/admin/accounts/new' },
-    { label: 'My Group Accounts', to: '/admin/accounts/my-group-accounts' },
     { label: 'Search Account', to: '/admin/accounts/search' },
     { label: 'My Accounts', to: '/admin/accounts/my-accounts' },
-    { label: 'View Deal', to: '/admin/deals/view' },
+    { label: 'My Deal', to: '/admin/deals/view' },
     { label: 'Search Deal', to: '/admin/deals/search' },
     ...(!isKevalVShah ? [{ label: 'Weekly reports-ALL', to: '/admin/accounts/weekly-reports-all' }] : []),
   ]), [isKevalVShah])

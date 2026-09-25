@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   FaBell,
   FaBook,
@@ -267,6 +267,7 @@ const createCustomerCalendarReminder = async (customer, { reminderDate, reminder
     assignedTo: customer.assignedTo || customer.ownerUserId || customer.customerOwner || customer.customerOwnerName || '',
   }).catch(() => null)
 }
+
 
 const getCustomerSearchName = (customer = {}) => {
   const companyName = String(customer.companyName || customer.company || '').trim()
@@ -752,7 +753,8 @@ const AdminCustomersPage = ({
   const location = useLocation()
   const { customerId: routeCustomerId = '' } = useParams()
   
-  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search])
+  const [searchParams, setSearchParams] = useSearchParams()
+  const searchQuery = searchParams.get('query') || ''
   const urlCustomerId = searchParams.get('customerId') || ''
   
   const variantKey = propVariantKey
@@ -1176,8 +1178,9 @@ const AdminCustomersPage = ({
     searchRows.filter((row) => {
       const globalQuery = new URLSearchParams(location.search).get('query')
       if (!matchesSectionSearch(row, [
-        'customerNumber', 'customerName', 'email', 'phone', 'addedDate',
-        'customerOwner', 'customerCategory', 'customerStatus', 'customerType', 'latestRemark',
+        'customerNumber', 'customerName', 'company', 'companyName', 'name', 'email', 'phone', 'addedDate',
+        'customerOwner', 'customerCategory', 'customerStatus', 'customerType', 'projectName', 'latestRemark',
+        'address', 'contactPerson', 'designation', 'industryType', 'state', 'gstin', 'jobNo', 'addedBy',
       ], globalQuery)) return false
 
       const matchesColumnFilters = searchColumns.every((column) => {
@@ -1657,35 +1660,27 @@ const AdminCustomersPage = ({
             <h1>{title}</h1>
 
             <div className="admin-customers-toolbar-actions" data-customer-bulk-menu>
-              {false && showActionMenu ? (
-                <div className="admin-customers-toolbar-bulk-wrap">
-                  <button
-                    type="button"
-                    className="admin-customers-toolbar-button admin-customers-toolbar-button-primary admin-customers-toolbar-button-bulk btn-red-theme"
-                    onClick={() => setIsBulkMenuOpen((currentValue) => !currentValue)}
-                    aria-expanded={isBulkMenuOpen}
-                  >
-                    <FiLayers />
-                    <span>Bulk Actions</span>
-                  </button>
-
-                  {isBulkMenuOpen ? (
-                    <div className="admin-customers-toolbar-bulk-menu">
-                      {BULK_ACTION_OPTIONS.map((option) => (
-                        <button
-                          key={option.key}
-                          type="button"
-                          className="admin-customers-toolbar-bulk-item"
-                          disabled={selectedCount === 0}
-                          onClick={() => handleOpenBulkActionDialog(option.key)}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
+              <div className="admin-customers-titlebar-search">
+                <label htmlFor="customer-titlebar-search-input" className="admin-customers-search-label">
+                  Search:
+                </label>
+                <input
+                  id="customer-titlebar-search-input"
+                  type="text"
+                  className="admin-customers-search-input"
+                  placeholder="Search customers..."
+                  value={searchQuery}
+                  onChange={(event) => {
+                    const value = event.target.value
+                    setSearchParams((prev) => {
+                      const next = new URLSearchParams(prev)
+                      if (value) next.set('query', value)
+                      else next.delete('query')
+                      return next
+                    })
+                  }}
+                />
+              </div>
 
               <button
                 type="button"
@@ -1695,16 +1690,6 @@ const AdminCustomersPage = ({
                 aria-label="Export customers"
               >
                 <FaFileExport />
-              </button>
-              <button
-                type="button"
-                className={`admin-customers-toolbar-icon admin-customers-toolbar-icon-filter ${isFilterDialogOpen || filterRules.length || orderRules.length ? 'admin-customers-toolbar-icon-active' : ''}`}
-                onClick={() => setIsFilterDialogOpen(true)}
-                title="Filter customer"
-                aria-label="Filter customer"
-                aria-pressed={isFilterDialogOpen}
-              >
-                <FaFilter />
               </button>
             </div>
           </div>
