@@ -34,7 +34,6 @@ import './AddAccountWizard.css'
 
 const steps = [
   { id: 'basic', label: 'Account Basic Details' },
-  { id: 'deal', label: 'Deal Details' },
   { id: 'contacts', label: 'Contacts' },
   { id: 'reminder', label: 'Reminders & Remark' },
 ]
@@ -86,6 +85,7 @@ const initialFormData = {
   accountState: '',
   customerType: '',
   productCategory: '',
+  panelAssemblies: [],
   industryType: '',
   customerRefNo: '',
   customerRefDate: '',
@@ -105,12 +105,9 @@ const initialFormData = {
   dealName: '',
   dealDescription: '',
   poValue: '',
-  dealCoOwners: '',
   dealValue: '',
-  dealScore: '',
   customerQuotationStatus: '',
   dealType: '',
-  dealSource: '',
   dealOwner: '',
   dealCity: '',
   expectedClosureDate: new Date().toISOString().slice(0, 10),
@@ -130,59 +127,51 @@ const requiredMessages = {
   accountSource: 'Account Source: Please select Account Source',
   state: 'State: Please provide State',
   industryType: 'Industry type: Please select Industry type',
+  dealOwner: 'Deal Owner: Please select Deal Owner',
 }
 
 const fieldGroups = {
   basicLeft: [
-    { name: 'accountName', label: 'Account Name', required: true, icon: <FaRegBuilding /> },
-    { name: 'accountCategory', label: 'Vertical Name', type: 'select', options: accountCategories, required: true, icon: <FaLayerGroup /> },
-    { name: 'accountOwner', label: 'Account Owner', type: 'select', options: [], required: true, icon: <FaUserAlt /> },
-    { name: 'state', label: 'State', type: 'select', options: states, required: true, icon: <FaMapMarkerAlt /> },
+    { name: 'accountName', label: 'Account Name', icon: <FaRegBuilding /> },
+    { name: 'accountCategory', label: 'Vertical Name', type: 'select', options: accountCategories, icon: <FaLayerGroup /> },
+    { name: 'accountOwner', label: 'Account Owner', type: 'select', options: [], icon: <FaUserAlt /> },
+    { name: 'state', label: 'State', type: 'select', options: states, icon: <FaMapMarkerAlt /> },
     { name: 'description', label: 'Remark', type: 'textarea', textareaRows: 3, fieldClassName: 'min-h-[88px]', icon: <FaRegFileAlt /> },
     { name: 'address', label: 'Address', type: 'textarea', textareaRows: 3, fieldClassName: 'min-h-[88px]', icon: <FaRegMap /> },
   ],
   basicRight: [
-    { name: 'accountDate', label: 'Account Date', type: 'date', required: true, icon: <FaCalendarAlt /> },
-    { name: 'accountSource', label: 'Account Source', type: 'select', options: accountSources, required: true, icon: <FaCodeBranch /> },
+    { name: 'accountDate', label: 'Account Date', type: 'date', icon: <FaCalendarAlt /> },
+    { name: 'accountSource', label: 'Account Source', type: 'select', options: accountSources, icon: <FaCodeBranch /> },
     { name: 'customerName', label: 'Customer Name', icon: <FaRegUser /> },
     { name: 'consultantName', label: 'Consultant/AR Name', icon: <FaUserTie /> },
     { name: 'customerType', label: 'Customer Type', type: 'select', options: customerTypes, icon: <FaBuilding /> },
     { name: 'customerRefNo', label: 'Inquiry Ref No.', icon: <FaHashtag /> },
     { name: 'customerRefDate', label: 'Inquiry Ref Date', type: 'date', icon: <FaCalendarDay /> },
-    { name: 'industryType', label: 'Industry Type', type: 'select', options: industryTypes, required: true, icon: <FaIndustry /> },
+    { name: 'industryType', label: 'Industry Type', type: 'select', options: industryTypes, icon: <FaIndustry /> },
   ],
   dealDetailsLeft: [
     { name: 'dealDate', label: 'Deal Date', type: 'date' },
-    { name: 'dealName', label: 'Deal Name' },
+    { name: 'dealName', label: 'Project Name' },
     { name: 'dealDescription', label: 'Description', type: 'textarea', textareaRows: 2 },
     { name: 'poValue', label: 'PO Value', type: 'number' },
-    { name: 'dealCoOwners', label: 'Deal Co-Owners', type: 'select', options: [] },
-    { name: 'dealValue', label: 'Deal Value (PO Value/Base Price)', type: 'number' },
-    { name: 'dealScore', label: 'Deal Score', type: 'number' },
+    { name: 'dealValue', label: 'Deal Value', type: 'number' },
     { name: 'consultantName', label: 'Consultant/AR Name' },
     { name: 'customerRefNo', label: 'Customer Ref. No.' },
-    { name: 'projectName', label: 'Project Name' },
-    { name: 'customerQuotationStatus', label: 'Status Of Customer as per quotation Given', type: 'select', options: CUSTOMER_QUOTATION_STATUS_OPTIONS },
+    { name: 'customerQuotationStatus', label: 'Status Of Customer as per quotation Given', type: 'select', options: CUSTOMER_QUOTATION_STATUS_OPTIONS, rowClassName: 'min-h-[64px] flex flex-col justify-end' },
     { name: 'dealType', label: 'Deal Type', type: 'select', options: dealTypes },
   ],
   dealDetailsRight: [
-    { name: 'dealSource', label: 'Deal Source', type: 'select', options: dealSources },
-    { name: 'dealOwner', label: 'Deal Owner', type: 'select', options: [] },
+    { name: 'dealOwner', label: 'Deal Owner', type: 'select', options: [], required: true },
+    { name: 'pmcName', label: 'PMC Name' },
     { name: 'address', label: 'Address', type: 'textarea', textareaRows: 2 },
     { name: 'dealCity', label: 'City' },
     { name: 'expectedClosureDate', label: 'Expected Closure Date', type: 'date' },
     { name: 'probability', label: 'Probability (%)', type: 'range' },
-    { name: 'productCategory', label: 'Product Category' },
+    { name: 'productCategory', label: 'Product Category', type: 'select', options: [{ value: 'TTA', label: 'TTA' }, { value: 'Non TTA', label: 'Non TTA' }, { value: 'LT', label: 'LT' }, { value: 'HT', label: 'HT' }, { value: 'BUSDUC', label: 'BUSDUC' }, { value: 'AUTOMATION', label: 'AUTOMATION' }] },
     { name: 'customerRefDate', label: 'Customer Ref. Date', type: 'date' },
     { name: 'gstin', label: 'GSTIN' },
     { name: 'jobNo', label: 'Job No' },
-    { name: 'customerOrderStatus', label: 'Status of Customer as per Order Received', type: 'select', options: DEAL_LIFECYCLE_STATUS_OPTIONS },
-    { name: 'valueCurrency', label: 'Currency', type: 'select', options: ['INR', 'USD', 'AED', 'EUR', 'GBP'] },
-  ],
-  projectDetails: [
-    { name: 'projectName', label: 'Project Name', icon: <FaBriefcase /> },
-    { name: 'architectName', label: 'Architect / Consultant', icon: <FaUserTie /> },
-    { name: 'pmcName', label: 'PMC Name', icon: <FaHardHat /> },
+    { name: 'customerOrderStatus', label: 'Status of Customer as per Order Received', type: 'select', options: DEAL_LIFECYCLE_STATUS_OPTIONS, rowClassName: 'min-h-[64px] flex flex-col justify-end' },
   ],
   contactsLeft: [
     { name: 'contactPerson', label: 'Contact Person' },
@@ -338,95 +327,64 @@ const AddAccountWizard = () => {
       delete next.customer
       return next
     })
-    
+
     setFormData((prev) => ({
       ...prev,
       accountName: customer.customerName || prev.accountName,
       customerName: customer.customerName || prev.customerName,
       address: customer.address || prev.address,
-      contactPerson: primaryContact.contactPerson || prev.contactPerson,
+      state: customer.state || prev.state,
+      gstin: customer.gstin || prev.gstin,
+      industryType: customer.industryType || customer.industry || prev.industryType,
+      accountOwner: customer.customerOwner || customer.accountOwner || prev.accountOwner,
+      accountState: (customer.customerStatus && customer.customerStatus !== 'converted') ? customer.customerStatus : 'pending',
+      contactPerson: primaryContact.contactPerson || primaryContact.name || prev.contactPerson,
       contactPhone: primaryContact.phone || prev.contactPhone,
       contactMobile: primaryContact.mobile || prev.contactMobile,
       contactEmail: primaryContact.email || prev.contactEmail,
       contactDesignation: primaryContact.designation || prev.contactDesignation,
       consultantName: customer.consultantName || prev.consultantName,
+      architectName: customer.architectName || prev.architectName,
+      pmcName: customer.pmcName || prev.pmcName,
       projectName: customer.projectName || prev.projectName,
-      accountCategory: customer.customerCategory || prev.accountCategory,
+      accountCategory: customer.customerCategory || customer.accountCategory || prev.accountCategory,
+      productCategory: customer.productCategory || prev.productCategory,
+      customerRefNo: customer.customerRefNo || prev.customerRefNo,
+      customerRefDate: customer.customerRefDate || prev.customerRefDate,
+      jobNo: customer.jobNo || prev.jobNo,
+      poValue: customer.poValue || prev.poValue,
+      dealValue: customer.dealValue || customer.projectValue || prev.dealValue,
       dealName: `${customer.customerName || 'Account'} Deal`,
       dealType: customer.customerCategory || prev.dealType,
+      dealOwner: customer.customerOwner || customer.accountOwner || prev.dealOwner,
     }))
   }
 
   const validateStep = (stepIndex) => {
     const nextErrors = {}
 
-    if (stepIndex === 0) {
-      Object.entries(requiredMessages).forEach(([field, message]) => {
-        if (!formData[field]?.trim()) {
-          nextErrors[field] = message
-        }
-      })
-      if (isExistingCustomer && !selectedCustomerId && !customerSearch.trim()) {
-        nextErrors.customer = 'Please select a customer or type a valid customer name.'
-      }
-    }
-
-    if (stepIndex === 1) {
-      // Deal details are optional. However, if they entered a dealName, we might want to validate some fields, 
-      // but per requirements, it can be skipped. We will only flag errors if they provided partial critical data.
-      if (formData.dealName && !formData.dealValue) {
-        nextErrors.dealValue = 'Please provide a deal value if you are adding a deal.'
-      }
-    }
-
     if (formData.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)) {
       nextErrors.contactEmail = 'Enter a valid contact email.'
     }
 
     setErrors((prev) => ({ ...prev, ...nextErrors }))
-    setValidationNotice(
-      Object.entries(requiredMessages)
-        .filter(([field]) => nextErrors[field])
-        .map(([, message]) => message)
-    )
     return Object.keys(nextErrors).length === 0
   }
 
   const validateAllSteps = () => {
     const collectedErrors = {}
 
-    Object.entries(requiredMessages).forEach(([field, message]) => {
-      if (!formData[field]?.trim()) {
-        collectedErrors[field] = message
-      }
-    })
-
-    if (isExistingCustomer && !selectedCustomerId && !customerSearch.trim()) {
-      collectedErrors.customer = 'Please select a customer or type a valid customer name.'
-    }
-
-    if (formData.dealName && !formData.dealValue) {
-      collectedErrors.dealValue = 'Please provide a deal value if you are adding a deal.'
-    }
-
     if (formData.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)) {
       collectedErrors.contactEmail = 'Enter a valid contact email.'
     }
 
     setErrors(collectedErrors)
-    setValidationNotice(
-      Object.entries(requiredMessages)
-        .filter(([field]) => collectedErrors[field])
-        .map(([, message]) => message)
-    )
     return collectedErrors
   }
 
   const handleChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
-    setValidationNotice((prev) =>
-      prev.filter((message) => message !== requiredMessages[name])
-    )
+    setValidationNotice([])
     setErrors((prev) => {
       if (!prev[name]) return prev
       const nextErrors = { ...prev }
@@ -436,26 +394,12 @@ const AddAccountWizard = () => {
   }
 
   const handleStepChange = (targetStep) => {
-    if (targetStep <= currentStep) {
-      setCurrentStep(targetStep)
-      return
-    }
-
-    if (validateStep(currentStep)) {
-      setCurrentStep(targetStep)
-    } else {
-      triggerErrorScroll()
-    }
+    setCurrentStep(targetStep)
   }
 
   const handleNext = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1))
-      setValidationNotice([])
-    } else {
-      triggerErrorScroll()
-      addNotification('error', 'Required Fields', 'Please complete all required fields marked as required.')
-    }
+    setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1))
+    setValidationNotice([])
   }
 
   const triggerErrorScroll = () => {
@@ -482,7 +426,7 @@ const AddAccountWizard = () => {
       let stepWithError = 0
       if (errorKeys.some(key => ['accountName', 'accountOwner', 'accountSource', 'state', 'industryType', 'customer'].includes(key))) {
         stepWithError = 0
-      } else if (errorKeys.some(key => ['dealValue'].includes(key))) {
+      } else if (errorKeys.some(key => ['dealOwner', 'dealValue'].includes(key))) {
         stepWithError = 1
       } else if (errorKeys.some(key => ['contactEmail'].includes(key))) {
         stepWithError = 2
@@ -555,10 +499,11 @@ const AddAccountWizard = () => {
       const createdAccountId = accountResult.data?.id || accountResult.data?._id || ''
       const createdAccountName = accountResult.data?.name || formData.accountName || ''
 
-      // If Deal Name is provided, create a Deal using the new Account ID
-      if (formData.dealName.trim()) {
+      // If Deal Name is provided OR isExistingCustomer is checked, create a Deal in MongoDB deals collection
+      const targetDealName = formData.dealName.trim() || (isExistingCustomer ? `${formData.customerName || createdAccountName || 'Account'} Deal` : '')
+      if (targetDealName) {
         const dealPayload = {
-          name: formData.dealName.trim(),
+          name: targetDealName,
           dealDate: formData.dealDate || new Date().toISOString().slice(0, 10),
           description: formData.dealDescription || '',
           poValue: parseFloat(formData.poValue) || 0,
@@ -583,8 +528,8 @@ const AddAccountWizard = () => {
           gstin: formData.gstin || '',
           jobNo: formData.jobNo || '',
           orderCustomerStatus: formData.customerOrderStatus || '',
-          status: formData.dealStatus,
-          stage: formData.dealStage || 'new',
+          status: isExistingCustomer ? 'pending' : (formData.dealStatus || 'pending'),
+          stage: isExistingCustomer ? 'new' : (formData.dealStage || 'new'),
           accountId: createdAccountId,
           accountName: createdAccountName,
           customerName: formData.customerName || createdAccountName,
@@ -649,26 +594,59 @@ const AddAccountWizard = () => {
   }
 
   const renderFieldGroup = (fields, options = {}) =>
-    fields.map((field) => (
-      <LegacyFormField
-        key={field.name}
-        label={field.label}
-        name={field.name}
-        type={field.type}
-        value={formData[field.name]}
-        onChange={handleChange}
-        required={field.required}
-        options={field.options}
-        error={errors[field.name]}
-        placeholder={field.placeholder}
-        textareaRows={field.textareaRows}
-        fieldClassName={field.fieldClassName}
-        layout={options.layout}
-        rowClassName={[options.rowClassName, field.rowClassName].filter(Boolean).join(' ')}
-        inputWrapperClassName={options.inputWrapperClassName}
-        icon={field.icon}
-      />
-    ))
+    fields.map((field) => {
+      const isCurrencyField = field.name === 'poValue' || field.name === 'dealValue'
+      if (isCurrencyField) {
+        return (
+          <div key={field.name} className="legacy-form-row legacy-form-row-inline mb-3">
+            <label className="legacy-form-label text-[11px] font-medium text-slate-500 w-32 flex-shrink-0">
+              {field.label} {field.required && <span className="text-red-500">*</span>}
+            </label>
+            <div className="flex-1 flex items-center gap-1">
+              <select
+                value={formData.valueCurrency || 'INR'}
+                onChange={(e) => handleChange('valueCurrency', e.target.value)}
+                className="py-1 px-2 text-xs border border-gray-300 rounded bg-slate-50 font-bold text-slate-700 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+              >
+                {['INR', 'USD', 'AED', 'EUR', 'GBP'].map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                name={field.name}
+                value={formData[field.name] || ''}
+                onChange={(e) => handleChange(field.name, e.target.value)}
+                placeholder={field.placeholder || '0.00'}
+                className={`w-full py-1 px-2 text-sm border rounded outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 ${errors[field.name] ? 'border-red-500' : 'border-gray-300'}`}
+              />
+            </div>
+            {errors[field.name] && <p className="text-xs text-red-600 mt-1 legacy-form-error-message">{errors[field.name]}</p>}
+          </div>
+        )
+      }
+
+      return (
+        <LegacyFormField
+          key={field.name}
+          label={field.label}
+          name={field.name}
+          type={field.type}
+          value={formData[field.name]}
+          onChange={handleChange}
+          required={field.required}
+          options={field.options}
+          error={errors[field.name]}
+          placeholder={field.placeholder}
+          textareaRows={field.textareaRows}
+          fieldClassName={field.fieldClassName}
+          layout={options.layout}
+          rowClassName={[options.rowClassName, field.rowClassName].filter(Boolean).join(' ')}
+          inputWrapperClassName={options.inputWrapperClassName}
+          icon={field.icon}
+        />
+      )
+    })
 
   return (
     <div className="add-account-landscape-page">
@@ -684,118 +662,183 @@ const AddAccountWizard = () => {
         />
 
         {currentStep === 0 ? (
-          <div className="add-account-landscape-section" style={{ padding: '2rem 2.5rem' }}>
-            <div className="add-account-mockup-header-row">
-              <div className="add-account-mockup-header-title">
-                <div className="add-account-mockup-header-title-bar"></div>
-                <div>
-                  <h2>Account Basic Details</h2>
-                  <p>Enter the key details about the account. Fields marked with an asterisk (*) are mandatory.</p>
+          <>
+            <div className="add-account-landscape-section" style={{ padding: '2rem 2.5rem' }}>
+              <div className="add-account-mockup-header-row">
+                <div className="add-account-mockup-header-title">
+                  <div className="add-account-mockup-header-title-bar"></div>
+                  <div>
+                    <h2>Account Basic Details</h2>
+                    <p>Enter the key details about the account. Fields marked with an asterisk (*) are mandatory.</p>
+                  </div>
                 </div>
               </div>
+
+              <label className="add-account-mockup-existing-banner">
+                <input 
+                  type="checkbox" 
+                  checked={isExistingCustomer} 
+                  onChange={(e) => {
+                    const checked = e.target.checked
+                    setIsExistingCustomer(checked)
+                    setErrors({})
+                    setValidationNotice([])
+                  }} 
+                />
+                Are your current Account is existing customer?
+              </label>
+              
+              {isExistingCustomer && (
+                <div className="mb-6 relative">
+                  <label className="block text-[11px] font-medium mb-1 text-slate-500">
+                    Customer Search <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={customerSearch}
+                    onChange={(e) => {
+                      setCustomerSearch(e.target.value)
+                      setSelectedCustomerId('')
+                    }}
+                    placeholder="Start typing the customer name (e.g. Tata, Demo)"
+                    className={`w-full max-w-md py-1.5 px-2 text-sm border rounded outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-shadow ${errors.customer ? 'border-red-500 admin-add-deal-input-error' : 'border-gray-300'}`}
+                  />
+                  {errors.customer && <p className="text-xs text-red-600 mt-1 legacy-form-error-message">{errors.customer}</p>}
+                  {filteredCustomers.length > 0 && !selectedCustomerId && (
+                    <div className="absolute z-10 w-full bg-white border border-gray-200 mt-1 rounded shadow-lg max-h-60 overflow-y-auto">
+                      {filteredCustomers.map(c => (
+                        <div key={c.id} onClick={() => handleSelectCustomer(c)} className="p-3 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-0">
+                          <div className="font-semibold text-sm text-slate-800">{c.customerName}</div>
+                          <div className="text-xs text-slate-500">
+                            <span className="bg-gray-100 px-1 py-0.5 rounded mr-2">{c.sourceType === 'account' ? 'Account' : 'Customer'}</span>
+                            {c.customerNumber || 'No number'} | {c.customerOwnerDisplay || 'No owner'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {selectedCustomerId && customerSearch.trim() && (
+                    <div className="mt-2 text-sm text-green-700 bg-green-50 p-2 rounded border border-green-100">
+                      Selected: <strong>{customerSearch}</strong>. Details auto-filled!
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {isExistingCustomer ? (
+                selectedCustomerId ? (
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-5 mb-6">
+                    <h3 className="text-base font-bold text-slate-800 mb-3 border-b border-slate-200 pb-2">Customer Details (Non-Editable)</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+                      <div><span className="font-semibold text-slate-600">Customer Name:</span> <span className="text-slate-900 font-medium">{formData.customerName || formData.accountName || '-'}</span></div>
+                      <div><span className="font-semibold text-slate-600">Product Category:</span> <span className="text-slate-900 font-medium">{formData.productCategory || '-'}</span></div>
+                      <div><span className="font-semibold text-slate-600">Customer Category:</span> <span className="text-slate-900 font-medium">{formData.accountCategory || '-'}</span></div>
+                      <div><span className="font-semibold text-slate-600">Project Name:</span> <span className="text-slate-900 font-medium">{formData.projectName || formData.dealName || '-'}</span></div>
+                      <div><span className="font-semibold text-slate-600">Customer Owner:</span> <span className="text-slate-900 font-medium">{formData.accountOwner || '-'}</span></div>
+                      <div><span className="font-semibold text-slate-600">State:</span> <span className="text-slate-900 font-medium">{formData.state || '-'}</span></div>
+                      <div><span className="font-semibold text-slate-600">Customer Status:</span> <span className="text-slate-900 font-medium">{formData.accountState || 'converted'}</span></div>
+                      <div><span className="font-semibold text-slate-600">Industry Type:</span> <span className="text-slate-900 font-medium">{formData.industryType || '-'}</span></div>
+                      <div><span className="font-semibold text-slate-600">Address:</span> <span className="text-slate-900 font-medium">{formData.address || '-'}</span></div>
+                      <div><span className="font-semibold text-slate-600">GSTIN:</span> <span className="text-slate-900 font-medium">{formData.gstin || '-'}</span></div>
+                    </div>
+                  </div>
+                ) : null
+              ) : (
+                <div className="add-account-split-layout">
+                  <div className="add-account-split-col">
+                    {renderFieldGroup(
+                      fieldGroups.basicLeft.map(f => f.name === 'accountOwner' ? { ...f, options: activeOwners } : f),
+                      { layout: 'inline' }
+                    )}
+                  </div>
+                  <div className="add-account-split-divider"></div>
+                  <div className="add-account-split-col">
+                    {renderFieldGroup(fieldGroups.basicRight, { layout: 'inline' })}
+                  </div>
+                </div>
+              )}
             </div>
 
-            <label className="add-account-mockup-existing-banner">
-              <input 
-                type="checkbox" 
-                checked={isExistingCustomer} 
-                onChange={(e) => setIsExistingCustomer(e.target.checked)} 
-              />
-              Are your current Account is existing customer?
-            </label>
-            
-            {isExistingCustomer && (
-              <div className="mb-6 relative">
-                <label className="block text-[11px] font-medium mb-1 text-slate-500">
-                  Customer Search <span className="text-red-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={customerSearch}
-                  onChange={(e) => {
-                    setCustomerSearch(e.target.value)
-                    setSelectedCustomerId('')
-                  }}
-                  placeholder="Start typing the customer name (e.g. Tata, Demo)"
-                  className={`w-full max-w-md py-1.5 px-2 text-sm border rounded outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-shadow ${errors.customer ? 'border-red-500 admin-add-deal-input-error' : 'border-gray-300'}`}
-                />
-                {errors.customer && <p className="text-xs text-red-600 mt-1 legacy-form-error-message">{errors.customer}</p>}
-                {filteredCustomers.length > 0 && !selectedCustomerId && (
-                  <div className="absolute z-10 w-full bg-white border border-gray-200 mt-1 rounded shadow-lg max-h-60 overflow-y-auto">
-                    {filteredCustomers.map(c => (
-                      <div key={c.id} onClick={() => handleSelectCustomer(c)} className="p-3 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-0">
-                        <div className="font-semibold text-sm text-slate-800">{c.customerName}</div>
-                        <div className="text-xs text-slate-500">
-                          <span className="bg-gray-100 px-1 py-0.5 rounded mr-2">{c.sourceType === 'account' ? 'Account' : 'Customer'}</span>
-                          {c.customerNumber || 'No number'} | {c.customerOwnerDisplay || 'No owner'}
+            <LegacyFormSection
+              title="Project Details"
+              subtitle="Key project and deal information for this account."
+              className="add-account-landscape-section"
+            >
+              {(() => {
+                const dealLeftFieldsPrepared = fieldGroups.dealDetailsLeft.map((f) => ({
+                  ...f,
+                  required: isExistingCustomer ? false : f.required,
+                }))
+                const dealRightFieldsWithOwners = fieldGroups.dealDetailsRight.map((f) => ({
+                  ...f,
+                  options: f.name === 'dealOwner' ? activeOwners : f.options,
+                  required: isExistingCustomer ? false : f.required,
+                }))
+                const maxRows = Math.max(dealLeftFieldsPrepared.length, dealRightFieldsWithOwners.length)
+                const rows = Array.from({ length: maxRows }, (_, i) => ({
+                  left: dealLeftFieldsPrepared[i] || null,
+                  right: dealRightFieldsWithOwners[i] || null,
+                }))
+
+                return (
+                  <div className="flex flex-col gap-3">
+                    {rows.map((row, idx) => (
+                      <div key={idx} className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 items-start">
+                        <div>
+                          {row.left ? renderFieldGroup([row.left], { layout: 'inline' }) : null}
+                        </div>
+                        <div>
+                          {row.right ? renderFieldGroup([row.right], { layout: 'inline' }) : null}
+                          {row.right?.name === 'productCategory' && formData.productCategory === 'TTA' && (
+                            <div className="mt-2.5 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                Panel Assemblies
+                              </label>
+                              <div className="flex flex-wrap gap-4">
+                                {['L&T/L&K', 'ABP', 'Siemens', 'Schneider'].map((option) => {
+                                  const isChecked = Array.isArray(formData.panelAssemblies)
+                                    ? formData.panelAssemblies.includes(option)
+                                    : String(formData.panelAssemblies || '').split(',').map((s) => s.trim()).includes(option)
+
+                                  return (
+                                    <label key={option} className="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+                                      <input
+                                        type="checkbox"
+                                        value={option}
+                                        checked={isChecked}
+                                        onChange={(e) => {
+                                          const current = Array.isArray(formData.panelAssemblies)
+                                            ? [...formData.panelAssemblies]
+                                            : (formData.panelAssemblies ? String(formData.panelAssemblies).split(',').map((s) => s.trim()) : [])
+                                          
+                                          let next = []
+                                          if (e.target.checked) {
+                                            next = [...new Set([...current, option])]
+                                          } else {
+                                            next = current.filter((item) => item !== option)
+                                          }
+                                          setFormData((prev) => ({ ...prev, panelAssemblies: next }))
+                                        }}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                      />
+                                      <span>{option}</span>
+                                    </label>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
                   </div>
-                )}
-                {selectedCustomerId && customerSearch.trim() && (
-                  <div className="mt-2 text-sm text-green-700 bg-green-50 p-2 rounded border border-green-100">
-                    Selected: <strong>{customerSearch}</strong>. Details auto-filled!
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="add-account-split-layout">
-              <div className="add-account-split-col">
-                {renderFieldGroup(
-                  fieldGroups.basicLeft.map(f => f.name === 'accountOwner' ? { ...f, options: activeOwners } : f),
-                  { layout: 'inline' }
-                )}
-              </div>
-              <div className="add-account-split-divider"></div>
-              <div className="add-account-split-col">
-                {renderFieldGroup(fieldGroups.basicRight, { layout: 'inline' })}
-              </div>
-            </div>
-          </div>
+                )
+              })()}
+            </LegacyFormSection>
+          </>
         ) : null}
-
-        {currentStep === 0 ? (
-          <div className="add-account-landscape-section" style={{ padding: '1.5rem 2.5rem' }}>
-            <div className="add-account-mockup-header-title" style={{ marginBottom: '1.25rem' }}>
-              <div className="add-account-mockup-header-title-bar"></div>
-              <div>
-                <h2 style={{ fontSize: '1.25rem' }}>Project Details</h2>
-                <p>Key project information related to this account.</p>
-              </div>
-            </div>
-            <div className="add-account-project-details-grid">
-              {renderFieldGroup(fieldGroups.projectDetails, { layout: 'stacked' })}
-            </div>
-          </div>
-        ) : null}
-
 
         {currentStep === 1 ? (
-          <LegacyFormSection
-            title="Deal Details (Optional)"
-            subtitle="Fill these details if you also want to create a Deal alongside the Account."
-            className="add-account-landscape-section"
-          >
-            <div className="add-account-landscape-field-grid add-account-landscape-field-grid-two">
-              <div className="add-account-landscape-field-column">
-                {renderFieldGroup(
-                  fieldGroups.dealDetailsLeft.map(f => f.name === 'dealCoOwners' ? { ...f, options: activeOwners, type: 'select', isMulti: true } : f),
-                  { layout: 'inline' }
-                )}
-              </div>
-              <div className="add-account-landscape-field-column">
-                {renderFieldGroup(
-                  fieldGroups.dealDetailsRight.map(f => f.name === 'dealOwner' ? { ...f, options: activeOwners } : f),
-                  { layout: 'inline' }
-                )}
-              </div>
-            </div>
-          </LegacyFormSection>
-        ) : null}
-
-        {currentStep === 2 ? (
           <LegacyFormSection
             title="Contacts"
             subtitle="Add the primary contact details linked to this account."
@@ -808,7 +851,7 @@ const AddAccountWizard = () => {
           </LegacyFormSection>
         ) : null}
 
-        {currentStep === 3 ? (
+        {currentStep === 2 ? (
           <LegacyFormSection
             title="Reminders"
             subtitle="Capture follow-up details and internal notes before saving the account."
@@ -827,10 +870,10 @@ const AddAccountWizard = () => {
             <div className="add-account-mockup-footer-bar">
               <div 
                 className="add-account-mockup-footer-bar-fill" 
-                style={{ width: `${(currentStep + 1) * 25}%` }}
+                style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
               ></div>
             </div>
-            <span className="add-account-mockup-footer-percent">{((currentStep + 1) * 25)}%</span>
+            <span className="add-account-mockup-footer-percent">{Math.round(((currentStep + 1) / steps.length) * 100)}%</span>
           </div>
 
           <div className="add-account-mockup-footer-actions">

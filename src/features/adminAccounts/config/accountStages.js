@@ -8,6 +8,7 @@ export const ACCOUNT_STAGES = [
   { key: 'quotation_sent', label: 'Quotation Sent', order: 7, visible: true, emptyStateText: 'No quotations have been sent in this bucket.' },
   { key: 'quote_revision', label: 'Quote Revision', order: 8, visible: true, emptyStateText: 'No quote revisions are pending.' },
   { key: 'order_received', label: 'Order Received', order: 9, visible: true, emptyStateText: 'No orders have been received yet.' },
+  { key: 'not_quoted', label: 'Not Quoted', order: 9.5, visible: true, emptyStateText: 'No accounts are tagged as Not Quoted.' },
   { key: 'convert_to_po', label: 'Convert To PO', order: 10, visible: true, emptyStateText: 'No accounts are waiting to be converted to PO.' },
   { key: 'order_lost', label: 'Order Lost', order: 11, visible: true, emptyStateText: 'No lost-order accounts are listed here.' },
   { key: 'converted', label: 'Converted', order: 12, visible: true, emptyStateText: 'No converted accounts are available yet.' },

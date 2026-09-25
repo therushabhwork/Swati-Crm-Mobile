@@ -2660,6 +2660,30 @@ html:not([data-theme="dark"]) select.ap-performance-select option {
   font-weight: 400;
 }
 
+.ap-upcoming-tasks-scroll {
+  max-height: 135px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.ap-upcoming-tasks-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.ap-upcoming-tasks-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.ap-upcoming-tasks-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.ap-upcoming-tasks-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 
 
 

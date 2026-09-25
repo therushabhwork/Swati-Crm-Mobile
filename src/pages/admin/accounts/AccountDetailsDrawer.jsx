@@ -582,13 +582,20 @@ const AccountDetailsDrawer = ({
                   {visibleActionItems.map((action) => {
                     const Icon = ACTION_ICONS[action.key] || HiOutlineStatusOnline
 
+                    const isNotQuotedAccount = account.stage === 'not_quoted' || account.status === 'Not Quoted' || account.stage === 'Not Quoted' || account.status === 'not_quoted' || account.accountStatus === 'not_quoted'
+                    const isBlocked = isNotQuotedAccount && (action.key === 'generate-quotation' || action.key === 'converted-deal' || action.key === 'convert_to_po')
+
                     return (
                       <button
                         type="button"
                         key={action.key}
-                        className="admin-accounts-actions-menu-button"
+                        className={`admin-accounts-actions-menu-button${isBlocked ? ' opacity-50 cursor-not-allowed' : ''}`}
                         onClick={() => {
                           closeActions()
+                          if (isBlocked) {
+                            addNotification('warning', 'Action Unavailable', 'This account is marked as Not Quoted. PO Conversion and Quotation Generation are disabled.')
+                            return
+                          }
                           if (action.key === 'generate-quotation') {
                             const isAdminPortal = window.location.pathname.startsWith('/admin')
                             navigate(isAdminPortal ? '/admin/quotations' : '/quotations', {
@@ -665,7 +672,7 @@ const AccountDetailsDrawer = ({
                 const displayValue = getDisplayFieldValue(field, value)
                 const isEditing = editingSection === field.sectionKey
                 const isSingleFieldEditing = isEditing && editingFieldKey === field.key
-                const canEditThisField = canEdit || !isAdminPortal || field.key === 'addedBy'
+                const canEditThisField = canEdit || !isAdminPortal || field.key === 'addedBy' || field.key === 'accountOwner'
                 const canEditField = isSingleFieldEditing && canEditThisField && !field.readOnly
                 const isUserSelectField = ['accountOwner', 'addedBy', 'dealOwner', 'dealCoOwners'].includes(field.key)
 

@@ -544,7 +544,7 @@ const readQuotationLayout = () => {
   }
 }
 
-const Quotations = ({ autoOpen = false }) => {
+const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const {
@@ -893,6 +893,20 @@ const Quotations = ({ autoOpen = false }) => {
       setActionLoadingId(targetId)
       await quotationApi.approveQuotation(targetId, { revisionCode: revCode })
       addNotification?.('success', 'Quotation Approved', `Quotation ${targetRevRow.num || targetId} (${revCode}) approved successfully.`)
+
+      setRevisionsModalRow((prev) => {
+        if (!prev) return null
+        return {
+          ...prev,
+          status: 'Approved',
+          statusLabel: 'Approved',
+          raw: {
+            ...prev.raw,
+            status: 'Approved',
+          },
+        }
+      })
+
       await refreshQuotations?.()
     } catch (err) {
       addNotification?.('error', 'Approval Failed', err.response?.data?.message || err.message || 'Could not approve quotation.')
@@ -970,16 +984,19 @@ const Quotations = ({ autoOpen = false }) => {
       return
     }
 
-    if (preselectedDealFromRoute) {
-      const dealAccount = buildQuotationDealAccount(preselectedDealFromRoute)
+    const activePreselectedDeal = preselectedDeal || preselectedDealFromRoute
+    if (activePreselectedDeal) {
+      const dealAccount = buildQuotationDealAccount(activePreselectedDeal)
       const profileValue = getQuotationProfileForAccount(dealAccount)
 
-      handleCloseQuotationBuilder()
+      close()
       setSelectedProfile(profileValue)
       setSelectedAccountId('')
       setIsGenerateOpen(false)
       openQuotationBuilder(profileValue, dealAccount)
-      navigate(location.pathname, { replace: true, state: {} })
+      if (location.state?.preselectedDeal) {
+        navigate(location.pathname, { replace: true, state: {} })
+      }
       return
     }
 
@@ -1063,6 +1080,7 @@ const Quotations = ({ autoOpen = false }) => {
     setBuilderMessage('')
     setAdditionalSections([])
     setQuotationForm(createInitialQuotationForm())
+    if (onClose) onClose()
   }
 
   const handleOpenGenerator = () => {
@@ -1083,16 +1101,27 @@ const Quotations = ({ autoOpen = false }) => {
     const profile = getProfileByValue(profileValue)
     const quotationDate = getTodayInputValue()
 
-    const existingAccountQuotes = (Array.isArray(quotations) ? quotations : []).filter((q) => (
-      (q.selectedAccountId && account?.id && String(q.selectedAccountId) === String(account.id)) ||
-      (q.clientAccountNumber && account?.accountNumber && String(q.clientAccountNumber).trim() === String(account.accountNumber).trim())
-    ))
+    const targetDealId = account?.sourceDealId || account?.source_deal_id || account?.dealId || account?.id
+    const targetAccountId = account?.id || account?.selectedAccountId || account?.accountNumber
+
+    const existingMatchingQuotes = (Array.isArray(quotations) ? quotations : []).filter((q) => {
+      const qDealId = q.dealId || q.raw?.dealId || q.raw?.sourceDealId || q.raw?.source_deal_id || q.raw?.id
+      if (targetDealId && qDealId && String(qDealId) === String(targetDealId)) return true
+      const qAccId = q.selectedAccountId || q.raw?.selectedAccountId || q.customerId || q.raw?.customerId
+      if (targetAccountId && qAccId && String(qAccId) === String(targetAccountId)) return true
+      const qAccNum = q.clientAccountNumber || q.raw?.clientAccountNumber
+      if (account?.accountNumber && qAccNum && String(qAccNum).trim() === String(account.accountNumber).trim()) return true
+      return false
+    })
 
     let computedQuoteNumber = nextQuotationNumber
-    if (existingAccountQuotes.length > 0) {
-      const baseQuote = existingAccountQuotes[0].quotationNumber || nextQuotationNumber
+    if (existingMatchingQuotes.length > 0) {
+      const baseQuote = existingMatchingQuotes[0].quotationNumber || existingMatchingQuotes[0].quoteNumber || nextQuotationNumber
       const baseClean = baseQuote.replace(/-R\d+$/i, '')
-      computedQuoteNumber = `${baseClean}-R${existingAccountQuotes.length + 1}`
+      computedQuoteNumber = `${baseClean}-R${existingMatchingQuotes.length + 1}`
+    } else {
+      const baseClean = nextQuotationNumber.replace(/-R\d+$/i, '')
+      computedQuoteNumber = `${baseClean}-R1`
     }
 
     return {

@@ -289,6 +289,20 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
       setActionLoadingId(targetId)
       await quotationApi.approveQuotation(targetId, { revisionCode: revCode })
       addNotification('success', 'Quotation Approved', `Quotation ${targetRevRow.num || targetId} (${revCode}) approved successfully.`)
+      
+      setRevisionsModalRow((prev) => {
+        if (!prev) return null
+        return {
+          ...prev,
+          status: 'Approved',
+          statusLabel: 'Approved',
+          raw: {
+            ...prev.raw,
+            status: 'Approved',
+          },
+        }
+      })
+
       await refreshQuotations?.()
     } catch (err) {
       addNotification('error', 'Approval Failed', err.response?.data?.message || err.message || 'Could not approve quotation.')

@@ -1792,6 +1792,13 @@ export function RevisionsListModal({
 
   const recordsToProcess = siblingRevisions.length > 0 ? siblingRevisions : [row]
 
+  const isAnyRecordApproved = recordsToProcess.some((q) => {
+    const st = String(q.status || q.raw?.status || '').toLowerCase()
+    if (st === 'approved') return true
+    const revs = Array.isArray(q.raw?.revisions) ? q.raw.revisions : (Array.isArray(q.revisions) ? q.revisions : [])
+    return revs.some((r) => String(r.status || '').toLowerCase() === 'approved')
+  })
+
   // Extract base quotation number e.g. "SSIPL/2026/1013" from "SSIPL/2026/1013-R1" or "SSIPL/2026/1013"
   const rawBaseQuoteNo = (targetQuoteNo || row.num || row.quotationNumber || 'SSIPL/2026/1013').replace(/-R\d+$/i, '')
   const companyName = row.company || row.raw?.companyName || row.raw?.customerName || row.raw?.clientName || 'Account'
@@ -1815,7 +1822,7 @@ export function RevisionsListModal({
         const formattedNum = `${rawBaseQuoteNo}-${revCode}`
         const rawAmt = Number(revItem.amount || revItem.totalAmount || 0)
         const amtLabel = formatCurrency(rawAmt, q.currency || 'INR')
-        const statusVal = revItem.status || q.raw?.status || q.status || 'Draft'
+        const statusVal = isAnyRecordApproved ? 'Approved' : (revItem.status || q.raw?.status || q.status || 'Draft')
         const dateVal = revItem.date || q.date || q.raw?.quotationDate || '-'
 
         revisionRowsMap.set(revCode, {
@@ -1841,7 +1848,7 @@ export function RevisionsListModal({
         : `${rawBaseQuoteNo}-${revCode}`
       const rawAmt = Number(q.amount || q.totalAmount || q.raw?.totalAmount || q.raw?.amount || 0)
       const amtLabel = q.amountLabel || formatCurrency(rawAmt, q.currency || 'INR')
-      const statusVal = q.raw?.status || q.status || 'Draft'
+      const statusVal = isAnyRecordApproved ? 'Approved' : (q.raw?.status || q.status || 'Draft')
       const dateVal = q.date || q.raw?.quotationDate || '-'
 
       revisionRowsMap.set(revCode, {

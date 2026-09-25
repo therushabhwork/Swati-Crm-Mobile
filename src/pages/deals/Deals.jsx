@@ -51,6 +51,7 @@ import { calendarApi } from '../../services/calendarApi'
 import { exportCsvWorkbook, exportExcelWorkbook } from '../../utils/excelExport'
 import { capitalize, formatCurrency, formatDate, formatNumber, getStatusColor } from '../../utils/helpers'
 import { DEAL_STATUS } from '../../utils/constants'
+import Quotations from '../quotations/Quotations'
 import './Deals.css'
 
 const REMINDER_MODE_OPTIONS = [
@@ -1077,6 +1078,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
   const [reminderForm, setReminderForm] = useState({ reminderDate: '', reminderTime: '09:00', reminderMode: '', reminderNote: '' })
   const [reassignOwnerId, setReassignOwnerId] = useState('')
   const [reassignReminderAction, setReassignReminderAction] = useState('retain')
+  const [inlineQuotationDeal, setInlineQuotationDeal] = useState(null)
   const [reassignAddReminder, setReassignAddReminder] = useState(false)
   const [boardDragDealId, setBoardDragDealId] = useState('')
   const [boardDragOverColumnKey, setBoardDragOverColumnKey] = useState('')
@@ -2822,12 +2824,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
     setOpenBoardActionMenuDealId('')
     setDealTableMenuPosition(null)
     closeBoardActionModal()
-    navigate('/admin/quotations', {
-      state: {
-        openGenerator: true,
-        preselectedDeal: activeDeal,
-      },
-    })
+    setInlineQuotationDeal(activeDeal)
   }
 
   const handleCreateConvertedDealFromMenu = async (deal) => {
@@ -5634,6 +5631,13 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
           </div>
         </form>
       </Modal>
+      {inlineQuotationDeal && (
+        <Quotations
+          autoOpen={true}
+          preselectedDeal={inlineQuotationDeal}
+          onClose={() => setInlineQuotationDeal(null)}
+        />
+      )}
     </div>
   )
 }

@@ -177,24 +177,44 @@ const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
 
     let updates = {}
 
-    if (actionKey === 'change-status') {
-      if (!stage) {
+    if (actionKey === 'change-status' || actionKey === 'converted-deal') {
+      const targetStage = actionKey === 'converted-deal' ? 'convert_to_po' : stage
+      if (!targetStage) {
         setFormError('Status is required.')
         return
       }
 
-      const selectedStatus = getAccountChangeStatusOption(stage)
-      const selectedStatusLabel = selectedStatus?.label || stage
+      const isNotQuoted = targetStage === 'not_quoted' || targetStage === 'Not Quoted' || targetStage === 'not-quoted'
+      if (isNotQuoted && !statusNote.trim()) {
+        setFormError('Status Note / Reason is mandatory for Not Quoted.')
+        return
+      }
+
+      const selectedStatus = getAccountChangeStatusOption(targetStage)
+      const selectedStatusLabel = selectedStatus?.label || targetStage
+
+      if (actionKey === 'converted-deal' || showPoDetails) {
+        if (!String(poValue).trim()) {
+          setFormError('PO Value is required to convert account to PO Converted status.')
+          return
+        }
+      }
+
       updates = {
-        stage: selectedStatus?.stageKey || stage,
-        status: selectedStatusLabel,
-        accountState: accountState || selectedStatusLabel,
+        stage: selectedStatus?.stageKey || targetStage,
+        status: isNotQuoted ? 'not_quoted' : selectedStatusLabel,
+        accountStatus: isNotQuoted ? 'not_quoted' : (targetStage === 'convert_to_po' ? 'PO Converted' : 'Pending'),
+        accountState: isNotQuoted ? 'not_quoted' : (accountState || selectedStatusLabel),
         latestRemark: statusNote.trim() || account.latestRemark,
       }
 
-      if (showPoDetails) {
+      if (showPoDetails || actionKey === 'converted-deal') {
         updates = {
           ...updates,
+          stage: 'convert_to_po',
+          status: 'convert_to_po',
+          accountStatus: 'PO Converted',
+          accountState: 'Pending',
           poValue: poValue === '' ? '' : poValue,
           statusAsPerOrderReceived: orderReceivedStatus,
           statusAsPerQuotationGiven: quotationGivenStatus,
@@ -281,28 +301,48 @@ const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
   }
 
   const renderFields = () => {
-    if (actionKey === 'change-status') {
+    if (actionKey === 'change-status' || actionKey === 'converted-deal') {
+      const isNotQuotedSelected = stage === 'not_quoted' || stage === 'Not Quoted'
+      const showPoFields = actionKey === 'converted-deal' || showPoDetails
+
       return (
         <>
-          <div className="admin-accounts-action-form-grid">
+          <div className="admin-accounts-action-form-grid" style={{ marginBottom: '16px', backgroundColor: '#f8fafc', padding: '12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
             <label className="admin-accounts-bulk-field">
-              Account Status
-              <select value={stage} onChange={(event) => setStage(event.target.value)}>
-                {ACTION_CHANGE_STATUS_OPTIONS.map((entry) => <option key={entry.value} value={entry.value}>{entry.label}</option>)}
-              </select>
+              Account No.
+              <input type="text" value={account.accountNumber || account.accountNo || '-'} readOnly style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} />
+            </label>
+            <label className="admin-accounts-bulk-field">
+              Account Owner
+              <input type="text" value={account.accountOwnerDisplay || account.accountOwnerName || account.accountOwner || '-'} readOnly style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} />
             </label>
             <label className="admin-accounts-bulk-field admin-accounts-action-field-full">
-              Status Note
-              <textarea value={statusNote} onChange={(event) => setStatusNote(event.target.value)} placeholder="Add status note..." />
+              Project Name
+              <input type="text" value={account.projectName || account.name || '-'} readOnly style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} />
             </label>
           </div>
 
-          {showPoDetails ? (
+          {actionKey === 'change-status' ? (
+            <div className="admin-accounts-action-form-grid">
+              <label className="admin-accounts-bulk-field">
+                Account Status
+                <select value={stage} onChange={(event) => setStage(event.target.value)}>
+                  {ACTION_CHANGE_STATUS_OPTIONS.map((entry) => <option key={entry.value} value={entry.value}>{entry.label}</option>)}
+                </select>
+              </label>
+              <label className="admin-accounts-bulk-field admin-accounts-action-field-full">
+                Status Note {isNotQuotedSelected ? <span style={{ color: '#dc2626' }}>* (Mandatory for Not Quoted)</span> : null}
+                <textarea value={statusNote} onChange={(event) => setStatusNote(event.target.value)} placeholder="Add status note..." />
+              </label>
+            </div>
+          ) : null}
+
+          {showPoFields ? (
             <>
-              <div className="admin-accounts-action-section-label">Please fill in the details below</div>
+              <div className="admin-accounts-action-section-label">Please fill in the PO Converted details below</div>
               <div className="admin-accounts-action-form-grid admin-accounts-action-form-grid--section">
                 <label className="admin-accounts-bulk-field">
-                  PO Value
+                  PO Value <span style={{ color: '#dc2626' }}>* (Mandatory)</span>
                   <input type="number" min="0" value={poValue} onChange={(event) => setPoValue(event.target.value)} placeholder="Enter PO value" />
                 </label>
                 <label className="admin-accounts-bulk-field">

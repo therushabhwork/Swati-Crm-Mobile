@@ -21,6 +21,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import AddReminderModal from '../../../components/common/AddReminderModal'
 import Button from '../../../components/common/Button'
 import Modal from '../../../components/common/Modal'
+import Quotations from '../../quotations/Quotations'
 import { useAuth } from '../../../context/AuthContext'
 import { useData } from '../../../context/DataContext'
 import { buildAdminManageDealUrl } from '../../../features/adminDeals/config/adminDealViews'
@@ -202,6 +203,7 @@ const AdminDealDetailPage = () => {
   const [editingFieldKey, setEditingFieldKey] = useState('')
   const [editValue, setEditValue] = useState('')
   const [isSavingField, setIsSavingField] = useState(false)
+  const [inlineQuotationDeal, setInlineQuotationDeal] = useState(null)
 
   const handleStartEditing = (key, initialValue) => {
     setEditingFieldKey(key)
@@ -383,13 +385,7 @@ const AdminDealDetailPage = () => {
 
   const handleGenerateQuotation = () => {
     if (!deal) return
-
-    navigate('/admin/quotations', {
-      state: {
-        openGenerator: true,
-        preselectedDeal: sourceDeal || deal,
-      },
-    })
+    setInlineQuotationDeal(sourceDeal || deal)
   }
 
   const handleSavedReminder = async (reminderData) => {
@@ -731,6 +727,14 @@ const AdminDealDetailPage = () => {
         assignedTo={deal?.assignedTo || deal?.ownerUserId || deal?.userId || user?.id}
         onSaved={handleSavedReminder}
       />
+
+      {inlineQuotationDeal && (
+        <Quotations
+          autoOpen={true}
+          preselectedDeal={inlineQuotationDeal}
+          onClose={() => setInlineQuotationDeal(null)}
+        />
+      )}
     </>
   )
 }

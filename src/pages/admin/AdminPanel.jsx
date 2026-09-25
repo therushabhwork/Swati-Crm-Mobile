@@ -212,7 +212,7 @@ const DashboardTabModal = ({
 const AdminPanel = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { accounts, deals, supportRequests, tasks = [], refreshData, addNotification } = useData()
+  const { accounts, deals, supportRequests, tasks = [], reminders = [], refreshData, addNotification } = useData()
   const { user, socket } = useAuth()
   const [dashboardTabs, setDashboardTabs] = useState(() => getDashboardTabs())
   const [activeSection, setActiveSection] = useState('home')
@@ -537,6 +537,20 @@ const AdminPanel = () => {
         }),
       }))
 
+    const dbReminderItems = (reminders || [])
+      .filter((r) => String(r.status || '').toLowerCase() !== 'closed')
+      .slice(0, 8)
+      .map((r) => ({
+        id: `db-reminder-${r.id || r._id}`,
+        type: r.reminderMode ? `Reminder (${r.reminderMode.toUpperCase()})` : 'Reminder',
+        title: r.title || r.note || r.message || 'Reminder',
+        meta: r.reminderDate ? formatTodoDateTime(r.reminderDate) : 'Today',
+        message: r.note || r.remark || r.description || '-',
+        date: r.reminderDate || r.createdAt,
+        reminder: r,
+        onClick: () => navigate('/admin/reminders/my'),
+      }))
+
     const replyItems = todoReplies.slice(0, 8).map((reply, index) => {
       const requestId = reply.support_request_id || reply.supportRequestId || reply.relatedEntityId || ''
       const matchedRequest = supportRequests.find((request) => (
@@ -560,10 +574,24 @@ const AdminPanel = () => {
       }
     })
 
-    return [...replyItems, ...reminderItems]
+    const taskItems = (tasks || [])
+      .filter((task) => String(task.status || '').toLowerCase() === 'pending' || String(task.status || '').toLowerCase() === 'open')
+      .slice(0, 8)
+      .map((task) => ({
+        id: `task-${task.id || task._id}`,
+        type: task.activityType === 're-assign-account' ? 'Reassignment' : 'Task',
+        title: task.title || task.name || 'Pending Task',
+        meta: formatTodoDateTime(task.dueDate || task.createdAt),
+        message: task.description || task.note || '-',
+        date: task.dueDate || task.createdAt,
+        task,
+        onClick: () => navigate(isAdmin ? '/admin/accounts/my-accounts' : '/accounts/my-accounts'),
+      }))
+
+    return [...replyItems, ...reminderItems, ...dbReminderItems, ...taskItems]
       .sort((left, right) => new Date(right.date || 0).getTime() - new Date(left.date || 0).getTime())
-      .slice(0, 6)
-  }, [accounts, deals, isAdmin, navigate, reminderStatesById, supportRequests, todoReplies, user])
+      .slice(0, 8)
+  }, [accounts, deals, isAdmin, navigate, reminderStatesById, reminders, supportRequests, tasks, todoReplies, user])
 
   const filteredTodoItems = useMemo(() => {
     if (activeTodoTab === 'reminders') {
@@ -874,17 +902,53 @@ const AdminPanel = () => {
                     <FaRegClock className="ap-card-head-icon" />
                     <span>Upcoming Tasks</span>
                   </span>
-                  <button type="button" className="ap-link-btn" onClick={() => navigate('/admin/tasks')}>
+                  <button type="button" className="ap-link-btn" onClick={() => navigate(isAdmin ? '/admin/accounts/my-accounts' : '/accounts/my-accounts')}>
                     View All &rarr;
                   </button>
                 </div>
-                <div className="ap-empty-task-block">
-                  <div className="ap-empty-task-icon">&#128203;</div>
-                  <div className="ap-empty-task-title">
-                    <span className="ap-empty-task-num">0</span> pending Tasks
-                  </div>
-                  <div className="ap-empty-task-sub">You&apos;re all caught up! Great work.</div>
-                </div>
+                {(() => {
+                  const pendingTasksList = (tasks || []).filter(
+                    (t) => String(t.status || '').toLowerCase() === 'pending' || String(t.status || '').toLowerCase() === 'open'
+                  )
+
+                  if (pendingTasksList.length === 0) {
+                    return (
+                      <div className="ap-empty-task-block">
+                        <div className="ap-empty-task-icon">&#128203;</div>
+                        <div className="ap-empty-task-title">
+                          <span className="ap-empty-task-num">0</span> pending Tasks
+                        </div>
+                        <div className="ap-empty-task-sub">You&apos;re all caught up! Great work.</div>
+                      </div>
+                    )
+                  }
+
+                  return (
+                    <div className="ap-upcoming-tasks-scroll flex flex-col gap-2 p-1">
+                      {pendingTasksList.map((task) => (
+                        <div
+                          key={task.id || task._id}
+                          onClick={() => navigate(isAdmin ? '/admin/accounts/my-accounts' : '/accounts/my-accounts')}
+                          className="p-2.5 bg-slate-50 hover:bg-blue-50/60 border border-slate-200 rounded-lg cursor-pointer transition-colors flex items-center justify-between"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-semibold text-slate-800 truncate">
+                              {task.title || task.name || 'Pending Task'}
+                            </div>
+                            <div className="text-[11px] text-slate-500 truncate mt-0.5">
+                              {task.description || task.note || (task.activityType ? `Type: ${task.activityType}` : 'No description')}
+                            </div>
+                          </div>
+                          <div className="ml-3 flex-shrink-0 text-right">
+                            <span className="inline-block text-[10px] font-bold px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded">
+                              {formatTodoDateTime(task.dueDate || task.createdAt) || 'Pending'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           </div>

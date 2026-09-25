@@ -273,12 +273,19 @@ const AccountActionPlaceholderPage = () => {
         return
       }
 
+      const isNotQuoted = stage === 'not_quoted' || stage === 'Not Quoted' || stage === 'not-quoted' || stage === 'Not-Quoted'
+      if (isNotQuoted && !statusNote.trim()) {
+        setFormError('Status Note / Reason is mandatory for Not Quoted.')
+        return
+      }
+
       const selectedStatus = getAccountChangeStatusOption(stage)
       const selectedStatusLabel = selectedStatus?.label || stage
       updates = {
         stage: selectedStatus?.stageKey || stage,
-        status: selectedStatusLabel,
-        accountState: accountState || selectedStatusLabel,
+        status: isNotQuoted ? 'not_quoted' : selectedStatusLabel,
+        accountStatus: isNotQuoted ? 'not_quoted' : 'Pending',
+        accountState: isNotQuoted ? 'not_quoted' : (accountState || selectedStatusLabel),
         latestRemark: statusNote.trim() || selectedAccount.latestRemark,
       }
 
@@ -448,6 +455,7 @@ const AccountActionPlaceholderPage = () => {
 
     if (actionKey === 'change-status') {
       const showPoDetails = shouldShowAccountPoDetails(stage)
+      const isNotQuotedSelected = stage === 'not_quoted' || stage === 'Not Quoted'
 
       return (
         <>
@@ -459,7 +467,7 @@ const AccountActionPlaceholderPage = () => {
               </select>
             </label>
             <label className="admin-accounts-bulk-field admin-accounts-action-field-full">
-              Status Note
+              Status Note {isNotQuotedSelected ? <span style={{ color: '#dc2626' }}>* (Mandatory for Not Quoted)</span> : null}
               <textarea value={statusNote} onChange={(event) => setStatusNote(event.target.value)} placeholder="Add status note..." />
             </label>
           </div>

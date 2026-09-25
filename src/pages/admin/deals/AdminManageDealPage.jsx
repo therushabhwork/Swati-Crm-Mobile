@@ -23,6 +23,7 @@ import {
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import Button from '../../../components/common/Button'
 import Modal from '../../../components/common/Modal'
+import Quotations from '../../quotations/Quotations'
 import { useAuth } from '../../../context/AuthContext'
 import { useData } from '../../../context/DataContext'
 import { buildAdminAccountsBoardUrl } from '../../../features/adminAccounts/config/accountBoardViews'
@@ -506,6 +507,7 @@ const AdminManageDealPage = () => {
     }
   }, [isActionsMenuOpen])
 
+  const [inlineQuotationDeal, setInlineQuotationDeal] = useState(null)
   const [availableUsers, setAvailableUsers] = useState(() => (
     getCachedAccountOwnerOptions().filter((entry) => entry.name !== 'System Administrator')
   ))
@@ -769,13 +771,7 @@ const AdminManageDealPage = () => {
 
   const handleGenerateQuotation = () => {
     if (!activeDeal) return
-
-    navigate('/admin/quotations', {
-      state: {
-        openGenerator: true,
-        preselectedDeal: sourceDeal || activeDeal,
-      },
-    })
+    setInlineQuotationDeal(sourceDeal || activeDeal)
   }
 
   const handleUploadQuotation = () => {
@@ -1317,7 +1313,6 @@ const AdminManageDealPage = () => {
     { key: 'dealType', label: 'Deal Type', inputType: 'text' },
     { key: 'dealOwnerId', label: 'Deal Owner', inputType: 'select' },
     { key: 'dealValue', label: 'Deal Value', inputType: 'number', min: '0' },
-    { key: 'dealScore', label: 'Deal Score', inputType: 'number', min: '0' },
     { key: 'probability', label: 'Probability', inputType: 'range', min: '1', max: '100' },
     { key: 'expectedClosureDate', label: 'Expected Closure Date', inputType: 'date' },
     { key: 'dealStatus', label: 'Change Status', inputType: 'select' },
@@ -1332,8 +1327,6 @@ const AdminManageDealPage = () => {
     { key: 'lastUpdated', label: 'Last Updated', icon: <FaCalendarAlt />, readOnly: true },
     { key: 'ageing', label: 'Ageing', icon: <FaBell />, readOnly: true },
     { key: 'addedBy', label: 'Added By', icon: <FaUser />, readOnly: true },
-    { key: 'dealSource', label: 'Deal Source', icon: <FaLink />, inputType: 'select', options: DEAL_SOURCE_SELECT_OPTIONS, placeholder: 'Select deal source' },
-    { key: 'dealSubsource', label: 'Deal Subsource', icon: <FaLink />, inputType: 'select', options: DEAL_SUBSOURCE_SELECT_OPTIONS, placeholder: 'Select deal subsource' },
   ]
   const otherFields = [
     { key: 'poValue', label: 'PO Value', inputType: 'number', min: '0' },
@@ -1672,6 +1665,14 @@ const AdminManageDealPage = () => {
           </div>
         </form>
       </Modal>
+
+      {inlineQuotationDeal && (
+        <Quotations
+          autoOpen={true}
+          preselectedDeal={inlineQuotationDeal}
+          onClose={() => setInlineQuotationDeal(null)}
+        />
+      )}
     </>
   )
 }

@@ -170,7 +170,18 @@ const buildLeadPayload = async (payload = {}, actor, existingLead = null) => {
     || payload.accountNumber
     || payload.account_no
     || null
-  const hasReasonForLost = Object.prototype.hasOwnProperty.call(sanitizedPayload, 'reasonForLost')
+  const isNotQuotedPayload = sanitizedPayload.stage === 'not_quoted' || sanitizedPayload.status === 'not_quoted' || sanitizedPayload.accountStatus === 'not_quoted' || sanitizedPayload.status === 'Not Quoted' || sanitizedPayload.stage === 'Not Quoted'
+  const isPoConvertedStage = sanitizedPayload.stage === 'convert_to_po' || sanitizedPayload.status === 'convert_to_po' || sanitizedPayload.accountStatus === 'PO Converted' || sanitizedPayload.accountStatus === 'convert_to_po'
+  const resolvedPoValue = String(sanitizedPayload.poValue ?? existingLead?.poValue ?? existingLead?.formData?.poValue ?? '').trim()
+  if (isPoConvertedStage && !resolvedPoValue) {
+    throw new AppError('PO Value is required to convert account to PO Converted status.', 400)
+  }
+
+  const hasReasonForLost = Object.prototype.hasOwnProperty.call(sanitizedPayload, 'reasonForLost') || Object.prototype.hasOwnProperty.call(sanitizedPayload, 'reasonForLostOrder')
+  const targetStatus = isNotQuotedPayload ? 'not_quoted' : (sanitizedPayload.accountState || sanitizedPayload.status || existingLead?.status || 'pending')
+  const targetAccountStatus = isNotQuotedPayload ? 'not_quoted' : (sanitizedPayload.accountStatus || existingLead?.accountStatus || existingLead?.formData?.accountStatus || 'Pending')
+  const targetAccountState = isNotQuotedPayload ? 'not_quoted' : (sanitizedPayload.accountState || existingLead?.accountState || existingLead?.formData?.accountState || 'Pending')
+
   const normalizedPayload = applyOwnershipMetadata(actor, {
     ...sanitizedPayload,
     customerName: sanitizedPayload.accountName || sanitizedPayload.customerName || existingLead?.customerName || '',
@@ -178,7 +189,10 @@ const buildLeadPayload = async (payload = {}, actor, existingLead = null) => {
     email: sanitizedPayload.alternateEmail || sanitizedPayload.email || existingLead?.email || '',
     company: sanitizedPayload.projectName || sanitizedPayload.company || existingLead?.company || '',
     projectName: sanitizedPayload.projectName || existingLead?.projectName || '',
-    status: sanitizedPayload.accountState || sanitizedPayload.status || existingLead?.status || 'pending',
+    status: targetStatus,
+    stage: isNotQuotedPayload ? 'not_quoted' : (sanitizedPayload.stage || existingLead?.stage || 'new'),
+    accountStatus: targetAccountStatus,
+    accountState: targetAccountState,
     reasonForLost: hasReasonForLost ? sanitizedPayload.reasonForLost : (existingLead?.reasonForLost || existingLead?.formData?.reasonForLost || ''),
     assignedTo: assignedUser?.id || existingLead?.assignedTo || null,
     createdBy: existingLead?.createdBy || actor.id,
@@ -213,7 +227,10 @@ const buildLeadPayload = async (payload = {}, actor, existingLead = null) => {
       employeeId: sanitizedPayload.employeeId || existingLead?.employeeId || actor.ownerCode || '',
       department: sanitizedPayload.department || existingLead?.department || '',
       userEmail: sanitizedPayload.userEmail || existingLead?.userEmail || actor.email || '',
-      status: sanitizedPayload.accountState || sanitizedPayload.status || existingLead?.status || 'pending',
+      status: targetStatus,
+      stage: isNotQuotedPayload ? 'not_quoted' : (sanitizedPayload.stage || existingLead?.stage || 'new'),
+      accountStatus: targetAccountStatus,
+      accountState: targetAccountState,
     },
   }, existingLead)
 
@@ -473,20 +490,37 @@ const frontendDeleteLead = async (actor, leadId) => {
 const updateLead = async (actor, leadId, payload) => {
   const existingLead = await getLeadById(actor, leadId, { includeGroupScope: false })
 
-  if (!isPrivilegedRole(actor.role)) {
-    const disallowedKeys = ['assignedTo', 'ownerId', 'assignedUserId']
-    const attemptedRestrictedChange = disallowedKeys.some((key) => payload[key] && payload[key] !== existingLead.assignedTo)
-
-    if (attemptedRestrictedChange) {
-      throw new AppError('You cannot reassign this lead.', 403)
-    }
-  }
-
   const leadPayload = await buildLeadPayload(payload, actor, existingLead)
   let updatedLead = await leadRepository.updateLead(normalizeLeadId(leadId), leadPayload)
 
   if (!updatedLead) {
     throw new AppError('Lead not found.', 404)
+  }
+
+  // Create re-assignment To-Do task if owner has changed
+  const newOwner = payload.assignedTo || payload.ownerId || payload.assignedUserId || payload.accountOwner
+  if (newOwner && String(newOwner) !== String(existingLead.assignedTo)) {
+    try {
+      const { getMongoModel } = require('../models/mongoModels')
+      const Task = getMongoModel('tasks')
+      const newTaskId = `task-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+      await Task.create({
+        id: newTaskId,
+        title: `Account Reassigned: ${updatedLead.accountName || updatedLead.name || updatedLead.companyName || 'Account'}`,
+        description: `Account has been reassigned to you.`,
+        status: 'pending',
+        activityType: 're-assign-account',
+        assignedTo: newOwner,
+        ownerUserId: newOwner,
+        createdBy: actor.id,
+        createdAt: new Date().toISOString(),
+        dueDate: new Date().toISOString(),
+        accountName: updatedLead.accountName || updatedLead.name,
+        accountId: updatedLead.id,
+      })
+    } catch (err) {
+      console.error('Failed to create reassignment task:', err)
+    }
   }
 
   const hasDealDetails = Boolean(payload.dealName || payload.dealValue || payload.dealDescription || payload.expectedClosureDate || payload.dealOwner)
