@@ -1776,13 +1776,16 @@ export function RevisionsListModal({
   const targetQuoteNo = row.num || row.quoteNumber || row.quotationNumber || row.raw?.quotationNumber || ''
 
   const siblingRevisions = allQuotations.filter((q) => {
-    const qNum = q.num || q.quoteNumber || q.quotationNumber || q.raw?.quoteNumber || q.raw?.quotationNumber
+    const qNum = q.num || q.quoteNumber || q.quotationNumber || q.raw?.quoteNumber || q.raw?.quotationNumber || ''
     const qAccount = q.raw?.customerId || q.raw?.selectedAccountId || q.raw?.accountNumber || q.accountNumber
-    const qDeal = q.raw?.dealId || q.dealNumber
+    const qDeal = q.raw?.dealId || q.dealNumber || q.raw?.sourceDealId
 
-    if (targetQuoteNo && qNum === targetQuoteNo) return true
-    if (targetDealNo && qDeal === targetDealNo) return true
-    if (targetAccountNo && qAccount === targetAccountNo) return true
+    const targetBase = targetQuoteNo.replace(/-R\d+$/i, '').trim().toLowerCase()
+    const qBase = qNum.replace(/-R\d+$/i, '').trim().toLowerCase()
+
+    if (targetBase && qBase && targetBase === qBase) return true
+    if (targetDealNo && qDeal && String(targetDealNo) === String(qDeal)) return true
+    if (targetAccountNo && qAccount && String(targetAccountNo) === String(qAccount)) return true
     return false
   }).sort((a, b) => {
     const revA = a.raw?.revisionNo ?? a.revisionNo ?? (a.raw?.revisionCode === 'Normal' ? 1 : 1)

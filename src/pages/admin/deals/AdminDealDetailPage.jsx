@@ -385,7 +385,15 @@ const AdminDealDetailPage = () => {
 
   const handleGenerateQuotation = () => {
     if (!deal) return
-    setInlineQuotationDeal(sourceDeal || deal)
+    const targetDeal = sourceDeal || deal
+    const isAdminPortal = window.location.pathname.startsWith('/admin')
+    navigate(isAdminPortal ? '/admin/quotations' : '/quotations', {
+      state: {
+        openGenerator: true,
+        preselectedDeal: targetDeal,
+        activeTab: 'deal',
+      },
+    })
   }
 
   const handleSavedReminder = async (reminderData) => {

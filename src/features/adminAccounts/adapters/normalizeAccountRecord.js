@@ -107,7 +107,9 @@ const resolveStage = (account) => {
     quotation_shared: 'quotation_sent',
     revision_requested: 'quote_revision',
     won: 'order_received',
+    not_quoted: 'not_quoted',
     awaiting_po: 'convert_to_po',
+    po_converted: 'convert_to_po',
     lost: 'order_lost',
     converted: 'converted',
     rejected: 'rejected',
@@ -145,13 +147,24 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
       ? `${accountOwnerCode}-${rawAccNo}`
       : rawAccNo || accountOwnerCode || '';
   const accountOwnerDisplay = accountOwner
-  const status = titleize(account.status || account.accountStatus || account.accountState || stageMeta.label)
+
+  const isNotQuotedStage = stage === 'not_quoted' || normalizeStageKey(account.status || account.accountStatus) === 'not_quoted'
+  const isPoConvertedStage = stage === 'convert_to_po' || normalizeStageKey(account.status || account.accountStatus) === 'convert_to_po' || normalizeStageKey(account.status || account.accountStatus) === 'po_converted'
+
+  const status = isNotQuotedStage
+    ? 'Not Quoted'
+    : (isPoConvertedStage ? 'PO Converted' : titleize(account.status || account.accountStatus || account.accountState || stageMeta.label))
+  const accountStatus = isNotQuotedStage
+    ? 'not_quoted'
+    : (isPoConvertedStage ? 'convert_to_po' : status)
+  const accountState = isNotQuotedStage
+    ? 'not_quoted'
+    : (isPoConvertedStage ? 'convert_to_po' : titleize(account.accountState || account.status || account.accountStatus || stageMeta.label))
   const reasonForLost =
     account.reasonForLost ||
     ((stage === 'order_lost' || stage === 'rejected') ? account.remark || 'Not specified' : '')
   const primaryEmail = account.email || account.contactEmail || primaryContact.email || account.alternateEmail || ''
   const primaryPhone = account.phone || account.contactPhone || primaryContact.phone || account.contactMobile || primaryContact.mobile || account.alternatePhone || ''
-  const accountState = titleize(account.accountState || account.status || account.accountStatus || stageMeta.label)
   const accountSource = titleize(account.accountSource || account.source || '')
   const accountSubsource = titleize(account.accountSubsource || account.subsource || '')
   const addedByName = resolveAddedByName(account)
@@ -168,27 +181,28 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
   const rawCustomerType = account.customerType || formData['Customer Type'] || formData.customerType || ''
   const parsedCustomerType = rawCustomerType.toLowerCase() === 'prospect' ? '' : titleize(rawCustomerType)
 
-  const accountNameVal = account.name || account.accountName || account.customerName || formData['Account Name'] || formData.accountName || formData.customerName || 'Untitled Account'
+  const accountNameVal = account.name || account.accountName || account.customerName || formData['Account Name'] || formData.accountName || formData.customerName || account.raw?.name || account.raw?.accountName || account.raw?.customerName || account.raw?.formData?.['Account Name'] || account.raw?.formData?.name || 'Untitled Account'
   if (typeof accountNameVal === 'string' && /Report Filter/i.test(accountNameVal)) {
     return null
   }
-  const projectNameVal = account.projectName || formData['Project Name'] || formData.projectName || titleize(account.productCategory || formData['Product Category']) || 'General Enquiry'
-  const primaryEmailVal = primaryEmail || formData['Email'] || formData.email || formData['Alternate Email'] || ''
-  const primaryPhoneVal = primaryPhone || formData['Phone'] || formData.phone || formData['Alternate Phone'] || ''
-  const contactPersonVal = account.contactPerson || formData['Contact Person'] || primaryContact.name || ''
-  const locationVal = titleize(account.location || formData['Location'] || '')
-  const stateVal = titleize(account.state || formData['State'] || '')
-  const industryTypeVal = titleize(account.industryType || account.industry || formData['Industry type'] || formData['Industry Type'] || '')
-  const customerRefNoVal = account.customerRefNo || formData['Customer Ref. No.'] || formData.customerRefNo || ''
-  const consultantNameVal = account.consultantName || formData['Consultant Name'] || ''
-  const poValueVal = account.poValue || formData['PO Value'] || ''
-  const productCategoryVal = titleize(account.productCategory || formData['Product Category'] || '')
-  const userGroupVal = account.userGroup || formData['User Group'] || ''
+  const projectNameVal = account.projectName || account.company || formData['Project Name'] || formData.projectName || formData.company || account.raw?.projectName || account.raw?.company || account.raw?.formData?.['Project Name'] || account.raw?.formData?.projectName || titleize(account.productCategory || formData['Product Category']) || 'General Enquiry'
+  const primaryEmailVal = primaryEmail || formData['Email'] || formData.email || formData['Alternate Email'] || account.raw?.email || account.raw?.contactEmail || ''
+  const primaryPhoneVal = primaryPhone || formData['Phone'] || formData.phone || formData['Alternate Phone'] || account.raw?.phone || account.raw?.contactPhone || ''
+  const contactPersonVal = account.contactPerson || formData['Contact Person'] || formData.contactPerson || primaryContact.name || account.raw?.contactPerson || account.raw?.formData?.['Contact Person'] || ''
+  const locationVal = titleize(account.location || formData['Location'] || formData.location || account.raw?.location || '')
+  const stateVal = titleize(account.state || formData['State'] || formData.state || account.raw?.state || '')
+  const industryTypeVal = titleize(account.industryType || account.industry || formData['Industry type'] || formData['Industry Type'] || formData.industryType || account.raw?.industryType || account.raw?.industry || '')
+  const customerRefNoVal = account.customerRefNo || formData['Customer Ref. No.'] || formData.customerRefNo || account.raw?.customerRefNo || ''
+  const consultantNameVal = account.consultantName || formData['Consultant Name'] || formData.consultantName || account.raw?.consultantName || account.raw?.formData?.['Consultant Name'] || ''
+  const poValueVal = account.poValue || formData['PO Value'] || formData.poValue || account.raw?.poValue || ''
+  const productCategoryVal = titleize(account.productCategory || formData['Product Category'] || formData.productCategory || account.raw?.productCategory || '')
+  const userGroupVal = account.userGroup || formData['User Group'] || formData.userGroup || account.raw?.userGroup || account.raw?.formData?.['User Group'] || ''
 
   const normalized = {
     id: String(account.id || account._id || accountNumber),
     accountNumber,
     name: accountNameVal,
+    accountName: accountNameVal,
     accountCategory: parsedAccountCategory,
     projectName: projectNameVal,
     reasonForLost,

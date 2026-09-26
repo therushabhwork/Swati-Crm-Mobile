@@ -27,6 +27,7 @@ const USER_ID_ARRAY_FIELDS = [
 
 const USER_NAME_FIELDS = [
   'accountOwner',
+  'accountOwnerName',
   'ownerName',
   'dealOwner',
   'customerOwner',
@@ -184,18 +185,7 @@ export const canUserAccessEntity = (user, entityType, payload) => {
   }
 
   if (entityType === 'account') {
-    const createdByIds = [
-      record.createdBy,
-      record.createdById,
-      record.createdByUserId,
-      record.userId,
-      record.raw?.createdBy,
-      record.raw?.createdByUserId,
-      record.raw?.formData?.userId,
-      record.raw?.formData?.createdByUserId,
-    ].map((value) => String(value || '')).filter(Boolean)
-
-    return createdByIds.includes(String(user.id || ''))
+    return matchesUserScope(record, user)
   }
 
   return matchesUserScope(record, user)

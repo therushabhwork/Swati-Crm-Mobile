@@ -43,20 +43,40 @@ const mapLeadRow = (record) => {
   }
 
   const mergedFormData = row.formData && typeof row.formData === 'object' ? row.formData : {}
-  const rawAccountName = row.customerName || row.accountName || row.name || mergedFormData.accountName || mergedFormData.customerName || mergedFormData.name || ''
+  const rawAccountName = row.name || row.accountName || row.customerName || mergedFormData.name || mergedFormData.accountName || mergedFormData.customerName || mergedFormData['Account Name'] || ''
   if (typeof rawAccountName === 'string' && /Report Filter/i.test(rawAccountName)) {
     return null
   }
 
   const resolvedAccountNo = row.accountNo || mergedFormData.accountNumber || mergedFormData.accountNo || null
-  const resolvedOwnerName = row.ownerName || mergedFormData.accountOwner || mergedFormData.ownerName || ''
+  const resolvedOwnerName = row.accountOwnerName || row.accountOwner || row.ownerName || mergedFormData.accountOwnerName || mergedFormData.accountOwner || mergedFormData.ownerName || ''
 
   return {
+    ...row,
+    ...mergedFormData,
     id: row.id,
-    customerName: row.customerName || mergedFormData.customerName || mergedFormData.accountName || '',
-    mobile: row.mobile || mergedFormData.alternatePhone || '',
-    email: row.email || mergedFormData.alternateEmail || '',
-    company: row.company || mergedFormData.projectName || '',
+    name: rawAccountName,
+    customerName: rawAccountName,
+    accountName: rawAccountName,
+    accountDate: row.accountDate || mergedFormData.accountDate || null,
+    accountCategory: row.accountCategory || mergedFormData.accountCategory || null,
+    contactPerson: row.contactPerson || mergedFormData.contactPerson || null,
+    phone: row.phone || row.mobile || mergedFormData.phone || mergedFormData.alternatePhone || null,
+    email: row.email || mergedFormData.email || mergedFormData.alternateEmail || '',
+    alternatePhone: row.alternatePhone || mergedFormData.alternatePhone || null,
+    alternateEmail: row.alternateEmail || mergedFormData.alternateEmail || null,
+    customerType: row.customerType || mergedFormData.customerType || null,
+    projectName: row.projectName || mergedFormData.projectName || row.company || '',
+    productCategory: row.productCategory || mergedFormData.productCategory || null,
+    state: row.state || mergedFormData.state || null,
+    location: row.location || mergedFormData.location || null,
+    industryType: row.industryType || mergedFormData.industryType || mergedFormData.industry || null,
+    customerRefNo: row.customerRefNo || mergedFormData.customerRefNo || null,
+    consultantName: row.consultantName || mergedFormData.consultantName || null,
+    poValue: row.poValue !== undefined ? row.poValue : (mergedFormData.poValue !== undefined ? mergedFormData.poValue : null),
+    userGroup: row.userGroup || mergedFormData.userGroup || null,
+    mobile: row.mobile || row.phone || mergedFormData.alternatePhone || mergedFormData.phone || '',
+    company: row.company || row.projectName || mergedFormData.projectName || mergedFormData.company || '',
     status: row.status || mergedFormData.accountState || 'pending',
     companyId: row.companyId || 1,
     ownerUserId: row.ownerUserId || row.assignedTo || row.createdBy || null,
@@ -69,7 +89,6 @@ const mapLeadRow = (record) => {
     formType: row.formType || 'account',
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    ...mergedFormData,
     createdByUserId: row.createdByUserId || mergedFormData.createdByUserId || row.createdBy || null,
     createdByUserName: row.createdByUserName || mergedFormData.createdByUserName || '',
     createdUserBy: row.createdUserBy || mergedFormData.createdUserBy || '',
@@ -80,10 +99,7 @@ const mapLeadRow = (record) => {
     accountNo: resolvedAccountNo,
     accountNumber: resolvedAccountNo,
     accountOwner: resolvedOwnerName,
-    accountName: mergedFormData.accountName || row.customerName || '',
-    alternatePhone: mergedFormData.alternatePhone || row.mobile || '',
-    alternateEmail: mergedFormData.alternateEmail || row.email || '',
-    projectName: row.projectName || mergedFormData.projectName || row.company || '',
+    accountOwnerName: resolvedOwnerName,
     accountState: mergedFormData.accountState || row.status || 'pending',
     ownerId: row.assignedTo || null,
     assignedUserId: row.assignedTo || null,
@@ -132,6 +148,9 @@ const listAssignedLeads = async (userId) => {
 }
 
 const listCreatedLeadsForActor = async (actor, filters = {}) => {
+  const ownerCodeStr = String(actor.ownerCode || actor.employeeId || '').trim()
+  const actorName = String(actor.name || actor.username || '').trim()
+
   const records = await Lead
     .find(mergeFilters(
       {
@@ -139,8 +158,28 @@ const listCreatedLeadsForActor = async (actor, filters = {}) => {
         $or: [
           { createdBy: actor.id },
           { createdByUserId: actor.id },
+          { assignedTo: actor.id },
+          { ownerUserId: actor.id },
           { 'formData.userId': actor.id },
           { 'formData.createdByUserId': actor.id },
+          { 'formData.assignedTo': actor.id },
+          { 'formData.ownerId': actor.id },
+          ...(ownerCodeStr ? [
+            { ownerCode: ownerCodeStr },
+            { accountOwnerCode: ownerCodeStr },
+            { accountNumber: ownerCodeStr },
+            { accountNo: ownerCodeStr },
+            { 'formData.ownerCode': ownerCodeStr },
+            { 'formData.accountOwnerCode': ownerCodeStr },
+          ] : []),
+          ...(actorName ? [
+            { accountOwner: actorName },
+            { accountOwnerName: actorName },
+            { ownerName: actorName },
+            { 'formData.accountOwner': actorName },
+            { 'formData.accountOwnerName': actorName },
+            { 'formData.ownerName': actorName },
+          ] : []),
         ],
       },
       buildAccountSearchFilter(filters),
@@ -149,7 +188,7 @@ const listCreatedLeadsForActor = async (actor, filters = {}) => {
     .sort({ accountNo: 1, legacyId: 1 })
     .lean()
 
-  return records.map(mapLeadRow)
+  return records.map(mapLeadRow).filter(Boolean)
 }
 
 const findLeadById = async (leadId) => {

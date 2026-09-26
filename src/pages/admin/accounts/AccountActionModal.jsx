@@ -203,8 +203,8 @@ const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
       updates = {
         stage: selectedStatus?.stageKey || targetStage,
         status: isNotQuoted ? 'not_quoted' : selectedStatusLabel,
-        accountStatus: isNotQuoted ? 'not_quoted' : (targetStage === 'convert_to_po' ? 'PO Converted' : 'Pending'),
-        accountState: isNotQuoted ? 'not_quoted' : (accountState || selectedStatusLabel),
+        accountStatus: isNotQuoted ? 'not_quoted' : (targetStage === 'convert_to_po' ? 'convert_to_po' : 'Pending'),
+        accountState: isNotQuoted ? 'not_quoted' : (targetStage === 'convert_to_po' ? 'convert_to_po' : (accountState || selectedStatusLabel)),
         latestRemark: statusNote.trim() || account.latestRemark,
       }
 
@@ -213,8 +213,8 @@ const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
           ...updates,
           stage: 'convert_to_po',
           status: 'convert_to_po',
-          accountStatus: 'PO Converted',
-          accountState: 'Pending',
+          accountStatus: 'convert_to_po',
+          accountState: 'convert_to_po',
           poValue: poValue === '' ? '' : poValue,
           statusAsPerOrderReceived: orderReceivedStatus,
           statusAsPerQuotationGiven: quotationGivenStatus,
@@ -318,7 +318,7 @@ const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
             </label>
             <label className="admin-accounts-bulk-field admin-accounts-action-field-full">
               Project Name
-              <input type="text" value={account.projectName || account.name || '-'} readOnly style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} />
+              <input type="text" value={account.projectName || account.company || account.raw?.projectName || '-'} readOnly style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed' }} />
             </label>
           </div>
 

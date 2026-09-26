@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FiChevronDown } from 'react-icons/fi'
 import { useClickOutside } from '../../../hooks'
+import { useData } from '../../../context/DataContext'
 import { ACCOUNT_ROW_ACTIONS } from '../../../features/adminAccounts/config/accountActions'
 import { openAdminAccountActionPage } from '../../../features/adminAccounts/utils/accountNavigation'
 import AccountsBoardFilters from './AccountsBoardFilters'
@@ -45,6 +46,7 @@ const AccountsLegacyBoard = ({
   ownerOptions = [],
 }) => {
   const navigate = useNavigate()
+  const { addNotification } = useData()
   const [openMenuId, setOpenMenuId] = useState(null)
   const [menuStyle, setMenuStyle] = useState(null)
   const closeRowMenu = () => {
@@ -79,6 +81,12 @@ const AccountsLegacyBoard = ({
   const handleMenuAction = (action, row) => {
     closeRowMenu()
 
+    const isNotQuotedAccount = row.stage === 'not_quoted' || row.status === 'Not Quoted' || row.stage === 'Not Quoted' || row.status === 'not_quoted' || row.accountStatus === 'not_quoted'
+    if (isNotQuotedAccount && (action.key === 'generate-quotation' || action.behavior === 'quotationGenerator' || action.key === 'converted-deal' || action.behavior === 'convertToDeal' || action.key === 'convert_to_po')) {
+      addNotification?.('warning', 'Action Unavailable', 'This account is marked as Not Quoted. PO Conversion and Quotation Generation are disabled.')
+      return
+    }
+
     if (action.behavior === 'deleteAccount' || action.key === 'delete-account') {
       onDeleteAccount?.(row)
       return
@@ -91,12 +99,6 @@ const AccountsLegacyBoard = ({
 
     if (action.behavior === 'viewDeal' || action.key === 'view-linked-deal') {
       onViewDeal?.(row)
-      return
-    }
-
-    const isNotQuotedAccount = row.stage === 'not_quoted' || row.status === 'Not Quoted' || row.stage === 'Not Quoted'
-    if (isNotQuotedAccount && (action.key === 'generate-quotation' || action.behavior === 'quotationGenerator' || action.key === 'converted-deal' || action.key === 'convert_to_po')) {
-      addNotification('warning', 'Action Unavailable', 'This account is marked as Not Quoted. PO Conversion and Quotation Generation are disabled.')
       return
     }
 
@@ -169,7 +171,7 @@ const AccountsLegacyBoard = ({
 
   const getVisibleRowActions = (row) => rowActions.flatMap((action) => {
     if (action.key === 'converted-deal') {
-      return row.isConverted || row.dealId ? [] : [{ ...action, behavior: 'convertToDeal', label: 'Convert to Deal' }]
+      return row.isConverted || row.dealId ? [] : [{ ...action, behavior: 'convertToDeal', label: 'Convert to PO' }]
     }
 
     if (action.key === 'view-linked-deal') {

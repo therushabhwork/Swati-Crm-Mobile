@@ -10,6 +10,7 @@ import AccountsBoardPagination from '../../../components/admin/accounts/Accounts
 import AccountsExportButton from '../../../components/admin/accounts/AccountsExportButton'
 import AccountBoardHeaderActions from '../../../components/admin/accounts/AccountBoardHeaderActions'
 import AccountDetailsDrawer from './AccountDetailsDrawer'
+import AccountActionModal from './AccountActionModal'
 import { useData } from '../../../context/DataContext'
 import { useAuth } from '../../../context/AuthContext';
 import { userApi } from '../../../services/userApi';
@@ -595,6 +596,8 @@ const MyGroupAccountsPage = ({ variantKey = 'myGroup' }) => {
   const [availableUsers, setAvailableUsers] = useState(() => authService.getAvailableUsers())
   const [cityFilter, setCityFilter] = useState('All')
   const [ownerFilter, setOwnerFilter] = useState('All')
+  const [activeActionAccount, setActiveActionAccount] = useState(null)
+  const [activeActionKey, setActiveActionKey] = useState(null)
   const lastAccountUpdateToastRef = useRef({ key: '', at: 0 })
 
   const allOwnerNames = useMemo(() => {
@@ -1068,31 +1071,10 @@ const activeStageParam = searchParams.get('stage')
     updateUrlState({ accountId: row.id })
   }
 
-  const handleConvertToDeal = async (row) => {
+  const handleConvertToDeal = (row) => {
     if (!row?.id) return
-    const confirmed = window.confirm('Convert Account\n\nAre you sure you want to convert this Account into a Deal?')
-    if (!confirmed) return
-
-    const result = await convertAccountToDeal(row.id)
-    if (!result.success) {
-      addNotification('error', 'Convert failed', result.message || 'Unable to convert account into deal.')
-      return
-    }
-
-    addNotification('success', 'Account converted', 'Deal and Converted Deal were created successfully.')
-    await refreshData()
-
-    const createdDeal = result.data?.deal || {}
-    const createdConvertedDeal = result.data?.convertedDeal || {}
-    navigate(isAdminPortal ? '/admin/deals/view' : '/deals/view', {
-      state: {
-        quotationDealLookup: {
-          dealNumber: createdDeal.dealNumber || createdConvertedDeal.dealNumber || '',
-          projectName: createdDeal.name || createdDeal.dealName || createdDeal.projectName || createdConvertedDeal.name || createdConvertedDeal.projectName || '',
-          companyName: createdDeal.companyName || createdDeal.customerName || createdDeal.accountName || createdConvertedDeal.accountName || row.name || '',
-        },
-      },
-    })
+    setActiveActionAccount(row)
+    setActiveActionKey('converted-deal')
   }
 
   const handleViewLinkedDeal = (row) => {
@@ -1829,6 +1811,22 @@ const activeStageParam = searchParams.get('stage')
           </p>
         </div>
       </Modal>
+
+      {activeActionAccount && activeActionKey ? (
+        <AccountActionModal
+          account={activeActionAccount}
+          actionKey={activeActionKey}
+          onClose={() => {
+            setActiveActionAccount(null)
+            setActiveActionKey(null)
+          }}
+          onSaved={async () => {
+            await refreshData()
+            setActiveActionAccount(null)
+            setActiveActionKey(null)
+          }}
+        />
+      ) : null}
     </div>
   )
 }

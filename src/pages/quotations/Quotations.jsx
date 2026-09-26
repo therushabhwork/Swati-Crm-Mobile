@@ -896,6 +896,16 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
 
       setRevisionsModalRow((prev) => {
         if (!prev) return null
+        const updatedRevisions = Array.isArray(prev.raw?.revisions)
+          ? prev.raw.revisions.map((r) => {
+              const rCode = r.revisionCode || (r.revisionNo ? `R${r.revisionNo}` : 'R1')
+              if (rCode === revCode || revCode === 'R1') {
+                return { ...r, status: 'Approved' }
+              }
+              return r
+            })
+          : prev.raw?.revisions
+
         return {
           ...prev,
           status: 'Approved',
@@ -903,6 +913,7 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
           raw: {
             ...prev.raw,
             status: 'Approved',
+            ...(updatedRevisions ? { revisions: updatedRevisions } : {}),
           },
         }
       })
@@ -993,6 +1004,7 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
       setSelectedProfile(profileValue)
       setSelectedAccountId('')
       setIsGenerateOpen(false)
+      setActiveTab('deal')
       openQuotationBuilder(profileValue, dealAccount)
       if (location.state?.preselectedDeal) {
         navigate(location.pathname, { replace: true, state: {} })
@@ -1101,7 +1113,7 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
     const profile = getProfileByValue(profileValue)
     const quotationDate = getTodayInputValue()
 
-    const targetDealId = account?.sourceDealId || account?.source_deal_id || account?.dealId || account?.id
+    const targetDealId = account?.sourceDealId || account?.source_deal_id || account?.dealId
     const targetAccountId = account?.id || account?.selectedAccountId || account?.accountNumber
 
     const existingMatchingQuotes = (Array.isArray(quotations) ? quotations : []).filter((q) => {

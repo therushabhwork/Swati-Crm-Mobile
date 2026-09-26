@@ -1,6 +1,21 @@
 import { format } from 'date-fns'
 
 const emptyValue = '-'
+const formatAccountNameDisplay = (value, row = {}) => {
+  const resolved = (typeof value === 'string' && value.trim() ? value : null)
+    || row.name
+    || row.accountName
+    || row.customerName
+    || row.raw?.name
+    || row.raw?.accountName
+    || row.raw?.customerName
+    || row.raw?.formData?.name
+    || row.raw?.formData?.accountName
+    || row.raw?.formData?.['Account Name']
+    || emptyValue
+
+  return resolved
+}
 const formatProjectNameDisplay = (value, row = {}) => (
   value
   || row.raw?.projectName
@@ -34,7 +49,7 @@ const formatLegacyBoardDate = (value) => {
 
 export const GROUP_ACCOUNTS_COLUMNS = [
   { key: 'accountNumber', label: 'Account No.', filterPlaceholder: 'Search Account No.', width: '150px', searchable: true, exportable: true, clickable: true },
-  { key: 'name', label: 'Account Name', filterPlaceholder: 'Search Account Name', width: '220px', searchable: true, exportable: true },
+  { key: 'name', label: 'Account Name', filterPlaceholder: 'Search Account Name', width: '220px', searchable: true, exportable: true, cellFormatter: formatAccountNameDisplay, exportFormatter: formatAccountNameDisplay },
   { key: 'accountOwner', label: 'Account Owner', filterPlaceholder: 'Search Account Owner', width: '180px', searchable: true, exportable: true, cellFormatter: formatAccountOwnerDisplay, exportFormatter: formatAccountOwnerDisplay },
   { key: 'accountDate', label: 'Account Date', filterPlaceholder: 'Search Account Date', width: '150px', searchable: true, exportable: true, cellFormatter: (value) => formatLegacyBoardDate(value), exportFormatter: (value) => formatLegacyBoardDate(value) },
   { key: 'accountCategory', label: 'Account Category', filterPlaceholder: 'Search Account Category', width: '180px', searchable: true, exportable: true, cellFormatter: (value) => value || emptyValue },
@@ -52,7 +67,7 @@ export const MY_GROUP_ACCOUNTS_COLUMNS = GROUP_ACCOUNTS_COLUMNS
 export const VIEW_ALL_COLUMNS = [
   { key: 'accountNumber', label: 'Account No.', filterPlaceholder: 'Search Account No.', width: '150px', searchable: true, exportable: true, clickable: true },
   { key: 'accountDate', label: 'Account Date', filterPlaceholder: 'Search Account Date', width: '150px', searchable: true, exportable: true, cellFormatter: (value) => formatLegacyBoardDate(value), exportFormatter: (value) => formatLegacyBoardDate(value) },
-  { key: 'name', label: 'Account Name', filterPlaceholder: 'Search Account Name', width: '220px', searchable: true, exportable: true },
+  { key: 'name', label: 'Account Name', filterPlaceholder: 'Search Account Name', width: '220px', searchable: true, exportable: true, cellFormatter: formatAccountNameDisplay, exportFormatter: formatAccountNameDisplay },
   { key: 'accountOwner', label: 'Account Owner', filterPlaceholder: 'Search Account Owner', width: '180px', searchable: true, exportable: true, cellFormatter: formatAccountOwnerDisplay, exportFormatter: formatAccountOwnerDisplay },
   { key: 'status', label: 'Account Status', filterPlaceholder: 'Search Account Status', width: '150px', searchable: true, exportable: true },
   { key: 'accountSource', label: 'Account Source', filterPlaceholder: 'Search Account Source', width: '150px', searchable: true, exportable: true },
@@ -66,7 +81,7 @@ export const VIEW_ALL_COLUMNS = [
 export const NO_FOLLOW_LEAD_COLUMNS = [
   { key: 'latestRemark', label: 'Latest Remark', filterPlaceholder: 'Search Latest Remark', width: '210px', searchable: true, exportable: true, cellFormatter: (value) => value || emptyValue },
   { key: 'accountNumber', label: 'Account No.', filterPlaceholder: 'Search Account No.', width: '150px', searchable: true, exportable: true, clickable: true },
-  { key: 'name', label: 'Account Name', filterPlaceholder: 'Search Account Name', width: '220px', searchable: true, exportable: true },
+  { key: 'name', label: 'Account Name', filterPlaceholder: 'Search Account Name', width: '220px', searchable: true, exportable: true, cellFormatter: formatAccountNameDisplay, exportFormatter: formatAccountNameDisplay },
   { key: 'accountDate', label: 'Account Date', filterPlaceholder: 'Search Account Date', width: '150px', searchable: true, exportable: true, cellFormatter: (value) => formatLegacyBoardDate(value), exportFormatter: (value) => formatLegacyBoardDate(value) },
   { key: 'accountCategory', label: 'Account Category', filterPlaceholder: 'Search Account Category', width: '180px', searchable: true, exportable: true, cellFormatter: (value) => value || emptyValue },
   { key: 'status', label: 'Account Status', filterPlaceholder: 'Search Account Status', width: '150px', searchable: true, exportable: true },
@@ -93,6 +108,8 @@ export const ACCOUNT_LIST_BOARD_COLUMNS = [
     width: '220px',
     searchable: true,
     exportable: true,
+    cellFormatter: formatAccountNameDisplay,
+    exportFormatter: formatAccountNameDisplay,
   },
   {
     key: 'projectName',
@@ -161,6 +178,8 @@ export const DEFAULT_ADMIN_BOARD_COLUMNS = [
     width: '240px',
     searchable: true,
     exportable: true,
+    cellFormatter: formatAccountNameDisplay,
+    exportFormatter: formatAccountNameDisplay,
   },
   {
     key: 'accountCategory',
@@ -248,6 +267,8 @@ export const SEARCH_ACCOUNT_BOARD_COLUMNS = [
     width: '210px',
     searchable: true,
     exportable: true,
+    cellFormatter: formatAccountNameDisplay,
+    exportFormatter: formatAccountNameDisplay,
   },
   {
     key: 'accountOwner',
@@ -349,6 +370,8 @@ export const MY_ACCOUNTS_BOARD_COLUMNS = [
     width: '240px',
     searchable: true,
     exportable: true,
+    cellFormatter: formatAccountNameDisplay,
+    exportFormatter: formatAccountNameDisplay,
   },
   {
     key: 'accountCategory',
@@ -408,6 +431,8 @@ export const ACCOUNT_SOURCE_VIEW_COLUMNS = [
     width: '240px',
     searchable: true,
     exportable: true,
+    cellFormatter: formatAccountNameDisplay,
+    exportFormatter: formatAccountNameDisplay,
   },
   {
     key: 'phone',
@@ -446,6 +471,8 @@ export const WEEKLY_REPORTS_ALL_COLUMNS = [
     width: '210px',
     searchable: true,
     exportable: true,
+    cellFormatter: formatAccountNameDisplay,
+    exportFormatter: formatAccountNameDisplay,
   },
   {
     key: 'accountDate',
@@ -546,6 +573,8 @@ export const SW_BARODA_MUM_COLUMNS = [
     width: '210px',
     searchable: true,
     exportable: true,
+    cellFormatter: formatAccountNameDisplay,
+    exportFormatter: formatAccountNameDisplay,
   },
   {
     key: 'accountDate',
@@ -646,6 +675,8 @@ export const USER_WISE_LEADS_COLUMNS = [
     width: '220px',
     searchable: true,
     exportable: true,
+    cellFormatter: formatAccountNameDisplay,
+    exportFormatter: formatAccountNameDisplay,
   },
   {
     key: 'accountDate',
@@ -710,6 +741,8 @@ export const CONVERTED_ACCOUNTS_COLUMNS = [
     width: '230px',
     searchable: true,
     exportable: true,
+    cellFormatter: formatAccountNameDisplay,
+    exportFormatter: formatAccountNameDisplay,
   },
   {
     key: 'accountOwner',

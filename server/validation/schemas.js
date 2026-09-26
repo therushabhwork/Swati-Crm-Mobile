@@ -33,7 +33,7 @@ if (!zod) {
     }
 
     return normalizedValue
-  }, z.union([z.number().int(), z.null()]))
+  }, z.union([z.number().int(), z.string().regex(/^[a-f\d]{24}$/i), z.null()]))
 
   const auth = {
     login: z.object({

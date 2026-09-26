@@ -178,9 +178,9 @@ const buildLeadPayload = async (payload = {}, actor, existingLead = null) => {
   }
 
   const hasReasonForLost = Object.prototype.hasOwnProperty.call(sanitizedPayload, 'reasonForLost') || Object.prototype.hasOwnProperty.call(sanitizedPayload, 'reasonForLostOrder')
-  const targetStatus = isNotQuotedPayload ? 'not_quoted' : (sanitizedPayload.accountState || sanitizedPayload.status || existingLead?.status || 'pending')
-  const targetAccountStatus = isNotQuotedPayload ? 'not_quoted' : (sanitizedPayload.accountStatus || existingLead?.accountStatus || existingLead?.formData?.accountStatus || 'Pending')
-  const targetAccountState = isNotQuotedPayload ? 'not_quoted' : (sanitizedPayload.accountState || existingLead?.accountState || existingLead?.formData?.accountState || 'Pending')
+  const targetStatus = isNotQuotedPayload ? 'not_quoted' : (isPoConvertedStage ? 'convert_to_po' : (sanitizedPayload.accountState || sanitizedPayload.status || existingLead?.status || 'pending'))
+  const targetAccountStatus = isNotQuotedPayload ? 'not_quoted' : (isPoConvertedStage ? 'convert_to_po' : (sanitizedPayload.accountStatus || existingLead?.accountStatus || existingLead?.formData?.accountStatus || 'Pending'))
+  const targetAccountState = isNotQuotedPayload ? 'not_quoted' : (isPoConvertedStage ? 'convert_to_po' : (sanitizedPayload.accountState || existingLead?.accountState || existingLead?.formData?.accountState || 'Pending'))
 
   const normalizedPayload = applyOwnershipMetadata(actor, {
     ...sanitizedPayload,
@@ -489,6 +489,15 @@ const frontendDeleteLead = async (actor, leadId) => {
 
 const updateLead = async (actor, leadId, payload) => {
   const existingLead = await getLeadById(actor, leadId, { includeGroupScope: false })
+
+  const targetStage = payload.stage || payload.status || payload.accountStatus || payload.formData?.stage || payload.formData?.status || ''
+  const isPoConversionTarget = targetStage === 'convert_to_po' || targetStage === 'po_converted' || targetStage === 'PO Converted'
+  if (isPoConversionTarget) {
+    const resolvedPoValue = payload.poValue || payload.formData?.poValue || existingLead.poValue || existingLead.formData?.poValue || ''
+    if (!String(resolvedPoValue).trim()) {
+      throw new AppError('PO Value is mandatory when converting account to PO status.', 400)
+    }
+  }
 
   const leadPayload = await buildLeadPayload(payload, actor, existingLead)
   let updatedLead = await leadRepository.updateLead(normalizeLeadId(leadId), leadPayload)

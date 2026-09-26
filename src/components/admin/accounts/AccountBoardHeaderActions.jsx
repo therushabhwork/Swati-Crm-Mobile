@@ -15,6 +15,8 @@ import {
 } from 'react-icons/fi'
 import * as XLSX from 'xlsx'
 import { useClickOutside } from '../../../hooks'
+import { useAuth } from '../../../context/AuthContext'
+import { getCrmOwnerCode } from '../../../features/users/crmUserDirectory'
 import { leadApi } from '../../../services/leadApi'
 import './AccountBoardHeaderActions.css'
 
@@ -41,6 +43,7 @@ const AccountBoardHeaderActions = ({
   onBulkReAssign,
   onBulkValidationError,
 }) => {
+  const { user } = useAuth()
   const actions = view.titlebarActions || {}
   const [openMenu, setOpenMenu] = useState(null)
   const [pendingColumnKeys, setPendingColumnKeys] = useState(() => visibleColumns.map((column) => column.key))
@@ -117,6 +120,11 @@ const AccountBoardHeaderActions = ({
 
       const normKey = (str) => String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '')
 
+      // Dynamic logged-in user and ownerCode resolution
+      const loggedInUserName = user?.name || user?.username || 'Jay Pandya'
+      const loggedInOwnerCode = String(user?.ownerCode || getCrmOwnerCode(loggedInUserName) || '1004').trim()
+      const loggedInUserId = user?.id || null
+
       let existingLeads = []
       try {
         existingLeads = await leadApi.getLeads()
@@ -148,8 +156,6 @@ const AccountBoardHeaderActions = ({
         const accountName = getVal('Account Name', 'AccountName', 'Customer Name', 'customerName', 'Name', 'name')
         const accountDate = getVal('Account Date', 'Date', 'accountDate')
         const accountCategory = getVal('Account Category', 'AccountCategory', 'Category', 'accountCategory')
-        const rawAccountOwner = getVal('Account Owner', 'AccountOwner', 'Owner', 'ownerName', 'accountOwner')
-        const accountOwner = rawAccountOwner || 'Jay Pandya'
         const contactPerson = getVal('Contact Person', 'ContactPerson', 'Contact', 'contactPerson')
         const phone = getVal('Phone', 'phone', 'Mobile', 'mobile', 'Contact Mobile')
         const email = sanitizeEmail(getVal('Email', 'email', 'Contact Email'))
@@ -161,18 +167,18 @@ const AccountBoardHeaderActions = ({
         const state = getVal('State', 'state')
         const location = getVal('Location', 'location', 'City', 'city')
         const industryType = getVal('Industry type', 'Industry Type', 'IndustryType', 'Industry', 'industry')
-        const customerRefNo = getVal('Customer Ref. No.', 'Customer Ref No', 'CustomerRefNo', 'Account No.', 'Account No', 'Account Number', 'accountNumber', 'accountNo')
+        const customerRefNo = getVal('Customer Ref. No.', 'Customer Ref No', 'CustomerRefNo')
         const consultantName = getVal('Consultant Name', 'consultantName')
         const poValue = getVal('PO Value', 'poValue', 'POValue')
         const userGroup = getVal('User Group', 'userGroup', 'UserGroup')
 
-        const displayName = accountName || customerRefNo || phone || Object.values(row).map(v => String(v || '').trim()).find(Boolean)
+        const displayName = accountName || customerRefNo || phone || Object.values(row).map((v) => String(v || '').trim()).find(Boolean)
         if (!displayName) continue
-        if (/Report Filter/i.test(displayName) || /Report Filter/i.test(accountName) || /Report Filter/i.test(rawAccountOwner)) continue
+        if (/Report Filter/i.test(displayName) || /Report Filter/i.test(accountName)) continue
 
         const matchingLead = existingLeads.find((lead) => {
           if (!lead) return false
-          if (customerRefNo && (lead.accountNumber === customerRefNo || lead.accountNo === customerRefNo)) return true
+          if (customerRefNo && (lead.customerRefNo === customerRefNo || lead.formData?.customerRefNo === customerRefNo)) return true
           if (accountName && (lead.name === accountName || lead.customerName === accountName || lead.accountName === accountName)) return true
           return false
         })
@@ -189,13 +195,19 @@ const AccountBoardHeaderActions = ({
           name: displayName,
           accountName: displayName,
           customerName: displayName,
-          accountNumber: customerRefNo || undefined,
-          accountNo: customerRefNo || undefined,
+          accountNumber: loggedInOwnerCode,
+          accountNo: loggedInOwnerCode,
+          account_no: loggedInOwnerCode,
+          ownerCode: loggedInOwnerCode,
+          accountOwnerCode: loggedInOwnerCode,
+          accountOwner: loggedInUserName,
+          ownerName: loggedInUserName,
+          createdBy: loggedInUserId,
+          ownerUserId: loggedInUserId,
+          assignedTo: loggedInUserId,
           customerRefNo: customerRefNo || undefined,
           accountDate: accountDate || undefined,
           accountCategory: accountCategory || undefined,
-          accountOwner: accountOwner,
-          ownerName: accountOwner,
           contactPerson: contactPerson || undefined,
           phone: phone || undefined,
           mobile: phone || undefined,
@@ -218,7 +230,7 @@ const AccountBoardHeaderActions = ({
             'Account Name': displayName,
             'Account Date': accountDate,
             'Account Category': accountCategory,
-            'Account Owner': accountOwner,
+            'Account Owner': loggedInUserName,
             'Contact Person': contactPerson,
             'Phone': phone,
             'Email': email,
@@ -234,6 +246,29 @@ const AccountBoardHeaderActions = ({
             'Consultant Name': consultantName,
             'PO Value': poValue,
             'User Group': userGroup,
+            accountName: displayName,
+            accountDate,
+            accountCategory,
+            accountOwner: loggedInUserName,
+            ownerCode: loggedInOwnerCode,
+            accountOwnerCode: loggedInOwnerCode,
+            contactPerson,
+            phone,
+            email,
+            alternatePhone,
+            alternateEmail,
+            customerType,
+            projectName,
+            productCategory,
+            state,
+            location,
+            industryType,
+            customerRefNo,
+            consultantName,
+            poValue,
+            userGroup,
+            accountNo: loggedInOwnerCode,
+            accountNumber: loggedInOwnerCode,
           },
         }
 
@@ -371,13 +406,15 @@ const AccountBoardHeaderActions = ({
 
       <button
         type="button"
-        className="account-board-header-icon-btn account-board-header-icon-btn-green"
+        className="account-board-header-btn account-board-header-icon-btn-green"
         title="Import accounts (.xlsx, .xls, .csv)"
         aria-label="Import accounts"
         disabled={isImporting}
         onClick={handleImportClick}
+        style={{ padding: '0 0.6rem', fontSize: '0.82rem', fontWeight: 600, height: '2.2rem' }}
       >
         <FiUpload />
+        <span>{isImporting ? 'Importing...' : 'Import'}</span>
       </button>
 
       {actions.showColumnsIcon ? (
@@ -528,6 +565,13 @@ const AccountBoardHeaderActions = ({
           ) : null}
         </div>
       ) : null}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".xlsx,.xls,.csv"
+        onChange={handleImportFileSelect}
+        style={{ display: 'none' }}
+      />
     </div>
   )
 }

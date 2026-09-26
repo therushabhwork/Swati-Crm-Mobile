@@ -868,7 +868,12 @@ const mergeDealSources = (deals = [], convertedDeals = []) => {
     mergedDeals.push(deal)
   })
 
-  return mergedDeals
+  return mergedDeals.sort((a, b) => {
+    const timeA = new Date(a?.createdAt || a?.dealDate || a?.date || 0).getTime()
+    const timeB = new Date(b?.createdAt || b?.dealDate || b?.date || 0).getTime()
+    if (timeA !== timeB) return timeB - timeA
+    return String(b?.id || b?._id || '').localeCompare(String(a?.id || a?._id || ''), undefined, { numeric: true })
+  })
 }
 
 const normalizeDealCityForFilter = (value) => {
@@ -929,7 +934,12 @@ const buildDealViewConfig = (variantKey, customViewDefinition) => {
     searchPlaceholder: 'Search deals...',
     emptyMessage: 'No deals found',
     filterFn: () => true,
-    sortFn: (left, right) => new Date(right.updatedAt || 0).getTime() - new Date(left.updatedAt || 0).getTime(),
+    sortFn: (left, right) => {
+      const timeA = new Date(left.createdAt || left.dealDate || left.date || left.updatedAt || 0).getTime()
+      const timeB = new Date(right.createdAt || right.dealDate || right.date || right.updatedAt || 0).getTime()
+      if (timeA !== timeB) return timeB - timeA
+      return String(right.id || right._id || '').localeCompare(String(left.id || left._id || ''), undefined, { numeric: true })
+    },
   }
 
   const configs = {
@@ -2824,7 +2834,14 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
     setOpenBoardActionMenuDealId('')
     setDealTableMenuPosition(null)
     closeBoardActionModal()
-    setInlineQuotationDeal(activeDeal)
+    const isAdminPortal = window.location.pathname.startsWith('/admin')
+    navigate(isAdminPortal ? '/admin/quotations' : '/quotations', {
+      state: {
+        openGenerator: true,
+        preselectedDeal: activeDeal,
+        activeTab: 'deal',
+      },
+    })
   }
 
   const handleCreateConvertedDealFromMenu = async (deal) => {

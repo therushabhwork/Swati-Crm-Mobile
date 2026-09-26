@@ -27,6 +27,7 @@ export const ACCOUNT_CHANGE_STATUS_OPTIONS = [
   { value: 'quotation_sent', label: 'Quotation Sent', stageKey: 'quotation_sent', aliases: ['quote sent'] },
   { value: 'quote_revision', label: 'Quote Revision', stageKey: 'quote_revision' },
   { value: 'order_received', label: 'Order Received', stageKey: 'order_received' },
+  { value: 'not_quoted', label: 'Not Quoted', stageKey: 'not_quoted' },
   { value: 'convert_to_po', label: 'Convert To PO', stageKey: 'convert_to_po', aliases: ['po converted'] },
   { value: 'order_lost', label: 'Order Lost', stageKey: 'order_lost', aliases: ['lost'] },
   { value: 'converted', label: 'Converted', stageKey: 'converted' },

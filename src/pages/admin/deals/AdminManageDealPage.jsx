@@ -771,7 +771,15 @@ const AdminManageDealPage = () => {
 
   const handleGenerateQuotation = () => {
     if (!activeDeal) return
-    setInlineQuotationDeal(sourceDeal || activeDeal)
+    const targetDeal = sourceDeal || activeDeal
+    const isAdminPortal = window.location.pathname.startsWith('/admin')
+    navigate(isAdminPortal ? '/admin/quotations' : '/quotations', {
+      state: {
+        openGenerator: true,
+        preselectedDeal: targetDeal,
+        activeTab: 'deal',
+      },
+    })
   }
 
   const handleUploadQuotation = () => {

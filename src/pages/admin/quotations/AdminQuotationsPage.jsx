@@ -241,10 +241,13 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
     const accountIdParam = searchParams.get('accountId')
     const viewParam = searchParams.get('view')
 
-    if (tabParam === 'accounts' || tabParam === 'account') {
-      setActiveTab('account')
-    } else if (tabParam === 'deals' || tabParam === 'deal') {
+    const stateActiveTab = location.state?.activeTab
+    const hasPreselectedDeal = Boolean(location.state?.preselectedDeal)
+
+    if (stateActiveTab === 'deal' || hasPreselectedDeal || tabParam === 'deals' || tabParam === 'deal') {
       setActiveTab('deal')
+    } else if (tabParam === 'accounts' || tabParam === 'account' || stateActiveTab === 'account') {
+      setActiveTab('account')
     }
     if (accountNameParam || accountNoParam) {
       setFilters((prev) => ({
@@ -292,6 +295,16 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
       
       setRevisionsModalRow((prev) => {
         if (!prev) return null
+        const updatedRevisions = Array.isArray(prev.raw?.revisions)
+          ? prev.raw.revisions.map((r) => {
+              const rCode = r.revisionCode || (r.revisionNo ? `R${r.revisionNo}` : 'R1')
+              if (rCode === revCode || revCode === 'R1') {
+                return { ...r, status: 'Approved' }
+              }
+              return r
+            })
+          : prev.raw?.revisions
+
         return {
           ...prev,
           status: 'Approved',
@@ -299,6 +312,7 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
           raw: {
             ...prev.raw,
             status: 'Approved',
+            ...(updatedRevisions ? { revisions: updatedRevisions } : {}),
           },
         }
       })
