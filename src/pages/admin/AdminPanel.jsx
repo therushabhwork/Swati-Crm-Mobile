@@ -48,6 +48,7 @@ import { closeAdminReminder, getAdminReminderStates, subscribeAdminReminderState
 import { buildMonthlyWonLostData, buildPerformanceSummary } from '../../features/adminDashboardTabs/dashboardInsights'
 import { getStatusColor, formatDate } from '../../utils/helpers'
 import './AdminPanel.css'
+import AnalyticsSection from '../../components/dashboard/AnalyticsSection'
 
 const QUICK_NAV = [
   { id: 'dash', dotColor: '#3498db', label: 'Start with Dashboard', route: '/admin/monitoring' },
@@ -212,7 +213,7 @@ const DashboardTabModal = ({
 const AdminPanel = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { accounts, deals, supportRequests, tasks = [], reminders = [], refreshData, addNotification } = useData()
+  const { accounts, deals, quotations = [], activities = [], supportRequests, tasks = [], reminders = [], refreshData, addNotification } = useData()
   const { user, socket } = useAuth()
   const [dashboardTabs, setDashboardTabs] = useState(() => getDashboardTabs())
   const [activeSection, setActiveSection] = useState('home')
@@ -953,6 +954,12 @@ const AdminPanel = () => {
             </div>
           </div>
         </div>
+        <AnalyticsSection
+        accounts={accounts}
+        deals={deals}
+        quotations={quotations}
+        activities={activities}
+        />
       </div>
     )
   }

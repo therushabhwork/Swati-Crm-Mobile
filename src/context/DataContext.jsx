@@ -1217,7 +1217,7 @@ export const DataProvider = ({ children }) => {
   return (
     <DataContext.Provider value={value}>
       {children}
-      <Toaster />
+      <Toaster notifications={notifications} clearNotification={clearNotification} />
     </DataContext.Provider>
   )
 }

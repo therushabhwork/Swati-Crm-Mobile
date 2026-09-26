@@ -70,6 +70,27 @@ const isOwnedByCurrentUser = (record, user) => {
     }
   }
 
+  const userOwnerCode = normalizeCompareValue(user.ownerCode || user.accountOwnerCode || user.employeeId)
+  if (userOwnerCode) {
+    const matchingOwnerCodes = [
+      record.ownerCode,
+      record.accountOwnerCode,
+      record.accountNumber,
+      raw.ownerCode,
+      raw.accountOwnerCode,
+      raw.accountNumber,
+      raw.accountNo,
+      raw.formData?.ownerCode,
+      raw.formData?.accountOwnerCode,
+      raw.formData?.accountNumber,
+      raw.formData?.accountNo,
+    ].map(normalizeCompareValue)
+
+    if (matchingOwnerCodes.includes(userOwnerCode)) {
+      return true
+    }
+  }
+
   // Match by added-by name using CRM-aware comparison
   const candidateCreators = [
     record.addedBy,

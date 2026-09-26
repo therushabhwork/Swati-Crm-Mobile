@@ -506,6 +506,28 @@ const updateLead = async (actor, leadId, payload) => {
     throw new AppError('Lead not found.', 404)
   }
 
+  if (isPoConversionTarget) {
+    const { getMongoModel } = require('../models/mongoModels')
+    const Deal = getMongoModel('deals')
+    await Deal.updateMany(
+      { accountId: normalizeLeadId(leadId), frontendDeleted: { $ne: true } },
+      {
+        $set: {
+          stage: 'convert_to_po',
+          status: 'convert_to_po',
+          accountStatus: 'convert_to_po',
+          accountState: 'convert_to_po',
+          poValue: leadPayload.poValue,
+          statusAsPerOrderReceived: leadPayload.statusAsPerOrderReceived,
+          statusAsPerQuotationGiven: leadPayload.statusAsPerQuotationGiven,
+          gstin: leadPayload.gstin,
+          jobNo: leadPayload.jobNo,
+          updatedAt: new Date().toISOString(),
+        },
+      }
+    )
+  }
+
   // Create re-assignment To-Do task if owner has changed
   const newOwner = payload.assignedTo || payload.ownerId || payload.assignedUserId || payload.accountOwner
   if (newOwner && String(newOwner) !== String(existingLead.assignedTo)) {

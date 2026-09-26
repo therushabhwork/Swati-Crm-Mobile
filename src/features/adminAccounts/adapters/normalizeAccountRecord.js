@@ -125,18 +125,18 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
   const stage = resolveStage(account)
   const stageMeta = stageLookup[stage] || stageLookup[DEFAULT_ACCOUNT_STAGE]
   const fallbackDate = account.createdAt || new Date().toISOString()
-  const rawAccountOwner = account.accountOwner || account.ownerName || account.raw?.accountOwner || account.raw?.ownerName || ownerByUserId[account.userId] || 'Unassigned'
+  const rawAccountOwner = account.accountOwnerName || account.accountOwner || account.ownerName || account.raw?.accountOwnerName || account.raw?.accountOwner || account.raw?.ownerName || ownerByUserId[account.userId] || 'Unassigned'
   const accountOwner = getCanonicalCrmUserName(rawAccountOwner) || titleize(rawAccountOwner)
   const accountOwnerCode = String(
     account.accountOwnerCode
+    || account.ownerCode
     || account.raw?.accountOwnerCode
+    || account.raw?.ownerCode
     || account.raw?.formData?.accountOwnerCode
     || account.raw?.formData?.ownerCode
     || account.formData?.accountOwnerCode
     || account.formData?.ownerCode
     || getCrmOwnerCode(accountOwner)
-    || account.ownerCode
-    || account.raw?.ownerCode
     || ''
   ).trim()
   const rawAccNo = account.accountNumber || account.accountNo || account.account_no || account.raw?.accountNumber || account.raw?.accountNo || account.raw?.account_no || '';
@@ -181,7 +181,7 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
   const rawCustomerType = account.customerType || formData['Customer Type'] || formData.customerType || ''
   const parsedCustomerType = rawCustomerType.toLowerCase() === 'prospect' ? '' : titleize(rawCustomerType)
 
-  const accountNameVal = account.name || account.accountName || account.customerName || formData['Account Name'] || formData.accountName || formData.customerName || account.raw?.name || account.raw?.accountName || account.raw?.customerName || account.raw?.formData?.['Account Name'] || account.raw?.formData?.name || 'Untitled Account'
+  const accountNameVal = account.raw?.name || account.name || account.accountName || account.customerName || formData['Account Name'] || formData.accountName || formData.customerName || account.raw?.accountName || account.raw?.customerName || account.raw?.formData?.['Account Name'] || account.raw?.formData?.name || 'Untitled Account'
   if (typeof accountNameVal === 'string' && /Report Filter/i.test(accountNameVal)) {
     return null
   }

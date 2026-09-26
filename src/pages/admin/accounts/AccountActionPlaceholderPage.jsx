@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Button from '../../../components/common/Button'
 import AddRemarksModal from '../../../components/common/AddRemarksModal'
@@ -24,6 +24,7 @@ import { getAccountOwnerOptionLabel, getCachedAccountOwnerOptions, loadAccountOw
 import { buildCrmAccountActionUrl } from '../crm-actions/CRMActionPage'
 import BulkUploadAccountsPage from './BulkUploadAccountsPage'
 import AccountDetailsDrawer from './AccountDetailsDrawer'
+import AccountActionModal from './AccountActionModal'
 import './MyGroupAccounts.css'
 
 const reminderModes = ['Call', 'Email', 'Meeting', 'Visit', 'WhatsApp', 'Follow Up']
@@ -47,12 +48,9 @@ const AccountActionPlaceholderPage = () => {
   const navigate = useNavigate()
   const { actionKey } = useParams()
   const [searchParams] = useSearchParams()
-  const { accounts, addNotification, updateAccount, findConvertedDealForAccount, convertAccountToDeal } = useData()
+  const { accounts, addNotification, updateAccount } = useData()
   const { user } = useAuth()
   const isAdminUser = user?.role === 'admin'
-  const searchDealPagePath = isAdminUser ? '/admin/deals/search' : '/deals/search'
-  const conversionStartedRef = useRef(false)
-  const [conversionError, setConversionError] = useState('')
   const [isRemarkModalOpen, setIsRemarkModalOpen] = useState(false)
   const [isSavingRemark, setIsSavingRemark] = useState(false)
   const [remarkRefreshKey, setRemarkRefreshKey] = useState(0)
@@ -119,64 +117,6 @@ const AccountActionPlaceholderPage = () => {
       navigate(buildCrmAccountActionUrl('send-mail', selectedAccount.id, accountDetailUrl || boardUrl), { replace: true })
     }
   }, [accountDetailUrl, actionKey, boardUrl, isAdminUser, navigate, selectedAccount])
-
-  useEffect(() => {
-    if (actionKey !== 'converted-deal' || !selectedAccount || conversionStartedRef.current) {
-      return
-    }
-
-    conversionStartedRef.current = true
-
-    const runConversion = async () => {
-      const accountId = selectedAccount.raw?.id ?? selectedAccount.id ?? ''
-      const existingResult = await findConvertedDealForAccount(accountId)
-
-      if (!existingResult?.success) {
-        setConversionError(existingResult?.message || 'Unable to check existing converted deal.')
-        return
-      }
-
-      if (existingResult.data?.id) {
-        addNotification('info', 'Existing linked deal', 'This account already has a converted deal. Opening it in Search Deal.')
-        navigate(searchDealPagePath, {
-          replace: true,
-          state: {
-            quotationDealLookup: {
-              dealNumber: existingResult.data.dealNumber || '',
-              projectName: existingResult.data.name || existingResult.data.projectName || '',
-              companyName: existingResult.data.accountName || existingResult.data.linkedAccountName || '',
-            },
-          },
-        })
-        return
-      }
-
-      const conversionResult = await convertAccountToDeal(accountId)
-
-      if (!conversionResult.success) {
-        setConversionError(conversionResult.message || 'Unable to convert this account into a deal.')
-        return
-      }
-
-      const createdDeal = conversionResult.data?.deal || {}
-      const createdConvertedDeal = conversionResult.data?.convertedDeal || {}
-
-      addNotification('success', 'Account converted', 'Deal and Converted Deal were created successfully. Opening Search Deal.')
-      navigate(searchDealPagePath, {
-        replace: true,
-        state: {
-          editDealId: createdDeal.id || '',
-          quotationDealLookup: {
-            dealNumber: createdDeal.dealNumber || createdConvertedDeal.dealNumber || '',
-            projectName: createdDeal.dealName || createdDeal.projectName || createdConvertedDeal.name || createdConvertedDeal.projectName || '',
-            companyName: createdDeal.customerName || createdDeal.accountName || createdConvertedDeal.accountName || selectedAccount.name || '',
-          },
-        },
-      })
-    }
-
-    runConversion()
-  }, [actionKey, addNotification, convertAccountToDeal, findConvertedDealForAccount, navigate, searchDealPagePath, selectedAccount])
 
   useEffect(() => {
     if (!selectedAccount) return
@@ -669,35 +609,14 @@ const AccountActionPlaceholderPage = () => {
   }
 
   if (actionKey === 'converted-deal') {
-    return (
-      <div className="admin-accounts-placeholder-page">
-        <div className="admin-accounts-placeholder-card">
-          <p className="admin-accounts-placeholder-eyebrow">Deal Section</p>
-          <h1>Converted Deal</h1>
-
-          {!selectedAccount ? (
-            <p>Select an account to convert into a deal.</p>
-          ) : conversionError ? (
-            <>
-              <div className="admin-accounts-action-error">{conversionError}</div>
-              <div className="admin-accounts-placeholder-actions">
-                <Button onClick={() => navigate(searchDealPagePath)}>Go To Search Deal</Button>
-                {accountDetailUrl ? (
-                  <Button variant="outline" onClick={() => navigate(accountDetailUrl)}>Back To Account</Button>
-                ) : null}
-              </div>
-            </>
-          ) : (
-            <>
-              <p>Converting {selectedAccount.name} into a deal and opening Search Deal...</p>
-              <div className="admin-accounts-placeholder-actions">
-                <Button variant="outline" onClick={() => navigate(searchDealPagePath)}>Open Search Deal</Button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    )
+    return selectedAccount ? (
+      <AccountActionModal
+        account={selectedAccount}
+        actionKey="converted-deal"
+        onClose={() => navigate(accountDetailUrl || boardUrl)}
+        onSaved={() => navigate(accountDetailUrl || boardUrl)}
+      />
+    ) : null
   }
 
   const isReminderAction = actionKey === 'add-reminder'

@@ -18,6 +18,7 @@ import {
   getStatusColor,
 } from '../../utils/helpers'
 import './UserDashboardPage.css'
+import AnalyticsSection from '../../components/dashboard/AnalyticsSection'
 
 const formatTodoDateTime = (value) => {
   const date = new Date(value)
@@ -40,6 +41,8 @@ const UserDashboardPage = () => {
     notifications,
     supportRequests,
     reminders,
+    quotations,
+    activities,
     updateReminder,
   } = useData()
   const [todoReplies, setTodoReplies] = useState([])
@@ -341,6 +344,13 @@ const UserDashboardPage = () => {
           </div>
         </div>
       </div>
+
+      <AnalyticsSection
+        accounts={accounts}
+        deals={deals}
+        quotations={quotations}
+        activities={activities}
+      />
 
     </div>
   )

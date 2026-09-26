@@ -13,8 +13,8 @@ const visibleFilter = { frontendDeleted: { $ne: true } }
 const escapeRegExp = (value) => String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 const accountSearchFieldsByQueryKey = {
-  accountNo: ['accountNo', 'accountNumber', 'formData.accountNo', 'formData.accountNumber'],
-  accountNumber: ['accountNo', 'accountNumber', 'formData.accountNo', 'formData.accountNumber'],
+  accountNo: ['accountNo', 'accountNumber', 'ownerCode', 'formData.accountNo', 'formData.accountNumber', 'formData.ownerCode'],
+  accountNumber: ['accountNo', 'accountNumber', 'ownerCode', 'formData.accountNo', 'formData.accountNumber', 'formData.ownerCode'],
   accountName: ['accountName', 'customerName', 'name', 'formData.accountName'],
   name: ['accountName', 'customerName', 'name', 'formData.accountName'],
   projectName: ['projectName', 'company', 'formData.projectName'],
@@ -48,7 +48,7 @@ const mapLeadRow = (record) => {
     return null
   }
 
-  const resolvedAccountNo = row.accountNo || mergedFormData.accountNumber || mergedFormData.accountNo || null
+  const resolvedAccountNo = row.accountNo || row.accountNumber || row['Account Number'] || row.ownerCode || mergedFormData.accountNumber || mergedFormData.accountNo || mergedFormData['Account Number'] || mergedFormData.ownerCode || null
   const resolvedOwnerName = row.accountOwnerName || row.accountOwner || row.ownerName || mergedFormData.accountOwnerName || mergedFormData.accountOwner || mergedFormData.ownerName || ''
 
   return {
@@ -92,7 +92,8 @@ const mapLeadRow = (record) => {
     createdByUserId: row.createdByUserId || mergedFormData.createdByUserId || row.createdBy || null,
     createdByUserName: row.createdByUserName || mergedFormData.createdByUserName || '',
     createdUserBy: row.createdUserBy || mergedFormData.createdUserBy || '',
-    ownerCode: row.ownerCode || mergedFormData.ownerCode || null,
+    ownerCode: row.ownerCode || row.accountOwnerCode || mergedFormData.ownerCode || mergedFormData.accountOwnerCode || null,
+    accountOwnerCode: row.accountOwnerCode || row.ownerCode || mergedFormData.accountOwnerCode || mergedFormData.ownerCode || null,
     employeeId: row.employeeId || mergedFormData.employeeId || '',
     department: row.department || mergedFormData.department || '',
     userEmail: row.userEmail || mergedFormData.userEmail || '',
@@ -115,7 +116,7 @@ const listAllLeads = async () => {
 const getLeadScopeOptions = ({ scopeUserIds = null, scopeOwnerCodes = [] } = {}) => ({
   scopeUserIds,
   additionalScopeGroups: scopeOwnerCodes.length
-    ? [{ fields: ['accountNo', 'accountNumber', 'formData.accountNumber', 'formData.accountNo'], values: scopeOwnerCodes }]
+    ? [{ fields: ['accountNo', 'accountNumber', 'ownerCode', 'accountOwnerCode', 'formData.accountNumber', 'formData.accountNo', 'formData.ownerCode', 'formData.accountOwnerCode'], values: scopeOwnerCodes }]
     : [],
 })
 

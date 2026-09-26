@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { FiAlertCircle, FiCheckCircle, FiInfo, FiX, FiXCircle } from 'react-icons/fi'
 import { useAuth } from '../../context/AuthContext'
-import { useData } from '../../context/DataContext'
 import './Toaster.css'
 
 const TOAST_DURATION_MS = 4000
@@ -45,8 +44,7 @@ const saveSeenNotifications = (storageKey, seenSet) => {
   }
 }
 
-const Toaster = () => {
-  const { notifications, clearNotification } = useData()
+const Toaster = ({ notifications = [], clearNotification }) => {
   const { user } = useAuth()
   const [visible, setVisible] = useState([])
   const seenStorageKey = getSeenStorageKey(user)

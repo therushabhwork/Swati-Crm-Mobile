@@ -15,8 +15,10 @@ const USER_ID_FIELDS = [
   'assignedToId',
   'assignedTo',
   'assignedUserId',
+  'ownerUserId',
   'createdById',
   'createdBy',
+  'createdByUserId',
   'updatedById',
 ]
 
@@ -156,6 +158,7 @@ export const matchesUserScope = (record, user) => {
     record.accountNo,
     record.accountNumber,
     record.ownerCode,
+    record.accountOwnerCode,
     record.owner_code,
     record.dealOwnerCode,
     record.customerOwnerCode,

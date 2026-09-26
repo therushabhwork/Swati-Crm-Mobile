@@ -2,7 +2,8 @@ import { format } from 'date-fns'
 
 const emptyValue = '-'
 const formatAccountNameDisplay = (value, row = {}) => {
-  const resolved = (typeof value === 'string' && value.trim() ? value : null)
+  const resolved = row.raw?.name
+    || (typeof value === 'string' && value.trim() ? value : null)
     || row.name
     || row.accountName
     || row.customerName

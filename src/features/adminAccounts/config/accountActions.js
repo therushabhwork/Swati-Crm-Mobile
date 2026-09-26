@@ -86,7 +86,7 @@ const actionConfig = [
     route: `${actionBaseRoute}/converted-deal`,
     placeholderTitle: 'Convert to PO',
     heading: 'Convert to PO',
-    description: 'Convert the selected account into PO Converted status and linked deal.',
+    description: 'Enter PO details before setting the selected account to PO Converted status.',
   },
   {
     key: 'view-linked-deal',

@@ -492,7 +492,9 @@ const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
           {formError ? <div className="admin-accounts-action-error">{formError}</div> : null}
           <div className="admin-accounts-placeholder-actions">
             <Button type="button" variant="outline" className="btn-red-theme" onClick={onClose}>Close</Button>
-            <Button type="submit" className="btn-red-theme" disabled={isSaving}>{actionKey === 'send-mail' ? 'Open Mail' : 'Save'}</Button>
+            <Button type="submit" className="btn-red-theme" disabled={isSaving}>
+              {actionKey === 'send-mail' ? 'Open Mail' : actionKey === 'converted-deal' ? 'Convert To PO' : 'Save'}
+            </Button>
           </div>
         </form>
       </section>
