@@ -117,6 +117,14 @@ const getAccountRowsWithRequiredFields = (rows = []) => rows.map((row = {}) => {
   }
 })
 
+const compareAccountRows = (left = {}, right = {}) => {
+  const leftNumber = String(left.accountNumber || left.accountNo || left.raw?.accountNumber || left.raw?.accountNo || '')
+  const rightNumber = String(right.accountNumber || right.accountNo || right.raw?.accountNumber || right.raw?.accountNo || '')
+  const numberOrder = leftNumber.localeCompare(rightNumber, undefined, { numeric: true, sensitivity: 'base' })
+  if (numberOrder !== 0) return numberOrder
+  return String(left.name || '').localeCompare(String(right.name || ''), undefined, { sensitivity: 'base' })
+}
+
 const stripOwnerCodePrefix = (value = '') => String(value || '')
   .trim()
   .replace(/^\d{3,}\s*-+\s*/u, '')
@@ -787,7 +795,7 @@ const activeStageParam = searchParams.get('stage')
         if (variantKey !== 'viewAll') return true
         return matchesViewAllDropdownFilters(row, cityFilter, ownerFilter)
       })
-      .sort((a, b) => new Date(b.createdAt || b.accountDate || 0).getTime() - new Date(a.createdAt || a.accountDate || 0).getTime()),
+      .sort(compareAccountRows),
     [boardRows, filterColumnDefinitions, filters, matchesConvertedFilterRules, variantKey, cityFilter, ownerFilter, searchQuery]
   )
   const filteredAllStageRows = useMemo(
@@ -804,7 +812,7 @@ const activeStageParam = searchParams.get('stage')
         if (variantKey !== 'viewAll') return true
         return matchesViewAllDropdownFilters(row, cityFilter, ownerFilter)
       })
-      .sort((a, b) => new Date(b.createdAt || b.accountDate || 0).getTime() - new Date(a.createdAt || a.accountDate || 0).getTime()),
+      .sort(compareAccountRows),
     [convertedBoardRecords, filterColumnDefinitions, filters, matchesConvertedFilterRules, variantKey, cityFilter, ownerFilter, searchQuery]
   )
 

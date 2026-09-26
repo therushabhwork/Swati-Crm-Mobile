@@ -29,9 +29,9 @@
 
 .add-account-landscape-stepper .wizard-stepper__track {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .add-account-landscape-stepper .wizard-stepper__step {
@@ -79,13 +79,13 @@
 
 .add-account-landscape-stepper .wizard-stepper__label {
   margin-top: 0.2rem;
-  overflow: hidden;
+  overflow: visible;
   color: var(--text-primary);
   font-size: 0.95rem;
   font-weight: 600;
   line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .add-account-landscape-stepper .wizard-stepper__divider {
@@ -586,6 +586,52 @@
 
   .add-account-landscape-button {
     flex: 1 1 6rem;
+  }
+}
+
+/* Keep important labels readable on dense dashboard layouts. */
+.ap-welcome-heading,
+.ap-welcome-sub,
+.ap-card-head-title,
+.ap-dashboard-card-title,
+.ap-dashboard-card-title-link,
+.ap-todo-row-title,
+.ap-todo-row-meta,
+.ap-activity-title,
+.ap-activity-sub,
+.ap-empty-task-title,
+.ap-empty-task-sub,
+.md-dashboard__title,
+.md-dashboard__subtitle,
+.md-widget-title,
+.md-todo-title,
+.md-todo-meta,
+.md-item-title,
+.md-item-desc,
+.md-activity-title,
+.md-activity-desc,
+.md-upcoming-value,
+.md-upcoming-sub {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.ap-dashboard-card-title,
+.ap-dashboard-card-title-link,
+.md-widget-title {
+  line-height: 1.3;
+}
+
+@media (max-width: 900px) {
+  .add-account-landscape-stepper .wizard-stepper__track {
+    grid-template-columns: 1fr;
+  }
+
+  .add-account-landscape-stepper .wizard-stepper__step {
+    min-height: 3.25rem;
   }
 }
 
