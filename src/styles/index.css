@@ -319,10 +319,10 @@ html.is-admin .sidebar--admin .sb-today-section {
   --dur-xl: 0ms;
 
   /* Layout */
-  --header-height: 64px;
-  --app-logo-size: 40px;
-  --app-logo-size-sm: 32px;
-  --app-logo-size-lg: 56px;
+  --header-height: 72px;
+  --app-logo-size: 60px;
+  --app-logo-size-sm: 48px;
+  --app-logo-size-lg: 84px;
   --sidebar-width: 280px;
   --sidebar-collapsed-width: 64px;
   --right-panel-width: 280px;
@@ -1529,10 +1529,10 @@ body {
   --radius-lg: 10px;
   --radius-xl: 12px;
   --radius-2xl: 16px;
-  --header-height: 56px;
-  --app-logo-size: 48px;
-  --app-logo-size-sm: 38px;
-  --app-logo-size-lg: 64px;
+  --header-height: 64px;
+  --app-logo-size: 58px;
+  --app-logo-size-sm: 46px;
+  --app-logo-size-lg: 82px;
   --sidebar-width: 272px;
   --sidebar-collapsed-width: 60px;
   --right-panel-width: 274px;

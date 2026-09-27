@@ -270,4 +270,194 @@ module.exports = {
 
     return updatedDeal
   },
+  bulkImportDeals: async (actor, deals = []) => {
+    if (!Array.isArray(deals) || deals.length === 0) {
+      return { count: 0 }
+    }
+
+    const { getMongoModel, getNextLegacyId } = require('../models/mongoModels')
+    const Deal = getMongoModel('deals')
+    const User = getMongoModel('users')
+
+    const allUsers = await User.find({ frontendDeleted: { $ne: true } }).lean()
+    const userByOwnerCode = new Map()
+    const userByName = new Map()
+
+    allUsers.forEach((u) => {
+      const code = String(u.ownerCode || u.owner_code || u.employeeId || '').trim()
+      if (code) userByOwnerCode.set(code, u)
+      const name = String(u.name || u.username || '').trim().toLowerCase()
+      if (name) userByName.set(name, u)
+    })
+
+    const cleanStr = (val) => {
+      if (val === null || val === undefined) return ''
+      const str = String(val).trim()
+      if (str.toLowerCase() === 'null' || str.toLowerCase() === 'undefined') return ''
+      return str
+    }
+
+    const cleanNum = (val) => {
+      if (val === null || val === undefined) return 0
+      const num = Number(String(val).replace(/[^0-9.-]+/g, ''))
+      return isNaN(num) ? 0 : num
+    }
+
+    let count = 0
+    for (const row of deals) {
+      const rawOwner = cleanStr(row.dealOwner || row.ownerName || row.accountOwner || row.ownerCode)
+      const ownerCodeMatch = userByOwnerCode.get(rawOwner)
+      const ownerNameMatch = userByName.get(rawOwner.toLowerCase())
+      const resolvedUser = ownerCodeMatch || ownerNameMatch || (actor.id ? allUsers.find((u) => u.id === actor.id || u.legacyId === actor.id) : null) || { id: actor.id || 1, name: rawOwner || actor.name || 'Jay Pandya', ownerCode: '1004' }
+
+      const resolvedUserId = resolvedUser.legacyId ?? resolvedUser.id ?? 1
+      const resolvedUserName = resolvedUser.name || resolvedUser.username || rawOwner || 'Jay Pandya'
+
+      const unifiedName = cleanStr(row.projectName || row.dealName || row.name || row.title || 'General Enquiry')
+      const dealName = unifiedName
+      const projectName = unifiedName
+      const customerName = cleanStr(row.customerName || row.accountName)
+      const customerCategory = cleanStr(row.customerCategory || row.category)
+      const coOwners = cleanStr(row.coOwners || row.dealCoOwners)
+      const dealValue = cleanNum(row.dealValue || row.value || row.amount)
+      const poValue = cleanNum(row.poValue)
+      const probability = cleanNum(row.probability)
+      const productCategory = cleanStr(row.productCategory) || 'MARKETING-SWATI'
+      const consultantName = cleanStr(row.consultantName)
+      const contactName = cleanStr(row.contactName || row.contactPerson)
+      const gstin = cleanStr(row.gstin)
+      const dealSource = cleanStr(row.dealSource || row.source) || 'MARKETING-SWATI'
+      const dealDate = cleanStr(row.dealDate)
+      const dealType = cleanStr(row.dealType || customerCategory || dealSource || 'SWATI')
+      const phone = cleanStr(row.phone || row.contactPhone || row.mobile)
+      const description = cleanStr(row.description || row.notes)
+      const jobNo = cleanStr(row.jobNo)
+
+      const existingDealNum = cleanStr(row.dealNumber)
+      const legacyId = await getNextLegacyId('deals')
+      const seriesNum = legacyId < 1001 ? legacyId + 1000 : legacyId
+      const dealNumber = existingDealNum || `DL-${seriesNum}`
+
+      const dealDoc = {
+        legacyId,
+        title: unifiedName,
+        name: unifiedName,
+        dealName: unifiedName,
+        projectName: unifiedName,
+        dealNumber,
+        customerName,
+        accountId: null,
+        amount: dealValue,
+        value: dealValue,
+        dealValue,
+        currency: 'INR',
+        stage: 'converted',
+        status: 'converted',
+        probability: probability || 0,
+        expectedCloseDate: dealDate,
+        expectedClosureDate: dealDate,
+        closeDate: dealDate,
+        actualClosureDate: dealDate,
+        assignedTo: resolvedUserId,
+        ownerUserId: resolvedUserId,
+        createdBy: resolvedUserId,
+        dealOwner: resolvedUserName,
+        ownerName: resolvedUserName,
+        coOwners,
+        notes: description,
+        dealDate,
+        dealType,
+        dealSource,
+        source: dealSource,
+        dealSubsource: 'E-MAIL',
+        subsource: 'E-MAIL',
+        projectStatus: 'In Progress',
+        poValue,
+        jobNo,
+        gstin,
+        contactPerson: contactName,
+        contactName,
+        contactMobile: phone,
+        contactPhone: phone,
+        phone,
+        contactEmail: cleanStr(row.email),
+        email: cleanStr(row.email),
+        address: '',
+        description,
+        dealScore: 0,
+        productCategory,
+        consultantName,
+        customerCategory,
+        companyId: actor.companyId || 1,
+        projectId: null,
+        workflowId: null,
+        frontendDeleted: false,
+        data: {
+          title: unifiedName,
+          name: unifiedName,
+          dealName: unifiedName,
+          projectName: unifiedName,
+          customerName,
+          customerCategory,
+          accountId: null,
+          customerId: null,
+          customerNumber: String(resolvedUser.ownerCode || '1004'),
+          amount: dealValue,
+          value: dealValue,
+          dealValue,
+          currency: 'INR',
+          stage: 'converted',
+          status: 'converted',
+          statusLabel: 'Converted',
+          assignedTo: resolvedUserId,
+          ownerUserId: resolvedUserId,
+          ownerName: resolvedUserName,
+          dealOwner: resolvedUserName,
+          coOwners,
+          dealCoOwners: coOwners,
+          assignedUserName: resolvedUserName,
+          createdBy: resolvedUserId,
+          convertedFromAccount: true,
+          conversionSource: 'excel-import',
+          convertedAt: new Date().toISOString(),
+          convertedBy: resolvedUserId,
+          consultantName,
+          contactName,
+          contactPerson: contactName,
+          description,
+          notes: description,
+          companyId: actor.companyId || 1,
+          organizationId: actor.companyId || 1,
+          dealNumber,
+          probability,
+          expectedCloseDate: dealDate,
+          expectedClosureDate: dealDate,
+          closeDate: dealDate,
+          actualClosureDate: dealDate,
+          ownerId: resolvedUserId,
+          dealDate,
+          dealType,
+          phone,
+          dealSource,
+          source: dealSource,
+          dealSubsource: 'E-MAIL',
+          subsource: 'E-MAIL',
+          poValue,
+          projectStatus: 'In Progress',
+          productCategory,
+          jobNo,
+          gstin,
+          assignedUserId: String(resolvedUserId),
+          userId: String(resolvedUserId),
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+
+      await Deal.create(dealDoc)
+      count++
+    }
+
+    return { count }
+  },
 }

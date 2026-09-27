@@ -181,7 +181,36 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
   const rawCustomerType = account.customerType || formData['Customer Type'] || formData.customerType || ''
   const parsedCustomerType = rawCustomerType.toLowerCase() === 'prospect' ? '' : titleize(rawCustomerType)
 
-  const accountNameVal = account.raw?.name || account.name || account.accountName || account.customerName || formData['Account Name'] || formData.accountName || formData.customerName || account.raw?.accountName || account.raw?.customerName || account.raw?.formData?.['Account Name'] || account.raw?.formData?.name || 'Untitled Account'
+  const data = (account.data || account.raw?.data || {})
+  const accountNameCandidates = [
+    account.raw?.accountName,
+    account.raw?.customerName,
+    account.raw?.name,
+    account.accountName,
+    account.customerName,
+    account.name,
+    formData['Account Name'],
+    formData.accountName,
+    formData.customerName,
+    formData.name,
+    data.accountName,
+    data.customerName,
+    data.name,
+    data['Account Name'],
+    data['Customer Name'],
+    account.raw?.formData?.['Account Name'],
+    account.raw?.formData?.accountName,
+    account.raw?.formData?.customerName,
+    account.raw?.formData?.name,
+    account.raw?.data?.accountName,
+    account.raw?.data?.customerName,
+    account.raw?.data?.name,
+    account.company,
+    account.raw?.company,
+  ]
+  const isCodePattern = (str) => typeof str === 'string' && /^[A-Z]{2,4}\d{4,8}$/i.test(str.trim())
+  const validAccountName = accountNameCandidates.find((val) => typeof val === 'string' && val.trim() && !isCodePattern(val))
+  const accountNameVal = validAccountName ? validAccountName.trim() : 'Untitled Account'
   if (typeof accountNameVal === 'string' && /Report Filter/i.test(accountNameVal)) {
     return null
   }

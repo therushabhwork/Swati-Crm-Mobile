@@ -83,19 +83,26 @@ const getAccountColumnKeysWithRequiredFields = (columnKeys = [], columns = []) =
   const cleanColumnKeys = columnKeys.filter((key) => availableColumnKeySet.has(key))
   
   let nextColumnKeys = (cleanColumnKeys.length > 0 ? cleanColumnKeys : availableColumnKeys)
-    .filter((key) => key !== 'projectName' && key !== 'accountOwner')
+    .filter((key) => key !== 'projectName' && key !== 'accountOwner' && key !== 'accountDate')
 
   const accountNameIndex = nextColumnKeys.indexOf('name')
   const accountNumberIndex = nextColumnKeys.indexOf('accountNumber')
   const insertIndex = accountNameIndex >= 0 ? accountNameIndex + 1 : (accountNumberIndex >= 0 ? accountNumberIndex + 1 : 0)
 
+  if (availableColumnKeySet.has('accountDate')) {
+    nextColumnKeys.splice(insertIndex, 0, 'accountDate')
+  }
+
   if (availableColumnKeySet.has('projectName')) {
-    nextColumnKeys.splice(insertIndex, 0, 'projectName')
+    const dIndex = nextColumnKeys.indexOf('accountDate')
+    const pIndex = dIndex >= 0 ? dIndex + 1 : insertIndex
+    nextColumnKeys.splice(pIndex, 0, 'projectName')
   }
 
   if (availableColumnKeySet.has('accountOwner')) {
     const pIndex = nextColumnKeys.indexOf('projectName')
-    const oIndex = pIndex >= 0 ? pIndex + 1 : insertIndex
+    const dIndex = nextColumnKeys.indexOf('accountDate')
+    const oIndex = pIndex >= 0 ? pIndex + 1 : (dIndex >= 0 ? dIndex + 1 : insertIndex)
     nextColumnKeys.splice(oIndex, 0, 'accountOwner')
   }
 
@@ -201,7 +208,7 @@ const getConvertedAccountsFieldText = (row = {}, fieldKey = '') => {
   switch (fieldKey) {
     case 'accountNumber': return row.accountNumber || ''
     case 'name': return row.name || ''
-    case 'accountDate': return row.accountDateDisplay || formatDisplayDate(row.accountDate) || ''
+    case 'accountDate': return row.accountDateDisplay || formatDisplayDate(row.accountDate) || formatDisplayDate(row.createdAt) || formatDisplayDate(row.created_at) || ''
     case 'accountCategory': return row.accountCategory || ''
     case 'accountOwner': return row.accountOwnerDisplay || row.accountOwnerName || row.accountOwner || ''
     case 'status':

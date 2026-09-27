@@ -1,21 +1,50 @@
 import { format } from 'date-fns'
 
 const emptyValue = '-'
-const formatAccountNameDisplay = (value, row = {}) => {
-  const resolved = row.raw?.name
-    || (typeof value === 'string' && value.trim() ? value : null)
-    || row.name
-    || row.accountName
-    || row.customerName
-    || row.raw?.name
-    || row.raw?.accountName
-    || row.raw?.customerName
-    || row.raw?.formData?.name
-    || row.raw?.formData?.accountName
-    || row.raw?.formData?.['Account Name']
-    || emptyValue
+const isAccountNoCodeString = (val, row = {}) => {
+  if (!val || typeof val !== 'string') return true
+  const trimmed = val.trim()
+  if (!trimmed) return true
+  if (/^[A-Z]{2,4}\d{4,8}$/i.test(trimmed)) return true
+  const raw = row.raw || row || {}
+  const codes = [
+    row.accountNo, row.accountNumber, row.ownerCode,
+    raw.accountNo, raw.accountNumber, raw.ownerCode,
+    row.formData?.accountNo, row.formData?.accountNumber, row.formData?.ownerCode,
+    raw.formData?.accountNo, raw.formData?.accountNumber, raw.formData?.ownerCode
+  ].filter(Boolean)
+  return codes.includes(trimmed)
+}
 
-  return resolved
+const formatAccountNameDisplay = (value, row = {}) => {
+  const raw = row.raw || row || {}
+  const formData = (row.formData || raw.formData || {})
+  const data = (row.data || raw.data || {})
+
+  const candidates = [
+    value,
+    row.accountName,
+    row.customerName,
+    row.name,
+    raw.accountName,
+    raw.customerName,
+    raw.name,
+    formData.accountName,
+    formData.customerName,
+    formData.name,
+    formData['Account Name'],
+    formData['Customer Name'],
+    data.accountName,
+    data.customerName,
+    data.name,
+    data['Account Name'],
+    data['Customer Name'],
+    row.company,
+    raw.company,
+  ]
+
+  const validName = candidates.find((candidate) => typeof candidate === 'string' && candidate.trim() && !isAccountNoCodeString(candidate, row))
+  return validName ? validName.trim() : emptyValue
 }
 const formatProjectNameDisplay = (value, row = {}) => (
   value
@@ -39,11 +68,12 @@ const formatAccountOwnerDisplay = (value, row = {}) => {
 }
 const formatAddedByDisplay = (value, row = {}) => row.addedBy || row.addedByDisplay || value || emptyValue
 
-const formatLegacyBoardDate = (value) => {
-  if (!value) return emptyValue
+const formatLegacyBoardDate = (value, row = {}) => {
+  const dateVal = value || row.accountDate || row.accountDateDisplay || row.createdAt || row.created_at || row.raw?.accountDate || row.raw?.createdAt || row.raw?.created_at
+  if (!dateVal) return emptyValue
 
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return emptyValue
+  const date = new Date(dateVal)
+  if (Number.isNaN(date.getTime())) return String(dateVal)
 
   return format(date, 'dd-MM-yyyy')
 }
@@ -111,6 +141,16 @@ export const ACCOUNT_LIST_BOARD_COLUMNS = [
     exportable: true,
     cellFormatter: formatAccountNameDisplay,
     exportFormatter: formatAccountNameDisplay,
+  },
+  {
+    key: 'accountDate',
+    label: 'Account Date',
+    filterPlaceholder: 'Search Account Date',
+    width: '150px',
+    searchable: true,
+    exportable: true,
+    cellFormatter: (value, row) => formatLegacyBoardDate(value, row),
+    exportFormatter: (value, row) => formatLegacyBoardDate(value, row),
   },
   {
     key: 'projectName',

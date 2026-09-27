@@ -15,8 +15,8 @@ const escapeRegExp = (value) => String(value || '').replace(/[.*+?^${}()|[\]\\]/
 const accountSearchFieldsByQueryKey = {
   accountNo: ['accountNo', 'accountNumber', 'ownerCode', 'formData.accountNo', 'formData.accountNumber', 'formData.ownerCode'],
   accountNumber: ['accountNo', 'accountNumber', 'ownerCode', 'formData.accountNo', 'formData.accountNumber', 'formData.ownerCode'],
-  accountName: ['accountName', 'customerName', 'name', 'formData.accountName'],
-  name: ['accountName', 'customerName', 'name', 'formData.accountName'],
+  accountName: ['accountName', 'customerName', 'name', 'company', 'formData.accountName', 'formData.customerName', 'formData.name', 'formData.Account Name', 'data.accountName', 'data.customerName', 'data.name'],
+  name: ['accountName', 'customerName', 'name', 'company', 'formData.accountName', 'formData.customerName', 'formData.name', 'formData.Account Name', 'data.accountName', 'data.customerName', 'data.name'],
   projectName: ['projectName', 'company', 'formData.projectName'],
   accountOwner: ['accountOwner', 'ownerName', 'formData.accountOwner', 'formData.ownerName'],
   accountCategory: ['accountCategory', 'customerType', 'industryType', 'formData.accountCategory'],
@@ -43,7 +43,25 @@ const mapLeadRow = (record) => {
   }
 
   const mergedFormData = row.formData && typeof row.formData === 'object' ? row.formData : {}
-  const rawAccountName = row.name || row.accountName || row.customerName || mergedFormData.name || mergedFormData.accountName || mergedFormData.customerName || mergedFormData['Account Name'] || ''
+  const mergedData = row.data && typeof row.data === 'object' ? row.data : {}
+  const rawAccountNameCandidates = [
+    row.accountName,
+    row.customerName,
+    row.name,
+    mergedFormData.accountName,
+    mergedFormData.customerName,
+    mergedFormData.name,
+    mergedFormData['Account Name'],
+    mergedFormData['Customer Name'],
+    mergedData.accountName,
+    mergedData.customerName,
+    mergedData.name,
+    mergedData['Account Name'],
+    row.company,
+  ]
+  const isCodePattern = (str) => typeof str === 'string' && /^[A-Z]{2,4}\d{4,8}$/i.test(str.trim())
+  const validName = rawAccountNameCandidates.find((val) => typeof val === 'string' && val.trim() && !isCodePattern(val))
+  const rawAccountName = validName ? validName.trim() : ''
   if (typeof rawAccountName === 'string' && /Report Filter/i.test(rawAccountName)) {
     return null
   }
@@ -72,6 +90,7 @@ const mapLeadRow = (record) => {
     location: row.location || mergedFormData.location || null,
     industryType: row.industryType || mergedFormData.industryType || mergedFormData.industry || null,
     customerRefNo: row.customerRefNo || mergedFormData.customerRefNo || null,
+    jobNo: row.jobNo || mergedFormData.jobNo || row.customerRefNo || mergedFormData.customerRefNo || null,
     consultantName: row.consultantName || mergedFormData.consultantName || null,
     poValue: row.poValue !== undefined ? row.poValue : (mergedFormData.poValue !== undefined ? mergedFormData.poValue : null),
     userGroup: row.userGroup || mergedFormData.userGroup || null,

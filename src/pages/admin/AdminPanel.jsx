@@ -743,7 +743,7 @@ const AdminPanel = () => {
             </div>
             <div className="ap-kpi-main">
               <div className="ap-kpi-val-row">
-                <span className="ap-kpi-value">-</span>
+                <span className="ap-kpi-value">{quotations.length}</span>
               </div>
               <div className="ap-kpi-title">Quotation Manager</div>
             </div>

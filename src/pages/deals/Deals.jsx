@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import * as XLSX from 'xlsx'
 import {
   FaArrowLeft,
   FaArrowRight,
@@ -8,7 +9,7 @@ import {
   FaEdit,
   FaEllipsisV,
   FaEnvelope,
-  FaFileExport,
+  FaFileImport,
   FaFileAlt,
   FaFilter,
   FaListAlt,
@@ -122,12 +123,11 @@ const parseAndDeduplicateMessages = (message, fallback = 'An error occurred') =>
 
 const DEAL_TABLE_COLUMNS = [
   { key: 'dealNumber', label: 'Deal No.', placeholder: 'Search Deal No.', sourceField: 'deal_number' },
-  { key: 'dealName', label: 'Deal Name', placeholder: 'Search Deal Name', sourceField: 'deal_name' },
+  { key: 'projectName', label: 'Project Name', placeholder: 'Search Project Name', sourceField: 'project_name' },
   { key: 'dealDate', label: 'Deal Date', placeholder: 'Search Deal Date', sourceField: 'deal_date' },
   { key: 'dealOwner', label: 'Deal Owner', placeholder: 'Search Deal Owner', sourceField: 'owner' },
   { key: 'dealType', label: 'Deal Type', placeholder: 'Search Deal Type', sourceField: 'deal_type' },
   { key: 'dealStatus', label: 'Deal Status', placeholder: 'Search Deal Status', sourceField: 'status' },
-  { key: 'projectName', label: 'Project Name', placeholder: 'Search Project Name', sourceField: 'project_name' },
   { key: 'dealValue', label: 'Deal Value', placeholder: 'Search Deal Value', sourceField: 'deal_value' },
   { key: 'convertToPo', label: 'Convert PO', placeholder: 'Search Convert PO', sourceField: 'convert_to_po' },
   { key: 'poValue', label: 'PO Value', placeholder: 'Search PO Value', sourceField: 'po_value' },
@@ -237,7 +237,7 @@ const DEAL_STATUS_FILTER_OPTIONS = [
   ...DEAL_BOARD_COLUMNS.map((column) => ({ key: column.key, label: column.label })),
 ]
 
-const ROWS_PER_PAGE = 6
+const ROWS_PER_PAGE = 10
 const BOARD_INITIAL_LIMIT = 8
 const BOARD_LOAD_MORE_COUNT = 6
 let dealContactSequence = 0
@@ -972,12 +972,12 @@ const buildDealViewConfig = (variantKey, customViewDefinition) => {
     },
     view: {
       ...baseConfig,
-      title: 'View Deal',
+      title: 'My Deals',
       subtitle: 'Review all admin deals in one consolidated listing.',
     },
     ownerWise: {
       ...baseConfig,
-      title: 'View Deal',
+      title: 'My Deals',
       subtitle: 'Review all admin deals in one consolidated listing.',
       sortFn: (left, right) =>
         (left.dealOwner || '').localeCompare(right.dealOwner || '') || (left.name || '').localeCompare(right.name || ''),
@@ -1068,6 +1068,10 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
     })
   }, [rawDeals])
   const { user } = useAuth()
+  const dealFileInputRef = useRef(null)
+  const [isImportingDeals, setIsImportingDeals] = useState(false)
+  const [importPreviewDeals, setImportPreviewDeals] = useState(null)
+  const [isImportPreviewOpen, setIsImportPreviewOpen] = useState(false)
   const { isOpen, data, open, close } = useModal()
   const [hasAutoOpened, setHasAutoOpened] = useState(false)
   const [formData, setFormData] = useState(() => buildInitialFormData({ ownerUserId: String(user?.id || '') }))
@@ -1336,12 +1340,20 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
 
   const scopedDeals = useMemo(() => {
     let sourceDeals = deals || []
-    if (isAdmin || variantKey === 'search' || variantKey === 'view') {
+    if (variantKey === 'search') {
       sourceDeals = mergeDealSources(deals || [], convertedDeals || [])
     }
 
-    const normalizedDeals = sourceDeals
-      .filter((deal) => deal?.id)
+    const seenIds = new Set()
+    const uniqueSourceDeals = sourceDeals.filter((deal) => {
+      if (!deal || !deal.id) return false
+      const key = String(deal.id)
+      if (seenIds.has(key)) return false
+      seenIds.add(key)
+      return true
+    })
+
+    const normalizedDeals = uniqueSourceDeals
       .map((deal, index) => {
         const linkedAccount = accountDirectory[String(deal.accountId || '')]
           || accountNameDirectory[normalizeSearchValue(deal.accountName || deal.customerName || '')]
@@ -1362,9 +1374,15 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
           || userDirectory[deal.userId]
           || 'Unassigned'
 
+        const primaryProjectName = deal.projectName || deal.data?.projectName || linkedAccount?.projectName || deal.title || deal.name || deal.dealName || ''
+        const primaryDealName = deal.name || deal.dealName || deal.title || deal.data?.dealName || deal.data?.name || deal.customerName || primaryProjectName || ''
+
         return {
           ...deal,
-          projectName: deal.projectName || linkedAccount?.projectName || deal.name || deal.title || '',
+          projectName: primaryProjectName,
+          dealName: primaryDealName,
+          title: primaryProjectName || primaryDealName,
+          name: primaryDealName,
           accountOwner: deal.accountOwnerDisplay || deal.accountOwner || linkedAccount?.accountOwnerDisplay || linkedAccount?.accountOwnerName || linkedAccount?.accountOwner || deal.customerOwnerDisplay || deal.customerOwner || '',
           city: normalizeDealCityForFilter(deal.city || deal.location || deal.branch || deal.branchLocation || deal.projectLocation || linkedAccount?.raw?.city || linkedAccount?.location || linkedCustomer?.city || linkedCustomer?.location || ''),
           ownerUserId: resolvedOwnerUserId,
@@ -1373,7 +1391,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
           assignedUserId: String(deal.assignedUserId || deal.assignedTo || resolvedOwnerUserId || ''),
           ownerName: deal.ownerName || resolvedOwnerName,
           dealOwner: resolvedOwnerName,
-          dealNumber: deal.dealNumber || `DL${String(index + 1).padStart(5, '0')}`,
+          dealNumber: deal.dealNumber || `DL-${1000 + index + 1}`,
           dealDate: deal.dealDate || deal.createdAt || '',
           dealType: deal.dealType || deal.customerCategory || linkedAccount?.accountCategory || deal.stage || '',
           quotationCustomerStatus: deal.quotationCustomerStatus || '',
@@ -1463,15 +1481,19 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
     'dealNo',
     'id',
     'name',
+    'title',
     'dealName',
     'dealDate',
     'dealOwner',
+    'ownerName',
     'dealType',
     'status',
     'dealStatus',
     'jobNo',
     'projectName',
     'dealValue',
+    'amount',
+    'value',
     'convertToPo',
     'convertPO',
     'poValue',
@@ -1485,9 +1507,12 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
     'companyName',
     'companyProfile',
     'contactPerson',
+    'contactName',
     'contactPhone',
     'contactMobile',
     'contactEmail',
+    'consultantName',
+    'gstin',
   ]
 
   const { searchTerm, setSearchTerm, filteredItems: searchedDeals } = useSearch(drilldownScopedDeals, searchKeys)
@@ -1592,7 +1617,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
         id: deal.id,
         rawDeal: deal,
         dealId: deal.id || '',
-        dealNumber: deal.dealNumber || `DL${String(index + 1).padStart(5, '0')}`,
+        dealNumber: deal.dealNumber || `DL-${1000 + index + 1}`,
         quotationNumber: getDealQuotationNumber(deal, quotationNumberByDealId, quotationNumberByDealNumber),
         location: deal.city || deal.location || linkedCustomer?.city || linkedCustomer?.location || '',
         customerNumber: deal.customerNumber || linkedCustomer?.customerNumber || '',
@@ -1917,7 +1942,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
         rawDeal: deal,
         ownerKey: deal.dealOwnerDisplay || getCrmOwnerDisplay(deal.dealOwner || deal.ownerName || '') || deal.dealOwner || deal.ownerName || '',
         dealId: deal.id || '',
-        dealNumber: deal.dealNumber || `DL${String(index + 1).padStart(5, '0')}`,
+        dealNumber: deal.dealNumber || `DL-${1000 + index + 1}`,
         quotationNumber: getDealQuotationNumber(deal, quotationNumberByDealId, quotationNumberByDealNumber),
         location: getDealBranchLocation(deal, linkedCustomer),
         customerName: getDealCustomerName(deal, linkedCustomer),
@@ -2163,7 +2188,20 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
   const sortedOwnerScopedRows = useMemo(() => {
     const activeSortKey = activeOwnerScopedColumns.some((column) => column.key === gridSortConfig.key)
       ? gridSortConfig.key
-      : 'dealNumber'
+      : null
+
+    if (!activeSortKey) {
+      return [...displayOwnerScopedRows].sort((left, right) => {
+        const leftId = Number(left.legacyId || left.id || left.rawDeal?.legacyId || left.rawDeal?.id) || 0
+        const rightId = Number(right.legacyId || right.id || right.rawDeal?.legacyId || right.rawDeal?.id) || 0
+        if (leftId !== rightId && leftId > 0 && rightId > 0) return rightId - leftId
+        const timeA = new Date(left.createdAt || left.dealDate || left.rawDeal?.createdAt || 0).getTime()
+        const timeB = new Date(right.createdAt || right.dealDate || right.rawDeal?.createdAt || 0).getTime()
+        if (timeA !== timeB) return timeB - timeA
+        return String(right.id || '').localeCompare(String(left.id || ''), undefined, { numeric: true })
+      })
+    }
+
     const sortDirectionMultiplier = gridSortConfig.direction === 'asc' ? 1 : -1
 
     return [...displayOwnerScopedRows].sort((left, right) => {
@@ -3046,6 +3084,262 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
     }
   }
 
+  const handleImportDealsClick = () => {
+    if (dealFileInputRef.current) {
+      dealFileInputRef.current.value = ''
+      dealFileInputRef.current.click()
+    }
+  }
+
+  const handleImportDealsFile = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsImportingDeals(true)
+    try {
+      const data = await file.arrayBuffer()
+      const workbook = XLSX.read(data, { type: 'array' })
+      const firstSheetName = workbook.SheetNames[0]
+      if (!firstSheetName || !workbook.Sheets[firstSheetName]) {
+        addNotification('error', 'Import Deals', 'No valid worksheets found in Excel file.')
+        return
+      }
+
+      const worksheet = workbook.Sheets[firstSheetName]
+      const raw2DRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' })
+      let headerRowIndex = -1
+      for (let i = 0; i < Math.min(raw2DRows.length, 20); i++) {
+        const rowArr = raw2DRows[i] || []
+        const rowStr = rowArr.join(' ').toLowerCase()
+
+        // Skip CRM report summary headers
+        if (
+          rowStr.includes('total records') ||
+          rowStr.includes('records :') ||
+          /deal owner\s*[-:]/i.test(rowStr) ||
+          /generated on/i.test(rowStr) ||
+          /report filter/i.test(rowStr)
+        ) {
+          continue
+        }
+
+        let matchCount = 0
+        if (rowStr.includes('project name') || rowStr.includes('deal name') || rowStr.includes('title')) matchCount++
+        if (rowStr.includes('deal date') || rowStr.includes('date')) matchCount++
+        if (rowStr.includes('customer name') || rowStr.includes('account name') || rowStr.includes('customer')) matchCount++
+        if (rowStr.includes('deal owner') || rowStr.includes('owner')) matchCount++
+        if (rowStr.includes('deal value') || rowStr.includes('amount') || rowStr.includes('value')) matchCount++
+        if (rowStr.includes('deal number') || rowStr.includes('deal no')) matchCount++
+        if (rowStr.includes('product category') || rowStr.includes('consultant name')) matchCount++
+
+        if (matchCount >= 2) {
+          headerRowIndex = i
+          break
+        }
+      }
+
+      let validRows = []
+      if (headerRowIndex !== -1) {
+        const headers = (raw2DRows[headerRowIndex] || []).map((h) => String(h || '').trim())
+        for (let i = headerRowIndex + 1; i < raw2DRows.length; i++) {
+          const rowArr = raw2DRows[i]
+          if (!rowArr || rowArr.length === 0) continue
+          const rowObj = {}
+          headers.forEach((h, colIdx) => {
+            if (h) rowObj[h] = rowArr[colIdx]
+          })
+          const rowText = Object.values(rowObj).join(' ')
+          if (/Generated on:/i.test(rowText) || /Report Filter/i.test(rowText) || /Page \d+/i.test(rowText) || /Total Records/i.test(rowText)) continue
+          if (Object.values(rowObj).some((val) => String(val || '').trim() !== '')) {
+            validRows.push(rowObj)
+          }
+        }
+      } else {
+        const rawObjects = XLSX.utils.sheet_to_json(worksheet, { defval: '' })
+        validRows = rawObjects.filter((row) => {
+          if (!row || typeof row !== 'object') return false
+          const rowText = Object.values(row).join(' ')
+          if (/Generated on:/i.test(rowText) || /Report Filter/i.test(rowText) || /Total Records/i.test(rowText)) return false
+          return Object.values(row).some((val) => String(val || '').trim() !== '')
+        })
+      }
+
+      if (!validRows || validRows.length === 0) {
+        addNotification('error', 'Import Deals', 'The uploaded file does not contain any valid data rows.')
+        return
+      }
+
+      const getVal = (row, ...candidateKeys) => {
+        if (!row || typeof row !== 'object') return ''
+
+        // 1. Direct exact key check
+        for (const k of candidateKeys) {
+          if (row[k] !== undefined && row[k] !== null) {
+            const val = String(row[k]).trim()
+            if (val !== '' && val.toLowerCase() !== 'null' && val.toLowerCase() !== 'undefined') return val
+          }
+        }
+
+        // 2. Normalized key map check (handles spaces, slashes, dashes, tabs, special chars)
+        const normKeyMap = new Map()
+        Object.keys(row).forEach((rk) => {
+          const cleanRk = String(rk || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+          if (cleanRk) normKeyMap.set(cleanRk, rk)
+        })
+
+        for (const k of candidateKeys) {
+          const cleanK = String(k || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+          const actualKey = normKeyMap.get(cleanK)
+          if (actualKey && row[actualKey] !== undefined && row[actualKey] !== null) {
+            const val = String(row[actualKey]).trim()
+            if (val !== '' && val.toLowerCase() !== 'null' && val.toLowerCase() !== 'undefined') return val
+          }
+        }
+
+        // 3. Soft substring match check (e.g., "Project / Deal Name" matching "Deal Name")
+        for (const k of candidateKeys) {
+          const cleanK = String(k || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+          if (!cleanK || cleanK.length < 3) continue
+          for (const [normRk, actualKey] of normKeyMap.entries()) {
+            if ((normRk.includes(cleanK) || cleanK.includes(normRk)) && row[actualKey] !== undefined && row[actualKey] !== null) {
+              const val = String(row[actualKey]).trim()
+              if (val !== '' && val.toLowerCase() !== 'null' && val.toLowerCase() !== 'undefined') return val
+            }
+          }
+        }
+
+        return ''
+      }
+
+      const formatExcelDate = (val) => {
+        if (!val) return ''
+        if (typeof val === 'number') {
+          const date = new Date(Math.round((val - 25569) * 86400 * 1000))
+          if (!isNaN(date.getTime())) return date.toISOString().slice(0, 10)
+        }
+        const str = String(val).trim()
+        if (!str || str.toLowerCase() === 'null' || str.toLowerCase() === 'undefined') return ''
+        const dmyMatch = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/)
+        if (dmyMatch) {
+          const [, d, m, y] = dmyMatch
+          return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+        }
+        const parsed = new Date(str)
+        if (!isNaN(parsed.getTime())) {
+          return parsed.toISOString().slice(0, 10)
+        }
+        return str
+      }
+
+      const dealsToImport = validRows.map((row) => {
+        const rawProjName = getVal(row, 'Project Name', 'ProjectName', 'Project / Deal Name', 'Project/Deal Name', 'Project', 'Deal Name', 'DealName', 'Title', 'Name')
+        const rawDealName = getVal(row, 'Deal Name', 'DealName', 'Project / Deal Name', 'Project/Deal Name', 'Title', 'Name', 'Project Name', 'ProjectName')
+        const rawCustName = getVal(row, 'Customer Name', 'Account Name', 'Customer', 'Account', 'Company', 'Client')
+
+        const unifiedName = String(rawProjName || rawDealName || rawCustName || 'General Enquiry').trim()
+        const dealName = unifiedName
+        const projectName = unifiedName
+        const customerName = String(rawCustName || rawDealName || rawProjName || '').trim()
+        const dealNumber = String(getVal(row, 'Deal Number', 'Deal No', 'DealNumber', 'Deal #') || '').trim()
+        const dealOwner = String(getVal(row, 'Deal Owner', 'Account Owner', 'Owner Name', 'Owner', 'Assigned To', 'Owner Code', 'ownerCode') || '').trim()
+        const coOwners = String(getVal(row, 'Deal Co-Owners', 'Co-Owners', 'Co Owners', 'CoOwners') || '').trim()
+        const rawDealDate = getVal(row, 'Deal Date', 'Date', 'Expected Close Date', 'Close Date')
+        const dealDate = formatExcelDate(rawDealDate)
+        const dealType = String(getVal(row, 'Deal Type', 'Type') || '').trim()
+        const rawDealVal = getVal(row, 'Deal Value', 'Amount', 'Value', 'Deal Amount')
+        const dealValue = Number(String(rawDealVal).replace(/[^0-9.-]+/g, '')) || 0
+        const probability = Number(String(getVal(row, 'Probability', 'Win Probability')).replace(/[^0-9.-]+/g, '')) || 0
+        const productCategory = String(getVal(row, 'Product Category', 'ProductCategory', 'Product') || '').trim()
+        const consultantName = String(getVal(row, 'Consultant Name', 'Consultant') || '').trim()
+        const contactName = String(getVal(row, 'Contact Name', 'Contact Person', 'Contact') || '').trim()
+        const gstin = String(getVal(row, 'GSTIN', 'GST No', 'GST') || '').trim()
+        const source = String(getVal(row, 'Deal Source', 'Source', 'Deal Category') || '').trim()
+        const category = String(getVal(row, 'Customer Category', 'Category', 'Account Category') || '').trim()
+        const rawPoVal = getVal(row, 'PO Value', 'PO Amount', 'poValue')
+        const poValue = Number(String(rawPoVal).replace(/[^0-9.-]+/g, '')) || 0
+        const description = String(getVal(row, 'Description', 'Notes', 'Remark', 'Remarks') || '').trim()
+        const phone = String(getVal(row, 'Phone', 'Contact Phone', 'Mobile', 'Contact Mobile') || '').trim()
+        const addedBy = String(getVal(row, 'Added By', 'Created By', 'AddedBy') || '').trim()
+        const jobNo = String(getVal(row, 'Job No', 'Job Number', 'JobNo') || '').trim()
+
+        let status = 'ready'
+        let statusMessage = 'Ready to import'
+
+        if (!dealName || dealName === 'Untitled') {
+          status = 'warning'
+          statusMessage = 'Default Deal Name'
+        }
+
+        return {
+          dealNumber,
+          dealName,
+          projectName,
+          title: dealName,
+          name: dealName,
+          dealOwner,
+          accountOwner: dealOwner,
+          coOwners,
+          dealDate,
+          dealType: category || source || dealType || 'SWATI',
+          dealValue,
+          amount: dealValue,
+          value: dealValue,
+          probability,
+          productCategory: productCategory || 'MARKETING-SWATI',
+          consultantName,
+          contactName,
+          contactPerson: contactName,
+          gstin,
+          source: source || 'MARKETING-SWATI',
+          dealSource: source || 'MARKETING-SWATI',
+          customerName,
+          accountName: customerName,
+          category,
+          customerCategory: category,
+          poValue,
+          description,
+          phone,
+          addedBy,
+          jobNo,
+          status,
+          statusMessage,
+        }
+      })
+
+      setImportPreviewDeals(dealsToImport)
+      setIsImportPreviewOpen(true)
+    } catch (err) {
+      console.error('Failed to parse deals Excel:', err)
+      addNotification('error', 'Import Deals', `Failed to parse Excel file: ${err.message || 'Unknown error'}`)
+    } finally {
+      setIsImportingDeals(false)
+    }
+  }
+
+  const handleConfirmImportDeals = async () => {
+    if (!importPreviewDeals || importPreviewDeals.length === 0) return
+    const validDeals = importPreviewDeals.filter((r) => r.status !== 'error')
+    if (validDeals.length === 0) {
+      addNotification('error', 'Import Deals', 'No valid rows available to import.')
+      return
+    }
+
+    setIsImportingDeals(true)
+    try {
+      const res = await dealApi.importDeals(validDeals)
+      const importedCount = res?.count ?? validDeals.length
+      addNotification('success', 'Import Deals', `Successfully imported ${importedCount} deals into MongoDB.`)
+      setIsImportPreviewOpen(false)
+      setImportPreviewDeals(null)
+      await refreshData()
+    } catch (err) {
+      console.error('Failed to import deals Excel:', err)
+      addNotification('error', 'Import Deals', `Failed to import Excel file: ${err.message || 'Unknown error'}`)
+    } finally {
+      setIsImportingDeals(false)
+    }
+  }
+
   const handleExportDeals = (format = 'excel') => {
     const exportColumns = (isOwnerScopedAdminView ? activeOwnerScopedColumns : activeGridColumns) || []
     const filteredRows = isOwnerScopedAdminView ? sortedOwnerScopedRows : sortedGridRows
@@ -3547,7 +3841,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
 
   const defaultColumns = [
     { key: 'id', label: 'ID', width: '120px' },
-    { key: 'name', label: 'Deal Name' },
+    { key: 'name', label: 'Project Name' },
     {
       key: 'value',
       label: 'Value',
@@ -3601,7 +3895,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
         </div>
       ),
     },
-    { key: 'name', label: 'Deal Name' },
+    { key: 'name', label: 'Project Name' },
     {
       key: 'dealDate',
       label: 'Deal Date',
@@ -3698,6 +3992,25 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
   }
 
   const renderDealGridCellContent = (row, columnKey) => {
+    if (columnKey === 'projectName') {
+      const val = row.projectName || row.title || row.name || row.rawDeal?.projectName || row.rawDeal?.title || row.rawDeal?.name || row.rawDeal?.data?.projectName || row.rawDeal?.data?.title
+      const strVal = String(val || '').trim()
+      if (strVal && strVal.toLowerCase() !== 'null' && strVal.toLowerCase() !== 'undefined' && strVal.toLowerCase() !== 'no') {
+        return strVal
+      }
+      return '-'
+    }
+
+    if (columnKey === 'dealName') {
+      const val = row.dealName || row.name || row.title || row.customerName || row.rawDeal?.dealName || row.rawDeal?.name || row.rawDeal?.title || row.rawDeal?.data?.dealName
+      return (val && String(val).trim().toLowerCase() !== 'null' && String(val).trim().toLowerCase() !== 'undefined') ? String(val).trim() : '-'
+    }
+
+    if (columnKey === 'customerName') {
+      const val = row.customerName || row.companyName || row.accountName || row.rawDeal?.customerName || row.rawDeal?.data?.customerName
+      return (val && String(val).trim().toLowerCase() !== 'null' && String(val).trim().toLowerCase() !== 'undefined') ? String(val).trim() : '-'
+    }
+
     if (columnKey === 'reasonForLostOrder') {
       const selectedReason = normalizeLostOrderReason(row.reasonForLostOrder)
       return (
@@ -3709,7 +4022,11 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
       )
     }
 
-    return row[columnKey] || ''
+    const rawVal = row[columnKey]
+    if (rawVal === undefined || rawVal === null || String(rawVal).trim().toLowerCase() === 'null' || String(rawVal).trim().toLowerCase() === 'undefined') {
+      return ''
+    }
+    return String(rawVal)
   }
 
   const renderOwnerScopedCell = (row, columnKey) => {
@@ -3749,6 +4066,13 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
 
   const renderDealToolModals = () => (
     <>
+      <input
+        ref={dealFileInputRef}
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        style={{ display: 'none' }}
+        onChange={handleImportDealsFile}
+      />
       <Modal
         isOpen={isFieldSelectorOpen}
         onClose={handleCloseFieldSelector}
@@ -4219,7 +4543,94 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
           </div>
         </div>
       </Modal>
+      {renderImportPreviewModal()}
     </>
+  )
+
+  const renderImportPreviewModal = () => (
+    <Modal
+      isOpen={isImportPreviewOpen}
+      onClose={() => setIsImportPreviewOpen(false)}
+      size="xlarge"
+      showClose={true}
+      title={`Import Deals Preview (${importPreviewDeals?.length || 0} Records)`}
+    >
+      <div className="deals-import-preview-container" style={{ padding: '16px', maxHeight: '70vh', overflowY: 'auto' }}>
+        {importPreviewDeals && importPreviewDeals.length > 0 ? (
+          <>
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', fontSize: '14px', fontWeight: 600 }}>
+              <span style={{ color: '#2b6cb0' }}>Total: {importPreviewDeals.length}</span>
+              <span style={{ color: '#2f855a' }}>Ready: {importPreviewDeals.filter((r) => r.status === 'ready').length}</span>
+              <span style={{ color: '#dd6b20' }}>Warnings: {importPreviewDeals.filter((r) => r.status === 'warning').length}</span>
+              <span style={{ color: '#c53030' }}>Errors: {importPreviewDeals.filter((r) => r.status === 'error').length}</span>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="deals-crm-table" style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse', whiteSpace: 'nowrap' }}>
+                <thead>
+                  <tr style={{ background: '#f7fafc', borderBottom: '2px solid #e2e8f0' }}>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>#</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Deal Name</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Deal Date</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Deal Owner</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Deal Co-Owners</th>
+                    <th style={{ padding: '8px', textAlign: 'right' }}>Deal Value</th>
+                    <th style={{ padding: '8px', textAlign: 'right' }}>Probability</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Product Category</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Consultant Name</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Contact Name</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>GSTIN</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Project Name</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Deal Source</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Customer Name</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>Customer Category</th>
+                    <th style={{ padding: '8px', textAlign: 'center' }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {importPreviewDeals.map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #edf2f7' }}>
+                      <td style={{ padding: '8px' }}>{idx + 1}</td>
+                      <td style={{ padding: '8px', fontWeight: 500 }}>{row.dealName || row.projectName}</td>
+                      <td style={{ padding: '8px' }}>{row.dealDate || '-'}</td>
+                      <td style={{ padding: '8px' }}>{row.dealOwner || <em style={{ color: '#a0aec0' }}>Not specified</em>}</td>
+                      <td style={{ padding: '8px' }}>{row.coOwners || '-'}</td>
+                      <td style={{ padding: '8px', textAlign: 'right' }}>₹{formatNumber(row.dealValue)}</td>
+                      <td style={{ padding: '8px', textAlign: 'right' }}>{row.probability || 0}%</td>
+                      <td style={{ padding: '8px' }}>{row.productCategory || '-'}</td>
+                      <td style={{ padding: '8px' }}>{row.consultantName || '-'}</td>
+                      <td style={{ padding: '8px' }}>{row.contactName || '-'}</td>
+                      <td style={{ padding: '8px' }}>{row.gstin || '-'}</td>
+                      <td style={{ padding: '8px' }}>{row.projectName || '-'}</td>
+                      <td style={{ padding: '8px' }}>{row.source || row.dealSource || '-'}</td>
+                      <td style={{ padding: '8px' }}>{row.customerName || '-'}</td>
+                      <td style={{ padding: '8px' }}>{row.customerCategory || row.category || '-'}</td>
+                      <td style={{ padding: '8px', textAlign: 'center' }}>
+                        <span className={`badge badge--${row.status === 'ready' ? 'success' : row.status === 'warning' ? 'warning' : 'danger'}`}>
+                          {row.status === 'ready' ? '✓ Ready' : row.status === 'warning' ? '⚠ Warning' : '✕ Error'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <Button type="button" variant="outline" onClick={() => setIsImportPreviewOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                disabled={isImportingDeals || importPreviewDeals.filter((r) => r.status !== 'error').length === 0}
+                onClick={handleConfirmImportDeals}
+              >
+                {isImportingDeals ? 'Importing...' : `Confirm & Import (${importPreviewDeals.filter((r) => r.status !== 'error').length} Deals)`}
+              </Button>
+            </div>
+          </>
+        ) : null}
+      </div>
+    </Modal>
   )
 
   if (isOwnerScopedAdminView) {
@@ -4253,11 +4664,12 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
               <button
                 type="button"
                 className="deals-ownerwise-toolbar-icon deals-ownerwise-toolbar-icon-orange"
-                onClick={() => handleExportDeals('excel')}
-                aria-label="Export"
-                title="Export"
+                onClick={handleImportDealsClick}
+                disabled={isImportingDeals}
+                aria-label="Import Deals Excel"
+                title="Import Deals Excel"
               >
-                <FaFileExport />
+                <FaFileImport />
               </button>
             </div>
           </div>
@@ -4542,6 +4954,16 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
               <button type="button" className="deals-board-toolbar-button" onClick={() => navigate('/admin/deals/add')}>
                 <FaPlus />
                 <span>Add Deal</span>
+              </button>
+              <button
+                type="button"
+                className="deals-board-toolbar-icon deals-board-toolbar-icon-panel"
+                onClick={handleImportDealsClick}
+                disabled={isImportingDeals}
+                aria-label="Import Deals Excel"
+                title="Import Deals Excel"
+              >
+                <FaFileImport />
               </button>
               <button
                 type="button"
@@ -4967,6 +5389,14 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
             </div>
           </div>
         </Modal>
+        <input
+          ref={dealFileInputRef}
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          style={{ display: 'none' }}
+          onChange={handleImportDealsFile}
+        />
+        {renderImportPreviewModal()}
       </div>
     )
   }
@@ -5017,11 +5447,12 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
               <button
                 type="button"
                 className="deals-crm-toolbar-icon deals-crm-toolbar-icon-orange"
-                onClick={() => handleExportDeals('excel')}
-                aria-label="Export"
-                title="Export"
+                onClick={handleImportDealsClick}
+                disabled={isImportingDeals}
+                aria-label="Import Deals Excel"
+                title="Import Deals Excel"
               >
-                <FaFileExport />
+                <FaFileImport />
               </button>
             </div>
           </div>

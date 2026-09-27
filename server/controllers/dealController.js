@@ -12,7 +12,17 @@ const getConvertedFromAccount = async (req, res, next) => {
   }
 }
 
+const importDeals = async (req, res, next) => {
+  try {
+    const result = await dealService.bulkImportDeals(req.user, req.body?.deals || [])
+    res.json({ success: true, data: result })
+  } catch (error) {
+    next(error)
+  }
+}
+
 module.exports = {
   ...controller,
   getConvertedFromAccount,
+  importDeals,
 }

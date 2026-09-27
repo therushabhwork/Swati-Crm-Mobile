@@ -132,10 +132,15 @@ const sortFromFilters = (filters = {}) => {
     stage: 'stage',
     title: 'title',
     updatedAt: 'updatedAt',
+    legacyId: 'legacyId',
+  }
+
+  if (!sortBy) {
+    return { createdAt: -1, legacyId: -1 }
   }
 
   return {
-    [sortableFields[sortBy] || 'updatedAt']: direction,
+    [sortableFields[sortBy] || 'createdAt']: direction,
     legacyId: -1,
   }
 }

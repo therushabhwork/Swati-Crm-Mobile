@@ -17,7 +17,7 @@ export const DEAL_CUSTOM_VIEW_FIELD_DEFINITIONS = {
   customerName: { key: 'customerName', label: 'Customer Name', filterPlaceholder: 'Search Customer Name' },
   customerNumber: { key: 'customerNumber', label: 'Customer No.', filterPlaceholder: 'Search Customer No.' },
   dealDate: { key: 'dealDate', label: 'Deal Date', filterPlaceholder: 'Search Deal Date' },
-  dealName: { key: 'dealName', label: 'Deal Name', filterPlaceholder: 'Search Deal Name' },
+  dealName: { key: 'dealName', label: 'Project Name', filterPlaceholder: 'Search Project Name' },
   dealOwner: { key: 'dealOwner', label: 'Deal Owner', filterPlaceholder: 'Search Deal Owner' },
   dealType: { key: 'dealType', label: 'Deal Type', filterPlaceholder: 'Search Deal Type' },
   dealStatus: { key: 'dealStatus', label: 'Deal Status', filterPlaceholder: 'Search Deal Status' },

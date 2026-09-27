@@ -171,4 +171,9 @@ export const dealApi = {
     const responseData = response.data?.success ? response.data.data : response.data
     return normalizeDealRecord(responseData)
   },
+
+  async importDeals(deals) {
+    const response = await apiClient.post('/deals/import', { deals })
+    return response.data?.success ? response.data.data : response.data
+  },
 }

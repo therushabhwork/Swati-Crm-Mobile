@@ -104,13 +104,47 @@ const AccountBoardHeaderActions = ({
       const workbook = XLSX.read(data, { type: 'array' })
       const firstSheetName = workbook.SheetNames[0]
       const worksheet = workbook.Sheets[firstSheetName]
-      const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: '' })
+      const raw2DRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' })
+      let headerRowIndex = -1
+      for (let i = 0; i < Math.min(raw2DRows.length, 15); i++) {
+        const rowStr = (raw2DRows[i] || []).join(' ').toLowerCase()
+        if (
+          rowStr.includes('account name') ||
+          rowStr.includes('project name') ||
+          rowStr.includes('account date') ||
+          rowStr.includes('account category') ||
+          rowStr.includes('contact person')
+        ) {
+          headerRowIndex = i
+          break
+        }
+      }
 
-      const validRows = rawRows.filter((row) => {
-        if (!row || typeof row !== 'object') return false
-        const values = Object.values(row).map((val) => String(val || '').trim())
-        return values.some(Boolean)
-      })
+      let validRows = []
+      if (headerRowIndex !== -1) {
+        const headers = (raw2DRows[headerRowIndex] || []).map((h) => String(h || '').trim())
+        for (let i = headerRowIndex + 1; i < raw2DRows.length; i++) {
+          const rowArr = raw2DRows[i]
+          if (!rowArr || rowArr.length === 0) continue
+          const rowObj = {}
+          headers.forEach((h, colIdx) => {
+            if (h) rowObj[h] = rowArr[colIdx]
+          })
+          const rowText = Object.values(rowObj).join(' ')
+          if (/Generated on:/i.test(rowText) || /Report Filter/i.test(rowText) || /Page \d+/i.test(rowText)) continue
+          if (Object.values(rowObj).some((val) => String(val || '').trim() !== '')) {
+            validRows.push(rowObj)
+          }
+        }
+      } else {
+        const rawObjects = XLSX.utils.sheet_to_json(worksheet, { defval: '' })
+        validRows = rawObjects.filter((row) => {
+          if (!row || typeof row !== 'object') return false
+          const rowText = Object.values(row).join(' ')
+          if (/Generated on:/i.test(rowText) || /Report Filter/i.test(rowText)) return false
+          return Object.values(row).some((val) => String(val || '').trim() !== '')
+        })
+      }
 
       if (validRows.length === 0) {
         alert('No valid rows found in the selected file.')
@@ -141,7 +175,7 @@ const AccountBoardHeaderActions = ({
             const matchKey = rowKeys.find((rk) => normKey(rk) === kNorm)
             if (matchKey && row[matchKey] !== undefined && row[matchKey] !== null) {
               const val = String(row[matchKey]).trim()
-              if (val !== '') return val
+              if (val !== '' && val.toLowerCase() !== 'null' && val.toLowerCase() !== 'undefined') return val
             }
           }
           return ''
@@ -153,8 +187,35 @@ const AccountBoardHeaderActions = ({
           return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleaned) ? cleaned : undefined
         }
 
-        const accountName = getVal('Account Name', 'AccountName', 'Customer Name', 'customerName', 'Name', 'name')
-        const accountDate = getVal('Account Date', 'Date', 'accountDate')
+        const isCodePatternStr = (str) => typeof str === 'string' && /^[A-Z]{2,4}\d{4,8}$/i.test(str.trim())
+
+        const parseExcelDateValue = (rawDate) => {
+          if (!rawDate) return undefined
+          const str = String(rawDate).trim()
+          if (!str) return undefined
+
+          if (/^\d{5}$/.test(str) || (typeof rawDate === 'number' && rawDate > 30000 && rawDate < 60000)) {
+            const num = Number(rawDate)
+            const jsDate = new Date(Math.round((num - 25569) * 86400 * 1000))
+            return jsDate.toISOString()
+          }
+
+          const match = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/)
+          if (match) {
+            const [, day, month, year] = match
+            const jsDate = new Date(Number(year), Number(month) - 1, Number(day))
+            return jsDate.toISOString()
+          }
+
+          const parsed = new Date(str)
+          return Number.isNaN(parsed.getTime()) ? str : parsed.toISOString()
+        }
+
+        const rawAccNameCandidate = getVal('Account Name', 'AccountName', 'Customer Name', 'customerName', 'Company Name', 'companyName', 'Company', 'company', 'Client Name', 'clientName', 'Name', 'name', 'Account')
+        const accountName = isCodePatternStr(rawAccNameCandidate) ? '' : rawAccNameCandidate
+
+        const rawDateInput = getVal('Account Date', 'Date', 'accountDate')
+        const accountDate = parseExcelDateValue(rawDateInput) || rawDateInput || undefined
         const accountCategory = getVal('Account Category', 'AccountCategory', 'Category', 'accountCategory')
         const contactPerson = getVal('Contact Person', 'ContactPerson', 'Contact', 'contactPerson')
         const phone = getVal('Phone', 'phone', 'Mobile', 'mobile', 'Contact Mobile')
@@ -167,19 +228,30 @@ const AccountBoardHeaderActions = ({
         const state = getVal('State', 'state')
         const location = getVal('Location', 'location', 'City', 'city')
         const industryType = getVal('Industry type', 'Industry Type', 'IndustryType', 'Industry', 'industry')
-        const customerRefNo = getVal('Customer Ref. No.', 'Customer Ref No', 'CustomerRefNo')
+        const jobNo = getVal('Job No', 'JobNo', 'Job No.', 'Customer Ref. No.', 'Customer Ref No', 'CustomerRefNo')
+        const customerRefNo = jobNo || getVal('Customer Ref. No.', 'Customer Ref No', 'CustomerRefNo')
         const consultantName = getVal('Consultant Name', 'consultantName')
         const poValue = getVal('PO Value', 'poValue', 'POValue')
         const userGroup = getVal('User Group', 'userGroup', 'UserGroup')
 
-        const displayName = accountName || customerRefNo || phone || Object.values(row).map((v) => String(v || '').trim()).find(Boolean)
+        const fallbackRowName = Object.values(row)
+          .map((v) => String(v || '').trim())
+          .find((val) => val.length > 1 && !isCodePatternStr(val) && !/^\d+$/.test(val) && !/Report Filter/i.test(val)) || ''
+
+        const displayName = (
+          (accountName && !isCodePatternStr(accountName) ? accountName : null) ||
+          (projectName && !isCodePatternStr(projectName) ? projectName : null) ||
+          (customerRefNo && !isCodePatternStr(customerRefNo) ? customerRefNo : null) ||
+          (fallbackRowName ? fallbackRowName : null) ||
+          ''
+        )
         if (!displayName) continue
         if (/Report Filter/i.test(displayName) || /Report Filter/i.test(accountName)) continue
 
         const matchingLead = existingLeads.find((lead) => {
           if (!lead) return false
           if (customerRefNo && (lead.customerRefNo === customerRefNo || lead.formData?.customerRefNo === customerRefNo)) return true
-          if (accountName && (lead.name === accountName || lead.customerName === accountName || lead.accountName === accountName)) return true
+          if (displayName && (lead.name === displayName || lead.customerName === displayName || lead.accountName === displayName)) return true
           return false
         })
 
@@ -206,6 +278,7 @@ const AccountBoardHeaderActions = ({
           ownerUserId: loggedInUserId,
           assignedTo: loggedInUserId,
           customerRefNo: customerRefNo || undefined,
+          jobNo: jobNo || undefined,
           accountDate: accountDate || undefined,
           accountCategory: accountCategory || undefined,
           contactPerson: contactPerson || undefined,
@@ -243,6 +316,7 @@ const AccountBoardHeaderActions = ({
             'Location': location,
             'Industry type': industryType,
             'Customer Ref. No.': customerRefNo,
+            'Job No': jobNo,
             'Consultant Name': consultantName,
             'PO Value': poValue,
             'User Group': userGroup,
@@ -264,6 +338,7 @@ const AccountBoardHeaderActions = ({
             location,
             industryType,
             customerRefNo,
+            jobNo,
             consultantName,
             poValue,
             userGroup,
@@ -487,6 +562,17 @@ const AccountBoardHeaderActions = ({
           <FiRefreshCw />
         </button>
       ) : null}
+
+      <button
+        type="button"
+        className="account-board-header-icon-btn account-board-header-icon-btn-import"
+        title="Import Accounts Excel"
+        aria-label="Import Accounts Excel"
+        onClick={handleImportClick}
+        disabled={isImporting}
+      >
+        <FiUpload />
+      </button>
 
       {actions.showLoadMenu ? (
         <div className="account-board-header-menu-wrap">
