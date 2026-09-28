@@ -19,10 +19,12 @@ import {
   FaBan,
   FaClipboardList,
   FaEllipsisV,
+  FaStickyNote,
 } from 'react-icons/fa'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import Button from '../../../components/common/Button'
 import Modal from '../../../components/common/Modal'
+import AddRemarksModal from '../../../components/common/AddRemarksModal'
 import Quotations from '../../quotations/Quotations'
 import { useAuth } from '../../../context/AuthContext'
 import { useData } from '../../../context/DataContext'
@@ -478,6 +480,7 @@ const AdminManageDealPage = () => {
   const [isChangeTypeOpen, setIsChangeTypeOpen] = useState(false)
   const [changeTypeValue, setChangeTypeValue] = useState('')
   const [isReminderOpen, setIsReminderOpen] = useState(false)
+  const [isRemarksModalOpen, setIsRemarksModalOpen] = useState(false)
   const [reminderForm, setReminderForm] = useState(() => ({
     reminderDate: getTodayInputValue(),
     reminderTime: '09:00',
@@ -1056,6 +1059,7 @@ const AdminManageDealPage = () => {
 
   const actionsMenuItems = [
     { key: 'reminder', label: 'Add Reminder', icon: <FaBell />, accent: 'orange', onSelect: handleOpenReminder },
+    { key: 'addRemarks', label: 'Add Notes/Remarks', icon: <FaStickyNote />, accent: 'blue', onSelect: () => setIsRemarksModalOpen(true) },
     { key: 'changeStatus', label: 'Change Status', icon: <FaExchangeAlt />, accent: 'blue', onSelect: handleChangeStatus },
     { key: 'generateQuotation', label: 'Generate Quotation', icon: <FaFileAlt />, accent: 'blue', onSelect: handleGenerateQuotation },
     { key: 'uploadQuotation', label: 'Upload Quotation', icon: <FaFileUpload />, accent: 'blue', onSelect: handleUploadQuotation },
@@ -1673,6 +1677,29 @@ const AdminManageDealPage = () => {
           </div>
         </form>
       </Modal>
+
+      <AddRemarksModal
+        isOpen={isRemarksModalOpen}
+        onClose={() => setIsRemarksModalOpen(false)}
+        accountId={deal?.accountId || deal?.id}
+        dealData={deal ? {
+          id: deal.id,
+          dealId: deal.dealId || deal.id || deal._id,
+          dealNumber: deal.dealNumber || deal.id,
+          projectName: deal.projectName || deal.title || deal.customerName,
+          title: deal.title || deal.projectName,
+          customerName: deal.customerName,
+          dealType: deal.dealType || deal.type || deal.stage,
+          dealSource: deal.dealSource || deal.source,
+          status: deal.status || deal.stage,
+          dealOwner: deal.dealOwner || deal.ownerName || deal.assignedTo,
+          dealValue: deal.dealValue || deal.amount || deal.value,
+          currency: deal.currency || 'INR',
+        } : null}
+        onSuccess={() => {
+          setIsRemarksModalOpen(false)
+        }}
+      />
 
       {inlineQuotationDeal && (
         <Quotations

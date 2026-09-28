@@ -1,6 +1,7 @@
 export const CUSTOMER_ACTIONS = [
   { key: 'view-customer', label: 'View Customer', behavior: 'view' },
   { key: 'add-note-remarks', label: 'Add Note/Remarks', behavior: 'inline' },
+  { key: 'history', label: 'History', behavior: 'inline' },
   { key: 'add-reminder', label: 'Add Reminder', behavior: 'inline' },
   { key: 'change-status', label: 'Change Status', behavior: 'inline' },
   { key: 're-assign-customer', label: 'Re-Assign Customer', behavior: 'inline' },

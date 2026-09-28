@@ -139,7 +139,7 @@ const SalesDashboard = () => {
       nextDeals.sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt))
     }
 
-    return nextDeals.slice(0, 5)
+    return nextDeals.slice(0, 3)
   }, [filteredDeals, sortBy])
 
   const dealsByStage = useMemo(() => {

@@ -6,6 +6,7 @@ import {
   FaBell,
   FaBriefcase,
   FaClipboardList,
+  FaComments,
   FaDesktop,
   FaEnvelope,
   FaFileAlt,
@@ -28,6 +29,8 @@ import { useClickOutside } from '../../hooks'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import apiClient from '../../services/apiClient'
+import { remarkApi } from '../../services/remarkApi'
+import Badge from '../../components/common/Badge'
 import { customerService } from '../../services/customerService'
 import { APP_NAME } from '../../utils/constants'
 import { getAdminBookmarks, subscribeAdminBookmarks, toggleAdminBookmark } from '../../features/adminBookmarks/adminBookmarkStorage'
@@ -226,6 +229,7 @@ const AdminPanel = () => {
   const [selectedPerformanceMetric, setSelectedPerformanceMetric] = useState('won')
   const [collapsedMyCrmCards, setCollapsedMyCrmCards] = useState([])
   const [todoReplies, setTodoReplies] = useState([])
+  const [communicationRemarks, setCommunicationRemarks] = useState([])
   const [activeTodoTab, setActiveTodoTab] = useState('all')
   const [reminderStatesById, setReminderStatesById] = useState(() => getAdminReminderStates())
   const menuRef = useClickOutside(() => setOpenMenuState(null))
@@ -241,9 +245,19 @@ const AdminPanel = () => {
     }
   }, [])
 
+  const fetchCommunicationRemarks = useCallback(async () => {
+    try {
+      const data = await remarkApi.getAllRemarks()
+      setCommunicationRemarks(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Failed to fetch communication remarks:', error)
+    }
+  }, [])
+
   useEffect(() => {
     fetchTodoReplies()
-  }, [fetchTodoReplies])
+    fetchCommunicationRemarks()
+  }, [fetchTodoReplies, fetchCommunicationRemarks])
   useEffect(() => subscribeAdminReminderStates(setReminderStatesById), [])
 
   const weeklyData = useMemo(() => getWeeklyReportsAllBoardData(accounts), [accounts])
@@ -775,7 +789,7 @@ const AdminPanel = () => {
               </div>
 
               {filteredTodoItems.length > 0 ? (
-                <div className="ap-todo-rows">
+                <div className="ap-todo-rows" style={{ maxHeight: '340px', overflowY: 'auto' }}>
                   {filteredTodoItems.map((item) => (
                     <div key={item.id} className="ap-todo-row" onClick={item.onClick}>
                       <div className="ap-todo-row-left">
@@ -813,8 +827,6 @@ const AdminPanel = () => {
                 <div className="ap-todo-empty">No todo items found</div>
               )}
             </div>
-
-
           </div>
 
           {/* Right Column */}
@@ -908,9 +920,22 @@ const AdminPanel = () => {
                   </button>
                 </div>
                 {(() => {
-                  const pendingTasksList = (tasks || []).filter(
-                    (t) => String(t.status || '').toLowerCase() === 'pending' || String(t.status || '').toLowerCase() === 'open'
-                  )
+                  const pendingTasksList = [...(tasks || [])]
+                    .concat(
+                      (reminders || [])
+                        .filter((r) => !r.isCompleted)
+                        .map((r) => ({
+                          id: r.id || r._id,
+                          title: r.reminderNote || r.remarkContent || r.note || r.actionType || 'Followup Reminder',
+                          description: r.assignedOwnerName ? `Assigned to: ${r.assignedOwnerName}` : (r.note || 'Pending Action'),
+                          status: 'pending',
+                          dueDate: r.reminderDate || r.date || r.createdAt,
+                        }))
+                    )
+                    .filter((t) => {
+                      const status = String(t.status || '').toLowerCase()
+                      return status !== 'completed' && status !== 'closed' && !t.isCompleted
+                    })
 
                   if (pendingTasksList.length === 0) {
                     return (
@@ -925,7 +950,7 @@ const AdminPanel = () => {
                   }
 
                   return (
-                    <div className="ap-upcoming-tasks-scroll flex flex-col gap-2 p-1">
+                    <div className="ap-upcoming-tasks-scroll flex flex-col gap-2 p-1" style={{ maxHeight: '340px', overflowY: 'auto' }}>
                       {pendingTasksList.map((task) => (
                         <div
                           key={task.id || task._id}
@@ -953,6 +978,62 @@ const AdminPanel = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Full-Width Communication Activity Section: Positioned after Upper Grid & before Performance Section */}
+        <div className="ap-card-box" style={{ marginTop: '24px', marginBottom: '24px' }}>
+          <div className="ap-card-head">
+            <div className="ap-card-head-title">
+              <FaComments className="ap-card-head-icon" />
+              <span>Communication Activity</span>
+            </div>
+            <button
+              type="button"
+              className="ap-link-btn"
+              onClick={() => navigate('/admin/communication-activities')}
+            >
+              View All &rarr;
+            </button>
+          </div>
+
+          {communicationRemarks.length > 0 ? (
+            <div className="ap-todo-rows">
+              {communicationRemarks.slice(0, 3).map((rem) => {
+                const isDeal = rem.relatedEntityType === 'deal'
+                const ownerName = rem.recordOwnerName || rem.dealOwnerName || rem.accountOwnerName || rem.ownerName || '-'
+                return (
+                  <div
+                    key={rem.id}
+                    className="ap-todo-row"
+                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}
+                    onClick={() => navigate('/admin/communication-activities')}
+                  >
+                    <FaComments style={{ color: '#2563eb', fontSize: '18px', flexShrink: 0 }} aria-hidden="true" />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <Badge variant={isDeal ? 'info' : 'success'}>
+                          {isDeal ? 'Deal' : 'Account'}
+                        </Badge>
+                        <span style={{ fontWeight: 600, color: '#1e293b' }}>
+                          {rem.dealName || rem.accountName || 'Activity'}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {rem.content}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', fontSize: '12px', color: '#64748b', flexShrink: 0 }}>
+                      <div style={{ fontWeight: 500, color: '#334155' }}>Owner: {ownerName}</div>
+                      <div>By: {rem.createdByName || 'User'}</div>
+                      <div>{rem.createdAt ? formatDate(rem.createdAt) : '-'}</div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="ap-todo-empty">No communication activities found</div>
+          )}
         </div>
         <AnalyticsSection
         accounts={accounts}

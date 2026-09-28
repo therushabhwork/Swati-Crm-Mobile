@@ -28,6 +28,7 @@ import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { useModal, useSearch, useFilter } from '../../hooks'
 import AddReminderModal from '../../components/common/AddReminderModal'
+import AddRemarksModal from '../../components/common/AddRemarksModal'
 import Badge from '../../components/common/Badge'
 import Button from '../../components/common/Button'
 import Card from '../../components/common/Card'
@@ -47,6 +48,7 @@ import { getCrmOwnerDisplay, normalizeCrmUserName } from '../../features/users/c
 import { authService } from '../../services/authService'
 import { customerService } from '../../services/customerService'
 import { dealApi } from '../../services/dealApi'
+import { remarkApi } from '../../services/remarkApi'
 import { reminderApi } from '../../services/reminderApi'
 import { calendarApi } from '../../services/calendarApi'
 import { exportCsvWorkbook, exportExcelWorkbook } from '../../utils/excelExport'
@@ -363,7 +365,7 @@ const DEAL_OWNER_FILTER_OPERATORS = [
 const DEAL_FILTER_ACTION_OPTIONS = [
   { key: 'viewDeal', label: 'View Deal' },
   { key: 'manageDeal', label: 'Manage Deal' },
-  { key: 'addRemark', label: 'Add Remark' },
+  { key: 'addRemark', label: 'Add Notes/Remarks' },
   { key: 'changeStatus', label: 'Change Status' },
   { key: 'generateQuotation', label: 'Generate Quotation' },
   { key: 'uploadQuotation', label: 'Upload Quotation' },
@@ -3839,6 +3841,28 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
     }
   }
 
+  const [remarkModalDeal, setRemarkModalDeal] = useState(null)
+  const [isSavingRemark, setIsSavingRemark] = useState(false)
+
+  const handleOpenAddRemarkForDeal = (dealRecord) => {
+    setOpenBoardActionMenuDealId(null)
+    setDealTableMenuPosition(null)
+    setRemarkModalDeal(dealRecord?.rawDeal || dealRecord)
+  }
+
+  const handleSaveDealRemark = async (remarkData) => {
+    setIsSavingRemark(true)
+    try {
+      await remarkApi.createRemark(remarkData)
+      addNotification('success', 'Remark added', 'Remark saved successfully.')
+      setRemarkModalDeal(null)
+    } catch (error) {
+      addNotification('error', 'Remark not saved', error.response?.data?.message || error.message || 'Unable to save remark.')
+    } finally {
+      setIsSavingRemark(false)
+    }
+  }
+
   const defaultColumns = [
     { key: 'id', label: 'ID', width: '120px' },
     { key: 'name', label: 'Project Name' },
@@ -3966,6 +3990,10 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
                   <span>Manage Deal</span>
                 </button>
               )}
+              <button type="button" className="deals-board-card-action-item" onClick={() => handleOpenAddRemarkForDeal(activeDeal)}>
+                <FaEdit />
+                <span>Add Notes/Remarks</span>
+              </button>
               <button type="button" className="deals-board-card-action-item deals-board-card-action-item-orange" onClick={() => handleOpenDealModalActionFromMenu('reminder', activeDeal)} disabled={isConvertedDeal}>
                 <FaBell />
                 <span>Add Reminder</span>
@@ -6086,6 +6114,15 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
           onClose={() => setInlineQuotationDeal(null)}
         />
       )}
+      {remarkModalDeal ? (
+        <AddRemarksModal
+          isOpen={Boolean(remarkModalDeal)}
+          onClose={() => setRemarkModalDeal(null)}
+          dealData={remarkModalDeal}
+          onSave={handleSaveDealRemark}
+          isLoading={isSavingRemark}
+        />
+      ) : null}
     </div>
   )
 }

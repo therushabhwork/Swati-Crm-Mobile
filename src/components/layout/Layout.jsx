@@ -16,7 +16,7 @@ const Layout = ({ isAdmin = false }) => {
   const location = useLocation()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const { theme } = useTheme()
-  const showRightPanel = isAdmin && !['/admin', '/admin/', '/admin/monitoring', '/admin/dashboard'].includes(location.pathname)
+  const showRightPanel = isAdmin && !['/admin', '/admin/', '/admin/monitoring', '/admin/dashboard', '/admin/communication-activities'].includes(location.pathname)
 
   useEffect(() => {
     setMobileSidebarOpen(false)

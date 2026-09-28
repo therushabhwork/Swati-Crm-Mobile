@@ -8,16 +8,19 @@ import {
   FaExchangeAlt,
   FaExternalLinkAlt,
   FaFileAlt,
+  FaHistory,
   FaHome,
   FaMapMarkerAlt,
   FaPhoneAlt,
   FaStickyNote,
   FaTimes,
   FaUser,
+  FaComments,
 } from 'react-icons/fa'
 import ContactIntegrationActions from '../../../components/integrations/ContactIntegrationActions'
 import { getCrmOwnerDisplay } from '../../../features/users/crmUserDirectory'
 import { calendarApi } from '../../../services/calendarApi'
+import { remarkApi } from '../../../services/remarkApi'
 import './CustomerDetailsDrawer.css'
 
 const CUSTOMER_STATUS_OPTIONS = [
@@ -38,6 +41,7 @@ const REMINDER_MODES = [
 
 const DRAWER_ACTIONS = [
   { key: 'add-note-remarks', label: 'Add Notes/Remarks', icon: FaStickyNote },
+  { key: 'history', label: 'History', icon: FaHistory },
   { key: 'add-reminder', label: 'Add Reminder', icon: FaBell },
   { key: 'change-status', label: 'Change Status', icon: FaClock },
   { key: 'add-document', label: 'Add Document', icon: FaFileAlt },
@@ -357,14 +361,29 @@ const CustomerDetailsDrawer = ({
     { label: 'Alternate Phone', value: customer.alternatePhone },
   ]
 
-  const savedDocuments = Array.isArray(customer.documents) ? customer.documents : []
+  const [customerHistoryRemarks, setCustomerHistoryRemarks] = useState([])
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
 
-  const handleOpenAction = (actionKey) => {
+  const handleOpenAction = async (actionKey) => {
     setIsActionsMenuOpen(false)
     setActionsMenuPosition(null)
     setActiveActionKey(actionKey)
     setErrorMessage('')
     setSuccessMessage('')
+
+    if (actionKey === 'history') {
+      setIsLoadingHistory(true)
+      try {
+        const response = await remarkApi.getRemarks({ relatedEntityId: customer.id, relatedEntityType: 'customer' })
+        setCustomerHistoryRemarks(response?.data || response || [])
+      } catch (err) {
+        console.error('Failed to load customer remarks history:', err)
+        setCustomerHistoryRemarks([])
+      } finally {
+        setIsLoadingHistory(false)
+      }
+      return
+    }
 
     if (actionKey === 'manage-customer') {
       onManageCustomer(customer.id)
@@ -542,6 +561,68 @@ const CustomerDetailsDrawer = ({
               className="customer-details-drawer-form-input customer-details-drawer-form-textarea"
             />
           </label>
+        ) : null}
+
+        {activeActionKey === 'history' ? (
+          <div style={{ padding: '8px', maxHeight: '350px', overflowY: 'auto' }}>
+            {isLoadingHistory ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>
+                Loading remarks history...
+              </div>
+            ) : customerHistoryRemarks.length === 0 ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>
+                No remarks history found for this customer.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {customerHistoryRemarks.map((rem) => (
+                  <div
+                    key={rem.id || rem._id}
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      background: '#f8fafc',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '10px',
+                    }}
+                  >
+                    <FaComments style={{ color: '#2563eb', fontSize: '16px', marginTop: '2px', flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          background: rem.category === 'call-log' ? '#fef3c7' : '#e2e8f0',
+                          color: rem.category === 'call-log' ? '#92400e' : '#1e293b',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                        }}>
+                          {rem.category || 'GENERAL'}
+                        </span>
+                        <span style={{ fontSize: '11px', color: '#64748b' }}>
+                          {rem.createdAt ? new Date(rem.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                        </span>
+                      </div>
+                      <p style={{ margin: '4px 0 6px 0', fontSize: '13px', color: '#334155', whiteSpace: 'pre-wrap' }}>
+                        {rem.content || rem.remark || rem.note}
+                      </p>
+                      {rem.category === 'call-log' && (rem.startTime || rem.endTime || rem.callLogTime) && (
+                        <div style={{ fontSize: '12px', color: '#0284c7', marginBottom: '4px', fontWeight: 600 }}>
+                          Call Duration: {rem.startTime || rem.callLogTime || '09:00'} - {rem.endTime || '09:30'}
+                        </div>
+                      )}
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>
+                        Added by: <strong>{rem.userName || rem.createdBy || rem.ownerCode || 'User'}</strong>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         ) : null}
 
         {activeActionKey === 'add-reminder' ? (

@@ -6,6 +6,7 @@ const { assertRecordAccess, isPrivilegedRole, toNumberOrNull } = require('../sec
 const Remark = getMongoModel('remarks')
 const RemarkReminder = getMongoModel('remark_reminders')
 const User = getMongoModel('users')
+const Deal = getMongoModel('deals')
 const AuditLog = getMongoModel('audit_log')
 
 const byLegacyId = (id) => {
@@ -103,10 +104,44 @@ const mapRemark = async (remark) => {
     id: remark.legacyId ?? remark.id,
     account_id: remark.accountId,
     accountId: remark.accountId,
+    account_name: remark.accountName || '',
+    accountName: remark.accountName || '',
+    deal_id: remark.dealId,
+    dealId: remark.dealId,
+    deal_name: remark.dealName || '',
+    dealName: remark.dealName || '',
+    related_entity_type: remark.relatedEntityType || (remark.dealId ? 'deal' : 'account'),
+    relatedEntityType: remark.relatedEntityType || (remark.dealId ? 'deal' : 'account'),
     created_by: createdBy,
     createdBy,
-    created_by_name: user?.name || user?.username || '',
-    createdByName: user?.name || user?.username || '',
+    created_by_name: remark.createdByName || user?.name || user?.username || '',
+    createdByName: remark.createdByName || user?.name || user?.username || '',
+    created_by_email: remark.createdByEmail || user?.email || '',
+    createdByEmail: remark.createdByEmail || user?.email || '',
+    account_owner_id: remark.accountOwnerId || null,
+    accountOwnerId: remark.accountOwnerId || null,
+    account_owner_name: remark.accountOwnerName || '',
+    accountOwnerName: remark.accountOwnerName || '',
+    account_owner_email: remark.accountOwnerEmail || '',
+    accountOwnerEmail: remark.accountOwnerEmail || '',
+    deal_owner_id: remark.dealOwnerId || null,
+    dealOwnerId: remark.dealOwnerId || null,
+    deal_owner_name: remark.dealOwnerName || '',
+    dealOwnerName: remark.dealOwnerName || '',
+    deal_owner_email: remark.dealOwnerEmail || '',
+    dealOwnerEmail: remark.dealOwnerEmail || '',
+    account_created_by_id: remark.accountCreatedById || null,
+    accountCreatedById: remark.accountCreatedById || null,
+    account_created_by_name: remark.accountCreatedByName || '',
+    accountCreatedByName: remark.accountCreatedByName || '',
+    account_created_by_email: remark.accountCreatedByEmail || '',
+    accountCreatedByEmail: remark.accountCreatedByEmail || '',
+    deal_created_by_id: remark.dealCreatedById || null,
+    dealCreatedById: remark.dealCreatedById || null,
+    deal_created_by_name: remark.dealCreatedByName || '',
+    dealCreatedByName: remark.dealCreatedByName || '',
+    deal_created_by_email: remark.dealCreatedByEmail || '',
+    dealCreatedByEmail: remark.dealCreatedByEmail || '',
     company_id: remark.companyId,
     companyId: remark.companyId,
     owner_user_id: remark.ownerUserId,
@@ -123,6 +158,32 @@ const mapRemark = async (remark) => {
 }
 
 class RemarkService {
+  async findUserByRef(userId, userCode, userNameStr) {
+    const numericId = toNumber(userId)
+    if (numericId !== null) {
+      const found = await User.findOne(byLegacyId(numericId)).lean()
+      if (found) return found
+    }
+    const cleanCode = normalizeText(userCode)
+    if (cleanCode) {
+      const found = await User.findOne({ $or: [{ ownerCode: cleanCode }, { owner_code: cleanCode }, { legacyId: toNumber(cleanCode) }] }).lean()
+      if (found) return found
+    }
+    const cleanName = normalizeNameKey(userNameStr)
+    if (cleanName) {
+      const escapedName = cleanName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const found = await User.findOne({
+        $or: [
+          { name: { $regex: new RegExp(`^${escapedName}$`, 'i') } },
+          { username: { $regex: new RegExp(`^${escapedName}$`, 'i') } },
+          { email: { $regex: new RegExp(`^${escapedName}$`, 'i') } },
+        ]
+      }).lean()
+      if (found) return found
+    }
+    return null
+  }
+
   async getAccessibleLead(accountId, actor) {
     const lead = leadRepository.findLeadByIdForActor
       ? await leadRepository.findLeadByIdForActor(accountId, actor, { companyWide: isPrivilegedRole(actor?.role) })
@@ -193,27 +254,173 @@ class RemarkService {
   }
 
   async createRemark(remarkData) {
-    const { actor, accountId, category = 'general', content, createdBy, reminder } = remarkData
+    const { actor, accountId, dealId, category = 'general', content, createdBy, reminder } = remarkData
     const assignment = this.normalizeAssignment(remarkData.assignment)
-    if (!actor || !accountId || !content) {
-      throw new AppError('Account ID and content are required', 400)
+    if (!actor || (!accountId && !dealId) || !content) {
+      throw new AppError('Account ID or Deal ID and content are required', 400)
     }
 
-    const lead = await this.getAccessibleLead(accountId, actor)
+    let lead = null
+    let dealRecord = null
+    let resolvedAccountId = accountId
+
+    if (dealId) {
+      dealRecord = await Deal.findOne(byLegacyId(dealId)).lean()
+      if (dealRecord && !resolvedAccountId && dealRecord.accountId) {
+        resolvedAccountId = dealRecord.accountId
+      }
+    }
+
+    if (resolvedAccountId) {
+      try {
+        lead = await this.getAccessibleLead(resolvedAccountId, actor)
+      } catch (_err) {
+        // If lead fetch fails for deal remark, proceed with deal record
+      }
+    }
+
+    if (dealRecord && !lead) {
+      const LeadModel = getMongoModel('leads')
+      const searchNo = dealRecord.customerNumber || dealRecord.data?.customerNumber || dealRecord.customerCode
+      const searchName = dealRecord.customerName || dealRecord.data?.customerName || dealRecord.customer
+      let matchedLead = null
+      if (searchNo) {
+        matchedLead = await LeadModel.findOne({
+          $or: [
+            { legacyId: toNumber(searchNo) },
+            { accountNo: searchNo },
+            { accountNumber: searchNo },
+            { 'formData.accountNo': searchNo }
+          ]
+        }).lean()
+      }
+      if (!matchedLead && searchName) {
+        matchedLead = await LeadModel.findOne({
+          $or: [
+            { customerName: searchName },
+            { accountName: searchName },
+            { 'formData.accountName': searchName }
+          ]
+        }).lean()
+      }
+      if (matchedLead) {
+        lead = matchedLead
+        resolvedAccountId = matchedLead.legacyId || matchedLead.id
+      }
+    }
+
+    // 1. Account Details Resolution (from lead if available)
+    let accountOwnerId = null
+    let accountOwnerName = ''
+    let accountOwnerEmail = ''
+    let accountCreatedById = null
+    let accountCreatedByName = ''
+    let accountCreatedByEmail = ''
+    let resolvedAccountName = ''
+
+    if (lead) {
+      const lFormData = lead.formData && typeof lead.formData === 'object' ? lead.formData : {}
+
+      resolvedAccountName = lead.accountName || lFormData.accountName || lead.customerName || lead.company || lead.name || ''
+
+      const leadOwnerNameStr = lead.ownerName || lead.accountOwner || lFormData.accountOwner || lFormData.accountOwnerName || ''
+      const leadOwnerUserId = lead.assignedTo || lead.ownerUserId || lead.ownerId || lFormData.ownerId || lead.assignedUserId
+      const leadOwnerCode = lead.ownerCode || lead.accountOwnerCode || lFormData.ownerCode || lFormData.accountOwnerCode
+
+      const accountOwnerUser = await this.findUserByRef(null, null, leadOwnerNameStr) || await this.findUserByRef(leadOwnerUserId, leadOwnerCode, null)
+
+      accountOwnerName = leadOwnerNameStr || accountOwnerUser?.name || accountOwnerUser?.username || ''
+      accountOwnerEmail = accountOwnerUser?.email || lead.userEmail || lead.createdUserBy || lFormData.userEmail || lFormData.createdUserBy || ''
+      accountOwnerId = accountOwnerUser?.legacyId || accountOwnerUser?.id || leadOwnerUserId || null
+
+      const leadCreatedByNameStr = lead.createdByUserName || lFormData.createdByUserName || lead.addedBy || lead.createdByName || ''
+      const leadCreatedByUserId = lead.createdByUserId || lead.createdBy || lFormData.createdByUserId
+
+      const accountCreatorUser = await this.findUserByRef(null, null, leadCreatedByNameStr) || await this.findUserByRef(leadCreatedByUserId, null, null)
+
+      accountCreatedByName = leadCreatedByNameStr || accountCreatorUser?.name || accountCreatorUser?.username || ''
+      accountCreatedByEmail = accountCreatorUser?.email || lead.createdUserBy || lead.userEmail || lFormData.createdUserBy || lFormData.userEmail || ''
+      accountCreatedById = accountCreatorUser?.legacyId || accountCreatorUser?.id || leadCreatedByUserId || null
+    } else if (dealRecord) {
+      resolvedAccountName = dealRecord.accountName || dealRecord.customerName || dealRecord.data?.accountName || dealRecord.data?.customerName || ''
+    }
+
+    // 2. Deal Details Resolution (from dealRecord ONLY if dealRecord / dealId is present)
+    let dealOwnerId = null
+    let dealOwnerName = ''
+    let dealOwnerEmail = ''
+    let dealCreatedById = null
+    let dealCreatedByName = ''
+    let dealCreatedByEmail = ''
+    let resolvedDealName = ''
+
+    if (dealRecord) {
+      const dData = dealRecord.data && typeof dealRecord.data === 'object' ? dealRecord.data : {}
+
+      resolvedDealName = dData.title || dData.name || dData.projectName || dealRecord.projectName || dealRecord.title || dealRecord.dealName || ''
+
+      const dealOwnerNameStr = dData.dealOwner || dData.ownerName || dData.assignedUserName || dealRecord.dealOwner || dealRecord.ownerName || ''
+      const dealOwnerUserId = dData.assignedTo || dData.ownerUserId || dealRecord.ownerUserId || dealRecord.assignedTo
+
+      const dealOwnerUser = await this.findUserByRef(null, null, dealOwnerNameStr) || await this.findUserByRef(dealOwnerUserId, null, null)
+
+      dealOwnerName = dealOwnerNameStr || dealOwnerUser?.name || dealOwnerUser?.username || ''
+      dealOwnerEmail = dealOwnerUser?.email || ''
+      dealOwnerId = dealOwnerUser?.legacyId || dealOwnerUser?.id || dealOwnerUserId || null
+
+      const dealCreatedByNameStr = dData.createdByName || dData.addedBy || dealRecord.createdByName || dealRecord.addedBy || ''
+      const dealCreatedByUserId = dData.createdBy || dealRecord.createdBy
+
+      const dealCreatorUser = await this.findUserByRef(null, null, dealCreatedByNameStr) || await this.findUserByRef(dealCreatedByUserId, null, null)
+
+      dealCreatedByName = dealCreatedByNameStr || dealCreatorUser?.name || dealCreatorUser?.username || ''
+      dealCreatedByEmail = dealCreatorUser?.email || ''
+      dealCreatedById = dealCreatorUser?.legacyId || dealCreatorUser?.id || dealCreatedByUserId || null
+    }
+
+    // 3. Resolve Remark Creator (Logged-in User adding the remark)
+    const remarkCreatorUserId = createdBy || actor?.id
+    const remarkCreatorUser = await this.findUserByRef(remarkCreatorUserId, actor?.ownerCode, actor?.name)
+    const resolvedRemarkCreatedByName = remarkCreatorUser?.name || remarkCreatorUser?.username || actor?.name || ''
+    const resolvedRemarkCreatedByEmail = remarkCreatorUser?.email || actor?.email || ''
+
     const legacyId = await getNextLegacyId('remarks')
-    const companyId = actor.companyId || lead.companyId || 1
+    const companyId = actor.companyId || dealRecord?.companyId || lead?.companyId || 1
     const now = new Date()
 
     const remark = await Remark.create({
       legacyId,
-      accountId: toNumber(accountId),
+      accountId: resolvedAccountId ? toNumber(resolvedAccountId) : null,
+      accountName: resolvedAccountName,
+      dealId: dealId ? toNumber(dealId) : null,
+      dealName: resolvedDealName,
+      relatedEntityType: dealId ? 'deal' : 'account',
       category,
       content,
-      createdBy,
+      createdBy: toNumber(remarkCreatorUserId),
+      createdByName: resolvedRemarkCreatedByName,
+      createdByEmail: resolvedRemarkCreatedByEmail,
+
+      // Account Owner & Creator
+      accountOwnerId: accountOwnerId ? toNumber(accountOwnerId) : null,
+      accountOwnerName,
+      accountOwnerEmail,
+      accountCreatedById: accountCreatedById ? toNumber(accountCreatedById) : null,
+      accountCreatedByName,
+      accountCreatedByEmail,
+
+      // Deal Owner & Creator (Strictly null / empty when dealId is null)
+      dealOwnerId: dealOwnerId ? toNumber(dealOwnerId) : null,
+      dealOwnerName,
+      dealOwnerEmail,
+      dealCreatedById: dealCreatedById ? toNumber(dealCreatedById) : null,
+      dealCreatedByName,
+      dealCreatedByEmail,
+
       companyId,
       ownerUserId: actor.id,
-      projectId: lead.projectId || null,
-      workflowId: remarkData.workflowId || lead.workflowId || null,
+      projectId: dealRecord?.projectId || lead?.projectId || null,
+      workflowId: remarkData.workflowId || dealRecord?.workflowId || lead?.workflowId || null,
       assignmentMode: assignment.mode,
       assignedUserIds: assignment.userIds,
       assignedUserTypes: assignment.userTypes,
@@ -457,6 +664,24 @@ class RemarkService {
     }
   }
 
+  async getAllRemarks(actor, query = {}) {
+    const companyId = actor?.companyId || 1
+    const baseFilter = { companyId }
+
+    const records = await Remark
+      .find(baseFilter)
+      .sort({ createdAt: -1, legacyId: -1 })
+      .limit(200)
+      .lean()
+
+    const visibleRecords = records.filter((remark) => this.canSeeRemark(actor, remark))
+    const mapped = []
+    for (const remark of visibleRecords) {
+      mapped.push(await mapRemark(remark))
+    }
+    return mapped
+  }
+
   canSeeRemark(actor, remark) {
     if (!actor) return false
     if (isPrivilegedRole(actor.role)) return true
@@ -471,6 +696,27 @@ class RemarkService {
   async getRemarksHistory(accountId, limit = 50, offset = 0, actor = null) {
     await this.getAccessibleLead(accountId, actor)
     const baseFilter = { accountId: toNumber(accountId), companyId: actor.companyId || 1 }
+    const records = await Remark
+      .find(baseFilter)
+      .sort({ createdAt: -1, legacyId: -1 })
+      .skip(Math.max(0, Number(offset) || 0))
+      .limit(Math.max(1, Number(limit) || 50))
+      .lean()
+
+    const visibleRecords = records.filter((remark) => this.canSeeRemark(actor, remark))
+    const remarks = []
+    for (const remark of visibleRecords) {
+      remarks.push(await mapRemark(remark))
+    }
+
+    return {
+      remarks,
+      total: await Remark.countDocuments(baseFilter),
+    }
+  }
+
+  async getRemarksByDeal(dealId, limit = 50, offset = 0, actor = null) {
+    const baseFilter = { dealId: toNumber(dealId), companyId: actor?.companyId || 1 }
     const records = await Remark
       .find(baseFilter)
       .sort({ createdAt: -1, legacyId: -1 })

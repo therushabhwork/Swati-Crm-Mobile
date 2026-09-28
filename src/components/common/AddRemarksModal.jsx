@@ -9,6 +9,7 @@ import './AddRemarksModal.css'
 const REMARK_CATEGORIES = [
   { value: 'feedback', label: 'FEEDBACK' },
   { value: 'general', label: 'GENERAL' },
+  { value: 'call-log', label: 'CALL LOG' },
 ]
 
 const FOLLOW_UP_TIMES = [
@@ -137,9 +138,44 @@ const getAccountInfoDisplayValue = (accountData, field, drafts = {}) => {
   return draftValue ?? getEditableAccountValue(accountData, field.key)
 }
 
-const AddRemarksModal = ({ isOpen, onClose, accountData, onSave, onSaveAccountField, isLoading = false }) => {
+const getEditableDealValue = (dealData, field) => {
+  switch (field) {
+    case 'dealName':
+      return dealData?.dealName || dealData?.name || dealData?.title || dealData?.projectName || 'N/A'
+    case 'dealNumber':
+      return dealData?.dealNumber || dealData?.number || dealData?.id || 'N/A'
+    case 'dealType':
+      return getDisplayValue(dealData?.dealType, dealData?.customerCategory, dealData?.type)
+    case 'dealSource':
+      return getDisplayValue(dealData?.dealSource, dealData?.source)
+    case 'status':
+      return getDisplayValue(dealData?.dealStatus, dealData?.status, dealData?.stage)
+    case 'dealOwner':
+      return getDisplayValue(dealData?.dealOwner, dealData?.ownerName, dealData?.accountOwner)
+    case 'dealValue':
+      return (dealData?.dealValue !== undefined && dealData?.dealValue !== null && dealData?.dealValue !== '')
+        ? String(dealData.dealValue)
+        : (dealData?.value !== undefined && dealData?.value !== null && dealData?.value !== '')
+          ? String(dealData.value)
+          : 'Not Available'
+    default:
+      return 'Not Available'
+  }
+}
+
+const getDealInfoDisplayValue = (dealData, field, drafts = {}) => {
+  const draftValue = drafts[field.key]
+  return draftValue ?? getEditableDealValue(dealData, field.key)
+}
+
+const AddRemarksModal = ({ isOpen, onClose, accountData, dealData, onSave, onSaveAccountField, onSaveDealField, isLoading = false }) => {
+  const isDealMode = Boolean(dealData)
+  const activeData = isDealMode ? dealData : accountData
   const [category, setCategory] = useState('feedback')
   const [content, setContent] = useState('')
+  const [callLogTime, setCallLogTime] = useState('09:00')
+  const [startTime, setStartTime] = useState('09:00')
+  const [endTime, setEndTime] = useState('09:30')
   const [hasReminder, setHasReminder] = useState(false)
   const [reminderDate, setReminderDate] = useState('')
   const [reminderTime, setReminderTime] = useState('09:00')
@@ -176,7 +212,9 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, onSave, onSaveAccountFi
   const selectedGroupSet = useMemo(() => new Set(selectedAssignmentGroups), [selectedAssignmentGroups])
   const allUserIds = useMemo(() => assignmentUsers.map((user) => user.id), [assignmentUsers])
   const allUsersSelected = allUserIds.length > 0 && allUserIds.every((userId) => selectedAssignmentUserSet.has(userId))
-  const ownerId = getAccountOwnerId(accountData)
+  const ownerId = isDealMode
+    ? (dealData?.ownerUserId || dealData?.assignedTo || dealData?.ownerId || getAccountOwnerId(accountData))
+    : getAccountOwnerId(accountData)
   const fallbackAssignedUser = availableUsers[0]?.id || ownerId || ''
   const selectedAssignedUser = assignedTo === 'owner' ? ownerId || fallbackAssignedUser : otherUserId
 
@@ -191,6 +229,18 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, onSave, onSaveAccountFi
     { key: 'status', label: 'Status:' },
     { key: 'stage', label: 'Stage:', options: ACCOUNT_STAGE_OPTIONS },
   ]
+
+  const dealInfoFields = [
+    { key: 'dealName', label: 'Deal Name:' },
+    { key: 'dealNumber', label: 'Deal No.:' },
+    { key: 'dealType', label: 'Deal Type:' },
+    { key: 'dealSource', label: 'Source:' },
+    { key: 'status', label: 'Status:' },
+    { key: 'dealOwner', label: 'Deal Owner:' },
+    { key: 'dealValue', label: 'Deal Value:' },
+  ]
+
+  const activeInfoFields = isDealMode ? dealInfoFields : accountInfoFields
 
   useEffect(() => {
     if (!isOpen) return undefined
@@ -213,12 +263,12 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, onSave, onSaveAccountFi
   useEffect(() => {
     if (!isOpen) return
 
-    setInfoDrafts(accountInfoFields.reduce((drafts, field) => ({
+    setInfoDrafts(activeInfoFields.reduce((drafts, field) => ({
       ...drafts,
-      [field.key]: getEditableAccountValue(accountData, field.key),
+      [field.key]: isDealMode ? getEditableDealValue(dealData, field.key) : getEditableAccountValue(accountData, field.key),
     }), {}))
     setEditingInfoField('')
-  }, [accountData, isOpen])
+  }, [accountData, dealData, isDealMode, isOpen])
 
   useEffect(() => {
     if (isOpen && !initialSelectDone && allUserIds.length > 0) {
@@ -303,9 +353,13 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, onSave, onSaveAccountFi
     }
 
     const remarkData = {
-      accountId: accountData?.id,
+      accountId: accountData?.id || dealData?.accountId || dealData?.linkedAccountId,
+      dealId: dealData?.id || dealData?.sourceDealId,
+      relatedEntityType: isDealMode ? 'deal' : 'account',
       category,
       content,
+      startTime: category === 'call-log' ? startTime : null,
+      endTime: category === 'call-log' ? endTime : null,
       assignment: {
         mode: assignmentMode,
         userIds: expandedAssignmentUserIds,
@@ -333,6 +387,9 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, onSave, onSaveAccountFi
   const resetForm = () => {
     setCategory('feedback')
     setContent('')
+    setCallLogTime('09:00')
+    setStartTime('09:00')
+    setEndTime('09:30')
     setHasReminder(false)
     setReminderDate('')
     setReminderTime('09:00')
@@ -462,11 +519,13 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, onSave, onSaveAccountFi
       <form onSubmit={handleSubmit} className="add-remarks-form">
         <div className="remark-top-grid">
           <div className="remark-section remark-section--account-info">
-            <h3 className="section-title">Account Information</h3>
+            <h3 className="section-title">{isDealMode ? 'Deal Information' : 'Account Information'}</h3>
             <div className="account-info-display">
-              {accountInfoFields.map((field) => {
+              {activeInfoFields.map((field) => {
                 const isEditing = editingInfoField === field.key
-                const displayValue = getAccountInfoDisplayValue(accountData, field, infoDrafts)
+                const displayValue = isDealMode
+                  ? getDealInfoDisplayValue(dealData, field, infoDrafts)
+                  : getAccountInfoDisplayValue(accountData, field, infoDrafts)
 
                 return (
                   <div
@@ -567,6 +626,53 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, onSave, onSaveAccountFi
 
 
 
+        {/* Call Log Time Section */}
+        {category === 'call-log' && (
+          <div className="remark-section">
+            <div className="followup-subsection">
+              <h4>Call Log Time</h4>
+              <div className="followup-time-buttons">
+                {FOLLOW_UP_TIMES.map((time) => (
+                  <button
+                    key={time}
+                    type="button"
+                    className={`time-btn ${callLogTime === time ? 'active' : ''}`}
+                    onClick={() => {
+                      setCallLogTime(time)
+                      setStartTime(time)
+                    }}
+                  >
+                    {time}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="followup-subsection" style={{ display: 'flex', gap: '20px', marginTop: '14px' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Start Time *</label>
+                <input
+                  type="time"
+                  className="time-picker"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>End Time *</label>
+                <input
+                  type="time"
+                  className="time-picker"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Remark Content */}
         <div className={`remark-section${category === 'feedback' ? ' remark-section--compact-feedback' : ''}`}>
           <label className="section-title">{category === 'feedback' ? 'Feedback *' : 'Remark Details *'}</label>
@@ -574,8 +680,8 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, onSave, onSaveAccountFi
             className="remark-textarea"
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder={category === 'feedback' ? 'Add feedback here...' : 'Add remark here...'}
-            rows={category === 'feedback' ? 4 : 6}
+            placeholder={category === 'feedback' ? 'Add feedback here...' : category === 'call-log' ? 'Add call log notes here...' : 'Add remark here...'}
+            rows={category === 'feedback' ? 4 : 5}
             required
           />
         </div>

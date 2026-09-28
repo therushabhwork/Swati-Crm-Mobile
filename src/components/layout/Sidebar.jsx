@@ -8,6 +8,7 @@ import {
   FaChartPie,
   FaClipboardList,
   FaCloud,
+  FaComments,
   FaDesktop,
   FaHandshake,
   FaHeadset,
@@ -485,6 +486,15 @@ const Sidebar = ({ isAdmin = false }) => {
           >
             <span className="sb-link-icon"><FaUsers /></span>
             <span>Team View</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/communication-activities"
+            className={({ isActive }) => `sb-link sb-link--team ${isActive ? 'sb-link--active' : ''}`}
+            title="Communication Activity"
+          >
+            <span className="sb-link-icon"><FaComments /></span>
+            <span>Communication Activity</span>
           </NavLink>
 
         </div>

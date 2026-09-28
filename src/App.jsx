@@ -58,6 +58,7 @@ import CustomerMapViewPage from './pages/admin/reports/CustomerMapViewPage'
 import ChartsPage from './pages/admin/charts/ChartsPage'
 import ChartsListPage from './pages/admin/charts/ChartsListPage'
 import ViewSettingsPage from './pages/admin/view-settings/ViewSettingsPage'
+import CommunicationActivitiesPage from './pages/communication/CommunicationActivitiesPage'
 import MyAccountsViewPage from './pages/admin/view-settings/MyAccountsViewPage'
 import MyCustomersViewPage from './pages/admin/view-settings/MyCustomersViewPage'
 import ViewDealsViewPage from './pages/admin/view-settings/ViewDealsViewPage'
@@ -189,6 +190,7 @@ function App() {
                 <Route path="search" element={<AdminAdvancedSearchPage />} />
                 <Route path="dashboard" element={<UserDashboardPage />} />
                 <Route path="monitoring" element={<UserDashboardPage />} />
+                <Route path="communication-activities" element={<CommunicationActivitiesPage />} />
                 <Route path="accounts/new" element={<AddAccountWizard />} />
                 <Route path="accounts" element={<Accounts />} />
                 <Route path="accounts/search" element={<MyGroupAccountsPage variantKey="searchAccount" />} />
@@ -296,6 +298,7 @@ function App() {
                 <Route path="dashboard" element={<AdminPanel />} />
                 <Route path="sales-dashboard" element={<SalesDashboard />} />
                 <Route path="monitoring" element={<AdminPanel />} />
+                <Route path="communication-activities" element={<CommunicationActivitiesPage isAdmin />} />
                 <Route path="calendar" element={<AdminCalendarPage />} />
                 <Route path="accounts/new" element={<AddAccountWizard />} />
                 <Route path="accounts" element={<MyGroupAccountsPage variantKey="viewAll" />} />

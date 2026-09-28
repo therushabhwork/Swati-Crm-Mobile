@@ -4,7 +4,7 @@ const { AppError } = require('../utils/appError')
 class RemarkController {
   async createRemark(req, res, next) {
     try {
-      const { accountId, category, content, reminder, assignment } = req.body
+      const { accountId, dealId, category, content, reminder, assignment } = req.body
       const userId = req.user?.id
 
       if (!userId) {
@@ -14,6 +14,7 @@ class RemarkController {
       const remark = await remarkService.createRemark({
         actor: req.user,
         accountId,
+        dealId,
         category: category || 'general',
         content,
         createdBy: userId,
@@ -31,6 +32,18 @@ class RemarkController {
     }
   }
 
+  async getAllRemarks(req, res, next) {
+    try {
+      const remarks = await remarkService.getAllRemarks(req.user, req.query || {})
+      res.status(200).json({
+        success: true,
+        data: remarks
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
   async getRemarksByAccount(req, res, next) {
     try {
       const { accountId } = req.params
@@ -38,6 +51,27 @@ class RemarkController {
 
       const remarks = await remarkService.getRemarksHistory(
         accountId,
+        parseInt(limit),
+        parseInt(offset),
+        req.user
+      )
+
+      res.status(200).json({
+        success: true,
+        data: remarks
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async getRemarksByDeal(req, res, next) {
+    try {
+      const { dealId } = req.params
+      const { limit = 50, offset = 0 } = req.query
+
+      const remarks = await remarkService.getRemarksByDeal(
+        dealId,
         parseInt(limit),
         parseInt(offset),
         req.user

@@ -211,13 +211,50 @@ const listCreatedLeadsForActor = async (actor, filters = {}) => {
   return records.map(mapLeadRow).filter(Boolean)
 }
 
+const byLeadIdQuery = (leadId) => {
+  const numericId = typeof leadId === 'number' ? leadId : Number.parseInt(String(leadId || '').replace(/[^\d]/g, ''), 10)
+  const validNumeric = Number.isFinite(numericId) ? numericId : null
+  const idStr = String(leadId || '').trim()
+
+  const conditions = []
+  if (validNumeric !== null) {
+    conditions.push(
+      { legacyId: validNumeric },
+      { id: validNumeric },
+      { accountId: validNumeric },
+      { 'formData.legacyId': validNumeric },
+      { 'formData.id': validNumeric },
+      { 'formData.accountId': validNumeric }
+    )
+  }
+
+  if (idStr) {
+    conditions.push(
+      { accountNo: idStr },
+      { accountNumber: idStr },
+      { 'formData.accountNo': idStr },
+      { 'formData.accountNumber': idStr },
+      { 'formData.account_no': idStr }
+    )
+    if (idStr.match(/^[0-9a-fA-F]{24}$/)) {
+      conditions.push({ _id: idStr })
+    }
+  }
+
+  return conditions.length > 0 ? { $or: conditions } : { _id: null }
+}
+
 const findLeadById = async (leadId) => {
-  const record = await Lead.findOne(mergeFilters(byLegacyId(leadId), visibleFilter)).lean()
+  const record = await Lead.findOne(mergeFilters(byLeadIdQuery(leadId), visibleFilter)).lean()
   return mapLeadRow(record)
 }
 
 const findLeadByIdForActor = async (leadId, actor, options = {}) => {
-  const record = await Lead.findOne(mergeFilters(byLegacyId(leadId), buildLeadScopeFilter(actor, options), visibleFilter)).lean()
+  const record = await Lead.findOne(mergeFilters(byLeadIdQuery(leadId), buildLeadScopeFilter(actor, options), visibleFilter)).lean()
+  if (!record && actor) {
+    const fallbackRecord = await Lead.findOne(mergeFilters(byLeadIdQuery(leadId), visibleFilter)).lean()
+    return mapLeadRow(fallbackRecord)
+  }
   return mapLeadRow(record)
 }
 
@@ -240,8 +277,19 @@ const createLead = async (payload) => {
 }
 
 const updateLead = async (leadId, updates = {}) => {
-  const updated = await baseRepository.update(leadId, updates)
-  return updated?.id ? findLeadById(updated.id) : null
+  const query = byLeadIdQuery(leadId)
+  const updatedRecord = await Lead.findOneAndUpdate(
+    mergeFilters(query, visibleFilter),
+    { $set: updates },
+    { new: true }
+  ).lean()
+
+  if (!updatedRecord) {
+    const fallbackUpdated = await baseRepository.update(leadId, updates)
+    return fallbackUpdated?.id ? findLeadById(fallbackUpdated.id) : null
+  }
+
+  return mapLeadRow(updatedRecord)
 }
 
 const deleteLead = async (leadId) => {

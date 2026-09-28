@@ -9,6 +9,8 @@ import {
   FaExternalLinkAlt,
   FaFileAlt,
   FaFileSignature,
+  FaHistory,
+  FaComments,
   FaHome,
   FaLayerGroup,
   FaMapMarkerAlt,
@@ -22,6 +24,8 @@ import {
 } from 'react-icons/fa'
 import Badge from '../../../components/common/Badge'
 import Button from '../../../components/common/Button'
+import Modal from '../../../components/common/Modal'
+import { remarkApi } from '../../../services/remarkApi'
 import { useData } from '../../../context/DataContext'
 import { buildAdminDealDetailUrl } from '../../../features/adminDeals/config/adminDealViews'
 import { ACCOUNT_ACTION_MAP, ACCOUNT_ROW_ACTIONS } from '../../../features/adminAccounts/config/accountActions'
@@ -284,7 +288,7 @@ const AccountDetailsPage = () => {
               })}
             </div>
 
-            <div className="account-details-actions" ref={actionsRef}>
+            <div className="account-details-actions" ref={actionsRef} style={{ display: 'flex', alignItems: 'center' }}>
               <button
                 type="button"
                 className="account-details-actions-trigger"
@@ -292,6 +296,28 @@ const AccountDetailsPage = () => {
               >
                 <span>Actions</span>
                 <span className="account-details-actions-caret">v</span>
+              </button>
+
+              <button
+                type="button"
+                className="account-details-history-trigger"
+                title="View Remarks History"
+                onClick={handleOpenAccountHistory}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#2563eb',
+                  cursor: 'pointer',
+                  marginLeft: '8px',
+                  fontSize: '16px',
+                }}
+              >
+                <FaHistory />
               </button>
 
               {isActionsOpen ? (
@@ -316,6 +342,67 @@ const AccountDetailsPage = () => {
             </div>
           </div>
         </div>
+
+        {isHistoryModalOpen && (
+          <Modal
+            isOpen={isHistoryModalOpen}
+            onClose={() => setIsHistoryModalOpen(false)}
+            title={`Remarks History - ${account.name || 'Account'}`}
+            size="large"
+          >
+            <div style={{ padding: '8px', maxHeight: '70vh', overflowY: 'auto' }}>
+              {accountHistoryRemarks.length === 0 ? (
+                <div style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>
+                  No remarks history found for this account.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {accountHistoryRemarks.map((rem) => (
+                    <div
+                      key={rem.id}
+                      style={{
+                        padding: '12px 16px',
+                        borderRadius: '8px',
+                        border: '1px solid #e2e8f0',
+                        background: '#f8fafc',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '12px',
+                      }}
+                    >
+                      <FaComments style={{ color: '#2563eb', fontSize: '18px', marginTop: '2px', flexShrink: 0 }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            background: rem.category === 'call-log' ? '#fef3c7' : '#e2e8f0',
+                            color: rem.category === 'call-log' ? '#92400e' : '#1e293b',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                          }}>
+                            {rem.category || 'GENERAL'}
+                          </span>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>
+                            {rem.createdAt ? new Date(rem.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                          </span>
+                        </div>
+                        <p style={{ margin: '6px 0', color: '#1e293b', fontSize: '14px', lineHeight: '1.4' }}>
+                          {rem.content}
+                        </p>
+                        <div style={{ fontSize: '12px', color: '#475569', display: 'flex', gap: '16px' }}>
+                          <span><strong>Owner:</strong> {rem.recordOwnerName || rem.accountOwnerName || rem.ownerName || '-'}</span>
+                          <span><strong>By:</strong> {rem.createdByName || 'User'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Modal>
+        )}
 
         <div className="account-details-overview">
           <div className="account-details-summary-grid">

@@ -4,13 +4,16 @@ import {
   FaBell,
   FaChartLine,
   FaClipboardList,
+  FaComments,
   FaHandshake,
   FaUsers,
 } from 'react-icons/fa'
 import Badge from '../../components/common/Badge'
+import Modal from '../../components/common/Modal'
 import { useAuth } from '../../context/AuthContext'
 import { useData } from '../../context/DataContext'
 import apiClient from '../../services/apiClient'
+import { remarkApi } from '../../services/remarkApi'
 import {
   formatCurrency,
   formatDate,
@@ -46,6 +49,8 @@ const UserDashboardPage = () => {
     updateReminder,
   } = useData()
   const [todoReplies, setTodoReplies] = useState([])
+  const [remarksList, setRemarksList] = useState([])
+  const [isCommunicationModalOpen, setIsCommunicationModalOpen] = useState(false)
 
   const fetchTodoReplies = useCallback(async () => {
     try {
@@ -56,9 +61,19 @@ const UserDashboardPage = () => {
     }
   }, [])
 
+  const fetchCommunicationRemarks = useCallback(async () => {
+    try {
+      const data = await remarkApi.getAllRemarks()
+      setRemarksList(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Failed to fetch communication remarks:', error)
+    }
+  }, [])
+
   useEffect(() => {
     fetchTodoReplies()
-  }, [fetchTodoReplies])
+    fetchCommunicationRemarks()
+  }, [fetchTodoReplies, fetchCommunicationRemarks])
 
   const stats = useMemo(() => {
     const pendingTasks = tasks.filter((task) => task.status === 'pending')
@@ -81,7 +96,7 @@ const UserDashboardPage = () => {
   const recentDeals = useMemo(() => (
     [...deals]
       .sort((left, right) => new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime())
-      .slice(0, 5)
+      .slice(0, 3)
   ), [deals])
 
   const upcomingTasks = useMemo(() => (
@@ -96,6 +111,29 @@ const UserDashboardPage = () => {
       .sort((left, right) => new Date(right.timestamp || 0).getTime() - new Date(left.timestamp || 0).getTime())
       .slice(0, 5)
   ), [notifications])
+
+  const filteredCommunicationRemarks = useMemo(() => {
+    const userEmail = (user?.email || user?.userEmail || '').trim().toLowerCase()
+    const userName = (user?.name || user?.fullName || '').trim().toLowerCase()
+    const isAdmin = user?.role === 'admin'
+
+    if (isAdmin) return remarksList
+
+    return remarksList.filter((rem) => {
+      if (!userEmail && !userName) return true
+      const createdByEmail = (rem.createdByEmail || rem.createdUserBy || rem.userEmail || '').trim().toLowerCase()
+      const dealOwnerEmail = (rem.dealOwnerEmail || '').trim().toLowerCase()
+      const accountOwnerEmail = (rem.accountOwnerEmail || '').trim().toLowerCase()
+      const createdByName = (rem.createdByName || '').trim().toLowerCase()
+
+      return (
+        (userEmail && createdByEmail === userEmail) ||
+        (userEmail && dealOwnerEmail === userEmail) ||
+        (userEmail && accountOwnerEmail === userEmail) ||
+        (userName && createdByName === userName)
+      )
+    })
+  }, [remarksList, user])
 
   const userIdentity = useMemo(() => [
     user?.id,
@@ -343,6 +381,43 @@ const UserDashboardPage = () => {
             )}
           </div>
         </div>
+        <div className="ud-card">
+          <div className="ud-card-header">
+            <h3><FaComments aria-hidden="true" /> Communication Activity</h3>
+            <button type="button" className="ud-view-all-btn" onClick={() => navigate('/communication-activities')}>
+              View All &rarr;
+            </button>
+          </div>
+          <div className="ud-list">
+            {filteredCommunicationRemarks.length > 0 ? filteredCommunicationRemarks.slice(0, 3).map((rem) => (
+              <div
+                key={rem.id}
+                className="ud-list-item"
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+                onClick={() => navigate('/communication-activities')}
+              >
+                <FaComments style={{ color: '#3b82f6', fontSize: '18px', flexShrink: 0 }} aria-hidden="true" />
+                <div className="ud-item-info" style={{ flex: 1 }}>
+                  <div className="ud-item-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Badge variant={rem.relatedEntityType === 'deal' ? 'info' : 'success'}>
+                      {rem.relatedEntityType === 'deal' ? 'Deal' : 'Account'}
+                    </Badge>
+                    <span>{rem.dealName || rem.accountName || 'Activity'}</span>
+                  </div>
+                  <div className="ud-item-desc" style={{ marginTop: '4px', opacity: 0.85 }}>
+                    {rem.content}
+                  </div>
+                </div>
+                <div className="ud-item-meta">
+                  <div className="ud-item-value">{rem.createdByName || 'User'}</div>
+                  <div className="ud-item-date">{rem.createdAt ? formatDate(rem.createdAt) : '-'}</div>
+                </div>
+              </div>
+            )) : (
+              <div className="ud-empty-state">No communication activities</div>
+            )}
+          </div>
+        </div>
       </div>
 
       <AnalyticsSection
@@ -351,6 +426,64 @@ const UserDashboardPage = () => {
         quotations={quotations}
         activities={activities}
       />
+
+      <Modal
+        isOpen={isCommunicationModalOpen}
+        onClose={() => setIsCommunicationModalOpen(false)}
+        title="Communication Activities (Notes & Remarks)"
+        size="large"
+      >
+        <div style={{ padding: '12px 4px', maxHeight: '70vh', overflowY: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #e2e8f0', background: '#f8fafc' }}>
+                <th style={{ padding: '10px 12px' }}>Type</th>
+                <th style={{ padding: '10px 12px' }}>Name</th>
+                <th style={{ padding: '10px 12px' }}>Category</th>
+                <th style={{ padding: '10px 12px' }}>Remark / Note</th>
+                <th style={{ padding: '10px 12px' }}>Record Owner</th>
+                <th style={{ padding: '10px 12px' }}>Created By</th>
+                <th style={{ padding: '10px 12px' }}>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {remarksList.length > 0 ? remarksList.map((rem) => (
+                <tr key={rem.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '10px 12px' }}>
+                    <Badge variant={rem.relatedEntityType === 'deal' ? 'info' : 'success'}>
+                      {rem.relatedEntityType === 'deal' ? 'Deal' : 'Account'}
+                    </Badge>
+                  </td>
+                  <td style={{ padding: '10px 12px', fontWeight: 600 }}>
+                    {rem.dealName || rem.accountName || '-'}
+                  </td>
+                  <td style={{ padding: '10px 12px', textTransform: 'capitalize' }}>
+                    {rem.category || 'general'}
+                  </td>
+                  <td style={{ padding: '10px 12px', maxWidth: '300px', wordBreak: 'break-word' }}>
+                    {rem.content}
+                  </td>
+                  <td style={{ padding: '10px 12px' }}>
+                    {rem.dealOwnerName || rem.accountOwnerName || '-'}
+                  </td>
+                  <td style={{ padding: '10px 12px' }}>
+                    {rem.createdByName || '-'}
+                  </td>
+                  <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>
+                    {rem.createdAt ? formatDate(rem.createdAt) : '-'}
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={7} style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>
+                    No communication activities found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Modal>
 
     </div>
   )

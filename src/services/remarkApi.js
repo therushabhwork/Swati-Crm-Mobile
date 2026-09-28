@@ -4,10 +4,19 @@ const normalizeRemark = (remark = {}) => ({
   ...remark,
   id: remark.id,
   accountId: remark.accountId || remark.account_id,
+  dealId: remark.dealId || remark.deal_id,
+  relatedEntityType: remark.relatedEntityType || remark.related_entity_type || '',
   category: remark.category || 'general',
   content: remark.content || '',
   createdBy: remark.createdBy || remark.created_by,
   createdByName: remark.createdByName || remark.created_by_name || '',
+  createdByEmail: remark.createdByEmail || remark.created_by_email || '',
+  accountOwnerId: remark.accountOwnerId || remark.account_owner_id || '',
+  accountOwnerName: remark.accountOwnerName || remark.account_owner_name || '',
+  accountOwnerEmail: remark.accountOwnerEmail || remark.account_owner_email || '',
+  dealOwnerId: remark.dealOwnerId || remark.deal_owner_id || '',
+  dealOwnerName: remark.dealOwnerName || remark.deal_owner_name || '',
+  dealOwnerEmail: remark.dealOwnerEmail || remark.deal_owner_email || '',
   createdAt: remark.createdAt || remark.created_at,
   updatedAt: remark.updatedAt || remark.updated_at,
   assignmentMode: remark.assignmentMode || remark.assignment_mode || '',
@@ -20,6 +29,7 @@ const normalizeRemarkReminder = (reminder = {}) => ({
   ...reminder,
   id: reminder.id,
   accountId: reminder.accountId || reminder.account_id || '',
+  dealId: reminder.dealId || reminder.deal_id || '',
   remarkId: reminder.remarkId || reminder.remark_id || '',
   reminderDate: reminder.reminderDate || reminder.reminder_date || '',
   reminderTime: reminder.reminderTime || reminder.reminder_time || '',
@@ -39,8 +49,25 @@ export const remarkApi = {
     return normalizeRemark(response.data)
   },
 
+  async getAllRemarks(params = {}) {
+    const response = await apiClient.get('/remarks', { params })
+    const data = response?.data?.data ?? response?.data ?? []
+    return Array.isArray(data) ? data.map(normalizeRemark) : []
+  },
+
   async getAccountRemarks(accountId, params = {}) {
     const response = await apiClient.get(`/remarks/account/${encodeURIComponent(accountId)}`, { params })
+    const data = response.data || {}
+    const remarks = Array.isArray(data.remarks) ? data.remarks : []
+
+    return {
+      remarks: remarks.map(normalizeRemark),
+      total: Number(data.total || remarks.length),
+    }
+  },
+
+  async getDealRemarks(dealId, params = {}) {
+    const response = await apiClient.get(`/remarks/deal/${encodeURIComponent(dealId)}`, { params })
     const data = response.data || {}
     const remarks = Array.isArray(data.remarks) ? data.remarks : []
 

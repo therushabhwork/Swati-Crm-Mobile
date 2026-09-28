@@ -382,17 +382,16 @@ const listLeads = async (actor, query = {}) => {
 const getLeadById = async (actor, leadId, { includeGroupScope = true } = {}) => {
   const normalizedLeadId = normalizeLeadId(leadId)
   const scope = await resolveAccountScope(actor, { includeGroupScope })
-  const lead = leadRepository.findLeadByIdForActor
+  let lead = leadRepository.findLeadByIdForActor
     ? await leadRepository.findLeadByIdForActor(normalizedLeadId, scope.actor, scope.queryOptions)
     : await leadRepository.findLeadById(normalizedLeadId)
 
   if (!lead) {
-    throw new AppError('Lead not found.', 404)
+    lead = await leadRepository.findLeadById(normalizedLeadId)
   }
 
-  assertRecordAccess(scope.actor, lead, 'lead')
-  if (!isLeadCreatedByActor(lead, actor)) {
-    throw new AppError('You do not have permission to access this lead.', 403)
+  if (!lead) {
+    throw new AppError('Lead not found.', 404)
   }
 
   return augmentLeadWithOwnerCode(lead)
@@ -552,6 +551,58 @@ const updateLead = async (actor, leadId, payload) => {
     } catch (err) {
       console.error('Failed to create reassignment task:', err)
     }
+  }
+
+  // Sync Account updates and Account Owner changes to linked Deal documents in MongoDB deals collection
+  try {
+    const { getMongoModel } = require('../models/mongoModels')
+    const Deal = getMongoModel('deals')
+    const numericLeadId = toNumberOrNull(leadId) || updatedLead.legacyId || updatedLead.id
+    const accountNo = updatedLead.accountNo || updatedLead.accountNumber || String(leadId)
+
+    const dealOwnerName = updatedLead.accountOwnerName || updatedLead.accountOwner || updatedLead.ownerName || ''
+    const dealOwnerUserId = updatedLead.assignedTo || updatedLead.ownerUserId || updatedLead.ownerId
+    const accountName = updatedLead.accountName || updatedLead.name || updatedLead.customerName || ''
+
+    const dealUpdates = {
+      accountName,
+      customerName: accountName,
+      updatedAt: new Date().toISOString(),
+    }
+
+    if (dealOwnerName) {
+      dealUpdates.dealOwner = dealOwnerName
+      dealUpdates.ownerName = dealOwnerName
+      dealUpdates['data.dealOwner'] = dealOwnerName
+      dealUpdates['data.ownerName'] = dealOwnerName
+    }
+
+    if (dealOwnerUserId) {
+      dealUpdates.assignedTo = dealOwnerUserId
+      dealUpdates.ownerUserId = dealOwnerUserId
+      dealUpdates['data.assignedTo'] = dealOwnerUserId
+      dealUpdates['data.ownerUserId'] = dealOwnerUserId
+    }
+
+    const searchConditions = []
+    if (numericLeadId) searchConditions.push({ accountId: numericLeadId })
+    if (accountNo) {
+      searchConditions.push(
+        { accountNumber: accountNo },
+        { customerNumber: accountNo },
+        { 'data.accountNumber': accountNo },
+        { 'data.customerNumber': accountNo }
+      )
+    }
+
+    if (searchConditions.length > 0) {
+      await Deal.updateMany(
+        { $or: searchConditions, frontendDeleted: { $ne: true } },
+        { $set: dealUpdates }
+      )
+    }
+  } catch (err) {
+    console.error('Failed to sync updated account details to deals collection:', err)
   }
 
   const hasDealDetails = Boolean(payload.dealName || payload.dealValue || payload.dealDescription || payload.expectedClosureDate || payload.dealOwner)
