@@ -21,22 +21,6 @@ const CATEGORIES = ['Accounts', 'Customers', 'SR', 'Deals']
 const VIEWS_DATA = {
   Accounts: [
     {
-      id: 'weekly-reports-all',
-      title: 'Weekly reports-ALL',
-      viewType: 'Tabular',
-      conditions: [
-        { type: 'check', text: 'Account Date is within last 7 day(s)' },
-      ],
-      fieldNames: [
-        'Account Name', 'Account Date', 'Account Owner', 'Account Status',
-        'Account Source', 'Account State', 'Contact Person', 'Phone',
-        'Email', 'Latest Remark', 'Last Updated',
-      ],
-      filters: [
-        { label: 'Account Category', values: ['SWATI'] },
-      ],
-    },
-    {
       id: 'sw-baroda-mum',
       title: 'SW-Baroda / Mum',
       viewType: 'Tabular',

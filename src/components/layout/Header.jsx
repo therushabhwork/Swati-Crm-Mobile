@@ -288,9 +288,7 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
     if (action === 'CONNECT_OUTLOOK') {
       setMenuOpen(false)
       closeHeaderPanels()
-      addNotification('info', 'Connecting to Outlook', 'Please wait while we redirect you to Microsoft...')
-      const returnUrl = encodeURIComponent(window.location.href)
-      window.location.href = `/api/auth/microsoft/login?returnUrl=${returnUrl}`
+      navigate(isAdmin ? '/admin/settings' : '/settings')
       return
     }
 

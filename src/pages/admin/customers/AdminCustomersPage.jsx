@@ -1200,9 +1200,15 @@ const AdminCustomersPage = ({
   ), [filterRules, filters, location.search, searchRows])
   const orderedRows = useMemo(() => {
     if (orderRules.length === 0) {
-      return [...filteredRows].sort((left, right) => (
-        String(left.customerNumber || '').localeCompare(String(right.customerNumber || ''), undefined, { numeric: true })
-      ))
+      return [...filteredRows].sort((left, right) => {
+        const timeA = new Date(left.createdAt || left.addedDate || left.date || 0).getTime()
+        const timeB = new Date(right.createdAt || right.addedDate || right.date || 0).getTime()
+        if (timeA !== timeB) return timeB - timeA
+        const leftId = Number(left.id) || 0
+        const rightId = Number(right.id) || 0
+        if (leftId !== rightId && leftId > 0 && rightId > 0) return rightId - leftId
+        return String(right.customerNumber || '').localeCompare(String(left.customerNumber || ''), undefined, { numeric: true })
+      })
     }
 
     return [...filteredRows].sort((left, right) => {

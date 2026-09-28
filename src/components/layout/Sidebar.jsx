@@ -223,7 +223,6 @@ const Sidebar = ({ isAdmin = false }) => {
     { label: 'My Accounts', to: '/admin/accounts/my-accounts' },
     { label: 'My Deal', to: '/admin/deals/view' },
     { label: 'Search Deal', to: '/admin/deals/search' },
-    ...(!isKevalVShah ? [{ label: 'Weekly reports-ALL', to: '/admin/accounts/weekly-reports-all' }] : []),
   ]), [isKevalVShah])
 
 

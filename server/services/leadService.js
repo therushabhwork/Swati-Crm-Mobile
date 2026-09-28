@@ -178,9 +178,9 @@ const buildLeadPayload = async (payload = {}, actor, existingLead = null) => {
   }
 
   const hasReasonForLost = Object.prototype.hasOwnProperty.call(sanitizedPayload, 'reasonForLost') || Object.prototype.hasOwnProperty.call(sanitizedPayload, 'reasonForLostOrder')
-  const targetStatus = isNotQuotedPayload ? 'not_quoted' : (isPoConvertedStage ? 'convert_to_po' : (sanitizedPayload.accountState || sanitizedPayload.status || existingLead?.status || 'pending'))
-  const targetAccountStatus = isNotQuotedPayload ? 'not_quoted' : (isPoConvertedStage ? 'convert_to_po' : (sanitizedPayload.accountStatus || existingLead?.accountStatus || existingLead?.formData?.accountStatus || 'Pending'))
-  const targetAccountState = isNotQuotedPayload ? 'not_quoted' : (isPoConvertedStage ? 'convert_to_po' : (sanitizedPayload.accountState || existingLead?.accountState || existingLead?.formData?.accountState || 'Pending'))
+  const targetStatus = isNotQuotedPayload ? 'not_quoted' : ((isPoConvertedStage && Boolean(resolvedPoValue)) ? 'convert_to_po' : (sanitizedPayload.accountState || sanitizedPayload.status || existingLead?.status || 'pending'))
+  const targetAccountStatus = isNotQuotedPayload ? 'not_quoted' : ((isPoConvertedStage && Boolean(resolvedPoValue)) ? 'convert_to_po' : (sanitizedPayload.accountStatus || existingLead?.accountStatus || existingLead?.formData?.accountStatus || 'Pending'))
+  const targetAccountState = isNotQuotedPayload ? 'not_quoted' : ((isPoConvertedStage && Boolean(resolvedPoValue)) ? 'convert_to_po' : (sanitizedPayload.accountState || existingLead?.accountState || existingLead?.formData?.accountState || 'Pending'))
 
   const normalizedPayload = applyOwnershipMetadata(actor, {
     ...sanitizedPayload,

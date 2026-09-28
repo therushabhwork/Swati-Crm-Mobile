@@ -2,20 +2,24 @@ import { normalizeAccountRecord } from '../adapters/normalizeAccountRecord'
 import { getVisibleAccountStages } from '../config/accountStages'
 
 export const compareAccountsByNumberAsc = (left = {}, right = {}) => {
+  const timeA = new Date(left.createdAt || left.accountDate || left.date || 0).getTime()
+  const timeB = new Date(right.createdAt || right.accountDate || right.date || 0).getTime()
+  if (timeA !== timeB) return timeB - timeA
+
   const leftNumber = Number(resolveAccountOwnerSeriesNumber(left) || 0)
   const rightNumber = Number(resolveAccountOwnerSeriesNumber(right) || 0)
 
   if (leftNumber !== rightNumber) {
-    return leftNumber - rightNumber
+    return rightNumber - leftNumber
   }
 
   const leftId = Number(left.id) || 0
   const rightId = Number(right.id) || 0
   if (leftId !== rightId) {
-    return leftId - rightId
+    return rightId - leftId
   }
 
-  return String(left.name || '').localeCompare(String(right.name || ''))
+  return String(right.name || '').localeCompare(String(left.name || ''))
 }
 
 const resolveAccountOwnerSeriesNumber = (record = {}) => {
@@ -64,6 +68,14 @@ export const getAccountsBoardData = (accounts = []) => {
       originalAccountNumber: record.originalAccountNumber || record.accountNumber,
       accountNumber: resolveStoredAccountNumber(record, index),
     }))
+    .sort((left, right) => {
+      const timeA = new Date(left.createdAt || left.accountDate || left.date || 0).getTime()
+      const timeB = new Date(right.createdAt || right.accountDate || right.date || 0).getTime()
+      if (timeA !== timeB) return timeB - timeA
+      const leftId = Number(left.id) || 0
+      const rightId = Number(right.id) || 0
+      return rightId - leftId
+    })
 
   const stages = getVisibleAccountStages()
   const countsByStage = stages.reduce((lookup, stage) => {

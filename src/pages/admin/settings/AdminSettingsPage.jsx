@@ -203,9 +203,8 @@ const AdminSettingsPage = () => {
           <FaEnvelope />
         </div>
         <div>
-          <span>Microsoft Graph API</span>
           <h1>Outlook Integration</h1>
-          <p>Connect Outlook once with Microsoft OAuth. CRM stores encrypted tokens in MongoDB and uses Microsoft Graph for mail.</p>
+          <p>Connect Outlook account here!</p>
         </div>
         <div className={`outlook-admin-state${connected ? ' outlook-admin-state--connected' : ''}`}>
           {connected ? <FaCheckCircle /> : <FaTimesCircle />}

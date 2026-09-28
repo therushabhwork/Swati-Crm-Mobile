@@ -43,7 +43,7 @@ import { buildCrmDealActionUrl } from '../admin/crm-actions/CRMActionPage'
 import { buildDealCustomViewColumns } from '../../features/adminDeals/customViews/dealCustomViewConfig'
 import { getCustomViewDeals } from '../../features/adminDeals/customViews/getCustomViewDeals'
 import { getAccountCategoryLogo } from '../../features/accounts/config/accountCategoryLogo'
-import { getCrmOwnerDisplay, normalizeCrmUserName } from '../../features/users/crmUserDirectory'
+import { getCrmOwnerDisplay, getCrmOwnerCode, isSameCrmOwner, normalizeCrmUserName } from '../../features/users/crmUserDirectory'
 import { authService } from '../../services/authService'
 import { customerService } from '../../services/customerService'
 import { dealApi } from '../../services/dealApi'
@@ -374,8 +374,8 @@ const DEAL_FILTER_ACTION_OPTIONS = [
 
 const DEFAULT_DEAL_FILTER_ACTION_KEYS = ['viewDeal', 'manageDeal', 'addRemark', 'changeStatus', 'generateQuotation', 'uploadQuotation', 'reassignDeal', 'addReminder']
 const DEFAULT_GRID_SORT_CONFIG = {
-  key: 'dealNumber',
-  direction: 'asc',
+  key: '',
+  direction: 'desc',
 }
 
 let dealFilterRowSequence = 0
@@ -927,6 +927,14 @@ const getLostOrderReasonLabel = (value = '') => {
   return LOST_ORDER_REASON_LABELS[normalized] || (normalized ? String(value).trim() : 'Select Reason')
 }
 
+const formatDealSequenceNumber = (deal, index = 0) => {
+  const rawNumber = String(deal?.dealNumber || '').trim()
+  if (rawNumber && /^DL-\d+$/i.test(rawNumber)) {
+    return rawNumber.toUpperCase()
+  }
+  return `DL-${String(index + 1).padStart(3, '0')}`
+}
+
 const buildDealViewConfig = (variantKey, customViewDefinition) => {
   const baseConfig = {
     title: 'Deals',
@@ -979,8 +987,6 @@ const buildDealViewConfig = (variantKey, customViewDefinition) => {
       ...baseConfig,
       title: 'My Deals',
       subtitle: 'Review all admin deals in one consolidated listing.',
-      sortFn: (left, right) =>
-        (left.dealOwner || '').localeCompare(right.dealOwner || '') || (left.name || '').localeCompare(right.name || ''),
     },
     projectDetails: {
       ...baseConfig,
@@ -1100,13 +1106,21 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
   const [pendingBoardStatuses, setPendingBoardStatuses] = useState(() => DEAL_BOARD_COLUMNS.map((column) => column.key))
   const [appliedBoardStatuses, setAppliedBoardStatuses] = useState(() => DEAL_BOARD_COLUMNS.map((column) => column.key))
   const [isBoardOwnershipOpen, setIsBoardOwnershipOpen] = useState(false)
-  const [boardOwnership, setBoardOwnership] = useState('overall')
+  const [boardOwnership, setBoardOwnership] = useState(() => (variantKey === 'search' ? 'overall' : 'me'))
   const [dealStatusTableFilter, setDealStatusTableFilter] = useState('all')
 
   const viewConfig = useMemo(
     () => buildDealViewConfig(customViewDefinition ? customViewDefinition.baseViewKey : variantKey, customViewDefinition),
     [customViewDefinition, variantKey]
   )
+  useEffect(() => {
+    if (variantKey === 'search') {
+      setBoardOwnership('overall')
+    } else if (variantKey === 'view') {
+      setBoardOwnership('me')
+    }
+  }, [variantKey])
+
   const effectiveVariantKey = customViewDefinition ? customViewDefinition.baseViewKey : variantKey
   const customViewColumns = useMemo(
     () => customViewDefinition?.viewType === 'tabular'
@@ -1391,7 +1405,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
           assignedUserId: String(deal.assignedUserId || deal.assignedTo || resolvedOwnerUserId || ''),
           ownerName: deal.ownerName || resolvedOwnerName,
           dealOwner: resolvedOwnerName,
-          dealNumber: deal.dealNumber || `DL-${1000 + index + 1}`,
+          dealNumber: deal.dealNumber || `DL-${String(index + 1).padStart(3, '0')}`,
           dealDate: deal.dealDate || deal.createdAt || '',
           dealType: deal.dealType || deal.customerCategory || linkedAccount?.accountCategory || deal.stage || '',
           quotationCustomerStatus: deal.quotationCustomerStatus || '',
@@ -1617,7 +1631,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
         id: deal.id,
         rawDeal: deal,
         dealId: deal.id || '',
-        dealNumber: deal.dealNumber || `DL-${1000 + index + 1}`,
+        dealNumber: formatDealSequenceNumber(deal, index),
         quotationNumber: getDealQuotationNumber(deal, quotationNumberByDealId, quotationNumberByDealNumber),
         location: deal.city || deal.location || linkedCustomer?.city || linkedCustomer?.location || '',
         customerNumber: deal.customerNumber || linkedCustomer?.customerNumber || '',
@@ -1729,8 +1743,37 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
 
     return DEAL_GRID_COLUMNS
   }, [baseGridColumns, isSearchAdminView])
-  const filteredGridRows = useMemo(() => (
-    adminGridRows.filter((row) => {
+  const filteredGridRows = useMemo(() => {
+    const currentUserId = String(user?.id || user?._id || user?.ownerCode || '')
+    const currentUserName = normalizeSearchValue(user?.name || user?.username || '')
+    const currentOwnerCode = String(user?.ownerCode || getCrmOwnerCode(user?.name) || '')
+
+    return adminGridRows.filter((row) => {
+      const filterableRow = row.rawDeal || row
+      const dealOwnerId = String(filterableRow.userId || filterableRow.ownerUserId || filterableRow.ownerId || filterableRow.assignedTo || filterableRow.assignedUserId || '')
+      const resolvedOwnerName = getResolvedOwnerName(filterableRow) || filterableRow.dealOwner || filterableRow.ownerName || row.dealOwner || ''
+      const normalizedResolvedOwner = normalizeSearchValue(resolvedOwnerName)
+      const dealOwnerCode = String(filterableRow.ownerCode || getCrmOwnerCode(resolvedOwnerName) || '')
+      const coOwnerTokens = getOwnerTokenSet(getResolvedCoOwnerValue(filterableRow))
+
+      if (boardOwnership === 'me') {
+        const isOwnedByMe = Boolean(
+          (currentUserId && dealOwnerId === currentUserId)
+          || (currentOwnerCode && dealOwnerCode === currentOwnerCode)
+          || (currentUserName && (
+            normalizedResolvedOwner === currentUserName
+            || isSameCrmOwner(resolvedOwnerName, user?.name)
+          ))
+        )
+        if (!isOwnedByMe) return false
+      } else if (boardOwnership === 'coOwned') {
+        const isCoOwnedByMe = currentUserName && (
+          coOwnerTokens.has(currentUserName)
+          || Array.from(coOwnerTokens).some((token) => isSameCrmOwner(token, user?.name))
+        )
+        if (!isCoOwnedByMe) return false
+      }
+
       const selectedOwnerName = ownerNameById[String(appliedOwnerWiseOwnerId)] || ''
 
       return (
@@ -1745,7 +1788,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
         && gridFilterRules.every((rule) => matchGridFilterRule(row, rule))
       )
     })
-  ), [adminGridRows, appliedOwnerWiseOwnerId, dealStatusTableFilter, gridFilterRules, gridFilters, ownerNameById])
+  }, [adminGridRows, appliedOwnerWiseOwnerId, boardOwnership, dealStatusTableFilter, gridFilterRules, gridFilters, ownerNameById, user?._id, user?.id, user?.name, user?.ownerCode, user?.username])
   const displayGridRows = useMemo(
     () => filteredGridRows,
     [filteredGridRows]
@@ -1790,12 +1833,20 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
   }
 
   const sortedGridRows = useMemo(() => {
-    const activeSortKey = activeGridColumns.some((column) => column.key === gridSortConfig.key)
+    const activeSortKey = gridSortConfig.key && activeGridColumns.some((column) => column.key === gridSortConfig.key)
       ? gridSortConfig.key
-      : activeGridColumns[0]?.key
+      : null
 
     if (!activeSortKey) {
-      return displayGridRows
+      return [...displayGridRows].sort((left, right) => {
+        const timeA = new Date(left.createdAt || left.dealDate || left.rawDeal?.createdAt || 0).getTime()
+        const timeB = new Date(right.createdAt || right.dealDate || right.rawDeal?.createdAt || 0).getTime()
+        if (timeA !== timeB) return timeB - timeA
+        const leftId = Number(left.id || left.rawDeal?.id || left.rawDeal?._id) || 0
+        const rightId = Number(right.id || right.rawDeal?.id || right.rawDeal?._id) || 0
+        if (leftId !== rightId && leftId > 0 && rightId > 0) return rightId - leftId
+        return String(right.dealNumber || '').localeCompare(String(left.dealNumber || ''), undefined, { numeric: true })
+      })
     }
 
     const sortDirectionMultiplier = gridSortConfig.direction === 'asc' ? 1 : -1
@@ -1905,16 +1956,33 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
       return lookup
     }, {})
 
-    const currentUserId = String(user?.id || '')
-    const currentUserName = normalizeSearchValue(user?.name || '')
+    const currentUserId = String(user?.id || user?._id || user?.ownerCode || '')
+    const currentUserName = normalizeSearchValue(user?.name || user?.username || '')
+    const currentOwnerCode = String(user?.ownerCode || getCrmOwnerCode(user?.name) || '')
+
     const ownershipFilteredDeals = displayedDeals.filter((deal) => {
       if (boardOwnership === 'overall') return true
-      const dealOwnerId = String(deal.userId || deal.ownerUserId || deal.ownerId || deal.assignedTo || deal.assignedUserId || '')
-      const dealOwnerName = normalizeOwnerValue(deal.dealOwner || deal.ownerName || '')
+
+      const dealOwnerId = String(deal.userId || deal.ownerUserId || deal.ownerId || deal.assignedTo || deal.assignedUserId || deal.rawDeal?.userId || '')
+      const resolvedOwnerName = getResolvedOwnerName(deal) || deal.dealOwner || deal.ownerName || ''
+      const normalizedResolvedOwner = normalizeSearchValue(resolvedOwnerName)
+      const dealOwnerCode = String(deal.ownerCode || getCrmOwnerCode(resolvedOwnerName) || '')
       const coOwnerTokens = getOwnerTokenSet(getResolvedCoOwnerValue(deal))
-      const isOwnedByMe = currentUserId && dealOwnerId === currentUserId
-        || (currentUserName && dealOwnerName === currentUserName)
-      const isCoOwnedByMe = currentUserName && coOwnerTokens.has(currentUserName)
+
+      const isOwnedByMe = Boolean(
+        (currentUserId && dealOwnerId === currentUserId)
+        || (currentOwnerCode && dealOwnerCode === currentOwnerCode)
+        || (currentUserName && (
+          normalizedResolvedOwner === currentUserName
+          || isSameCrmOwner(resolvedOwnerName, user?.name)
+        ))
+      )
+
+      const isCoOwnedByMe = currentUserName && (
+        coOwnerTokens.has(currentUserName)
+        || Array.from(coOwnerTokens).some((token) => isSameCrmOwner(token, user?.name))
+      )
+
       if (boardOwnership === 'me') return Boolean(isOwnedByMe)
       if (boardOwnership === 'coOwned') return Boolean(isCoOwnedByMe)
       return true
@@ -1931,7 +1999,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
         ...column,
         deals: groupedDeals[column.key] || [],
       }))
-  }, [appliedBoardStatuses, boardOwnership, displayedDeals, user?.id, user?.name])
+  }, [appliedBoardStatuses, boardOwnership, displayedDeals, user?._id, user?.id, user?.name, user?.ownerCode, user?.username])
 
   const ownerWiseAllRows = useMemo(() => (
     displayedDeals.map((deal, index) => {
@@ -1942,7 +2010,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
         rawDeal: deal,
         ownerKey: deal.dealOwnerDisplay || getCrmOwnerDisplay(deal.dealOwner || deal.ownerName || '') || deal.dealOwner || deal.ownerName || '',
         dealId: deal.id || '',
-        dealNumber: deal.dealNumber || `DL-${1000 + index + 1}`,
+        dealNumber: deal.dealNumber || `DL-${String(index + 1).padStart(3, '0')}`,
         quotationNumber: getDealQuotationNumber(deal, quotationNumberByDealId, quotationNumberByDealNumber),
         location: getDealBranchLocation(deal, linkedCustomer),
         customerName: getDealCustomerName(deal, linkedCustomer),
@@ -1986,7 +2054,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
           rawDeal: deal,
           ownerKey: deal.dealOwnerDisplay || getCrmOwnerDisplay(deal.dealOwner || deal.ownerName || '') || deal.dealOwner || deal.ownerName || '',
           dealId: deal.id || '',
-          dealNumber: deal.dealNumber || `DL${String(index + 1).padStart(5, '0')}`,
+          dealNumber: deal.dealNumber || `DL-${String(index + 1).padStart(3, '0')}`,
           quotationNumber: getDealQuotationNumber(deal, quotationNumberByDealId, quotationNumberByDealNumber),
           location: getDealBranchLocation(deal, linkedCustomer),
           customerName: getDealCustomerName(deal, linkedCustomer),
@@ -2027,7 +2095,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
         rawDeal: deal,
         ownerKey: deal.dealOwnerDisplay || getCrmOwnerDisplay(deal.dealOwner || deal.ownerName || '') || deal.dealOwner || deal.ownerName || '',
         dealId: deal.id || '',
-        dealNumber: deal.dealNumber || `DL${String(index + 1).padStart(5, '0')}`,
+        dealNumber: deal.dealNumber || `DL-${String(index + 1).padStart(3, '0')}`,
         quotationNumber: getDealQuotationNumber(deal, quotationNumberByDealId, quotationNumberByDealNumber),
         location: getDealBranchLocation(deal, linkedCustomer),
         customerName: getDealCustomerName(deal, linkedCustomer),
@@ -2069,7 +2137,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
         rawDeal: deal,
         ownerKey: deal.dealOwnerDisplay || getCrmOwnerDisplay(deal.dealOwner || deal.ownerName || '') || deal.dealOwner || deal.ownerName || '',
         dealId: deal.id || '',
-        dealNumber: deal.dealNumber || `DL${String(index + 1).padStart(5, '0')}`,
+        dealNumber: deal.dealNumber || `DL-${String(index + 1).padStart(3, '0')}`,
         quotationNumber: getDealQuotationNumber(deal, quotationNumberByDealId, quotationNumberByDealNumber),
         location: getDealBranchLocation(deal, linkedCustomer),
         customerName: getDealCustomerName(deal, linkedCustomer),
@@ -2159,27 +2227,77 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
 
   const ownerScopedRows = useMemo(() => ownerScopedAllRows, [ownerScopedAllRows])
 
-  const filteredOwnerScopedRows = useMemo(() => (
-    ownerScopedRows.filter((row) => {
-      const selectedOwnerName = ownerNameById[String(appliedOwnerWiseOwnerId)] || ''
+  const filteredOwnerScopedRows = useMemo(() => {
+    const currentUserId = String(user?.id || user?._id || user?.ownerCode || '')
+    const currentUserName = normalizeSearchValue(user?.name || user?.username || '')
+    const currentOwnerCode = String(user?.ownerCode || getCrmOwnerCode(user?.name) || '')
+
+    return ownerScopedRows.filter((row) => {
       const filterableRow = adminGridRowById[row.id] || row
+      const resolvedOwnerName = getResolvedOwnerName(filterableRow) || row.dealOwner || row.ownerName || ''
+      const normalizedResolvedOwner = normalizeSearchValue(resolvedOwnerName)
+      const rowOwnerId = String(
+        filterableRow.ownerUserId
+        || filterableRow.ownerId
+        || filterableRow.assignedTo
+        || filterableRow.assignedUserId
+        || filterableRow.userId
+        || ''
+      )
+      const rowOwnerCode = String(filterableRow.ownerCode || getCrmOwnerCode(resolvedOwnerName) || '')
+      const coOwnerTokens = getOwnerTokenSet(getResolvedCoOwnerValue(filterableRow))
+
+      if (boardOwnership === 'me') {
+        const isOwnedByMe = Boolean(
+          (currentUserId && rowOwnerId === currentUserId)
+          || (currentOwnerCode && rowOwnerCode === currentOwnerCode)
+          || (currentUserName && (
+            normalizedResolvedOwner === currentUserName
+            || isSameCrmOwner(resolvedOwnerName, user?.name)
+          ))
+        )
+        if (!isOwnedByMe) return false
+      } else if (boardOwnership === 'coOwned') {
+        const isCoOwnedByMe = currentUserName && (
+          coOwnerTokens.has(currentUserName)
+          || Array.from(coOwnerTokens).some((token) => isSameCrmOwner(token, user?.name))
+        )
+        if (!isCoOwnedByMe) return false
+      }
+
+      const selectedOwnerName = ownerNameById[String(appliedOwnerWiseOwnerId)] || ''
 
       return (
         matchesOwnerSelection(filterableRow, appliedOwnerWiseOwnerId, selectedOwnerName)
         && activeOwnerScopedColumns.every((column) => {
-        const filterValue = normalizeSearchValue(ownerScopedFilters[column.key])
-        if (!filterValue) return true
-        return matchesOwnerScopedFilterText(row, filterableRow, column.key, filterValue)
-      })
+          const filterValue = normalizeSearchValue(ownerScopedFilters[column.key])
+          if (!filterValue) return true
+          return matchesOwnerScopedFilterText(row, filterableRow, column.key, filterValue)
+        })
         && DEAL_SEARCH_FIELD_CATALOG.every((column) => {
-        const filterValue = normalizeSearchValue(gridFilters[column.key])
-        if (!filterValue) return true
-        return matchesOwnerScopedFilterText(row, filterableRow, column.key, filterValue)
-      })
+          const filterValue = normalizeSearchValue(gridFilters[column.key])
+          if (!filterValue) return true
+          return matchesOwnerScopedFilterText(row, filterableRow, column.key, filterValue)
+        })
         && gridFilterRules.every((rule) => matchGridFilterRule(filterableRow, rule))
       )
     })
-  ), [activeOwnerScopedColumns, adminGridRowById, appliedOwnerWiseOwnerId, gridFilterRules, gridFilters, ownerNameById, ownerScopedFilters, ownerScopedRows])
+  }, [
+    activeOwnerScopedColumns,
+    adminGridRowById,
+    appliedOwnerWiseOwnerId,
+    boardOwnership,
+    gridFilterRules,
+    gridFilters,
+    ownerNameById,
+    ownerScopedFilters,
+    ownerScopedRows,
+    user?._id,
+    user?.id,
+    user?.name,
+    user?.ownerCode,
+    user?.username,
+  ])
   const displayOwnerScopedRows = useMemo(
     () => filteredOwnerScopedRows,
     [filteredOwnerScopedRows]
@@ -3231,15 +3349,33 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
         return str
       }
 
-      const dealsToImport = validRows.map((row) => {
+      const existingKeys = new Set(
+        (adminGridRows || gridRows || []).map((r) => {
+          const accCust = String(r.accountName || r.customerName || r.company || r.companyName || '').trim().toLowerCase()
+          const projDeal = String(r.projectName || r.dealName || r.title || r.name || '').trim().toLowerCase()
+          const job = String(r.jobNo || '').trim().toLowerCase()
+          return job ? `job:${job}` : `${accCust}|${projDeal}`
+        })
+      )
+
+      const dealsToImport = []
+      const seenBatchKeys = new Set()
+
+      validRows.forEach((row) => {
         const rawProjName = getVal(row, 'Project Name', 'ProjectName', 'Project / Deal Name', 'Project/Deal Name', 'Project', 'Deal Name', 'DealName', 'Title', 'Name')
         const rawDealName = getVal(row, 'Deal Name', 'DealName', 'Project / Deal Name', 'Project/Deal Name', 'Title', 'Name', 'Project Name', 'ProjectName')
-        const rawCustName = getVal(row, 'Customer Name', 'Account Name', 'Customer', 'Account', 'Company', 'Client')
+        const rawCustName = getVal(row, 'Customer Name', 'CustomerName', 'Account Name', 'AccountName', 'Customer', 'Account', 'Company', 'Client')
+        const rawAccName = getVal(row, 'Account Name', 'AccountName', 'Customer Name', 'CustomerName', 'Customer', 'Account', 'Company', 'Client')
 
-        const unifiedName = String(rawProjName || rawDealName || rawCustName || 'General Enquiry').trim()
-        const dealName = unifiedName
-        const projectName = unifiedName
-        const customerName = String(rawCustName || rawDealName || rawProjName || '').trim()
+        const unifiedProjectDealName = String(rawProjName || rawDealName || 'General Enquiry').trim()
+        const unifiedAccountCustomerName = String(rawCustName || rawAccName || '').trim()
+
+        const dealName = unifiedProjectDealName
+        const projectName = unifiedProjectDealName
+        const customerName = unifiedAccountCustomerName
+        const accountName = unifiedAccountCustomerName
+        const companyName = unifiedAccountCustomerName
+
         const dealNumber = String(getVal(row, 'Deal Number', 'Deal No', 'DealNumber', 'Deal #') || '').trim()
         const dealOwner = String(getVal(row, 'Deal Owner', 'Account Owner', 'Owner Name', 'Owner', 'Assigned To', 'Owner Code', 'ownerCode') || '').trim()
         const coOwners = String(getVal(row, 'Deal Co-Owners', 'Co-Owners', 'Co Owners', 'CoOwners') || '').trim()
@@ -3262,15 +3398,26 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
         const addedBy = String(getVal(row, 'Added By', 'Created By', 'AddedBy') || '').trim()
         const jobNo = String(getVal(row, 'Job No', 'Job Number', 'JobNo') || '').trim()
 
+        const rowKey = jobNo ? `job:${jobNo.toLowerCase()}` : `${accountName.toLowerCase()}|${projectName.toLowerCase()}`
+
         let status = 'ready'
         let statusMessage = 'Ready to import'
 
-        if (!dealName || dealName === 'Untitled') {
+        if ((accountName || projectName) && (seenBatchKeys.has(rowKey) || existingKeys.has(rowKey))) {
           status = 'warning'
-          statusMessage = 'Default Deal Name'
+          statusMessage = 'Duplicate record - skipped'
+        } else if (accountName || projectName) {
+          seenBatchKeys.add(rowKey)
         }
 
-        return {
+        if (!dealName || dealName === 'Untitled') {
+          if (status !== 'warning') {
+            status = 'warning'
+            statusMessage = 'Default Deal Name'
+          }
+        }
+
+        dealsToImport.push({
           dealNumber,
           dealName,
           projectName,
@@ -3293,7 +3440,8 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
           source: source || 'MARKETING-SWATI',
           dealSource: source || 'MARKETING-SWATI',
           customerName,
-          accountName: customerName,
+          accountName,
+          companyName,
           category,
           customerCategory: category,
           poValue,
@@ -3303,7 +3451,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
           jobNo,
           status,
           statusMessage,
-        }
+        })
       })
 
       setImportPreviewDeals(dealsToImport)
@@ -3887,7 +4035,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
             onDoubleClick={() => handleManageDeal(row)}
           >
             <span className="deals-crm-number-button-content">
-              <span>{row.dealNumber || ''}</span>
+              <span>{row.dealNumber && /^DL-\d+$/i.test(String(row.dealNumber).trim()) ? String(row.dealNumber).trim().toUpperCase() : formatDealSequenceNumber(row.rawDeal || row, 0)}</span>
               <FaEllipsisV className="deals-crm-number-button-dots" aria-hidden="true" />
             </span>
           </button>
@@ -3992,6 +4140,16 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
   }
 
   const renderDealGridCellContent = (row, columnKey) => {
+    if (columnKey === 'dealNumber') {
+      return row.dealNumber && /^DL-\d+$/i.test(String(row.dealNumber).trim())
+        ? String(row.dealNumber).trim().toUpperCase()
+        : formatDealSequenceNumber(row.rawDeal || row, 0)
+    }
+
+    if (columnKey === 'dealDate') {
+      return row.dealDate || formatDate(row.rawDeal?.quotationDate || row.rawDeal?.dealDate || row.rawDeal?.createdAt || '') || '-'
+    }
+
     if (columnKey === 'projectName') {
       const val = row.projectName || row.title || row.name || row.rawDeal?.projectName || row.rawDeal?.title || row.rawDeal?.name || row.rawDeal?.data?.projectName || row.rawDeal?.data?.title
       const strVal = String(val || '').trim()
@@ -4041,7 +4199,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
               onDoubleClick={() => handleManageDeal(row)}
             >
               <span className="deals-crm-number-button-content">
-                <span>{row.dealNumber}</span>
+                <span>{row.dealNumber && /^DL-\d+$/i.test(String(row.dealNumber).trim()) ? String(row.dealNumber).trim().toUpperCase() : formatDealSequenceNumber(row.rawDeal || row, 0)}</span>
                 <FaEllipsisV className="deals-crm-number-button-dots" aria-hidden="true" />
               </span>
             </button>
@@ -5626,7 +5784,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
                                     onDoubleClick={() => handleManageDeal(row)}
                                   >
                                     <span className="deals-crm-number-button-content">
-                                      <span>{row[column.key] || ''}</span>
+                                      <span>{row.dealNumber && /^DL-\d+$/i.test(String(row.dealNumber).trim()) ? String(row.dealNumber).trim().toUpperCase() : formatDealSequenceNumber(row.rawDeal || row, 0)}</span>
                                       <FaEllipsisV className="deals-crm-number-button-dots" aria-hidden="true" />
                                     </span>
                                   </button>

@@ -303,7 +303,7 @@ function App() {
                 <Route path="accounts/my-accounts" element={<MyGroupAccountsPage variantKey="myAccounts" />} />
                 <Route path="accounts/search" element={<MyGroupAccountsPage variantKey="searchAccount" />} />
                 <Route path="accounts/source-view" element={<Navigate to="/admin/accounts/my-group-accounts" replace />} />
-                <Route path="accounts/weekly-reports-all" element={<MyGroupAccountsPage variantKey="weeklyReportsAll" />} />
+                <Route path="accounts/weekly-reports-all" element={<Navigate to="/admin/accounts/my-accounts" replace />} />
                 <Route path="accounts/sw-baroda-mum" element={<MyGroupAccountsPage variantKey="swBarodaMum" />} />
                 <Route path="accounts/user-wise-leads" element={<MyGroupAccountsPage variantKey="userWiseLeads" />} />
 

@@ -30,6 +30,7 @@ import { getCrmOwnerDisplay } from '../../../features/users/crmUserDirectory'
 import { getCachedAccountOwnerOptions, loadAccountOwnerOptions } from '../../../features/adminAccounts/utils/accountOwnerOptions'
 import { authService } from '../../../services/authService'
 import { customerService } from '../../../services/customerService'
+import { integrationApi } from '../../../services/integrationApi'
 import { reminderApi } from '../../../services/reminderApi'
 import { formatDate } from '../../../utils/helpers'
 import './CRMActionPage.css'
@@ -407,6 +408,38 @@ const CRMActionPage = () => {
     attachmentName: '',
     body: '',
   })
+  const [fileAttachments, setFileAttachments] = useState([])
+  const [isSendingMail, setIsSendingMail] = useState(false)
+
+  const handleFileUpload = (event) => {
+    const files = Array.from(event.target.files || [])
+    if (files.length === 0) return
+
+    files.forEach((file) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const base64Data = e.target.result
+        setFileAttachments((prev) => [
+          ...prev,
+          {
+            id: `att-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+            name: file.name,
+            contentType: file.type || 'application/octet-stream',
+            size: file.size,
+            base64Data,
+            contentBytes: String(base64Data || '').replace(/^data:[^;]+;base64,/, ''),
+          },
+        ])
+      }
+      reader.readAsDataURL(file)
+    })
+
+    event.target.value = ''
+  }
+
+  const handleRemoveAttachment = (id) => {
+    setFileAttachments((prev) => prev.filter((item) => item.id !== id))
+  }
 
   const [reassignForm, setReassignForm] = useState({
     newOwnerId: '',
@@ -629,28 +662,67 @@ const CRMActionPage = () => {
     return Object.keys(nextErrors).length === 0
   }
 
-  const handleSendMail = (event) => {
+  const handleSendMail = async (event) => {
     event.preventDefault()
     const editorBody = editorRef.current?.innerHTML || mailForm.body
     setMailForm((currentValue) => ({ ...currentValue, body: editorBody }))
     if (!validateMail()) return
 
-    appendStoredRow(COMMUNICATION_KEY, {
-      id: `MAIL-${Date.now()}`,
-      dateTime: new Date().toISOString(),
-      moduleName: recordModule,
-      recordId: selectedEntity?.id || '',
-      recordName: selectedEntity ? getEntityLabel(selectedEntity) : '',
-      contactName: emailContext.contactName,
-      email: mailForm.toEmail,
-      template: mailForm.template,
-      subject: mailForm.subject,
-      status: 'Sent',
-      sentBy: user?.name || 'Current User',
-    })
-    appendAudit('Send Mail', `Email sent using template "${mailForm.template}" to ${mailForm.toEmail}.`)
-    addNotification('success', 'Send Mail', 'Email action saved in communication log.')
-    setSuccessMessage('Email sent and communication log updated.')
+    setIsSendingMail(true)
+    setSuccessMessage('')
+    setErrors({})
+
+    try {
+      const payload = {
+        to: mailForm.toEmail,
+        cc: mailForm.cc,
+        bcc: mailForm.bcc,
+        subject: mailForm.subject,
+        message: editorBody,
+        isHtml: true,
+        attachments: fileAttachments.map((att) => ({
+          name: att.name,
+          contentType: att.contentType,
+          base64Data: att.base64Data || att.contentBytes,
+          contentBytes: att.contentBytes,
+        })),
+        targetType: recordModule,
+        targetId: selectedEntity?.id || selectedRecordId || '',
+      }
+
+      const res = await integrationApi.sendOutlookEmail(payload)
+
+      if (res && res.success) {
+        appendStoredRow(COMMUNICATION_KEY, {
+          id: `MAIL-${Date.now()}`,
+          dateTime: new Date().toISOString(),
+          moduleName: recordModule,
+          recordId: selectedEntity?.id || '',
+          recordName: selectedEntity ? getEntityLabel(selectedEntity) : '',
+          contactName: emailContext.contactName,
+          email: mailForm.toEmail,
+          template: mailForm.template,
+          subject: mailForm.subject,
+          status: 'Sent',
+          sentBy: user?.name || user?.email || 'Current User',
+        })
+        appendAudit('Send Mail', `Real-time Outlook email sent to ${mailForm.toEmail} with ${fileAttachments.length} attachments.`)
+        addNotification('success', 'Send Mail', 'Email sent successfully via Microsoft Graph!')
+        setSuccessMessage('Email sent successfully via Microsoft Graph and logged in database.')
+        setFileAttachments([])
+      } else {
+        const errorMsg = res?.message || 'Failed to send email via Microsoft Graph.'
+        setErrors({ general: errorMsg })
+        addNotification('error', 'Send Mail Error', errorMsg)
+      }
+    } catch (err) {
+      console.error('Send mail error:', err)
+      const errorMsg = err?.response?.data?.message || err?.message || 'Error sending email via Microsoft Graph.'
+      setErrors({ general: errorMsg })
+      addNotification('error', 'Send Mail Error', errorMsg)
+    } finally {
+      setIsSendingMail(false)
+    }
   }
 
   const getReminderDate = () => {
@@ -1107,24 +1179,53 @@ const CRMActionPage = () => {
               onChange={(event) => setMailForm({ ...mailForm, subject: event.target.value })}
             />
           </label>
-          <label className="crm-action-email-attach-button" title={mailForm.attachmentName || 'Attach file'}>
+          <label className="crm-action-email-attach-button" title="Attach documents (.pdf, .xlsx, .xls, .doc, .docx, images)">
             <FaPaperclip aria-hidden="true" />
-            <input type="file" onChange={(event) => setMailForm({ ...mailForm, attachmentName: event.target.files?.[0]?.name || '' })} />
+            <input
+              type="file"
+              multiple
+              accept=".pdf,.xls,.xlsx,.doc,.docx,image/*"
+              onChange={handleFileUpload}
+            />
           </label>
-          {mailForm.attachmentName ? <small className="crm-action-email-attachment-name">{mailForm.attachmentName}</small> : null}
           {errors.subject ? <small className="crm-action-error-text">{errors.subject}</small> : null}
         </div>
+
+        {fileAttachments.length > 0 ? (
+          <div className="crm-action-email-attachments-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', paddingLeft: '140px' }}>
+            {fileAttachments.map((file) => (
+              <span key={file.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--surface-card, #f0f4f8)', border: '1px solid #cbd5e1', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>
+                <FaPaperclip /> {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                <button
+                  type="button"
+                  onClick={() => handleRemoveAttachment(file.id)}
+                  style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0 2px', fontWeight: 'bold' }}
+                >
+                  &times;
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
     </section>
   )
 
   const renderSendMail = () => (
     <form className={`crm-action-form ${isEditorFullscreen ? 'crm-action-form--fullscreen-editor' : ''}`} onSubmit={handleSendMail}>
+      {errors.general ? (
+        <div className="crm-action-message crm-action-message-error" style={{ color: '#dc2626', background: '#fef2f2', padding: '10px 14px', borderRadius: '6px', marginBottom: '1rem', border: '1px solid #fecaca' }}>
+          {errors.general}
+        </div>
+      ) : null}
+
       <div className="crm-action-footer crm-action-footer-top">
         <Button type="button" variant="outline" onClick={() => setPreviewOpen((currentValue) => !currentValue)}>Preview</Button>
-        <Button type="submit"><FaEnvelope /> Send</Button>
-        <Button type="button" variant="outline" onClick={() => navigate(returnTo)}>Cancel</Button>
-        <Button type="button" variant="outline" onClick={() => navigate(-1)}>Back</Button>
+        <Button type="submit" disabled={isSendingMail}>
+          <FaEnvelope /> {isSendingMail ? 'Sending Email...' : 'Send'}
+        </Button>
+        <Button type="button" variant="outline" onClick={() => navigate(returnTo)} disabled={isSendingMail}>Cancel</Button>
+        <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={isSendingMail}>Back</Button>
       </div>
 
       {renderRecordPicker(false)}

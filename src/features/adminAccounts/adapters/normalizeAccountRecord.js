@@ -178,8 +178,8 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
   const rawAccountCategory = account.accountCategory || formData['Account Category'] || formData.accountCategory || ''
   const parsedAccountCategory = rawAccountCategory.toLowerCase() === 'prospect' ? '' : rawAccountCategory
 
-  const rawCustomerType = account.customerType || formData['Customer Type'] || formData.customerType || ''
-  const parsedCustomerType = rawCustomerType.toLowerCase() === 'prospect' ? '' : titleize(rawCustomerType)
+  const rawCustomerType = account.customerType || formData['Customer Type'] || formData.customerType || account.raw?.customerType || account.raw?.formData?.['Customer Type'] || account.raw?.formData?.customerType || ''
+  const parsedCustomerType = rawCustomerType.toLowerCase() === 'prospect' ? '' : rawCustomerType
 
   const data = (account.data || account.raw?.data || {})
   const accountNameCandidates = [
@@ -297,7 +297,7 @@ export const normalizeAccountRecord = (account = {}, index = 0, options = {}) =>
     poValue: account.poValue || '',
     statusAsPerQuotationGiven: account.statusAsPerQuotationGiven || '',
     statusAsPerOrderReceived: account.statusAsPerOrderReceived || '',
-    jobNo: account.jobNo || '',
+    jobNo: (typeof (account.jobNo || formData['Job No'] || formData.jobNo) === 'string' && String(account.jobNo || formData['Job No'] || formData.jobNo).trim().toLowerCase() === 'email') ? '' : (account.jobNo || formData['Job No'] || formData.jobNo || ''),
     createdAt: account.createdAt || fallbackDate,
     updatedAt: account.updatedAt || account.createdAt || fallbackDate,
     recordSource: options.recordSource || account.recordSource || 'live',

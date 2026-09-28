@@ -125,11 +125,17 @@ const getAccountRowsWithRequiredFields = (rows = []) => rows.map((row = {}) => {
 })
 
 const compareAccountRows = (left = {}, right = {}) => {
+  const timeA = new Date(left.createdAt || left.raw?.createdAt || left.accountDate || left.raw?.accountDate || 0).getTime()
+  const timeB = new Date(right.createdAt || right.raw?.createdAt || right.accountDate || right.raw?.accountDate || 0).getTime()
+  if (timeA !== timeB) return timeB - timeA
+
+  const leftId = Number(left.id || left.raw?.id || left.raw?._id) || 0
+  const rightId = Number(right.id || right.raw?.id || right.raw?._id) || 0
+  if (leftId !== rightId && leftId > 0 && rightId > 0) return rightId - leftId
+
   const leftNumber = String(left.accountNumber || left.accountNo || left.raw?.accountNumber || left.raw?.accountNo || '')
   const rightNumber = String(right.accountNumber || right.accountNo || right.raw?.accountNumber || right.raw?.accountNo || '')
-  const numberOrder = leftNumber.localeCompare(rightNumber, undefined, { numeric: true, sensitivity: 'base' })
-  if (numberOrder !== 0) return numberOrder
-  return String(left.name || '').localeCompare(String(right.name || ''), undefined, { sensitivity: 'base' })
+  return rightNumber.localeCompare(leftNumber, undefined, { numeric: true, sensitivity: 'base' })
 }
 
 const stripOwnerCodePrefix = (value = '') => String(value || '')
@@ -220,7 +226,7 @@ const getConvertedAccountsFieldText = (row = {}, fieldKey = '') => {
     case 'email': return row.email || ''
     case 'alternatePhone': return row.alternatePhone || ''
     case 'alternateEmail': return row.alternateEmail || ''
-    case 'customerType': return row.customerType || ''
+    case 'customerType': return row.customerType || row.formData?.['Customer Type'] || row.formData?.customerType || row.raw?.customerType || ''
     case 'projectName': return row.projectName || ''
     case 'productCategory': return row.productCategory || ''
     case 'state': return row.state || ''
@@ -230,13 +236,13 @@ const getConvertedAccountsFieldText = (row = {}, fieldKey = '') => {
     case 'customerRefNo': return row.customerRefNo || ''
     case 'address': return row.address || ''
     case 'customerRefDate': return row.customerRefDate || ''
-    case 'consultantName': return row.consultantName || ''
-    case 'poValue': return row.poValue || ''
+    case 'consultantName': return row.consultantName || row.formData?.['Consultant Name'] || row.formData?.consultantName || row.raw?.consultantName || ''
+    case 'poValue': return row.poValue || row.formData?.['PO Value'] || row.formData?.poValue || row.raw?.poValue || ''
     case 'statusAsPerOrderReceived': return row.statusAsPerOrderReceived || ''
     case 'statusAsPerQuotationGiven': return row.statusAsPerQuotationGiven || ''
     case 'gstin': return row.gstin || ''
     case 'stateCode': return row.stateCode || ''
-    case 'jobNo': return row.jobNo || ''
+    case 'jobNo': { const val = String(row.jobNo || row.formData?.['Job No'] || row.formData?.jobNo || '').trim(); return val.toLowerCase() === 'email' ? '' : val; }
     case 'reasonForLost': return row.reasonForLost || ''
     case 'customerName': return row.customerName || ''
     case 'accountSubsource': return row.accountSubsource || ''
@@ -245,7 +251,7 @@ const getConvertedAccountsFieldText = (row = {}, fieldKey = '') => {
     case 'lastUpdated':
     case 'updatedAtDisplay': return row.updatedAtDisplay || row.lastUpdated || ''
     case 'latestRemark': return row.latestRemark || ''
-    case 'userGroup': return row.userGroup || row.raw?.userGroup || ''
+    case 'userGroup': return row.userGroup || row.formData?.['User Group'] || row.formData?.userGroup || row.raw?.userGroup || ''
     case 'convertedContextNumber': return row.convertedContextNumber || ''
     case 'convertedAs': return row.convertedAs || ''
     case 'conversionDateDisplay': return row.conversionDateDisplay || ''
@@ -266,9 +272,9 @@ const CONVERTED_ACCOUNT_FIELD_DEFINITIONS = [
   { key: 'contactPerson', label: 'Contact Person' },
   { key: 'phone', label: 'Phone' },
   { key: 'email', label: 'Email' },
+  { key: 'customerType', label: 'Customer Type' },
   { key: 'alternatePhone', label: 'Alternate Phone' },
   { key: 'alternateEmail', label: 'Alternate Email' },
-  { key: 'customerType', label: 'Customer Type' },
   { key: 'projectName', label: 'Project Name' },
   { key: 'productCategory', label: 'Product Category' },
   { key: 'state', label: 'State' },

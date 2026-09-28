@@ -440,10 +440,23 @@ class IntegrationService {
   async getOutlookConnection(actorOrUserId) {
     const userId = typeof actorOrUserId === 'object' ? actorOrUserId.id : actorOrUserId
     const userSetting = await getSettingValue('user', String(userId), outlookSettingKey(userId), {})
-    const sharedSetting = await this.getSharedOutlookConnection()
-    const setting = hasOutlookToken(sharedSetting)
-      ? { ...sharedSetting, shared: true }
-      : userSetting
+    let setting = userSetting
+
+    if (!hasOutlookToken(setting)) {
+      const dbToken = await MicrosoftToken.findOne({ userId: String(userId), provider: 'microsoft_graph' }).lean()
+      if (dbToken && (dbToken.accessTokenEncrypted || dbToken.refreshTokenEncrypted)) {
+        setting = {
+          accessTokenEncrypted: dbToken.accessTokenEncrypted,
+          refreshTokenEncrypted: dbToken.refreshTokenEncrypted,
+          expiresAt: dbToken.expiresAt,
+          scopes: dbToken.scope || OUTLOOK_SCOPES,
+          email: dbToken.email,
+          displayName: dbToken.displayName,
+          connectedAt: dbToken.connectedAt,
+        }
+      }
+    }
+
     return {
       ...setting,
       accessToken: decryptSecret(setting.accessTokenEncrypted || setting.accessToken),
@@ -814,10 +827,8 @@ class IntegrationService {
 
     const tokenPayload = await this.requestOutlookToken(params)
     const profile = await this.fetchOutlookProfile(tokenPayload.access_token)
-    const existingShared = await getSettingValue('global', null, GLOBAL_OUTLOOK_KEY, {})
     await this.saveOutlookTokenSet(state.userId, tokenPayload, profile)
-    await this.saveOutlookTokenSet(state.userId, tokenPayload, profile, existingShared, { shared: true })
-    return { success: true, returnUrl: safeUrl(state.returnUrl), email: profile.email, shared: true }
+    return { success: true, returnUrl: safeUrl(state.returnUrl), email: profile.email, shared: false }
   }
 
   async disconnectOutlook(actor) {
@@ -841,7 +852,7 @@ class IntegrationService {
   async sendOutlookEmail(actor, payload) {
     const status = await this.getOutlookStatus(actor)
     const setting = await this.getValidOutlookConnection(actor)
-    const to = String(payload.to || '').trim()
+    const to = String(payload.to || payload.recipient || payload.toEmail || '').trim()
     if (!to || !to.includes('@')) throw new AppError('A valid recipient email is required.', 400)
     if (!status.connected || !setting.accessToken) throw new AppError('Connect Outlook before sending email.', 400)
 
@@ -849,6 +860,38 @@ class IntegrationService {
     let providerResponse = null
     const ccRecipients = String(payload.cc || '').split(',').map((address) => address.trim()).filter(Boolean)
     const bccRecipients = String(payload.bcc || '').split(',').map((address) => address.trim()).filter(Boolean)
+
+    const formattedAttachments = Array.isArray(payload.attachments) && payload.attachments.length > 0
+      ? payload.attachments.map((att) => {
+        const rawBytes = att.contentBytes || att.base64Data || att.data || ''
+        const cleanBytes = String(rawBytes).replace(/^data:[^;]+;base64,/, '')
+        return {
+          '@odata.type': '#microsoft.graph.fileAttachment',
+          name: att.name || att.filename || 'attachment',
+          contentType: att.contentType || att.mimeType || 'application/octet-stream',
+          contentBytes: cleanBytes,
+        }
+      }).filter((att) => Boolean(att.contentBytes))
+      : undefined
+
+    const messageContent = String(payload.message || payload.body || '')
+    const isHtmlContent = Boolean(payload.isHtml || (messageContent && messageContent.includes('<')))
+
+    const messageObj = {
+      subject: String(payload.subject || 'CRM Message'),
+      body: {
+        contentType: isHtmlContent ? 'HTML' : 'Text',
+        content: messageContent,
+      },
+      toRecipients: [{ emailAddress: { address: to } }],
+      ccRecipients: ccRecipients.map((address) => ({ emailAddress: { address } })),
+      bccRecipients: bccRecipients.map((address) => ({ emailAddress: { address } })),
+    }
+
+    if (formattedAttachments && formattedAttachments.length > 0) {
+      messageObj.attachments = formattedAttachments
+    }
+
     const response = await fetch('https://graph.microsoft.com/v1.0/me/sendMail', {
       method: 'POST',
       headers: {
@@ -856,56 +899,96 @@ class IntegrationService {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        message: {
-          subject: String(payload.subject || 'CRM message'),
-          body: {
-            contentType: 'Text',
-            content: String(payload.message || ''),
-          },
-          toRecipients: [{ emailAddress: { address: to } }],
-          ccRecipients: ccRecipients.map((address) => ({ emailAddress: { address } })),
-          bccRecipients: bccRecipients.map((address) => ({ emailAddress: { address } })),
-        },
+        message: messageObj,
         saveToSentItems: true,
       }),
     })
+
     providerResponse = response.ok ? { ok: true } : await response.json().catch(() => ({ ok: false }))
     deliveryStatus = response.ok ? 'sent' : 'failed'
+
+    if (!response.ok) {
+      const errorMessage = providerResponse?.error?.message || providerResponse?.error_description || 'Microsoft Graph sendMail failed.'
+      console.error('Microsoft Graph sendMail failed:', errorMessage, providerResponse)
+    }
+
+    let resolvedEntityName = ''
+    const targetType = payload.targetType || (payload.accountId ? 'account' : payload.dealId ? 'deal' : payload.customerId ? 'customer' : '')
+    const targetId = payload.targetId || payload.accountId || payload.dealId || payload.customerId || ''
+
+    if (targetType && targetId) {
+      try {
+        if (targetType === 'account') {
+          const Lead = getMongoModel('leads')
+          const account = await Lead.findOne({ $or: [{ id: targetId }, { _id: targetId }] }).lean()
+          resolvedEntityName = account?.companyName || account?.name || account?.customerName || ''
+        } else if (targetType === 'deal') {
+          const Deal = getMongoModel('deals')
+          const deal = await Deal.findOne({ $or: [{ id: targetId }, { _id: targetId }] }).lean()
+          resolvedEntityName = deal?.name || deal?.title || deal?.dealName || ''
+        } else if (targetType === 'customer') {
+          const Customer = getMongoModel('customers')
+          const customer = await Customer.findOne({ $or: [{ id: targetId }, { _id: targetId }] }).lean()
+          resolvedEntityName = customer?.customerName || customer?.name || ''
+        }
+      } catch (_lookupErr) {
+        // Ignored
+      }
+    }
 
     const log = await saveCommunicationLog({
       actor,
       channel: 'outlook',
       status: deliveryStatus,
-      targetType: payload.targetType,
-      targetId: payload.targetId,
+      targetType,
+      targetId,
       recipient: to,
-      subject: payload.subject || 'CRM message',
-      summary: payload.message || '',
+      subject: payload.subject || 'CRM Message',
+      summary: messageContent.replace(/<[^>]+>/g, '').slice(0, 300),
       provider: 'microsoft_graph',
       metadata: {
         providerResponse,
         connected: status.connected,
         shared: Boolean(setting.shared),
         senderEmail: setting.email || status.email || '',
+        entityName: resolvedEntityName,
+        attachmentCount: formattedAttachments?.length || 0,
       },
     })
+
+    const attachmentSummaryList = Array.isArray(payload.attachments)
+      ? payload.attachments.map((att) => ({
+        name: att.name || att.filename || 'attachment',
+        contentType: att.contentType || att.mimeType || 'application/octet-stream',
+        size: att.size || (att.contentBytes || att.base64Data || '').length || 0,
+      }))
+      : []
+
     await EmailLog.create({
       userId: String(actor.id),
       from: setting.email || status.email || '',
       to,
       cc: ccRecipients,
       bcc: bccRecipients,
-      subject: payload.subject || 'CRM message',
-      body: payload.message || '',
-      attachments: Array.isArray(payload.attachments) ? payload.attachments : [],
+      subject: payload.subject || 'CRM Message',
+      body: messageContent,
+      attachments: attachmentSummaryList,
       messageId: providerResponse?.messageId || '',
       deliveryStatus,
       sentDate: new Date(),
       provider: 'microsoft_graph',
       shared: Boolean(setting.shared),
+      targetType,
+      targetId,
+      entityName: resolvedEntityName,
       createdAt: new Date(),
       updatedAt: new Date(),
     })
+
+    if (!response.ok) {
+      throw new AppError(providerResponse?.error?.message || 'Microsoft Graph failed to send email.', 400)
+    }
+
     return { status: deliveryStatus, log, connected: status.connected }
   }
 

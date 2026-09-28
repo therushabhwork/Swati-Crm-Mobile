@@ -38,9 +38,12 @@ const Accounts = ({ isAdmin = false }) => {
 
   const userAccounts = useMemo(() => (
     [...accounts].sort((left, right) => {
+      const timeA = new Date(left.createdAt || left.accountDate || left.date || 0).getTime()
+      const timeB = new Date(right.createdAt || right.accountDate || right.date || 0).getTime()
+      if (timeA !== timeB) return timeB - timeA
       const leftId = Number(left.id) || 0
       const rightId = Number(right.id) || 0
-      return leftId - rightId
+      return rightId - leftId
     })
   ), [accounts])
 
