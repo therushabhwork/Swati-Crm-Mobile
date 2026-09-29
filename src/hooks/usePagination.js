@@ -24,6 +24,14 @@ export const usePagination = (items, itemsPerPage = 20) => {
     goToPage(currentPage - 1)
   }
 
+  const goToFirstPage = () => {
+    goToPage(1)
+  }
+
+  const goToLastPage = () => {
+    goToPage(totalPages)
+  }
+
   const reset = () => {
     setCurrentPage(1)
   }
@@ -33,6 +41,8 @@ export const usePagination = (items, itemsPerPage = 20) => {
     totalPages,
     paginatedItems,
     goToPage,
+    goToFirstPage,
+    goToLastPage,
     nextPage,
     prevPage,
     reset,

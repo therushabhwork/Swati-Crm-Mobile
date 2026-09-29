@@ -1,60 +1,57 @@
 import React, { useState } from 'react'
 import { FaEnvelope } from 'react-icons/fa'
-import integrationApi from '../../services/integrationApi'
+import OutlookEmailComposerModal from './OutlookEmailComposerModal'
 import './ContactIntegrationActions.css'
 
 const ContactIntegrationActions = ({
   email = '',
   targetType = 'account',
   targetId = '',
-  emailSubject = 'CRM message',
+  emailSubject = 'CRM Message',
   emailMessage = '',
   onStatus,
 }) => {
-  const [busyAction, setBusyAction] = useState('')
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const cleanEmail = String(email || '').trim()
 
   const emitStatus = (type, message) => {
     if (onStatus) onStatus(type, message)
   }
 
-  const handleOutlook = async () => {
+  const handleOpenComposer = () => {
     if (!cleanEmail || !cleanEmail.includes('@')) {
       emitStatus('error', 'A valid email address is required.')
       return
     }
-
-    setBusyAction('outlook')
-    try {
-      const result = await integrationApi.sendOutlookEmail({
-        to: cleanEmail,
-        subject: emailSubject,
-        message: emailMessage,
-        targetType,
-        targetId,
-      })
-      emitStatus('success', result.status === 'sent' ? 'Email sent with Outlook.' : 'Email attempt logged.')
-    } catch (error) {
-      emitStatus('error', error?.response?.data?.message || 'Unable to send Outlook email.')
-    } finally {
-      setBusyAction('')
-    }
+    setIsModalOpen(true)
   }
 
   return (
-    <span className="contact-integration-actions">
-      {cleanEmail ? (
-        <button
-          type="button"
-          className="contact-integration-action contact-integration-action--outlook"
-          onClick={handleOutlook}
-          disabled={busyAction === 'outlook'}
-          title="Send Email"
-        >
-          <FaEnvelope />
-        </button>
-      ) : null}
-    </span>
+    <>
+      <span className="contact-integration-actions">
+        {cleanEmail ? (
+          <button
+            type="button"
+            className="contact-integration-action contact-integration-action--outlook"
+            onClick={handleOpenComposer}
+            title="Compose Email via Outlook"
+          >
+            <FaEnvelope />
+          </button>
+        ) : null}
+      </span>
+
+      <OutlookEmailComposerModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        recipientEmail={cleanEmail}
+        targetType={targetType}
+        targetId={targetId}
+        defaultSubject={emailSubject}
+        defaultMessage={emailMessage}
+        onSuccess={() => emitStatus('success', 'Email message sent successfully via Outlook!')}
+      />
+    </>
   )
 }
 

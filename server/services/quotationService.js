@@ -292,7 +292,13 @@ const buildPayload = async (body, actor, existing) => {
   }).sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0))
 
   const isExplicitRevision = Boolean(body.isRevision || body.parentQuotationId || body.revisionCode)
-  const isRevision = isExplicitRevision || (matchingQuotations.length > 0 && !existing)
+  const hasRevisionAmountChange = Boolean(
+    body.quotationRevisionAmounts ||
+    body.revisionAmountR1 || body.revisionAmountR2 || body.revisionAmountR3 ||
+    body.r1Amount || body.r2Amount || body.r3Amount ||
+    body.revisions
+  )
+  const isRevision = isExplicitRevision || hasRevisionAmountChange || (matchingQuotations.length > 0 && !existing)
 
   let revisionNo = existing?.revisionNo || (matchingQuotations.length > 0 ? matchingQuotations.length + 1 : 1)
   let revisionCode = existing?.revisionCode || (matchingQuotations.length > 0 ? `R${matchingQuotations.length + 1}` : 'R1')

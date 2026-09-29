@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import AddRemarksModal from '../../../components/common/AddRemarksModal'
 import AddReminderModal from '../../../components/common/AddReminderModal'
 import Button from '../../../components/common/Button'
@@ -34,6 +35,8 @@ const getAllowedActionStatusOption = (value) => {
 }
 
 const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
+  const location = useLocation()
+  const isAdminRoute = location.pathname.startsWith('/admin')
   const { addNotification, updateAccount } = useData()
   const action = ACCOUNT_ACTION_MAP[actionKey]
   const [stage, setStage] = useState(ACCOUNT_CHANGE_STATUS_OPTIONS[0]?.value || 'new')
@@ -369,7 +372,8 @@ const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
                 </label>
               </div>
 
-              <div className="admin-accounts-action-form-grid admin-accounts-action-form-grid--section admin-accounts-action-form-grid--compact">
+              {isAdminRoute ? (
+                <div className="admin-accounts-action-form-grid admin-accounts-action-form-grid--section admin-accounts-action-form-grid--compact">
                 <label className="admin-accounts-bulk-field">
                   Account State
                   <select value={accountState} onChange={(event) => setAccountState(event.target.value)}>
@@ -377,7 +381,8 @@ const AccountActionModal = ({ account, actionKey, onClose, onSaved }) => {
                     {ACCOUNT_STATE_OPTIONS.map((entry) => <option key={entry} value={entry}>{entry}</option>)}
                   </select>
                 </label>
-              </div>
+                </div>
+              ) : null}
             </>
           ) : null}
         </>

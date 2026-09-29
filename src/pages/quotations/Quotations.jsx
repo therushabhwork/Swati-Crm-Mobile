@@ -322,6 +322,16 @@ const createInitialQuotationForm = () => ({
   customerReferenceNumber: '',
   customerReferenceDate: getTodayInputValue(),
   customerReferenceSubject: '',
+  productGroup: 'Non TTA',
+  ttaOrg: 'Abp',
+  productName: '',
+  hsn: '',
+  r1Amount: '',
+  r2Amount: '',
+  r3Amount: '',
+  isR1Locked: false,
+  isR2Locked: false,
+  isR3Locked: false,
   product: '',
   otherProduct: '',
   otherService: '',
@@ -343,6 +353,15 @@ const buildQuotationFormFromExisting = (quotation = {}, nextQuotationNumber = ''
     }))
     : [createEmptyLineItem()]
 
+  const revAmounts = quotation.quotationRevisionAmounts || quotation.data?.quotationRevisionAmounts || {}
+  const r1Val = revAmounts.R1 ?? (quotation.revisionCategory === 'R1' ? quotation.revisionAmount : (quotation.data?.revisionAmountR1 ?? (quotation.revisionNo === 1 ? quotation.amount : '')))
+  const r2Val = revAmounts.R2 ?? (quotation.revisionCategory === 'R2' ? quotation.revisionAmount : (quotation.data?.revisionAmountR2 ?? ''))
+  const r3Val = revAmounts.R3 ?? (quotation.revisionCategory === 'R3' ? quotation.revisionAmount : (quotation.data?.revisionAmountR3 ?? ''))
+
+  const hasR1 = r1Val !== undefined && r1Val !== null && r1Val !== '' && r1Val !== 0 && r1Val !== '0'
+  const hasR2 = r2Val !== undefined && r2Val !== null && r2Val !== '' && r2Val !== 0 && r2Val !== '0'
+  const hasR3 = r3Val !== undefined && r3Val !== null && r3Val !== '' && r3Val !== 0 && r3Val !== '0'
+
   return {
     ...createInitialQuotationForm(),
     ...quotation,
@@ -350,6 +369,16 @@ const buildQuotationFormFromExisting = (quotation = {}, nextQuotationNumber = ''
     quotationDate,
     validUntil: addDaysToInputValue(quotationDate, 7),
     status: 'approved',
+    productGroup: quotation.productGroup || 'Non TTA',
+    ttaOrg: quotation.ttaOrg || 'Abp',
+    productName: quotation.productName || quotation.product || '',
+    hsn: quotation.hsn || '',
+    r1Amount: hasR1 ? String(r1Val) : '',
+    r2Amount: hasR2 ? String(r2Val) : '',
+    r3Amount: hasR3 ? String(r3Val) : '',
+    isR1Locked: hasR1,
+    isR2Locked: hasR2,
+    isR3Locked: hasR3,
     lineItems: clonedLineItems,
   }
 }
@@ -1127,14 +1156,29 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
     })
 
     let computedQuoteNumber = nextQuotationNumber
+    let savedR1 = ''
+    let savedR2 = ''
+    let savedR3 = ''
+
     if (existingMatchingQuotes.length > 0) {
       const baseQuote = existingMatchingQuotes[0].quotationNumber || existingMatchingQuotes[0].quoteNumber || nextQuotationNumber
       const baseClean = baseQuote.replace(/-R\d+$/i, '')
       computedQuoteNumber = `${baseClean}-R${existingMatchingQuotes.length + 1}`
+
+      existingMatchingQuotes.forEach((q) => {
+        const revs = q.quotationRevisionAmounts || q.data?.quotationRevisionAmounts || {}
+        if (revs.R1 || q.revisionAmountR1) savedR1 = revs.R1 || q.revisionAmountR1
+        if (revs.R2 || q.revisionAmountR2) savedR2 = revs.R2 || q.revisionAmountR2
+        if (revs.R3 || q.revisionAmountR3) savedR3 = revs.R3 || q.revisionAmountR3
+      })
     } else {
       const baseClean = nextQuotationNumber.replace(/-R\d+$/i, '')
       computedQuoteNumber = `${baseClean}-R1`
     }
+
+    const hasR1 = Boolean(savedR1 !== '' && savedR1 !== null && savedR1 !== undefined && savedR1 !== 0 && savedR1 !== '0')
+    const hasR2 = Boolean(savedR2 !== '' && savedR2 !== null && savedR2 !== undefined && savedR2 !== 0 && savedR2 !== '0')
+    const hasR3 = Boolean(savedR3 !== '' && savedR3 !== null && savedR3 !== undefined && savedR3 !== 0 && savedR3 !== '0')
 
     return {
       ...createInitialQuotationForm(),
@@ -1166,6 +1210,16 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
       quotationSubject: account?.projectName || account?.name || '',
       quotationNotes: account?.latestRemark || account?.remark || '',
       customerReferenceDate: quotationDate,
+      productGroup: 'Non TTA',
+      r1Amount: hasR1 ? String(savedR1) : '',
+      r2Amount: hasR2 ? String(savedR2) : '',
+      r3Amount: hasR3 ? String(savedR3) : '',
+      isR1Locked: hasR1,
+      savedR1InDb: hasR1,
+      isR2Locked: hasR2,
+      savedR2InDb: hasR2,
+      isR3Locked: hasR3,
+      savedR3InDb: hasR3,
       product: account?.productCategory || '',
       selectedAccountId: account?.quotationContext === 'deal' ? '' : account?.id || '',
       selectedAccountOwner: account?.accountOwnerName || account?.accountOwner || '',
@@ -1245,15 +1299,18 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
     setUploading(true)
     setUploadError('')
 
+    const currentScope = activeTab === 'deal' ? 'deal' : 'account'
     const quotationData = {
       quotationNumber: file.name.replace(/\.[^.]+$/, '').toUpperCase(),
-      clientName: 'Imported Client',
-      companyName: 'Imported Company',
+      clientName: currentScope === 'deal' ? 'Deals Imported Client' : 'Account Imported Client',
+      companyName: currentScope === 'deal' ? 'Deals Imported Company' : 'Account Imported Company',
       projectName: file.name,
       amount: 0,
       validUntil: getTodayInputValue(),
       status: 'sent',
       quotationFileName: file.name,
+      quotationContext: currentScope,
+      quotationScope: currentScope,
     }
 
     const result = await createQuotationRecord(quotationData)
@@ -1380,12 +1437,19 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
 
     const persistedLineItems = sanitizeLineItems(quotationForm.lineItems)
 
+    const lineItemsSum = persistedLineItems.reduce((total, lineItem) => total + lineItem.amount, 0)
+    const r1Num = Number(quotationForm.r1Amount) || 0
+    const r2Num = Number(quotationForm.r2Amount) || 0
+    const r3Num = Number(quotationForm.r3Amount) || 0
+    const totalRevSum = r1Num + r2Num + r3Num
+    const grandTotal = lineItemsSum + totalRevSum
+
     const payload = {
       quotationNumber: quotationForm.quotationNumber.trim() || nextQuotationNumber,
       clientName: quotationForm.contactPerson || quotationForm.companyName || quotationForm.clientAccountNumber,
       companyName: quotationForm.companyName.trim(),
       projectName: quotationForm.projectName.trim() || quotationForm.companyName.trim(),
-      amount: persistedLineItems.reduce((total, lineItem) => total + lineItem.amount, 0),
+      amount: grandTotal,
       validUntil: quotationForm.validUntil,
       status: quotationForm.status,
       profileKey: quotationForm.profileKey,
@@ -1414,7 +1478,7 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
       pmcName: quotationForm.pmcName,
       quotationSubject: quotationForm.quotationSubject,
       quotationNotes: quotationForm.quotationNotes,
-      totalAmount: persistedLineItems.reduce((total, lineItem) => total + lineItem.amount, 0),
+      totalAmount: grandTotal,
       taxAmount: 0,
       discountAmount: 0,
       deliveryTerms: quotationForm.deliveryTerms,
@@ -1425,7 +1489,16 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
         date: quotationForm.customerReferenceDate,
         subject: quotationForm.customerReferenceSubject,
       },
-      product: quotationForm.product,
+      productGroup: quotationForm.productGroup || 'TTA',
+      ttaOrg: quotationForm.productGroup === 'TTA' ? (quotationForm.ttaOrg || 'Abp') : '',
+      productName: quotationForm.productName || quotationForm.product || '',
+      hsn: quotationForm.hsn || '',
+      quotationRevisionAmounts: {
+        ...(r1Num ? { R1: r1Num } : {}),
+        ...(r2Num ? { R2: r2Num } : {}),
+        ...(r3Num ? { R3: r3Num } : {}),
+      },
+      product: quotationForm.productName || quotationForm.product,
       otherProduct: quotationForm.otherProduct,
       otherService: quotationForm.otherService,
       uploadedLineItemsName: quotationForm.uploadedLineItemsName,
@@ -2608,6 +2681,81 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
                       onChange={(event) => handleBuilderFieldChange('contactPerson', event.target.value)}
                     />
                   </label>
+                  <label className="quotation-builder-field">
+                    <span>Choose Product Group</span>
+                    <select
+                      value={quotationForm.productGroup || 'TTA'}
+                      onChange={(event) => handleBuilderFieldChange('productGroup', event.target.value)}
+                    >
+                      <option value="TTA">TTA</option>
+                      <option value="Non TT">Non TT</option>
+                      <option value="ELECTRICAL PANEL">ELECTRICAL PANEL</option>
+                    </select>
+                  </label>
+                  {quotationForm.productGroup === 'TTA' && (
+                    <label className="quotation-builder-field">
+                      <span>TTA Org</span>
+                      <select
+                        value={quotationForm.ttaOrg || 'Abp'}
+                        onChange={(event) => handleBuilderFieldChange('ttaOrg', event.target.value)}
+                      >
+                        <option value="Abp">Abp</option>
+                        <option value="Siemens">Siemens</option>
+                        <option value="L&T">L&T</option>
+                        <option value="Schinder">Schinder</option>
+                      </select>
+                    </label>
+                  )}
+                  <label className="quotation-builder-field">
+                    <span>Product Name</span>
+                    <input
+                      value={quotationForm.productName || ''}
+                      onChange={(event) => handleBuilderFieldChange('productName', event.target.value)}
+                      placeholder="Product Name"
+                    />
+                  </label>
+                  <label className="quotation-builder-field">
+                    <span>HSN</span>
+                    <input
+                      value={quotationForm.hsn || ''}
+                      onChange={(event) => handleBuilderFieldChange('hsn', event.target.value)}
+                      placeholder="HSN / SAC Code"
+                    />
+                  </label>
+                  <label className="quotation-builder-field">
+                    <span>R1 Amount (₹)</span>
+                    <input
+                      type="number"
+                      value={quotationForm.r1Amount || ''}
+                      onChange={(event) => handleBuilderFieldChange('r1Amount', event.target.value)}
+                      placeholder="R1 Amount"
+                      readOnly={Boolean(quotationForm.isR1Locked || quotationForm.savedR1InDb)}
+                    />
+                  </label>
+                  {Boolean(quotationForm.isR1Locked || quotationForm.savedR1InDb) && (
+                    <label className="quotation-builder-field">
+                      <span>R2 Amount (₹)</span>
+                      <input
+                        type="number"
+                        value={quotationForm.r2Amount || ''}
+                        onChange={(event) => handleBuilderFieldChange('r2Amount', event.target.value)}
+                        placeholder="R2 Amount"
+                        readOnly={Boolean(quotationForm.isR2Locked || quotationForm.savedR2InDb)}
+                      />
+                    </label>
+                  )}
+                  {Boolean(quotationForm.isR2Locked || quotationForm.savedR2InDb) && (
+                    <label className="quotation-builder-field">
+                      <span>R3 Amount (₹)</span>
+                      <input
+                        type="number"
+                        value={quotationForm.r3Amount || ''}
+                        onChange={(event) => handleBuilderFieldChange('r3Amount', event.target.value)}
+                        placeholder="R3 Amount"
+                        readOnly={Boolean(quotationForm.isR3Locked || quotationForm.savedR3InDb)}
+                      />
+                    </label>
+                  )}
                 </div>
               </div>
 

@@ -18,6 +18,7 @@ import { useClickOutside } from '../../../hooks'
 import { useAuth } from '../../../context/AuthContext'
 import { getCrmOwnerCode } from '../../../features/users/crmUserDirectory'
 import { leadApi } from '../../../services/leadApi'
+import { dealApi } from '../../../services/dealApi'
 import './AccountBoardHeaderActions.css'
 
 const SHOW_BULK_ACTIONS = false
@@ -166,7 +167,7 @@ const AccountBoardHeaderActions = ({
         console.warn('Could not fetch existing leads prior to import cleanup:', fetchErr)
       }
 
-      let successCount = 0
+      const payloadsToImport = []
       for (const row of validRows) {
         const getVal = (...keys) => {
           const rowKeys = Object.keys(row || {})
@@ -347,18 +348,43 @@ const AccountBoardHeaderActions = ({
           },
         }
 
+        payloadsToImport.push({
+          ...payload,
+          targetCollection: 'accounts',
+        })
+      }
+
+      let insertedCount = 0
+      let duplicateCount = 0
+
+      if (payloadsToImport.length > 0) {
         try {
-          await leadApi.createLead(payload)
-          successCount += 1
-        } catch (err) {
-          console.error('Failed to import row to MongoDB:', row, err)
+          const res = await dealApi.importDeals(payloadsToImport)
+          const dataObj = res?.data || res || {}
+          insertedCount = dataObj.insertedCount ?? dataObj.count ?? res?.count ?? 0
+          duplicateCount = dataObj.duplicateCount ?? 0
+        } catch (bulkErr) {
+          console.warn('Batch import fallback in AccountBoardHeaderActions:', bulkErr)
+          for (const p of payloadsToImport) {
+            try {
+              await leadApi.createLead(p)
+              insertedCount += 1
+            } catch (err) {
+              console.error('Failed fallback single import:', err)
+            }
+          }
         }
       }
 
       if (onRefresh) {
         await onRefresh()
       }
-      alert(`Import completed successfully! ${successCount} account records stored in MongoDB.`)
+
+      if (insertedCount > 0) {
+        alert(`Import completed successfully! ${insertedCount} account records stored in MongoDB.`)
+      } else {
+        alert(`Import completed: 0 account records stored in MongoDB.`)
+      }
     } catch (err) {
       console.error('Error reading import file:', err)
       alert('Error parsing import file. Please select a valid Excel (.xlsx, .xls) or CSV (.csv) file.')

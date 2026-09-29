@@ -292,7 +292,7 @@ export const AddProductModal = ({ isOpen, onClose, onAdd }) => {
   const [ttaOrg, setTtaOrg] = useState('Abp')
 
   const productGroupOptions = ['TTA', 'Non TT', 'ELECTRICAL PANEL']
-  const ttaOrgOptions = ['Abp', 'Siemens', 'L&T', 'Snyder']
+  const ttaOrgOptions = ['Abp', 'Siemens', 'L&T', 'Schinder']
 
   const handleDoubleClick = (product) => {
     const selectedOrgPrefix = productGroup === 'TTA' ? ` (${ttaOrg})` : ''

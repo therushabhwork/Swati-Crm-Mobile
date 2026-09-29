@@ -144,8 +144,8 @@ const AdminLaunchpad = () => {
                 </div>
               </div>
 
-              <div className="lp-featured-grid">
-                {featuredModules.map((module, moduleIndex) => {
+              <div className="lp-unified-grid">
+                {launchpadModules.map((module, moduleIndex) => {
                   const Icon = module.icon
                   const isDefault = defaultRoute === module.route
 
@@ -156,7 +156,7 @@ const AdminLaunchpad = () => {
                       variants={cardMotion}
                       initial="hidden"
                       animate="visible"
-                      className={`lp-card lp-card--featured lp-card--${module.accent}${isDefault ? ' lp-card--default-active' : ''}`}
+                      className={`lp-card lp-card--${module.accent}${isDefault ? ' lp-card--default-active' : ''}`}
                     >
                       <button
                         type="button"
@@ -177,45 +177,6 @@ const AdminLaunchpad = () => {
                     </motion.div>
                   )
                 })}
-              </div>
-
-              <div className="lp-module-rows">
-                {remainingModuleRows.map((moduleRow, rowIndex) => (
-                  <div key={`module-row-${rowIndex}`} className="lp-module-row">
-                    {moduleRow.map((module, moduleIndex) => {
-                      const Icon = module.icon
-                      const isDefault = defaultRoute === module.route
-
-                      return (
-                        <motion.div
-                          key={module.id}
-                          custom={moduleIndex}
-                          variants={cardMotion}
-                          initial="hidden"
-                          animate="visible"
-                          className={`lp-card lp-card--${module.accent}${isDefault ? ' lp-card--default-active' : ''}`}
-                        >
-                          <button
-                            type="button"
-                            className={`lp-card-top lp-card-top--${module.accent}`}
-                            onClick={() => navigate(module.route)}
-                          >
-                            <span className="lp-card-icon"><Icon /></span>
-                            <span className={`lp-card-title${isKeval ? ' lp-card-title--full' : ''}`}>{module.title}</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            className={`lp-card-footer${isDefault ? ' lp-card-footer--active' : ''}`}
-                            onClick={() => handleDefaultSelection(module.route)}
-                          >
-                            Set As Default Module
-                          </button>
-                        </motion.div>
-                      )
-                    })}
-                  </div>
-                ))}
               </div>
             </section>
           </div>

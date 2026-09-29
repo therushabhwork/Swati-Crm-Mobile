@@ -1926,19 +1926,19 @@
   flex-direction: column;
   gap: 0.35rem;
   width: 100%;
-  padding: 0.95rem 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.32);
-  border-radius: 1rem;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.95));
+  padding: 0.75rem 0.9rem;
+  border: 1.5px solid #c60016;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(20, 20, 20, 0.05) 100%);
   text-align: left;
   cursor: pointer;
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .admin-accounts-converted-deal-card:hover {
-  border-color: rgba(37, 99, 235, 0.35);
+  border-color: #a00012;
   transform: translateY(-1px);
-  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 6px 18px rgba(198, 0, 22, 0.18);
 }
 
 .admin-accounts-converted-deal-card__title {

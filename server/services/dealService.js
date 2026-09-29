@@ -304,7 +304,10 @@ module.exports = {
     }
 
     let count = 0
+    let duplicateCount = 0
     const Lead = getMongoModel('leads')
+    const Account = getMongoModel('accounts')
+    const Customer = getMongoModel('customers')
 
     for (const row of deals) {
       const rawOwner = cleanStr(row.dealOwner || row.ownerName || row.accountOwner || row.ownerCode)
@@ -323,6 +326,8 @@ module.exports = {
       const accountName = unifiedAccountCustomerName
       const companyName = unifiedAccountCustomerName
 
+      const targetColl = cleanStr(row.targetCollection || row.sheetName || 'deals').toLowerCase()
+
       const customerCategory = cleanStr(row.customerCategory || row.category)
       const coOwners = cleanStr(row.coOwners || row.dealCoOwners)
       const dealValue = cleanNum(row.dealValue || row.value || row.amount)
@@ -338,12 +343,37 @@ module.exports = {
       const phone = cleanStr(row.phone || row.contactPhone || row.mobile)
       const description = cleanStr(row.description || row.notes)
       const jobNo = cleanStr(row.jobNo)
+      const isValidJobNo = jobNo && !['n/a', 'na', '-', 'none', '0', 'null', 'undefined'].includes(jobNo.toLowerCase())
 
-      // Duplicate prevention check
-      if (jobNo || (unifiedAccountCustomerName && unifiedName)) {
-        const dupCriteria = []
-        if (jobNo) dupCriteria.push({ jobNo })
-        if (unifiedAccountCustomerName && unifiedName) {
+      // Check target collection model for existing record
+      let TargetModel = Deal
+      let collectionName = 'deals'
+      if (targetColl.includes('account')) {
+        TargetModel = Account
+        collectionName = 'accounts'
+      } else if (targetColl.includes('customer')) {
+        TargetModel = Customer
+        collectionName = 'customers'
+      } else if (targetColl.includes('lead')) {
+        TargetModel = Lead
+        collectionName = 'leads'
+      }
+
+      const dupCriteria = []
+      if (isValidJobNo) dupCriteria.push({ jobNo })
+
+      if (collectionName === 'accounts' || collectionName === 'customers') {
+        if (unifiedAccountCustomerName) {
+          dupCriteria.push({
+            $or: [
+              { customerName: unifiedAccountCustomerName },
+              { accountName: unifiedAccountCustomerName },
+              { companyName: unifiedAccountCustomerName }
+            ]
+          })
+        }
+      } else {
+        if (unifiedAccountCustomerName && unifiedName && unifiedName.toLowerCase() !== 'general enquiry') {
           dupCriteria.push({
             $and: [
               { $or: [{ customerName: unifiedAccountCustomerName }, { accountName: unifiedAccountCustomerName }, { companyName: unifiedAccountCustomerName }] },
@@ -351,38 +381,41 @@ module.exports = {
             ]
           })
         }
-        const existingDoc = await Deal.findOne({
+      }
+
+      let existingTargetDoc = null
+      if (dupCriteria.length > 0) {
+        existingTargetDoc = await TargetModel.findOne({
           frontendDeleted: { $ne: true },
           $or: dupCriteria
         }).lean()
-
-        if (existingDoc) {
-          continue // Skip redundant duplicate document creation
-        }
       }
 
-      const existingDealNum = cleanStr(row.dealNumber)
-      const legacyId = await getNextLegacyId('deals')
+      const existingNum = cleanStr(row.dealNumber || row.accountNumber || row.customerNumber)
+      const legacyId = await getNextLegacyId(collectionName)
       const seriesNum = legacyId < 1001 ? legacyId + 1000 : legacyId
-      const dealNumber = existingDealNum || `DL-${seriesNum}`
+      const recordNumber = existingNum || (collectionName === 'accounts' ? `ACC-${seriesNum}` : collectionName === 'customers' ? `CUST-${seriesNum}` : `DL-${seriesNum}`)
 
-      const dealDoc = {
+      const docPayload = {
         legacyId,
         title: unifiedName,
         name: unifiedName,
         dealName: unifiedName,
         projectName: unifiedName,
-        dealNumber,
+        dealNumber: recordNumber,
+        accountNumber: recordNumber,
+        customerNumber: recordNumber,
         customerName: unifiedAccountCustomerName,
         accountName: unifiedAccountCustomerName,
         companyName: unifiedAccountCustomerName,
+        company: unifiedAccountCustomerName,
         accountId: null,
         amount: dealValue,
         value: dealValue,
         dealValue,
         currency: 'INR',
-        stage: 'converted',
-        status: 'converted',
+        stage: collectionName === 'leads' ? 'new' : 'converted',
+        status: collectionName === 'leads' ? 'new' : 'converted',
         probability: probability || 0,
         expectedCloseDate: dealDate,
         expectedClosureDate: dealDate,
@@ -392,6 +425,7 @@ module.exports = {
         ownerUserId: resolvedUserId,
         createdBy: resolvedUserId,
         dealOwner: resolvedUserName,
+        accountOwner: resolvedUserName,
         ownerName: resolvedUserName,
         coOwners,
         notes: description,
@@ -430,6 +464,7 @@ module.exports = {
           customerName: unifiedAccountCustomerName,
           accountName: unifiedAccountCustomerName,
           companyName: unifiedAccountCustomerName,
+          company: unifiedAccountCustomerName,
           customerCategory,
           accountId: null,
           customerId: null,
@@ -438,13 +473,14 @@ module.exports = {
           value: dealValue,
           dealValue,
           currency: 'INR',
-          stage: 'converted',
-          status: 'converted',
-          statusLabel: 'Converted',
+          stage: collectionName === 'leads' ? 'new' : 'converted',
+          status: collectionName === 'leads' ? 'new' : 'converted',
+          statusLabel: collectionName === 'leads' ? 'New Lead' : 'Converted',
           assignedTo: resolvedUserId,
           ownerUserId: resolvedUserId,
           ownerName: resolvedUserName,
           dealOwner: resolvedUserName,
+          accountOwner: resolvedUserName,
           coOwners,
           dealCoOwners: coOwners,
           assignedUserName: resolvedUserName,
@@ -460,7 +496,9 @@ module.exports = {
           notes: description,
           companyId: actor.companyId || 1,
           organizationId: actor.companyId || 1,
-          dealNumber,
+          dealNumber: recordNumber,
+          accountNumber: recordNumber,
+          customerNumber: recordNumber,
           probability,
           expectedCloseDate: dealDate,
           expectedClosureDate: dealDate,
@@ -486,72 +524,82 @@ module.exports = {
         updatedAt: new Date().toISOString(),
       }
 
-      await Deal.create(dealDoc)
+      await TargetModel.create(docPayload)
 
-      // Dual Ingestion into MongoDB `leads` collection
-      if (Lead) {
-        const leadLegacyId = await getNextLegacyId('leads')
-        const leadDoc = {
-          legacyId: leadLegacyId,
-          title: unifiedName,
-          name: unifiedName,
-          dealName: unifiedName,
-          projectName: unifiedName,
-          dealNumber,
-          customerName: unifiedAccountCustomerName,
-          accountName: unifiedAccountCustomerName,
-          companyName: unifiedAccountCustomerName,
-          company: unifiedAccountCustomerName,
-          amount: dealValue,
-          value: dealValue,
-          dealValue,
-          currency: 'INR',
-          stage: 'new',
-          status: 'new',
-          probability: probability || 0,
-          expectedCloseDate: dealDate,
-          assignedTo: resolvedUserId,
-          ownerUserId: resolvedUserId,
-          createdBy: resolvedUserId,
-          dealOwner: resolvedUserName,
-          ownerName: resolvedUserName,
-          coOwners,
-          notes: description,
-          dealDate,
-          dealType,
-          dealSource,
-          source: dealSource,
-          poValue,
-          jobNo,
-          gstin,
-          contactPerson: contactName,
-          contactName,
-          contactMobile: phone,
-          contactPhone: phone,
-          phone,
-          contactEmail: cleanStr(row.email),
-          email: cleanStr(row.email),
-          description,
-          productCategory,
-          consultantName,
-          customerCategory,
-          companyId: actor.companyId || 1,
-          frontendDeleted: false,
-          data: {
-            ...dealDoc.data,
+      // Multi-Collection Sync for Accounts & Customers: Sync into Customer, Account & Lead
+      if (collectionName === 'accounts' || collectionName === 'customers') {
+        if (Customer && collectionName !== 'customers') {
+          const custLegacyId = await getNextLegacyId('customers')
+          const custDoc = {
+            ...docPayload,
+            legacyId: custLegacyId,
+            customerNumber: `CUST-${custLegacyId < 1001 ? custLegacyId + 1000 : custLegacyId}`,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }
+          await Customer.create(custDoc)
+        }
+
+        if (Account && collectionName !== 'accounts') {
+          const accLegacyId = await getNextLegacyId('accounts')
+          const accDoc = {
+            ...docPayload,
+            legacyId: accLegacyId,
+            accountNumber: `ACC-${accLegacyId < 1001 ? accLegacyId + 1000 : accLegacyId}`,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }
+          await Account.create(accDoc)
+        }
+
+        if (Lead) {
+          const leadLegacyId = await getNextLegacyId('leads')
+          const leadDoc = {
+            ...docPayload,
+            legacyId: leadLegacyId,
             stage: 'new',
             status: 'new',
-            statusLabel: 'New Lead',
-          },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+            data: {
+              ...docPayload.data,
+              stage: 'new',
+              status: 'new',
+              statusLabel: 'New Lead',
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }
+          await Lead.create(leadDoc)
         }
-        await Lead.create(leadDoc)
+      } else {
+        // Dual Ingestion into MongoDB `leads` collection for Deals import
+        if (collectionName !== 'leads' && Lead) {
+          const leadLegacyId = await getNextLegacyId('leads')
+          const leadDoc = {
+            ...docPayload,
+            legacyId: leadLegacyId,
+            stage: 'new',
+            status: 'new',
+            data: {
+              ...docPayload.data,
+              stage: 'new',
+              status: 'new',
+              statusLabel: 'New Lead',
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }
+          await Lead.create(leadDoc)
+        }
       }
 
       count++
     }
 
-    return { count }
+    return {
+      count,
+      insertedCount: count,
+      duplicateCount: 0,
+      totalProcessed: deals.length,
+    }
   },
 }

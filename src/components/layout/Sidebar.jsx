@@ -320,7 +320,7 @@ const Sidebar = ({ isAdmin = false }) => {
                 <NavLink
                   key={item.key}
                   to={item.to}
-                  className={() => `sb-view-toolbar-button ${isRouteActive ? 'sb-view-toolbar-button--route-active' : ''}`}
+                  className={({ isActive }) => `sb-view-toolbar-button ${isRouteActive || isActive ? 'sb-view-toolbar-button--route-active active' : ''}`}
                   title={item.title}
                   aria-label={item.ariaLabel}
                 >

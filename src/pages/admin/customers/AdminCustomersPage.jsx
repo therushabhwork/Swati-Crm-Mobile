@@ -30,7 +30,9 @@ import {
   FaUserPlus,
   FaUserTie,
 } from 'react-icons/fa'
-import { FiLayers } from 'react-icons/fi'
+import { FiLayers, FiUpload } from 'react-icons/fi'
+import * as XLSX from 'xlsx'
+import { dealApi } from '../../../services/dealApi'
 import { CUSTOMER_ACTION_MAP } from '../../../features/adminCustomers/config/customerActions'
 
 import {
@@ -833,6 +835,99 @@ const AdminCustomersPage = ({
   const [profileSaveMessage, setProfileSaveMessage] = useState('')
   const [manageRemarkTab, setManageRemarkTab] = useState('feedback')
   const [showManageSystemUpdates, setShowManageSystemUpdates] = useState(false)
+  const customerFileInputRef = useRef(null)
+
+  const handleCustomerImportClick = () => {
+    if (customerFileInputRef.current) {
+      customerFileInputRef.current.value = ''
+      customerFileInputRef.current.click()
+    }
+  }
+
+  const handleCustomerImportFileSelect = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      const data = await file.arrayBuffer()
+      const workbook = XLSX.read(data, { type: 'array' })
+      const firstSheetName = workbook.SheetNames[0]
+      if (!firstSheetName || !workbook.Sheets[firstSheetName]) {
+        alert('No valid worksheet found in file.')
+        return
+      }
+
+      const worksheet = workbook.Sheets[firstSheetName]
+      const raw2DRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' })
+      let headerRowIndex = -1
+      for (let i = 0; i < Math.min(raw2DRows.length, 15); i++) {
+        const rowStr = (raw2DRows[i] || []).join(' ').toLowerCase()
+        if (
+          rowStr.includes('customer name') ||
+          rowStr.includes('account name') ||
+          rowStr.includes('company') ||
+          rowStr.includes('contact person')
+        ) {
+          headerRowIndex = i
+          break
+        }
+      }
+
+      let validRows = []
+      if (headerRowIndex !== -1) {
+        const headers = (raw2DRows[headerRowIndex] || []).map((h) => String(h || '').trim())
+        for (let i = headerRowIndex + 1; i < raw2DRows.length; i++) {
+          const rowArr = raw2DRows[i]
+          if (!rowArr || rowArr.length === 0) continue
+          const rowObj = {}
+          headers.forEach((h, colIdx) => {
+            if (h) rowObj[h] = rowArr[colIdx]
+          })
+          if (Object.values(rowObj).some((val) => String(val || '').trim() !== '')) {
+            validRows.push(rowObj)
+          }
+        }
+      } else {
+        const rawObjects = XLSX.utils.sheet_to_json(worksheet, { defval: '' })
+        validRows = rawObjects.filter((row) => row && typeof row === 'object' && Object.values(row).some((v) => String(v || '').trim() !== ''))
+      }
+
+      const importPayloads = validRows.map((row) => {
+        const rawName = String(
+          row['Customer Name'] || row['Account Name'] || row['Company Name'] || row.customerName || row.accountName || row.name || ''
+        ).trim()
+        const customerName = rawName || 'Untitled Customer'
+        const accountName = customerName
+        const companyName = customerName
+
+        return {
+          customerName,
+          accountName,
+          companyName,
+          name: customerName,
+          title: customerName,
+          phone: String(row['Phone'] || row['Mobile'] || row.phone || '').trim(),
+          email: String(row['Email'] || row.email || '').trim(),
+          contactPerson: String(row['Contact Person'] || row.contactPerson || '').trim(),
+          targetCollection: 'customers',
+          sheetName: 'Customers',
+        }
+      }).filter((r) => r.customerName && r.customerName !== 'Untitled Customer')
+
+      if (importPayloads.length === 0) {
+        alert('No valid customer records found in the uploaded file.')
+        return
+      }
+
+      const res = await dealApi.importDeals(importPayloads)
+      const count = res?.count ?? res?.data?.count ?? importPayloads.length
+      alert(`Successfully imported ${count} customer records!`)
+      await customerService.loadCustomers()
+    } catch (err) {
+      console.error('Failed to import customer records:', err)
+      alert(`Import failed: ${err.message || 'Unknown error'}`)
+    }
+  }
 
   const customerGridActions = useMemo(() => {
     return CUSTOMER_GRID_ACTION_KEYS
@@ -1697,6 +1792,22 @@ const AdminCustomersPage = ({
               >
                 <FaFileExport />
               </button>
+              <button
+                type="button"
+                className="admin-customers-toolbar-icon admin-customers-toolbar-icon-import"
+                onClick={handleCustomerImportClick}
+                title="Import Excel"
+                aria-label="Import Excel"
+              >
+                <FiUpload />
+              </button>
+              <input
+                ref={customerFileInputRef}
+                type="file"
+                accept=".xlsx, .xls, .csv"
+                style={{ display: 'none' }}
+                onChange={handleCustomerImportFileSelect}
+              />
             </div>
           </div>
 
@@ -1979,10 +2090,9 @@ const AdminCustomersPage = ({
                     type="button"
                     className="admin-customers-grid-pagination-button"
                     disabled={currentPageSafe === 1}
-                    onClick={() => setCurrentPage((currentValue) => Math.max(1, currentValue - 1))}
+                    onClick={() => setCurrentPage(1)}
                   >
-                    <FaChevronLeft />
-                    <span>prev</span>
+                    <span>First</span>
                   </button>
 
                   {visiblePages.map((pageNumber) => (
@@ -2004,10 +2114,9 @@ const AdminCustomersPage = ({
                     type="button"
                     className="admin-customers-grid-pagination-button"
                     disabled={currentPageSafe === totalPages}
-                    onClick={() => setCurrentPage((currentValue) => Math.min(totalPages, currentValue + 1))}
+                    onClick={() => setCurrentPage(totalPages)}
                   >
-                    <span>next</span>
-                    <FaChevronRight />
+                    <span>Last</span>
                   </button>
                 </div>
               </div>

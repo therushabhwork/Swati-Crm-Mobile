@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   FaBell,
@@ -543,7 +544,7 @@ const AccountDetailsDrawer = ({
     })
   }
 
-  return (
+  const drawerNode = (
     <div
       className={`admin-accounts-drawer-layer admin-accounts-workspace-layer${inline ? ' admin-accounts-workspace-layer--inline' : ''}`}
       role="dialog"
@@ -553,7 +554,6 @@ const AccountDetailsDrawer = ({
       <section className="admin-accounts-drawer admin-accounts-workspace">
         <header className="admin-accounts-workspace-header">
           <div className="admin-accounts-workspace-title">
-            <span className="admin-accounts-workspace-eyebrow">Account Details & Action Center</span>
             <h2>{account.name}</h2>
             <div className="admin-accounts-workspace-header-facts">
               {headerFacts.map((fact) => (
@@ -838,6 +838,12 @@ const AccountDetailsDrawer = ({
       />
     </div>
   )
+
+  if (inline) {
+    return drawerNode
+  }
+
+  return createPortal(drawerNode, document.body)
 }
 
 export default AccountDetailsDrawer

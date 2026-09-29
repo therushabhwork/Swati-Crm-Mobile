@@ -2771,9 +2771,10 @@ html.is-user:not([data-theme="dark"]) .layout--user :where(.badge, [class*="badg
 }
 
 html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user {
-  border-color: #DCE3E8 !important;
-  background: #FFFFFF !important;
-  box-shadow: 0 10px 28px rgba(17, 24, 39, 0.07) !important;
+  border: none !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-top-card,
@@ -2862,26 +2863,42 @@ html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(
 }
 
 /* Top View Toolbar Buttons Contrast */
-html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button {
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button:not(.sb-view-toolbar-button--route-active):not(.active) {
   background: #f8fafc !important;
   border: 1px solid #e2e8f0 !important;
   color: #1e293b !important;
 }
 
-html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button svg {
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button:not(.sb-view-toolbar-button--route-active):not(.active) svg,
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button:not(.sb-view-toolbar-button--route-active):not(.active) svg * {
   color: #334155 !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
-html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(.sb-view-toolbar-button--route-active, .sb-view-toolbar-button:active) {
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button.sb-view-toolbar-button--route-active,
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button.active,
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button:active {
   border-color: #b91c1c !important;
   background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
   color: #ffffff !important;
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
 }
 
-html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(.sb-view-toolbar-button--route-active, .sb-view-toolbar-button:active) svg {
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button.sb-view-toolbar-button--route-active svg,
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button.sb-view-toolbar-button--route-active svg *,
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button.active svg,
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button.active svg *,
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button:active svg,
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button:active svg * {
   color: #ffffff !important;
-  fill: #ffffff !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(.sb-link--active, .sb-link--team.sb-link--active, .sb-plain-link--active, .sb-group-trigger--route-active)::after {

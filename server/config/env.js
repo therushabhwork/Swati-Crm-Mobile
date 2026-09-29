@@ -76,7 +76,7 @@ const env = {
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
   bcryptRounds: parseInteger(process.env.BCRYPT_ROUNDS, 10),
   corsOrigins: parseCorsOrigins(),
-  rateLimitMax: parseInteger(process.env.RATE_LIMIT_MAX, 1200),
+  rateLimitMax: parseInteger(process.env.RATE_LIMIT_MAX, 50000),
   rateLimitWindowMs: parseInteger(process.env.RATE_LIMIT_WINDOW_MS, 15 * 60 * 1000),
   authRateLimitMax: parseInteger(process.env.AUTH_RATE_LIMIT_MAX, 80),
   requestTimeoutMs: parseInteger(process.env.REQUEST_TIMEOUT_MS, 120000),

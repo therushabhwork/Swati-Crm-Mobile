@@ -3217,72 +3217,81 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
     try {
       const data = await file.arrayBuffer()
       const workbook = XLSX.read(data, { type: 'array' })
-      const firstSheetName = workbook.SheetNames[0]
-      if (!firstSheetName || !workbook.Sheets[firstSheetName]) {
-        addNotification('error', 'Import Deals', 'No valid worksheets found in Excel file.')
-        return
-      }
+      const sheetEntries = []
+      workbook.SheetNames.forEach((sName) => {
+        const cleanSName = String(sName || '').trim().toLowerCase()
+        let targetCollection = 'deals'
+        if (cleanSName.includes('account')) targetCollection = 'accounts'
+        else if (cleanSName.includes('customer')) targetCollection = 'customers'
+        else if (cleanSName.includes('lead')) targetCollection = 'leads'
+        else if (cleanSName.includes('deal') || cleanSName.includes('project')) targetCollection = 'deals'
 
-      const worksheet = workbook.Sheets[firstSheetName]
-      const raw2DRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' })
-      let headerRowIndex = -1
-      for (let i = 0; i < Math.min(raw2DRows.length, 20); i++) {
-        const rowArr = raw2DRows[i] || []
-        const rowStr = rowArr.join(' ').toLowerCase()
+        const worksheet = workbook.Sheets[sName]
+        if (!worksheet) return
+        const raw2DRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' })
+        let headerRowIndex = -1
+        for (let i = 0; i < Math.min(raw2DRows.length, 20); i++) {
+          const rowArr = raw2DRows[i] || []
+          const rowStr = rowArr.join(' ').toLowerCase()
 
-        // Skip CRM report summary headers
-        if (
-          rowStr.includes('total records') ||
-          rowStr.includes('records :') ||
-          /deal owner\s*[-:]/i.test(rowStr) ||
-          /generated on/i.test(rowStr) ||
-          /report filter/i.test(rowStr)
-        ) {
-          continue
-        }
+          // Skip CRM report summary headers
+          if (
+            rowStr.includes('total records') ||
+            rowStr.includes('records :') ||
+            /deal owner\s*[-:]/i.test(rowStr) ||
+            /generated on/i.test(rowStr) ||
+            /report filter/i.test(rowStr)
+          ) {
+            continue
+          }
 
-        let matchCount = 0
-        if (rowStr.includes('project name') || rowStr.includes('deal name') || rowStr.includes('title')) matchCount++
-        if (rowStr.includes('deal date') || rowStr.includes('date')) matchCount++
-        if (rowStr.includes('customer name') || rowStr.includes('account name') || rowStr.includes('customer')) matchCount++
-        if (rowStr.includes('deal owner') || rowStr.includes('owner')) matchCount++
-        if (rowStr.includes('deal value') || rowStr.includes('amount') || rowStr.includes('value')) matchCount++
-        if (rowStr.includes('deal number') || rowStr.includes('deal no')) matchCount++
-        if (rowStr.includes('product category') || rowStr.includes('consultant name')) matchCount++
+          let matchCount = 0
+          if (rowStr.includes('project name') || rowStr.includes('deal name') || rowStr.includes('title')) matchCount++
+          if (rowStr.includes('deal date') || rowStr.includes('date')) matchCount++
+          if (rowStr.includes('customer name') || rowStr.includes('account name') || rowStr.includes('customer')) matchCount++
+          if (rowStr.includes('deal owner') || rowStr.includes('owner')) matchCount++
+          if (rowStr.includes('deal value') || rowStr.includes('amount') || rowStr.includes('value')) matchCount++
+          if (rowStr.includes('deal number') || rowStr.includes('deal no')) matchCount++
+          if (rowStr.includes('product category') || rowStr.includes('consultant name')) matchCount++
 
-        if (matchCount >= 2) {
-          headerRowIndex = i
-          break
-        }
-      }
-
-      let validRows = []
-      if (headerRowIndex !== -1) {
-        const headers = (raw2DRows[headerRowIndex] || []).map((h) => String(h || '').trim())
-        for (let i = headerRowIndex + 1; i < raw2DRows.length; i++) {
-          const rowArr = raw2DRows[i]
-          if (!rowArr || rowArr.length === 0) continue
-          const rowObj = {}
-          headers.forEach((h, colIdx) => {
-            if (h) rowObj[h] = rowArr[colIdx]
-          })
-          const rowText = Object.values(rowObj).join(' ')
-          if (/Generated on:/i.test(rowText) || /Report Filter/i.test(rowText) || /Page \d+/i.test(rowText) || /Total Records/i.test(rowText)) continue
-          if (Object.values(rowObj).some((val) => String(val || '').trim() !== '')) {
-            validRows.push(rowObj)
+          if (matchCount >= 2) {
+            headerRowIndex = i
+            break
           }
         }
-      } else {
-        const rawObjects = XLSX.utils.sheet_to_json(worksheet, { defval: '' })
-        validRows = rawObjects.filter((row) => {
-          if (!row || typeof row !== 'object') return false
-          const rowText = Object.values(row).join(' ')
-          if (/Generated on:/i.test(rowText) || /Report Filter/i.test(rowText) || /Total Records/i.test(rowText)) return false
-          return Object.values(row).some((val) => String(val || '').trim() !== '')
-        })
-      }
 
-      if (!validRows || validRows.length === 0) {
+        let validRows = []
+        if (headerRowIndex !== -1) {
+          const headers = (raw2DRows[headerRowIndex] || []).map((h) => String(h || '').trim())
+          for (let i = headerRowIndex + 1; i < raw2DRows.length; i++) {
+            const rowArr = raw2DRows[i]
+            if (!rowArr || rowArr.length === 0) continue
+            const rowObj = {}
+            headers.forEach((h, colIdx) => {
+              if (h) rowObj[h] = rowArr[colIdx]
+            })
+            const rowText = Object.values(rowObj).join(' ')
+            if (/Generated on:/i.test(rowText) || /Report Filter/i.test(rowText) || /Page \d+/i.test(rowText) || /Total Records/i.test(rowText)) continue
+            if (Object.values(rowObj).some((val) => String(val || '').trim() !== '')) {
+              validRows.push({ ...rowObj, targetCollection, sheetName: sName })
+            }
+          }
+        } else {
+          const rawObjects = XLSX.utils.sheet_to_json(worksheet, { defval: '' })
+          validRows = rawObjects
+            .filter((row) => {
+              if (!row || typeof row !== 'object') return false
+              const rowText = Object.values(row).join(' ')
+              if (/Generated on:/i.test(rowText) || /Report Filter/i.test(rowText) || /Total Records/i.test(rowText)) return false
+              return Object.values(row).some((val) => String(val || '').trim() !== '')
+            })
+            .map((row) => ({ ...row, targetCollection, sheetName: sName }))
+        }
+
+        sheetEntries.push(...validRows)
+      })
+
+      if (!sheetEntries || sheetEntries.length === 0) {
         addNotification('error', 'Import Deals', 'The uploaded file does not contain any valid data rows.')
         return
       }
@@ -3361,7 +3370,7 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
       const dealsToImport = []
       const seenBatchKeys = new Set()
 
-      validRows.forEach((row) => {
+      sheetEntries.forEach((row) => {
         const rawProjName = getVal(row, 'Project Name', 'ProjectName', 'Project / Deal Name', 'Project/Deal Name', 'Project', 'Deal Name', 'DealName', 'Title', 'Name')
         const rawDealName = getVal(row, 'Deal Name', 'DealName', 'Project / Deal Name', 'Project/Deal Name', 'Title', 'Name', 'Project Name', 'ProjectName')
         const rawCustName = getVal(row, 'Customer Name', 'CustomerName', 'Account Name', 'AccountName', 'Customer', 'Account', 'Company', 'Client')
@@ -3449,6 +3458,8 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
           phone,
           addedBy,
           jobNo,
+          targetCollection: row.targetCollection || 'deals',
+          sheetName: row.sheetName || 'Deals',
           status,
           statusMessage,
         })
@@ -5824,9 +5835,9 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
                       type="button"
                       className="deals-crm-pagination-button btn-red-theme"
                       disabled={currentPageSafe === 1}
-                      onClick={() => setCurrentPage((currentValue) => Math.max(1, currentValue - 1))}
+                      onClick={() => setCurrentPage(1)}
                     >
-                      <span>prev</span>
+                      <span>First</span>
                     </button>
 
                     {visiblePages.map((pageNumber) => (
@@ -5844,9 +5855,9 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
                       type="button"
                       className="deals-crm-pagination-button btn-red-theme"
                       disabled={currentPageSafe === totalPages}
-                      onClick={() => setCurrentPage((currentValue) => Math.min(totalPages, currentValue + 1))}
+                      onClick={() => setCurrentPage(totalPages)}
                     >
-                      <span>next</span>
+                      <span>Last</span>
                     </button>
                   </div>
                 </div>

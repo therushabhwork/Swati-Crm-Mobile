@@ -120,26 +120,25 @@ app.use('/api', auditRequestLogger)
 
 const rateLimit = tryRequire('express-rate-limit')
 if (rateLimit) {
-  const isIntegrationProbe = (req) => {
-    if (req.method !== 'GET') return false
+  const isSkippedFromRateLimit = (req) => {
+    if (req.method === 'OPTIONS') return true
+    const reqUrl = String(req.originalUrl || req.path || '').toLowerCase()
 
-    return [
-      req.path,
-      req.originalUrl,
-    ].some((requestPath) => (
-      requestPath === '/integrations/status'
-      || requestPath === '/integrations/downloads'
-      || requestPath === '/api/integrations/status'
-      || requestPath === '/api/integrations/downloads'
-    ))
+    return (
+      reqUrl.includes('/import') ||
+      reqUrl.includes('/directory') ||
+      reqUrl.includes('/setup-status') ||
+      reqUrl.includes('/integrations/') ||
+      reqUrl.includes('/auth/me')
+    )
   }
 
   const generalLimiter = rateLimit({
     windowMs: env.rateLimitWindowMs,
-    max: env.rateLimitMax,
+    max: env.rateLimitMax || 50000,
     standardHeaders: true,
     legacyHeaders: false,
-    skip: isIntegrationProbe,
+    skip: isSkippedFromRateLimit,
   })
   const authLimiter = rateLimit({
     windowMs: env.rateLimitWindowMs,

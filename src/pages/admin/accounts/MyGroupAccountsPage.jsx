@@ -1579,7 +1579,7 @@ const activeStageParam = searchParams.get('stage')
         onDeleteAccount={handleDeleteAccount}
         canEdit={user?.role === 'admin' || selectedAccount?.recordSource === 'live'}
         actionItems={drawerActions}
-        hiddenFieldKeys={variantKey === 'myGroup' ? ['accountState'] : []}
+        hiddenFieldKeys={(!location.pathname.startsWith('/admin') || variantKey === 'myGroup') ? ['accountState'] : []}
       />
 
       <Modal

@@ -181,9 +181,10 @@
 }
 
 .layout--user .sidebar--user {
-  background: rgba(255, 255, 255, 0.72) !important;
-  border-radius: 0 22px 22px 0 !important;
-  box-shadow: 8px 0 28px rgba(30, 41, 59, 0.06) !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border: 0 !important;
 }
 
 .layout--user .header--user {

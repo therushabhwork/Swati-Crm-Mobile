@@ -178,9 +178,9 @@ const buildLeadPayload = async (payload = {}, actor, existingLead = null) => {
   }
 
   const hasReasonForLost = Object.prototype.hasOwnProperty.call(sanitizedPayload, 'reasonForLost') || Object.prototype.hasOwnProperty.call(sanitizedPayload, 'reasonForLostOrder')
-  const targetStatus = isNotQuotedPayload ? 'not_quoted' : ((isPoConvertedStage && Boolean(resolvedPoValue)) ? 'convert_to_po' : (sanitizedPayload.accountState || sanitizedPayload.status || existingLead?.status || 'pending'))
-  const targetAccountStatus = isNotQuotedPayload ? 'not_quoted' : ((isPoConvertedStage && Boolean(resolvedPoValue)) ? 'convert_to_po' : (sanitizedPayload.accountStatus || existingLead?.accountStatus || existingLead?.formData?.accountStatus || 'Pending'))
-  const targetAccountState = isNotQuotedPayload ? 'not_quoted' : ((isPoConvertedStage && Boolean(resolvedPoValue)) ? 'convert_to_po' : (sanitizedPayload.accountState || existingLead?.accountState || existingLead?.formData?.accountState || 'Pending'))
+  const targetStatus = isNotQuotedPayload ? 'not_quoted' : (Boolean(resolvedPoValue) ? 'convert_to_po' : (sanitizedPayload.accountState || sanitizedPayload.status || existingLead?.status || 'pending'))
+  const targetAccountStatus = isNotQuotedPayload ? 'not_quoted' : (Boolean(resolvedPoValue) ? 'convert_to_po' : (sanitizedPayload.accountStatus || existingLead?.accountStatus || existingLead?.formData?.accountStatus || 'Pending'))
+  const targetAccountState = isNotQuotedPayload ? 'not_quoted' : (Boolean(resolvedPoValue) ? 'convert_to_po' : (sanitizedPayload.accountState || existingLead?.accountState || existingLead?.formData?.accountState || 'Pending'))
 
   const normalizedPayload = applyOwnershipMetadata(actor, {
     ...sanitizedPayload,
@@ -574,16 +574,16 @@ const updateLead = async (actor, leadId, payload) => {
         convertedBy: actor.id,
         accountId: leadId,
         dealId: targetDealId,
-        status: 'converted',
-        accountState: 'converted',
+        status: (updatedLead.status === 'convert_to_po' || updatedLead.stage === 'convert_to_po' || updatedLead.accountStatus === 'PO Converted') ? 'convert_to_po' : 'staged',
+        accountState: (updatedLead.status === 'convert_to_po' || updatedLead.stage === 'convert_to_po' || updatedLead.accountStatus === 'PO Converted') ? 'convert_to_po' : 'staged',
         formData: {
           ...(updatedLead.formData || {}),
           isConverted: true,
           convertedAt,
           convertedBy: actor.id,
           dealId: targetDealId,
-          status: 'converted',
-          accountState: 'converted',
+          status: (updatedLead.status === 'convert_to_po' || updatedLead.stage === 'convert_to_po' || updatedLead.accountStatus === 'PO Converted') ? 'convert_to_po' : 'staged',
+          accountState: (updatedLead.status === 'convert_to_po' || updatedLead.stage === 'convert_to_po' || updatedLead.accountStatus === 'PO Converted') ? 'convert_to_po' : 'staged',
         }
       })
       updatedLead = await getLeadById(actor, leadId, { includeGroupScope: false })
@@ -628,8 +628,8 @@ const buildDealPayloadFromAccount = (account = {}, actor = {}) => {
     amount: account.dealValue || account.projectValue || account.value || account.amount || null,
     value: account.dealValue || account.projectValue || account.value || account.amount || null,
     currency: account.currency || 'INR',
-    stage: 'converted',
-    status: 'converted',
+    stage: (account.stage === 'convert_to_po' || account.status === 'convert_to_po' || account.accountStatus === 'PO Converted') ? 'convert_to_po' : 'staged',
+    status: (account.stage === 'convert_to_po' || account.status === 'convert_to_po' || account.accountStatus === 'PO Converted') ? 'convert_to_po' : 'staged',
     assignedTo: ownerUserId,
     ownerUserId,
     ownerName,
@@ -691,8 +691,8 @@ const convertLeadToDeal = async (actor, leadId) => {
     accountId: account.id,
     dealId: deal.id,
     convertedDealId: convertedDeal?.id || null,
-    status: 'converted',
-    accountState: 'converted',
+    status: (account.status === 'convert_to_po' || account.stage === 'convert_to_po' || account.accountStatus === 'PO Converted') ? 'convert_to_po' : 'staged',
+    accountState: (account.status === 'convert_to_po' || account.stage === 'convert_to_po' || account.accountStatus === 'PO Converted') ? 'convert_to_po' : 'staged',
     formData: {
       ...(account.formData || account.raw?.formData || {}),
       ...account,
@@ -702,8 +702,8 @@ const convertLeadToDeal = async (actor, leadId) => {
       accountId: account.id,
       dealId: deal.id,
       convertedDealId: convertedDeal?.id || null,
-      accountState: 'converted',
-      status: 'converted',
+      accountState: (account.status === 'convert_to_po' || account.stage === 'convert_to_po' || account.accountStatus === 'PO Converted') ? 'convert_to_po' : 'staged',
+      status: (account.status === 'convert_to_po' || account.stage === 'convert_to_po' || account.accountStatus === 'PO Converted') ? 'convert_to_po' : 'staged',
     },
   })
 
