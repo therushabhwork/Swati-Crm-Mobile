@@ -57,24 +57,46 @@ export const remarkApi = {
 
   async getAccountRemarks(accountId, params = {}) {
     const response = await apiClient.get(`/remarks/account/${encodeURIComponent(accountId)}`, { params })
-    const data = response.data || {}
-    const remarks = Array.isArray(data.remarks) ? data.remarks : []
+    const payload = response?.data?.data ?? response?.data ?? {}
+    const remarks = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload.remarks)
+        ? payload.remarks
+        : []
 
     return {
       remarks: remarks.map(normalizeRemark),
-      total: Number(data.total || remarks.length),
+      total: Number(payload.total || remarks.length),
     }
   },
 
   async getDealRemarks(dealId, params = {}) {
     const response = await apiClient.get(`/remarks/deal/${encodeURIComponent(dealId)}`, { params })
-    const data = response.data || {}
-    const remarks = Array.isArray(data.remarks) ? data.remarks : []
+    const payload = response?.data?.data ?? response?.data ?? {}
+    const remarks = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload.remarks)
+        ? payload.remarks
+        : []
 
     return {
       remarks: remarks.map(normalizeRemark),
-      total: Number(data.total || remarks.length),
+      total: Number(payload.total || remarks.length),
     }
+  },
+
+  async getRemarks(query = {}) {
+    if (query?.relatedEntityType === 'account' || query?.accountId) {
+      const targetId = query.accountId || query.relatedEntityId
+      const res = await this.getAccountRemarks(targetId)
+      return res.remarks || []
+    }
+    if (query?.relatedEntityType === 'deal' || query?.dealId) {
+      const targetId = query.dealId || query.relatedEntityId
+      const res = await this.getDealRemarks(targetId)
+      return res.remarks || []
+    }
+    return this.getAllRemarks(query)
   },
 
   async getRemarkReminders() {

@@ -4,7 +4,7 @@ const { AppError } = require('../utils/appError')
 class RemarkController {
   async createRemark(req, res, next) {
     try {
-      const { accountId, dealId, category, content, reminder, assignment } = req.body
+      const { accountId, dealId, category, content, reminder, assignment, startTime, endTime, remarkDate, callLogTime, relatedEntityType } = req.body
       const userId = req.user?.id
 
       if (!userId) {
@@ -19,7 +19,12 @@ class RemarkController {
         content,
         createdBy: userId,
         reminder,
-        assignment
+        assignment,
+        startTime,
+        endTime,
+        remarkDate,
+        callLogTime,
+        relatedEntityType,
       })
 
       res.status(201).json({

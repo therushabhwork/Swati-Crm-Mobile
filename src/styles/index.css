@@ -6480,5 +6480,23 @@ html, body, #root, .layout {
   padding-right: 0 !important;
 }
 
+/* COMMUNICATION ACTIVITIES MAROON HEADER OVERRIDE */
+html body #root :is(.layout--admin, .layout--user) .comm-activities-table thead tr,
+html body #root :is(.layout--admin, .layout--user) .comm-activities-table thead tr.comm-activities-thead-tr,
+html body #root :is(.layout--admin, .layout--user) .comm-activities-table thead tr th {
+  background: #740A03 !important;
+  background-color: #740A03 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-bottom: 2px solid #ffffff !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) .comm-activities-table thead tr th :is(span, svg, path) {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+
 
 

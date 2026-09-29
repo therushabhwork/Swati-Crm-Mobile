@@ -105,8 +105,70 @@ const AccountDetailsPage = () => {
   const [activeActionKey, setActiveActionKey] = useState(null)
   const [, setRefreshKey] = useState(0)
   const actionsRef = useRef(null)
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
+  const [accountHistoryRemarks, setAccountHistoryRemarks] = useState([])
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
 
   const account = getAccountById(accounts, accountId)
+
+  const handleOpenAccountHistory = async () => {
+    if (!account?.id) return
+    setIsLoadingHistory(true)
+    setIsHistoryModalOpen(true)
+    try {
+      const response = await remarkApi.getRemarks({ relatedEntityId: account.id, relatedEntityType: 'account' })
+      const rawApiRemarks = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : []
+
+      const merged = [...rawApiRemarks]
+      const singleRemark = account?.remark || account?.notes || account?.description || account?.formData?.remark
+      if (singleRemark && typeof singleRemark === 'string' && singleRemark.trim()) {
+        const text = singleRemark.trim()
+        if (!merged.some((r) => String(r.content || r.remark || '').trim() === text)) {
+          merged.push({
+            id: `account-remark-single-${account.id}`,
+            content: text,
+            category: 'general',
+            createdByName: account.ownerName || account.accountOwner || 'User',
+            createdAt: account.updatedAt || account.createdAt || new Date().toISOString(),
+          })
+        }
+      }
+
+      const embeddedList = Array.isArray(account?.remarks)
+        ? account.remarks
+        : Array.isArray(account?.formData?.remarks)
+          ? account.formData.remarks
+          : Array.isArray(account?.history)
+            ? account.history
+            : []
+
+      embeddedList.forEach((item, idx) => {
+        const text = typeof item === 'string' ? item : item.content || item.remark || item.note || item.text || ''
+        if (text && text.trim()) {
+          const cleanText = text.trim()
+          if (!merged.some((r) => String(r.content || r.remark || '').trim() === cleanText)) {
+            merged.push({
+              id: item.id || item._id || `account-embedded-${idx}`,
+              content: cleanText,
+              category: item.category || 'general',
+              createdByName: item.createdByName || item.userName || item.addedBy || account.ownerName || 'User',
+              createdAt: item.createdAt || item.date || account.createdAt || new Date().toISOString(),
+              startTime: item.startTime || null,
+              endTime: item.endTime || null,
+            })
+          }
+        }
+      })
+
+      merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      setAccountHistoryRemarks(merged)
+    } catch (error) {
+      console.error('Failed to fetch account history remarks:', error)
+      setAccountHistoryRemarks([])
+    } finally {
+      setIsLoadingHistory(false)
+    }
+  }
   const boardUrl = useMemo(() => buildAdminAccountBoardReturnUrl(searchParams), [searchParams])
   const relatedConvertedDeals = useMemo(() => (
     (Array.isArray(convertedDeals) ? convertedDeals : [])
@@ -291,15 +353,6 @@ const AccountDetailsPage = () => {
             <div className="account-details-actions" ref={actionsRef} style={{ display: 'flex', alignItems: 'center' }}>
               <button
                 type="button"
-                className="account-details-actions-trigger"
-                onClick={() => setIsActionsOpen((current) => !current)}
-              >
-                <span>Actions</span>
-                <span className="account-details-actions-caret">v</span>
-              </button>
-
-              <button
-                type="button"
                 className="account-details-history-trigger"
                 title="View Remarks History"
                 onClick={handleOpenAccountHistory}
@@ -313,11 +366,20 @@ const AccountDetailsPage = () => {
                   background: '#ffffff',
                   color: '#2563eb',
                   cursor: 'pointer',
-                  marginLeft: '8px',
+                  marginRight: '8px',
                   fontSize: '16px',
                 }}
               >
                 <FaHistory />
+              </button>
+
+              <button
+                type="button"
+                className="account-details-actions-trigger"
+                onClick={() => setIsActionsOpen((current) => !current)}
+              >
+                <span>Actions</span>
+                <span className="account-details-actions-caret">v</span>
               </button>
 
               {isActionsOpen ? (

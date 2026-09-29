@@ -214,8 +214,53 @@ const AdminDealDetailPage = () => {
     setIsLoadingHistory(true)
     setIsDealHistoryModalOpen(true)
     try {
-      const response = await remarkApi.getRemarks({ relatedEntityId: deal.id, relatedEntityType: 'deal' })
-      setDealHistoryRemarks(response?.data || response || [])
+      const targetDealId = deal.sourceDealId || deal.source_deal_id || deal.dealId || deal.id
+      const response = await remarkApi.getRemarks({ relatedEntityId: targetDealId, relatedEntityType: 'deal' })
+      const rawApiRemarks = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : []
+
+      const merged = [...rawApiRemarks]
+      const singleRemark = deal?.remark || deal?.description || deal?.notes || deal?.data?.remark || deal?.data?.description
+      if (singleRemark && typeof singleRemark === 'string' && singleRemark.trim()) {
+        const text = singleRemark.trim()
+        if (!merged.some((r) => String(r.content || r.remark || '').trim() === text)) {
+          merged.push({
+            id: `deal-remark-single-${deal.id}`,
+            content: text,
+            category: 'general',
+            createdByName: deal.addedBy || deal.dealOwner || deal.ownerName || 'User',
+            createdAt: deal.lastUpdated || deal.dealDate || deal.createdAt || new Date().toISOString(),
+          })
+        }
+      }
+
+      const embeddedList = Array.isArray(deal?.remarks)
+        ? deal.remarks
+        : Array.isArray(deal?.data?.remarks)
+          ? deal.data.remarks
+          : Array.isArray(deal?.history)
+            ? deal.history
+            : []
+
+      embeddedList.forEach((item, idx) => {
+        const text = typeof item === 'string' ? item : item.content || item.remark || item.note || item.text || ''
+        if (text && text.trim()) {
+          const cleanText = text.trim()
+          if (!merged.some((r) => String(r.content || r.remark || '').trim() === cleanText)) {
+            merged.push({
+              id: item.id || item._id || `deal-embedded-${idx}`,
+              content: cleanText,
+              category: item.category || 'general',
+              createdByName: item.createdByName || item.userName || item.addedBy || deal.dealOwner || 'User',
+              createdAt: item.createdAt || item.date || deal.createdAt || new Date().toISOString(),
+              startTime: item.startTime || null,
+              endTime: item.endTime || null,
+            })
+          }
+        }
+      })
+
+      merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      setDealHistoryRemarks(merged)
     } catch (error) {
       console.error('Failed to fetch deal history remarks:', error)
       setDealHistoryRemarks([])

@@ -11,6 +11,7 @@ import Table from '../../components/common/Table'
 import Badge from '../../components/common/Badge'
 import AddRemarksModal from '../../components/common/AddRemarksModal'
 import { remarkApi } from '../../services/remarkApi'
+import { reminderApi } from '../../services/reminderApi'
 import { formatDate, getStatusColor } from '../../utils/helpers'
 import { ACCOUNT_STATUS, INDUSTRIES, LEAD_SOURCES } from '../../utils/constants'
 import { getAccountCategoryLogo } from '../../features/accounts/config/accountCategoryLogo'
@@ -109,6 +110,24 @@ const Accounts = ({ isAdmin = false }) => {
 
     try {
       await remarkApi.createRemark(remarkData)
+      if (remarkData?.reminder && remarkData.reminder.date) {
+        try {
+          const remindAt = new Date(`${remarkData.reminder.date}T${remarkData.reminder.time || '09:00'}:00`).toISOString()
+          await reminderApi.createReminder({
+            title: `Followup ${remarkData.reminder.actionType || 'Call'} - ${remarkData.accountName || remarkAccount?.name || 'Account'}`,
+            message: remarkData.content || remarkData.reminder.note || '',
+            remindAt,
+            reminderDate: remarkData.reminder.date,
+            reminderTime: remarkData.reminder.time || '09:00',
+            status: 'scheduled',
+            relatedEntityType: 'account',
+            relatedEntityId: String(remarkData.accountId || remarkAccount?.id || ''),
+            assignedTo: remarkData.reminder.assignedTo || '',
+          })
+        } catch (rErr) {
+          console.warn('Reminder creation error:', rErr)
+        }
+      }
       addNotification('success', 'Remark added', 'Remark saved successfully.')
       setRemarkAccount(null)
     } catch (error) {

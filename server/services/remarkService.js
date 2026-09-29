@@ -5,6 +5,7 @@ const { assertRecordAccess, isPrivilegedRole, toNumberOrNull } = require('../sec
 
 const Remark = getMongoModel('remarks')
 const RemarkReminder = getMongoModel('remark_reminders')
+const MainReminder = getMongoModel('reminders')
 const User = getMongoModel('users')
 const Deal = getMongoModel('deals')
 const AuditLog = getMongoModel('audit_log')
@@ -254,7 +255,7 @@ class RemarkService {
   }
 
   async createRemark(remarkData) {
-    const { actor, accountId, dealId, category = 'general', content, createdBy, reminder } = remarkData
+    const { actor, accountId, dealId, category = 'general', content, createdBy, reminder, startTime, endTime, remarkDate, callLogTime } = remarkData
     const assignment = this.normalizeAssignment(remarkData.assignment)
     if (!actor || (!accountId && !dealId) || !content) {
       throw new AppError('Account ID or Deal ID and content are required', 400)
@@ -397,6 +398,10 @@ class RemarkService {
       relatedEntityType: dealId ? 'deal' : 'account',
       category,
       content,
+      startTime: startTime || null,
+      endTime: endTime || null,
+      remarkDate: remarkDate || null,
+      callLogTime: callLogTime || null,
       createdBy: toNumber(remarkCreatorUserId),
       createdByName: resolvedRemarkCreatedByName,
       createdByEmail: resolvedRemarkCreatedByEmail,
@@ -492,6 +497,42 @@ class RemarkService {
           updatedAt: now,
         })
       }
+
+      if (reminder && reminder.date && reminder.time) {
+        try {
+          const remindAt = new Date(`${reminder.date}T${reminder.time || '09:00'}:00`).toISOString()
+          const reminderLegacyId = await getNextLegacyId('reminders')
+          await MainReminder.create({
+            legacyId: reminderLegacyId,
+            title: `Followup ${reminder.actionType || 'Call'} - ${resolvedDealName || resolvedAccountName || 'Record'}`,
+            message: content || reminder.note || '',
+            remindAt,
+            reminderDate: reminder.date,
+            reminderTime: reminder.time || '09:00',
+            status: 'scheduled',
+            relatedEntityType: dealId ? 'deal' : 'account',
+            relatedEntityId: dealId ? String(dealId) : String(resolvedAccountId || ''),
+            assignedTo: createdBy || actor.id,
+            createdBy: createdBy || actor.id,
+            companyId,
+            data: {
+              actionType: reminder.actionType || 'Call',
+              priority: reminder.priority || 'Medium',
+              followupType: reminder.followupType || 'Call',
+              note: reminder.note || content,
+              remarkId: legacyId,
+              dealId: dealId ? toNumber(dealId) : null,
+              accountId: resolvedAccountId ? toNumber(resolvedAccountId) : null,
+              accountName: resolvedAccountName,
+              dealName: resolvedDealName,
+            },
+            createdAt: now,
+            updatedAt: now,
+          })
+        } catch (rErr) {
+          console.error('Failed to create main reminder entry:', rErr)
+        }
+      }
     }
 
     await this.logAudit({
@@ -563,8 +604,16 @@ class RemarkService {
 
   async getRemarksByAccount(accountId, actor) {
     await this.getAccessibleLead(accountId, actor)
+    const numId = toNumber(accountId)
+    const strId = String(accountId || '')
     const remarks = await Remark
-      .find({ accountId: toNumber(accountId), companyId: actor.companyId || 1 })
+      .find({
+        companyId: actor.companyId || 1,
+        $or: [
+          ...(numId !== null ? [{ accountId: numId }, { relatedEntityId: numId }, { relatedEntityId: String(numId) }] : []),
+          ...(strId ? [{ accountId: strId }, { relatedEntityId: strId }] : []),
+        ]
+      })
       .sort({ createdAt: -1, legacyId: -1 })
       .lean()
 
@@ -695,7 +744,15 @@ class RemarkService {
 
   async getRemarksHistory(accountId, limit = 50, offset = 0, actor = null) {
     await this.getAccessibleLead(accountId, actor)
-    const baseFilter = { accountId: toNumber(accountId), companyId: actor.companyId || 1 }
+    const numId = toNumber(accountId)
+    const strId = String(accountId || '')
+    const baseFilter = {
+      companyId: actor.companyId || 1,
+      $or: [
+        ...(numId !== null ? [{ accountId: numId }, { relatedEntityId: numId }, { relatedEntityId: String(numId) }] : []),
+        ...(strId ? [{ accountId: strId }, { relatedEntityId: strId }] : []),
+      ]
+    }
     const records = await Remark
       .find(baseFilter)
       .sort({ createdAt: -1, legacyId: -1 })
@@ -716,7 +773,15 @@ class RemarkService {
   }
 
   async getRemarksByDeal(dealId, limit = 50, offset = 0, actor = null) {
-    const baseFilter = { dealId: toNumber(dealId), companyId: actor?.companyId || 1 }
+    const numId = toNumber(dealId)
+    const strId = String(dealId || '')
+    const baseFilter = {
+      companyId: actor?.companyId || 1,
+      $or: [
+        ...(numId !== null ? [{ dealId: numId }, { relatedEntityId: numId }, { relatedEntityId: String(numId) }] : []),
+        ...(strId ? [{ dealId: strId }, { relatedEntityId: strId }] : []),
+      ]
+    }
     const records = await Remark
       .find(baseFilter)
       .sort({ createdAt: -1, legacyId: -1 })

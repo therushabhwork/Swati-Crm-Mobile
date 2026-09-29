@@ -173,6 +173,7 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, dealData, onSave, onSav
   const activeData = isDealMode ? dealData : accountData
   const [category, setCategory] = useState('feedback')
   const [content, setContent] = useState('')
+  const [remarkDate, setRemarkDate] = useState(() => new Date().toISOString().split('T')[0])
   const [callLogTime, setCallLogTime] = useState('09:00')
   const [startTime, setStartTime] = useState('09:00')
   const [endTime, setEndTime] = useState('09:30')
@@ -358,8 +359,10 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, dealData, onSave, onSav
       relatedEntityType: isDealMode ? 'deal' : 'account',
       category,
       content,
+      remarkDate,
       startTime: category === 'call-log' ? startTime : null,
       endTime: category === 'call-log' ? endTime : null,
+      callLogTime: category === 'call-log' ? callLogTime : null,
       assignment: {
         mode: assignmentMode,
         userIds: expandedAssignmentUserIds,
@@ -387,6 +390,7 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, dealData, onSave, onSav
   const resetForm = () => {
     setCategory('feedback')
     setContent('')
+    setRemarkDate(new Date().toISOString().split('T')[0])
     setCallLogTime('09:00')
     setStartTime('09:00')
     setEndTime('09:30')
@@ -609,7 +613,7 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, dealData, onSave, onSav
 
           <div className="remark-section remark-section--category">
             <h3 className="section-title">Remark Category</h3>
-            <div className="category-tabs">
+            <div className="category-tabs" style={{ marginBottom: '10px' }}>
               {REMARK_CATEGORIES.map((cat) => (
                 <button
                   key={cat.value}
@@ -620,6 +624,15 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, dealData, onSave, onSav
                   {cat.label}
                 </button>
               ))}
+            </div>
+            <div style={{ marginTop: '10px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px', textTransform: 'uppercase' }}>Remark Date</label>
+              <input
+                type="date"
+                value={remarkDate}
+                onChange={(e) => setRemarkDate(e.target.value)}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', background: '#ffffff', color: '#0f172a' }}
+              />
             </div>
           </div>
         </div>

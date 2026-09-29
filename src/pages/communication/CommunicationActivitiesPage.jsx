@@ -263,17 +263,20 @@ const CommunicationActivitiesPage = ({ isAdmin = false }) => {
           <div style={{ padding: '40px', textAlign: 'center', color: '#475569', fontWeight: 500 }}>No communication activities found</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px', color: '#0f172a' }}>
+            <table className="comm-activities-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px', color: '#0f172a' }}>
               <thead>
-                <tr style={{ background: '#e2e8f0', borderBottom: '2px solid #cbd5e1', color: '#0f172a', fontWeight: 700 }}>
-                  <th style={{ padding: '12px 16px', width: '40px' }}></th>
-                  <th style={{ padding: '12px 16px' }}>Type</th>
-                  <th style={{ padding: '12px 16px' }}>Name</th>
-                  <th style={{ padding: '12px 16px' }}>Category</th>
-                  <th style={{ padding: '12px 16px' }}>Remark / Note</th>
-                  <th style={{ padding: '12px 16px' }}>Record Owner</th>
-                  <th style={{ padding: '12px 16px' }}>Created By</th>
-                  <th style={{ padding: '12px 16px' }}>Date</th>
+                <tr className="comm-activities-thead-tr" style={{ background: '#740A03', borderBottom: '2px solid #ffffff', color: '#ffffff', fontWeight: 700 }}>
+                  <th style={{ padding: '14px 16px', width: '40px', background: '#740A03', color: '#ffffff' }}></th>
+                  <th style={{ padding: '14px 16px', background: '#740A03', color: '#ffffff' }}>Type</th>
+                  <th style={{ padding: '14px 16px', background: '#740A03', color: '#ffffff' }}>Name</th>
+                  <th style={{ padding: '14px 16px', background: '#740A03', color: '#ffffff' }}>Category</th>
+                  <th style={{ padding: '14px 16px', background: '#740A03', color: '#ffffff' }}>Remark / Note</th>
+                  <th style={{ padding: '14px 16px', background: '#740A03', color: '#ffffff' }}>Record Owner</th>
+                  <th style={{ padding: '14px 16px', background: '#740A03', color: '#ffffff' }}>Activity By</th>
+                  <th style={{ padding: '14px 16px', background: '#740A03', color: '#ffffff' }}>Discussion</th>
+                  <th style={{ padding: '14px 16px', background: '#740A03', color: '#ffffff' }}>Start Time</th>
+                  <th style={{ padding: '14px 16px', background: '#740A03', color: '#ffffff' }}>End Time</th>
+                  <th style={{ padding: '14px 16px', background: '#740A03', color: '#ffffff' }}>Date & Time</th>
                 </tr>
               </thead>
               <tbody>
@@ -286,7 +289,7 @@ const CommunicationActivitiesPage = ({ isAdmin = false }) => {
                       key={rem.id}
                       style={{ background: rowBg, borderBottom: '1px solid #e2e8f0', cursor: 'pointer', transition: 'background-color 0.15s' }}
                       onClick={() => handleRowClick(rem)}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#e2e8f0' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9' }}
                       onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = rowBg }}
                     >
                       <td style={{ padding: '12px 16px', textAlign: 'center' }}>
@@ -313,17 +316,28 @@ const CommunicationActivitiesPage = ({ isAdmin = false }) => {
                           {rem.category || 'general'}
                         </span>
                       </td>
-                      <td style={{ padding: '12px 16px', color: '#1e293b', maxWidth: '350px', fontWeight: 500 }}>
-                        {rem.content || '-'}
+                      <td style={{ padding: '12px 16px', color: '#1e293b', maxWidth: '320px', fontWeight: 500 }}>
+                        <div>{rem.content || '-'}</div>
                       </td>
                       <td style={{ padding: '12px 16px', color: '#334155', fontWeight: 500 }}>
                         {ownerName}
                       </td>
                       <td style={{ padding: '12px 16px', color: '#334155', fontWeight: 500 }}>
-                        {rem.createdByName || 'User'}
+                        {rem.createdByName || rem.authorName || 'User'}
+                      </td>
+                      <td style={{ padding: '12px 16px', color: '#2563eb', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                          <FaComments /> Discussion
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 16px', color: '#475569', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                        {rem.startTime || (rem.category === 'call-log' ? (rem.callLogTime || '-') : '-')}
+                      </td>
+                      <td style={{ padding: '12px 16px', color: '#475569', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                        {rem.endTime || '-'}
                       </td>
                       <td style={{ padding: '12px 16px', color: '#475569', whiteSpace: 'nowrap', fontWeight: 500 }}>
-                        {rem.createdAt ? formatDate(rem.createdAt) : '-'}
+                        {rem.remarkDate ? formatDate(rem.remarkDate, 'long') : (rem.createdAt ? formatDate(rem.createdAt, 'long') : '-')}
                       </td>
                     </tr>
                   )
@@ -409,6 +423,11 @@ const CommunicationActivitiesPage = ({ isAdmin = false }) => {
                     <div style={{ fontSize: '13.5px', color: '#334155', lineHeight: '1.4' }}>
                       {item.content}
                     </div>
+                    {item.category === 'call-log' && (item.startTime || item.endTime || item.callLogTime) && (
+                      <div style={{ fontSize: '12px', color: '#0284c7', marginTop: '6px', fontWeight: 600 }}>
+                        Call Duration: {item.startTime || item.callLogTime || '09:00'} - {item.endTime || '09:30'}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
