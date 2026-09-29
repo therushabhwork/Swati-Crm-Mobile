@@ -364,31 +364,7 @@ const Dashboard = () => {
               <button className="md-link-btn">Manage &rarr;</button>
             </div>
             <div className="md-integration-cards">
-              <div className="md-integration-card">
-                <div className="md-integration-icon outlook">
-                  <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12.923 11.026V3h9v18h-9v-8.026l-3 1v-3.974l3-1zM2 13V9l8-2.667V15.667L2 13z"/>
-                  </svg>
-                </div>
-                <div className="md-integration-details">
-                  <span className="md-integration-name">Outlook Mail</span>
-                  <span className="md-integration-meta">Connect Outlook</span>
-                </div>
-                <svg className="md-integration-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/></svg>
-              </div>
-              <div className="md-integration-card">
-                <div className="md-integration-icon support">
-                  <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m-6-3v3m-6-3v3m-3 3h18M3 15h18m-9-6h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="md-integration-details">
-                  <span className="md-integration-name">CRM Support</span>
-                  <span className="md-integration-meta">Open Support Module</span>
-                </div>
-                <svg className="md-integration-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/></svg>
-              </div>
-            </div>
+              
           </div>
 
           <div className="md-widget md-activity-widget">

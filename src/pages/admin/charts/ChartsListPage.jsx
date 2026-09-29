@@ -10,11 +10,24 @@ import { useData } from '../../../context/DataContext'
 import ChartPreviewModal from './ChartPreviewModal'
 import './ChartsListPage.css'
 
-const CATEGORY_LINK_BY_FILTER = {
-  Accounts: '/admin/accounts',
-  Customers: '/admin/customers/search',
-  SR: '/admin/support-requests/list',
-  Deals: '/admin/deals/view',
+const getCategoryLink = (category, basePath) => {
+  const isUser = !basePath.startsWith('/admin')
+  if (isUser) {
+    switch (category) {
+      case 'Accounts': return '/accounts/search'
+      case 'Customers': return '/customers/search'
+      case 'SR': return '/support-requests/list'
+      case 'Deals': return '/deals/view'
+      default: return '/charts'
+    }
+  }
+  switch (category) {
+    case 'Accounts': return '/admin/accounts'
+    case 'Customers': return '/admin/customers/search'
+    case 'SR': return '/admin/support-requests/list'
+    case 'Deals': return '/admin/deals/view'
+    default: return '/admin/charts'
+  }
 }
 
 const ChartRow = ({
@@ -236,7 +249,7 @@ const ChartsListPage = ({ basePath = '/admin/charts' }) => {
                   key={chart.id}
                   chart={chart}
                   isExpanded={Boolean(expandedIds[chart.id])}
-                  linkedLabel={CATEGORY_LINK_BY_FILTER[activeFilter] ? activeFilter : ''}
+                  linkedLabel={getCategoryLink(activeFilter, basePath) ? activeFilter : ''}
                   onToggleExpand={() => handleToggleExpand(chart.id)}
                   onEdit={() => handleEdit(chart)}
                   onView={() => handleView(chart)}

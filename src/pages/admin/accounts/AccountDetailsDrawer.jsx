@@ -10,6 +10,8 @@ import {
   FaRegStickyNote,
   FaRegSun,
   FaTrash,
+  FaComments,
+  FaHistory,
 } from 'react-icons/fa'
 import {
   FiChevronDown,
@@ -17,6 +19,8 @@ import {
 } from 'react-icons/fi'
 import { HiOutlineStatusOnline } from 'react-icons/hi'
 import Button from '../../../components/common/Button'
+import Modal from '../../../components/common/Modal'
+import { remarkApi } from '../../../services/remarkApi'
 import ContactIntegrationActions from '../../../components/integrations/ContactIntegrationActions'
 import { useData } from '../../../context/DataContext'
 import { buildAdminDealDetailUrl } from '../../../features/adminDeals/config/adminDealViews'
@@ -385,6 +389,69 @@ const AccountDetailsDrawer = ({
   const [validationError, setValidationError] = useState('')
   const [activeActionKey, setActiveActionKey] = useState(null)
   const [ownerOptions, setOwnerOptions] = useState(getCachedAccountOwnerOptions)
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
+  const [accountHistoryRemarks, setAccountHistoryRemarks] = useState([])
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+
+  const handleOpenAccountHistory = async () => {
+    if (!account?.id) return
+    setIsLoadingHistory(true)
+    setIsHistoryModalOpen(true)
+    try {
+      const response = await remarkApi.getRemarks({ relatedEntityId: account.id, relatedEntityType: 'account' })
+      const rawApiRemarks = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : []
+
+      const merged = [...rawApiRemarks]
+      const singleRemark = account?.remark || account?.notes || account?.description || account?.formData?.remark
+      if (singleRemark && typeof singleRemark === 'string' && singleRemark.trim()) {
+        const text = singleRemark.trim()
+        if (!merged.some((r) => String(r.content || r.remark || '').trim() === text)) {
+          merged.push({
+            id: `account-remark-single-${account.id}`,
+            content: text,
+            category: 'general',
+            createdByName: account.ownerName || account.accountOwner || 'User',
+            createdAt: account.updatedAt || account.createdAt || new Date().toISOString(),
+          })
+        }
+      }
+
+      const embeddedList = Array.isArray(account?.remarks)
+        ? account.remarks
+        : Array.isArray(account?.formData?.remarks)
+          ? account.formData.remarks
+          : Array.isArray(account?.history)
+            ? account.history
+            : []
+
+      embeddedList.forEach((item, idx) => {
+        const text = typeof item === 'string' ? item : item.content || item.remark || item.note || item.text || ''
+        if (text && text.trim()) {
+          const cleanText = text.trim()
+          if (!merged.some((r) => String(r.content || r.remark || '').trim() === cleanText)) {
+            merged.push({
+              id: item.id || item._id || `account-embedded-${idx}`,
+              content: cleanText,
+              category: item.category || 'general',
+              createdByName: item.createdByName || item.userName || item.addedBy || account.ownerName || 'User',
+              createdAt: item.createdAt || item.date || account.createdAt || new Date().toISOString(),
+              startTime: item.startTime || null,
+              endTime: item.endTime || null,
+            })
+          }
+        }
+      })
+
+      merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      setAccountHistoryRemarks(merged)
+    } catch (error) {
+      console.error('Failed to fetch account history remarks:', error)
+      setAccountHistoryRemarks([])
+    } finally {
+      setIsLoadingHistory(false)
+    }
+  }
+
   const closeActions = useCallback(() => setIsActionsOpen(false), [])
   const actionsRef = useClickOutside(closeActions)
   const hiddenFieldKeySet = useMemo(() => new Set(hiddenFieldKeys), [hiddenFieldKeys])
@@ -564,7 +631,28 @@ const AccountDetailsDrawer = ({
             </div>
           </div>
 
-          <div className="admin-accounts-workspace-actions">
+          <div className="admin-accounts-workspace-actions" style={{ display: 'flex', alignItems: 'center' }}>
+            <button
+              type="button"
+              className="admin-accounts-history-trigger"
+              onClick={handleOpenAccountHistory}
+              title="View History"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justify: 'center',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                color: '#2563eb',
+                cursor: 'pointer',
+                marginRight: '8px',
+                fontSize: '16px',
+              }}
+            >
+              <FaHistory />
+            </button>
             <div className="admin-accounts-actions-dropdown" ref={actionsRef}>
               <button
                 type="button"
@@ -836,6 +924,75 @@ const AccountDetailsDrawer = ({
         actionKey={activeActionKey}
         onClose={() => setActiveActionKey(null)}
       />
+
+      {isHistoryModalOpen && (
+        <Modal
+          isOpen={isHistoryModalOpen}
+          onClose={() => setIsHistoryModalOpen(false)}
+          title={`Remarks & Communication History - ${account.name || account.accountName || 'Account'}`}
+          size="large"
+        >
+          <div style={{ padding: '8px', maxHeight: '70vh', overflowY: 'auto' }}>
+            {isLoadingHistory ? (
+              <div style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>
+                Loading remarks history...
+              </div>
+            ) : accountHistoryRemarks.length === 0 ? (
+              <div style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>
+                No remarks history found for this account.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {accountHistoryRemarks.map((rem) => (
+                  <div
+                    key={rem.id || rem._id}
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      background: '#f8fafc',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '12px',
+                    }}
+                  >
+                    <FaComments style={{ color: '#2563eb', fontSize: '18px', marginTop: '2px', flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          background: rem.category === 'call-log' ? '#fef3c7' : '#e2e8f0',
+                          color: rem.category === 'call-log' ? '#92400e' : '#1e293b',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                        }}>
+                          {rem.category || 'GENERAL'}
+                        </span>
+                        <span style={{ fontSize: '12px', color: '#64748b' }}>
+                          {rem.createdAt ? new Date(rem.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                        </span>
+                      </div>
+                      <p style={{ margin: '4px 0 8px 0', fontSize: '14px', color: '#334155', whiteSpace: 'pre-wrap' }}>
+                        {rem.content || rem.remark || rem.note}
+                      </p>
+                      {rem.category === 'call-log' && (rem.startTime || rem.endTime || rem.callLogTime) && (
+                        <div style={{ fontSize: '12px', color: '#0284c7', marginBottom: '4px', fontWeight: 600 }}>
+                          Call Duration: {rem.startTime || rem.callLogTime || '09:00'} - {rem.endTime || '09:30'}
+                        </div>
+                      )}
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>
+                        Added by: <strong>{rem.createdByName || rem.userName || rem.createdBy || rem.ownerCode || 'User'}</strong>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   )
 

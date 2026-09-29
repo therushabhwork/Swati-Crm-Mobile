@@ -9,6 +9,7 @@ import {
   FaChevronDown,
   FaEdit,
   FaFilePdf,
+  FaFileExcel,
   FaEnvelope,
   FaSave,
   FaTrash,
@@ -395,69 +396,64 @@ const SummaryReportCard = ({
       <div className="summary-report-card-header">
         <h2>{report.title}</h2>
         <div className="summary-report-card-actions">
-          <button type="button" className="summary-report-icon-btn summary-report-icon-btn-settings" title="Settings" onClick={onOpenSettings}>
+          <button type="button" className="summary-report-icon-btn" title="Settings" onClick={onOpenSettings}>
             <FaCog />
           </button>
-          <button type="button" className="summary-report-icon-btn summary-report-icon-btn-delete" title="Delete report" onClick={onDelete}>
+          <button type="button" className="summary-report-icon-btn" title="Delete report" onClick={onDelete}>
             <FaTrash />
           </button>
-          <ExcelExportMenuButton
-            label="Export"
-            title="Export actions"
-            className="summary-report-export-menu"
-            buttonClassName="summary-report-icon-btn summary-report-icon-btn--export"
-            menuClassName="summary-report-export-dropdown"
-            items={[
-              {
-                key: `${report.id}-excel`,
-                label: 'Export to Excel .xlsx',
-                badge: 'XLSX',
-                onClick: () => onExportAction('excel', report),
-              },
-            ]}
-          />
-          <button type="button" className="summary-report-icon-btn summary-report-icon-btn-info" title="Preview Table" onClick={onPreview}>
+          <button type="button" className="summary-report-icon-btn" title="Export to Excel" onClick={() => onExportAction('excel', report)}>
+            <FaFileExcel />
+          </button>
+          <button type="button" className="summary-report-icon-btn" title="Preview Table" onClick={onPreview}>
             <FaEye />
           </button>
-          <button type="button" className="summary-report-icon-btn summary-report-icon-btn-orange" title="Refresh" onClick={onRefresh}>
+          <button type="button" className="summary-report-icon-btn" title="Refresh" onClick={onRefresh}>
             <FaSyncAlt />
           </button>
-          <button type="button" className="summary-report-icon-btn summary-report-icon-btn-dark" title="Expand or collapse" onClick={onToggleCollapse}>
+          <button type="button" className="summary-report-icon-btn" title="Expand or collapse" onClick={onToggleCollapse}>
             <FaChevronDown className={isCollapsed ? '' : 'summary-report-icon-chevron-open'} />
           </button>
         </div>
       </div>
 
       {!isCollapsed && (
-        <>
-          <div className="summary-report-card-body">
-            <div className="summary-report-card-lines">
-              {report.lines.map((line) => {
-                const LineIcon = lineIconMap[line.key] || FaTable
-
-                return (
-                  <div key={line.key} className="summary-report-line">
-                    <LineIcon className="summary-report-line-icon" />
-                    <div className="summary-report-line-content">
-                      <strong>{line.label}-</strong> {line.value}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-
-            <div className="summary-report-card-meta">
-              <div className="summary-report-meta-row">
-                <FaTable className="summary-report-line-icon" />
-                <span>
-                  <strong>Created By-</strong> {report.createdBy} <strong>On-</strong> {report.createdOn}
-                </span>
+        <div className="summary-report-card-body">
+          <div className="summary-report-card-info-grid">
+            {report.lines[0] && (
+              <div className="summary-report-line">
+                {React.createElement(lineIconMap[report.lines[0].key] || FaTable, { className: 'summary-report-line-icon' })}
+                <div className="summary-report-line-content">
+                  <strong>{report.lines[0].label}-</strong> {report.lines[0].value}
+                </div>
               </div>
-              <div className="summary-report-meta-row">
-                <FaEye className="summary-report-line-icon" />
-                <span>
-                  <strong>Visibility-</strong> {report.visibility}
-                </span>
+            )}
+            {report.lines[1] && (
+              <div className="summary-report-line">
+                {React.createElement(lineIconMap[report.lines[1].key] || FaTable, { className: 'summary-report-line-icon' })}
+                <div className="summary-report-line-content">
+                  <strong>{report.lines[1].label}-</strong> {report.lines[1].value}
+                </div>
+              </div>
+            )}
+            {report.lines.slice(2).map((line) => (
+              <div key={line.key} className="summary-report-line">
+                {React.createElement(lineIconMap[line.key] || FaTable, { className: 'summary-report-line-icon' })}
+                <div className="summary-report-line-content">
+                  <strong>{line.label}-</strong> {line.value}
+                </div>
+              </div>
+            ))}
+            <div className="summary-report-line">
+              <FaTable className="summary-report-line-icon" />
+              <div className="summary-report-line-content">
+                <strong>Created By-</strong> {report.createdBy} <strong>On-</strong> {report.createdOn}
+              </div>
+            </div>
+            <div className="summary-report-line">
+              <FaEye className="summary-report-line-icon" />
+              <div className="summary-report-line-content">
+                <strong>Visibility-</strong> {report.visibility}
               </div>
             </div>
           </div>
@@ -466,7 +462,7 @@ const SummaryReportCard = ({
               {detailContent}
             </div>
           ) : null}
-        </>
+        </div>
       )}
     </div>
   </article>

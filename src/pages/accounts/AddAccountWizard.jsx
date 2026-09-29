@@ -132,7 +132,7 @@ const requiredMessages = {
 
 const fieldGroups = {
   basicLeft: [
-    { name: 'accountName', label: 'Account Name', icon: <FaRegBuilding /> },
+    { name: 'accountName', label: 'Account Name', required: true, icon: <FaRegBuilding /> },
     { name: 'accountCategory', label: 'Vertical Name', type: 'select', options: accountCategories, icon: <FaLayerGroup /> },
     { name: 'accountOwner', label: 'Account Owner', type: 'select', options: [], icon: <FaUserAlt /> },
     { name: 'state', label: 'State', type: 'select', options: states, icon: <FaMapMarkerAlt /> },
@@ -150,44 +150,44 @@ const fieldGroups = {
     { name: 'industryType', label: 'Industry Type', type: 'select', options: industryTypes, icon: <FaIndustry /> },
   ],
   dealDetailsLeft: [
-    { name: 'dealDate', label: 'Deal Date', type: 'date' },
-    { name: 'dealName', label: 'Project Name' },
-    { name: 'dealDescription', label: 'Description', type: 'textarea', textareaRows: 2 },
-    { name: 'poValue', label: 'PO Value', type: 'number' },
-    { name: 'dealValue', label: 'Deal Value', type: 'number' },
-    { name: 'consultantName', label: 'Consultant/AR Name' },
-    { name: 'customerRefNo', label: 'Customer Ref. No.' },
-    { name: 'customerQuotationStatus', label: 'Status Of Customer as per quotation Given', type: 'select', options: CUSTOMER_QUOTATION_STATUS_OPTIONS, rowClassName: 'min-h-[64px] flex flex-col justify-end' },
-    { name: 'dealType', label: 'Deal Type', type: 'select', options: dealTypes },
+    { name: 'dealDate', label: 'Deal Date', type: 'date', icon: <FaCalendarAlt /> },
+    { name: 'dealName', label: 'Project Name', icon: <FaBriefcase /> },
+    { name: 'dealDescription', label: 'Description', type: 'textarea', textareaRows: 2, icon: <FaRegFileAlt /> },
+    { name: 'poValue', label: 'PO Value', type: 'number', icon: <FaHashtag /> },
+    { name: 'dealValue', label: 'Deal Value', type: 'number', icon: <FaHashtag /> },
+    { name: 'consultantName', label: 'Consultant/AR Name', icon: <FaUserTie /> },
+    { name: 'customerRefNo', label: 'Customer Ref. No.', icon: <FaHashtag /> },
+    { name: 'customerQuotationStatus', label: 'Status Of Customer as per quotation Given', type: 'select', options: CUSTOMER_QUOTATION_STATUS_OPTIONS, icon: <FaRegFileAlt /> },
+    { name: 'dealType', label: 'Deal Type', type: 'select', options: dealTypes, icon: <FaLayerGroup /> },
   ],
   dealDetailsRight: [
-    { name: 'dealOwner', label: 'Deal Owner', type: 'select', options: [], required: true },
-    { name: 'pmcName', label: 'PMC Name' },
-    { name: 'address', label: 'Address', type: 'textarea', textareaRows: 2 },
-    { name: 'dealCity', label: 'City' },
-    { name: 'expectedClosureDate', label: 'Expected Closure Date', type: 'date' },
-    { name: 'probability', label: 'Probability (%)', type: 'range' },
-    { name: 'productCategory', label: 'Product Category', type: 'select', options: [{ value: 'TTA', label: 'TTA' }, { value: 'Non TTA', label: 'Non TTA' }, { value: 'LT', label: 'LT' }, { value: 'HT', label: 'HT' }, { value: 'BUSDUC', label: 'BUSDUC' }, { value: 'AUTOMATION', label: 'AUTOMATION' }] },
-    { name: 'customerRefDate', label: 'Customer Ref. Date', type: 'date' },
-    { name: 'gstin', label: 'GSTIN' },
-    { name: 'jobNo', label: 'Job No' },
-    { name: 'customerOrderStatus', label: 'Status of Customer as per Order Received', type: 'select', options: DEAL_LIFECYCLE_STATUS_OPTIONS, rowClassName: 'min-h-[64px] flex flex-col justify-end' },
+    { name: 'dealOwner', label: 'Deal Owner', type: 'select', options: [], required: true, icon: <FaUserAlt /> },
+    { name: 'pmcName', label: 'PMC Name', icon: <FaHardHat /> },
+    { name: 'address', label: 'Address', type: 'textarea', textareaRows: 2, icon: <FaRegMap /> },
+    { name: 'dealCity', label: 'City', icon: <FaMapMarkerAlt /> },
+    { name: 'expectedClosureDate', label: 'Expected Closure Date', type: 'date', icon: <FaCalendarDay /> },
+    { name: 'probability', label: 'Probability (%)', type: 'range', icon: <FaHashtag /> },
+    { name: 'productCategory', label: 'Product Category', type: 'select', options: [{ value: 'TTA', label: 'TTA' }, { value: 'Non TTA', label: 'Non TTA' }, { value: 'LT', label: 'LT' }, { value: 'HT', label: 'HT' }, { value: 'BUSDUC', label: 'BUSDUC' }, { value: 'AUTOMATION', label: 'AUTOMATION' }], icon: <FaLayerGroup /> },
+    { name: 'customerRefDate', label: 'Customer Ref. Date', type: 'date', icon: <FaCalendarAlt /> },
+    { name: 'gstin', label: 'GSTIN', icon: <FaHashtag /> },
+    { name: 'jobNo', label: 'Job No', icon: <FaBriefcase /> },
+    { name: 'customerOrderStatus', label: 'Status of Customer as per Order Received', type: 'select', options: DEAL_LIFECYCLE_STATUS_OPTIONS, icon: <FaRegFileAlt /> },
   ],
   contactsLeft: [
-    { name: 'contactPerson', label: 'Contact Person' },
-    { name: 'contactDesignation', label: 'Designation' },
+    { name: 'contactPerson', label: 'Contact Person', icon: <FaRegUser /> },
+    { name: 'contactDesignation', label: 'Designation', icon: <FaUserTie /> },
   ],
   contactsRight: [
-    { name: 'contactEmail', label: 'Contact Email', type: 'email' },
-    { name: 'contactPhone', label: 'Contact Phone', type: 'tel' },
-    { name: 'contactMobile', label: 'Contact Mobile', type: 'tel' },
+    { name: 'contactEmail', label: 'Contact Email', type: 'email', icon: <FaRegFileAlt /> },
+    { name: 'contactPhone', label: 'Contact Phone', type: 'tel', icon: <FaHashtag /> },
+    { name: 'contactMobile', label: 'Contact Mobile', type: 'tel', icon: <FaHashtag /> },
   ],
   reminderLeft: [
-    { name: 'reminderDate', label: 'Reminder Date', type: 'date' },
-    { name: 'reminderMode', label: 'Reminder Mode', type: 'select', options: reminderTypes },
+    { name: 'reminderDate', label: 'Reminder Date', type: 'date', icon: <FaCalendarAlt /> },
+    { name: 'reminderMode', label: 'Reminder Mode', type: 'select', options: reminderTypes, icon: <FaLayerGroup /> },
   ],
   reminderRight: [
-    { name: 'remark', label: 'Remark', type: 'textarea', textareaRows: 4, fieldClassName: 'min-h-[110px]' },
+    { name: 'remark', label: 'Remark', type: 'textarea', textareaRows: 4, fieldClassName: 'min-h-[100px]', icon: <FaRegFileAlt /> },
   ],
 }
 
@@ -363,6 +363,16 @@ const AddAccountWizard = () => {
   const validateStep = (stepIndex) => {
     const nextErrors = {}
 
+    if (stepIndex === 0) {
+      if (isExistingCustomer) {
+        if (!selectedCustomerId) {
+          nextErrors.customer = 'Select an existing customer before continuing.'
+        }
+      } else if (!String(formData.accountName || '').trim()) {
+        nextErrors.accountName = 'Account Name is required.'
+      }
+    }
+
     if (formData.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)) {
       nextErrors.contactEmail = 'Enter a valid contact email.'
     }
@@ -373,6 +383,14 @@ const AddAccountWizard = () => {
 
   const validateAllSteps = () => {
     const collectedErrors = {}
+
+    if (isExistingCustomer) {
+      if (!selectedCustomerId) {
+        collectedErrors.customer = 'Select an existing customer before saving.'
+      }
+    } else if (!String(formData.accountName || '').trim()) {
+      collectedErrors.accountName = 'Account Name is required.'
+    }
 
     if (formData.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)) {
       collectedErrors.contactEmail = 'Enter a valid contact email.'
@@ -398,6 +416,10 @@ const AddAccountWizard = () => {
   }
 
   const handleNext = () => {
+    if (!validateStep(currentStep)) {
+      triggerErrorScroll()
+      return
+    }
     setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1))
     setValidationNotice([])
   }
@@ -598,15 +620,23 @@ const AddAccountWizard = () => {
       const isCurrencyField = field.name === 'poValue' || field.name === 'dealValue'
       if (isCurrencyField) {
         return (
-          <div key={field.name} className="legacy-form-row legacy-form-row-inline mb-3">
-            <label className="legacy-form-label text-[11px] font-medium text-slate-500 w-32 flex-shrink-0">
-              {field.label} {field.required && <span className="text-red-500">*</span>}
+          <div key={field.name} className="legacy-form-row">
+            <label className="legacy-form-label">
+              {field.icon ? (
+                <span className="legacy-form-icon-wrap">
+                  {field.icon}
+                </span>
+              ) : null}
+              <span className="legacy-form-label-text">
+                {field.label} {field.required && <span className="text-red-500">*</span>}
+              </span>
             </label>
-            <div className="flex-1 flex items-center gap-1">
+            <div>
+              <div className="flex items-center gap-1.5 w-full">
               <select
                 value={formData.valueCurrency || 'INR'}
                 onChange={(e) => handleChange('valueCurrency', e.target.value)}
-                className="py-1 px-2 text-xs border border-gray-300 rounded bg-slate-50 font-bold text-slate-700 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+                className="min-h-[38px] py-1.5 px-2.5 text-xs font-bold border border-slate-300 rounded-md bg-slate-50 text-slate-700 outline-none focus:border-[#c60016] focus:ring-1 focus:ring-[#c60016]/20 shrink-0"
               >
                 {['INR', 'USD', 'AED', 'EUR', 'GBP'].map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -618,10 +648,11 @@ const AddAccountWizard = () => {
                 value={formData[field.name] || ''}
                 onChange={(e) => handleChange(field.name, e.target.value)}
                 placeholder={field.placeholder || '0.00'}
-                className={`w-full py-1 px-2 text-sm border rounded outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 ${errors[field.name] ? 'border-red-500' : 'border-gray-300'}`}
+                className={`legacy-form-control w-full min-h-[38px] py-1.5 px-3 text-sm border rounded-md outline-none bg-white text-slate-800 focus:border-[#c60016] focus:ring-1 focus:ring-[#c60016]/20 ${errors[field.name] ? 'border-[#c60016]' : 'border-slate-300'}`}
               />
             </div>
             {errors[field.name] && <p className="text-xs text-red-600 mt-1 legacy-form-error-message">{errors[field.name]}</p>}
+            </div>
           </div>
         )
       }
@@ -641,7 +672,7 @@ const AddAccountWizard = () => {
           textareaRows={field.textareaRows}
           fieldClassName={field.fieldClassName}
           layout={options.layout}
-          rowClassName={[options.rowClassName, field.rowClassName].filter(Boolean).join(' ')}
+          rowClassName={[options.rowClassName, field.rowClassName, field.type === 'textarea' ? 'legacy-form-row-textarea' : ''].filter(Boolean).join(' ')}
           inputWrapperClassName={options.inputWrapperClassName}
           icon={field.icon}
         />
@@ -663,7 +694,7 @@ const AddAccountWizard = () => {
 
         {currentStep === 0 ? (
           <>
-            <div className="add-account-landscape-section" style={{ padding: '2rem 2.5rem' }}>
+            <div className="add-account-landscape-section add-account-basic-section add-account-unified-section">
               <div className="add-account-mockup-header-row">
                 <div className="add-account-mockup-header-title">
                   <div className="add-account-mockup-header-title-bar"></div>
@@ -671,6 +702,16 @@ const AddAccountWizard = () => {
                     <h2>Account Basic Details</h2>
                     <p>Enter the key details about the account. Fields marked with an asterisk (*) are mandatory.</p>
                   </div>
+                </div>
+                <div className="add-account-mockup-step-chip" aria-label={`Step ${currentStep + 1} of ${steps.length}`}>
+                  <span>STEP {currentStep + 1} OF {steps.length}</span>
+                  {steps.map((step, index) => (
+                    <i
+                      key={step.id}
+                      className={index === currentStep ? 'is-active' : ''}
+                      aria-hidden="true"
+                    />
+                  ))}
                 </div>
               </div>
 
@@ -744,26 +785,37 @@ const AddAccountWizard = () => {
                   </div>
                 ) : null
               ) : (
-                <div className="add-account-split-layout">
-                  <div className="add-account-split-col">
-                    {renderFieldGroup(
-                      fieldGroups.basicLeft.map(f => f.name === 'accountOwner' ? { ...f, options: activeOwners } : f),
-                      { layout: 'inline' }
-                    )}
-                  </div>
-                  <div className="add-account-split-divider"></div>
-                  <div className="add-account-split-col">
-                    {renderFieldGroup(fieldGroups.basicRight, { layout: 'inline' })}
-                  </div>
-                </div>
+                (() => {
+                  const basicLeftFieldsPrepared = fieldGroups.basicLeft.map(f => (
+                    f.name === 'accountOwner' ? { ...f, options: activeOwners } : f
+                  ))
+                  const basicRightFieldsPrepared = fieldGroups.basicRight
+
+                  return (
+                    <div className="add-account-mockup-columns">
+                      <div className="add-account-mockup-column">
+                        {renderFieldGroup(basicLeftFieldsPrepared, { layout: 'inline' })}
+                      </div>
+                      <div className="add-account-mockup-column">
+                        {renderFieldGroup(basicRightFieldsPrepared, { layout: 'inline' })}
+                      </div>
+                    </div>
+                  )
+                })()
               )}
             </div>
 
-            <LegacyFormSection
-              title="Project Details"
-              subtitle="Key project and deal information for this account."
-              className="add-account-landscape-section"
-            >
+            <div className="add-account-landscape-section add-account-project-section add-account-unified-section">
+              <div className="add-account-mockup-header-row">
+                <div className="add-account-mockup-header-title">
+                  <div className="add-account-mockup-header-title-bar"></div>
+                  <div>
+                    <h2>Project Details</h2>
+                    <p>Key project and deal information for this account.</p>
+                  </div>
+                </div>
+              </div>
+
               {(() => {
                 const dealLeftFieldsPrepared = fieldGroups.dealDetailsLeft.map((f) => ({
                   ...f,
@@ -774,34 +826,29 @@ const AddAccountWizard = () => {
                   options: f.name === 'dealOwner' ? activeOwners : f.options,
                   required: isExistingCustomer ? false : f.required,
                 }))
-                const maxRows = Math.max(dealLeftFieldsPrepared.length, dealRightFieldsWithOwners.length)
-                const rows = Array.from({ length: maxRows }, (_, i) => ({
-                  left: dealLeftFieldsPrepared[i] || null,
-                  right: dealRightFieldsWithOwners[i] || null,
-                }))
 
                 return (
-                  <div className="flex flex-col gap-3">
-                    {rows.map((row, idx) => (
-                      <div key={idx} className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 items-start">
-                        <div>
-                          {row.left ? renderFieldGroup([row.left], { layout: 'inline' }) : null}
-                        </div>
-                        <div>
-                          {row.right ? renderFieldGroup([row.right], { layout: 'inline' }) : null}
-                          {row.right?.name === 'productCategory' && formData.productCategory === 'TTA' && (
-                            <div className="mt-2.5 p-3 bg-slate-50 border border-slate-200 rounded-lg">
-                              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  <div className="add-account-mockup-columns">
+                    <div className="add-account-mockup-column">
+                      {renderFieldGroup(dealLeftFieldsPrepared, { layout: 'inline' })}
+                    </div>
+                    <div className="add-account-mockup-column">
+                      {dealRightFieldsWithOwners.map((field) => (
+                        <React.Fragment key={field.name}>
+                          {renderFieldGroup([field], { layout: 'inline' })}
+                          {field.name === 'productCategory' && formData.productCategory === 'TTA' && (
+                            <div className="add-account-panel-assemblies">
+                              <label className="add-account-panel-assemblies-title">
                                 Panel Assemblies
                               </label>
-                              <div className="flex flex-wrap gap-4">
+                              <div className="add-account-panel-assemblies-options">
                                 {['L&T/L&K', 'ABP', 'Siemens', 'Schneider'].map((option) => {
                                   const isChecked = Array.isArray(formData.panelAssemblies)
                                     ? formData.panelAssemblies.includes(option)
                                     : String(formData.panelAssemblies || '').split(',').map((s) => s.trim()).includes(option)
 
                                   return (
-                                    <label key={option} className="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+                                    <label key={option} className="add-account-panel-assembly-option">
                                       <input
                                         type="checkbox"
                                         value={option}
@@ -819,7 +866,6 @@ const AddAccountWizard = () => {
                                           }
                                           setFormData((prev) => ({ ...prev, panelAssemblies: next }))
                                         }}
-                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                       />
                                       <span>{option}</span>
                                     </label>
@@ -828,54 +874,90 @@ const AddAccountWizard = () => {
                               </div>
                             </div>
                           )}
-                        </div>
-                      </div>
-                    ))}
+                        </React.Fragment>
+                      ))}
+                    </div>
                   </div>
                 )
               })()}
-            </LegacyFormSection>
+            </div>
           </>
         ) : null}
 
         {currentStep === 1 ? (
-          <LegacyFormSection
-            title="Contacts"
-            subtitle="Add the primary contact details linked to this account."
-            className="add-account-landscape-section"
-          >
-            <div className="add-account-landscape-field-grid add-account-landscape-field-grid-two">
-              <div className="add-account-landscape-field-column">{renderFieldGroup(fieldGroups.contactsLeft, { layout: 'inline' })}</div>
-              <div className="add-account-landscape-field-column">{renderFieldGroup(fieldGroups.contactsRight, { layout: 'inline' })}</div>
+          <div className="add-account-landscape-section add-account-unified-section">
+            <div className="add-account-mockup-header-row">
+              <div className="add-account-mockup-header-title">
+                <div className="add-account-mockup-header-title-bar"></div>
+                <div>
+                  <h2>Contacts</h2>
+                  <p>Add the primary contact details linked to this account.</p>
+                </div>
+              </div>
+              <div className="add-account-mockup-step-chip" aria-label={`Step 2 of ${steps.length}`}>
+                <span>STEP 2 OF {steps.length}</span>
+                {steps.map((step, index) => (
+                  <i
+                    key={step.id}
+                    className={index === 1 ? 'is-active' : ''}
+                    aria-hidden="true"
+                  />
+                ))}
+              </div>
             </div>
-          </LegacyFormSection>
+
+            <div className="add-account-mockup-columns">
+              <div className="add-account-mockup-column">
+                {renderFieldGroup(fieldGroups.contactsLeft, { layout: 'inline' })}
+              </div>
+              <div className="add-account-mockup-column">
+                {renderFieldGroup(fieldGroups.contactsRight, { layout: 'inline' })}
+              </div>
+            </div>
+          </div>
         ) : null}
 
         {currentStep === 2 ? (
-          <LegacyFormSection
-            title="Reminders"
-            subtitle="Capture follow-up details and internal notes before saving the account."
-            className="add-account-landscape-section"
-          >
-            <div className="add-account-landscape-field-grid add-account-landscape-field-grid-two">
-              <div className="add-account-landscape-field-column">{renderFieldGroup(fieldGroups.reminderLeft, { layout: 'stacked' })}</div>
-              <div className="add-account-landscape-field-column">{renderFieldGroup(fieldGroups.reminderRight, { layout: 'stacked' })}</div>
+          <div className="add-account-landscape-section add-account-unified-section">
+            <div className="add-account-mockup-header-row">
+              <div className="add-account-mockup-header-title">
+                <div className="add-account-mockup-header-title-bar"></div>
+                <div>
+                  <h2>Reminders & Remark</h2>
+                  <p>Capture follow-up details and internal notes before saving the account.</p>
+                </div>
+              </div>
+              <div className="add-account-mockup-step-chip" aria-label={`Step 3 of ${steps.length}`}>
+                <span>STEP 3 OF {steps.length}</span>
+                {steps.map((step, index) => (
+                  <i
+                    key={step.id}
+                    className={index === 2 ? 'is-active' : ''}
+                    aria-hidden="true"
+                  />
+                ))}
+              </div>
             </div>
-          </LegacyFormSection>
+
+            <div className="add-account-mockup-columns">
+              <div className="add-account-mockup-column">
+                {renderFieldGroup(fieldGroups.reminderLeft, { layout: 'inline' })}
+              </div>
+              <div className="add-account-mockup-column">
+                {renderFieldGroup(fieldGroups.reminderRight, { layout: 'inline' })}
+              </div>
+            </div>
+          </div>
         ) : null}
 
         <div className="add-account-landscape-footer">
-          <div className="add-account-mockup-footer-progress">
-            <span className="add-account-mockup-footer-step">Step {currentStep + 1} of {steps.length}</span>
-            <div className="add-account-mockup-footer-bar">
-              <div 
-                className="add-account-mockup-footer-bar-fill" 
-                style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-              ></div>
-            </div>
-            <span className="add-account-mockup-footer-percent">{Math.round(((currentStep + 1) / steps.length) * 100)}%</span>
-          </div>
-
+          <button
+            type="button"
+            onClick={() => navigate(backPath)}
+            className="add-account-landscape-button add-account-landscape-button-cancel"
+          >
+            Cancel
+          </button>
           <div className="add-account-mockup-footer-actions">
             <button
               type="button"
@@ -890,9 +972,9 @@ const AddAccountWizard = () => {
               <button
                 type="button"
                 onClick={handleNext}
-                className="add-account-landscape-button add-account-landscape-button-primary"
-              >
-                Next &gt;
+              className="add-account-landscape-button add-account-landscape-button-primary"
+            >
+                Next <span aria-hidden="true">-&gt;</span>
               </button>
             ) : (
               <button
@@ -903,14 +985,6 @@ const AddAccountWizard = () => {
                 {saving ? 'Saving...' : 'Submit'}
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={() => navigate(backPath)}
-              className="add-account-landscape-button add-account-landscape-button-cancel"
-            >
-              Cancel
-            </button>
           </div>
         </div>
       </form>

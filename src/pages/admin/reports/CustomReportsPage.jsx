@@ -1551,7 +1551,7 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
                     <button
                       type="button"
                       className={`cr-list-subitem-btn ${activeCustomSubFilter === 'account' ? 'active-subitem' : ''}`}
-                      style={{ textAlign: 'left', background: activeCustomSubFilter === 'account' ? '#e3f2fd' : 'none', border: 'none', padding: '0.4rem 0.6rem', borderRadius: '4px', cursor: 'pointer', color: activeCustomSubFilter === 'account' ? '#1976d2' : '#444', fontWeight: activeCustomSubFilter === 'account' ? '600' : 'normal', fontSize: '0.85rem' }}
+                      style={{ textAlign: 'left', background: activeCustomSubFilter === 'account' ? '#fff1f2' : 'none', border: 'none', padding: '0.4rem 0.6rem', borderRadius: '4px', cursor: 'pointer', color: activeCustomSubFilter === 'account' ? '#c60016' : '#444', fontWeight: activeCustomSubFilter === 'account' ? '600' : 'normal', fontSize: '0.85rem' }}
                       onClick={() => setActiveCustomSubFilter('account')}
                     >
                       Accounts
@@ -1559,7 +1559,7 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
                     <button
                       type="button"
                       className={`cr-list-subitem-btn ${activeCustomSubFilter === 'customer' ? 'active-subitem' : ''}`}
-                      style={{ textAlign: 'left', background: activeCustomSubFilter === 'customer' ? '#e3f2fd' : 'none', border: 'none', padding: '0.4rem 0.6rem', borderRadius: '4px', cursor: 'pointer', color: activeCustomSubFilter === 'customer' ? '#1976d2' : '#444', fontWeight: activeCustomSubFilter === 'customer' ? '600' : 'normal', fontSize: '0.85rem' }}
+                      style={{ textAlign: 'left', background: activeCustomSubFilter === 'customer' ? '#fff1f2' : 'none', border: 'none', padding: '0.4rem 0.6rem', borderRadius: '4px', cursor: 'pointer', color: activeCustomSubFilter === 'customer' ? '#c60016' : '#444', fontWeight: activeCustomSubFilter === 'customer' ? '600' : 'normal', fontSize: '0.85rem' }}
                       onClick={() => setActiveCustomSubFilter('customer')}
                     >
                       Customers
@@ -1567,7 +1567,7 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
                     <button
                       type="button"
                       className={`cr-list-subitem-btn ${activeCustomSubFilter === 'deal' ? 'active-subitem' : ''}`}
-                      style={{ textAlign: 'left', background: activeCustomSubFilter === 'deal' ? '#e3f2fd' : 'none', border: 'none', padding: '0.4rem 0.6rem', borderRadius: '4px', cursor: 'pointer', color: activeCustomSubFilter === 'deal' ? '#1976d2' : '#444', fontWeight: activeCustomSubFilter === 'deal' ? '600' : 'normal', fontSize: '0.85rem' }}
+                      style={{ textAlign: 'left', background: activeCustomSubFilter === 'deal' ? '#fff1f2' : 'none', border: 'none', padding: '0.4rem 0.6rem', borderRadius: '4px', cursor: 'pointer', color: activeCustomSubFilter === 'deal' ? '#c60016' : '#444', fontWeight: activeCustomSubFilter === 'deal' ? '600' : 'normal', fontSize: '0.85rem' }}
                       onClick={() => setActiveCustomSubFilter('deal')}
                     >
                       Deals
@@ -1575,7 +1575,7 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
                     <button
                       type="button"
                       className={`cr-list-subitem-btn ${activeCustomSubFilter === 'quotation' ? 'active-subitem' : ''}`}
-                      style={{ textAlign: 'left', background: activeCustomSubFilter === 'quotation' ? '#e3f2fd' : 'none', border: 'none', padding: '0.4rem 0.6rem', borderRadius: '4px', cursor: 'pointer', color: activeCustomSubFilter === 'quotation' ? '#1976d2' : '#444', fontWeight: activeCustomSubFilter === 'quotation' ? '600' : 'normal', fontSize: '0.85rem' }}
+                      style={{ textAlign: 'left', background: activeCustomSubFilter === 'quotation' ? '#fff1f2' : 'none', border: 'none', padding: '0.4rem 0.6rem', borderRadius: '4px', cursor: 'pointer', color: activeCustomSubFilter === 'quotation' ? '#c60016' : '#444', fontWeight: activeCustomSubFilter === 'quotation' ? '600' : 'normal', fontSize: '0.85rem' }}
                       onClick={() => setActiveCustomSubFilter('quotation')}
                     >
                       Quotations

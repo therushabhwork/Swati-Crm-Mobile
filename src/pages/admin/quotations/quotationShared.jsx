@@ -1691,7 +1691,7 @@ export function QuotationPdfViewer({
             <button
               type="button"
               className="aqp-pdf-action-btn"
-              style={{ backgroundColor: '#16a34a', color: '#ffffff', borderColor: '#15803d' }}
+              style={{ backgroundColor: '#c60016', color: '#ffffff', borderColor: '#a80012' }}
               onClick={() => onApprove(documentData)}
               aria-label="Approve quotation"
             >
@@ -1994,7 +1994,7 @@ export function RevisionsListModal({
                         <button
                           type="button"
                           className="aqp-btn aqp-btn--primary aqp-btn--sm"
-                          style={{ backgroundColor: '#16a34a', borderColor: '#15803d', color: '#ffffff' }}
+                          style={{ backgroundColor: '#c60016', borderColor: '#a80012', color: '#ffffff' }}
                           onClick={(e) => {
                             e.stopPropagation()
                             onApproveRevision({ ...rev.rawRecord, revisionCode: rev.revisionCode, num: rev.quotationNumber })

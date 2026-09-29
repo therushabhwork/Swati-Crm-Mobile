@@ -7,6 +7,9 @@ import { getVisibleAccountStages } from '../../features/adminAccounts/config/acc
 import './AddRemarksModal.css'
 
 const REMARK_CATEGORIES = [
+  { value: 'call-log', label: 'CALL LOG' },
+  { value: 'meeting', label: 'MEETING' },
+  { value: 'email', label: 'EMAIL' },
   { value: 'feedback', label: 'FEEDBACK' },
   { value: 'general', label: 'GENERAL' },
 ]
@@ -137,9 +140,12 @@ const getAccountInfoDisplayValue = (accountData, field, drafts = {}) => {
   return draftValue ?? getEditableAccountValue(accountData, field.key)
 }
 
-const AddRemarksModal = ({ isOpen, onClose, accountData, onSave, onSaveAccountField, isLoading = false }) => {
-  const [category, setCategory] = useState('feedback')
+const AddRemarksModal = ({ isOpen, onClose, accountData, dealData, onSave, onSaveAccountField, isLoading = false }) => {
+  const targetEntity = accountData || dealData
+  const [category, setCategory] = useState('call-log')
   const [content, setContent] = useState('')
+  const [startTime, setStartTime] = useState('09:00')
+  const [endTime, setEndTime] = useState('09:30')
   const [hasReminder, setHasReminder] = useState(false)
   const [reminderDate, setReminderDate] = useState('')
   const [reminderTime, setReminderTime] = useState('09:00')
@@ -303,9 +309,16 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, onSave, onSaveAccountFi
     }
 
     const remarkData = {
-      accountId: accountData?.id,
+      accountId: accountData?.id || null,
+      dealId: dealData?.id || null,
+      relatedEntityId: String(dealData?.id || accountData?.id || ''),
+      relatedEntityType: dealData ? 'deal' : 'account',
       category,
       content,
+      startTime: category === 'call-log' ? startTime : null,
+      endTime: category === 'call-log' ? endTime : null,
+      remarkDate: new Date().toISOString().split('T')[0],
+      callLogTime: startTime,
       assignment: {
         mode: assignmentMode,
         userIds: expandedAssignmentUserIds,
@@ -331,8 +344,10 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, onSave, onSaveAccountFi
   }
 
   const resetForm = () => {
-    setCategory('feedback')
+    setCategory('call-log')
     setContent('')
+    setStartTime('09:00')
+    setEndTime('09:30')
     setHasReminder(false)
     setReminderDate('')
     setReminderTime('09:00')

@@ -176,6 +176,28 @@ const UserDashboardPage = () => {
     })
   }
 
+  const [todoFilter, setTodoFilter] = useState('all')
+
+  const counts = useMemo(() => {
+    const reminderCount = todoItems.filter((item) => item.type.includes('REMINDER')).length
+    const taskCount = todoItems.filter((item) => item.type === 'TASK').length
+    const replyCount = todoItems.filter((item) => item.type === 'REPLY').length
+    return { all: todoItems.length, reminder: reminderCount, task: taskCount, reply: replyCount }
+  }, [todoItems])
+
+  const displayedTodoItems = useMemo(() => {
+    if (todoFilter === 'reminder') {
+      return todoItems.filter((item) => item.type.includes('REMINDER'))
+    }
+    if (todoFilter === 'task') {
+      return todoItems.filter((item) => item.type === 'TASK')
+    }
+    if (todoFilter === 'reply') {
+      return todoItems.filter((item) => item.type === 'REPLY')
+    }
+    return todoItems
+  }, [todoItems, todoFilter])
+
   const currentFormattedDateTime = useMemo(() => {
     const now = new Date()
     const dateStr = now.toLocaleDateString('en-GB')
@@ -254,15 +276,54 @@ const UserDashboardPage = () => {
         </div>
       </div>
 
-      {/* Main 2-Column Section */}
-      <div className="ud-main-layout">
-        {/* Left Wide Column: To Do List */}
-        <div className="ud-card ud-todo-card">
-          <div className="ud-card-header">
+      {/* Full Width To Do List Card */}
+      <div className="ud-todo-full-container">
+        <div className="ud-card ud-todo-card ud-todo-card--expansive">
+          <div className="ud-card-header ud-todo-header-expansive">
             <div className="ud-card-header-left">
-              <FaClipboardList className="ud-card-header-icon" />
-              <h3>To Do List</h3>
+              <div className="ud-todo-header-icon-box">
+                <FaClipboardList className="ud-card-header-icon" />
+              </div>
+              <div>
+                <div className="ud-todo-title-row">
+                  <h3>To Do List</h3>
+                  <span className="ud-todo-count-badge">{counts.all} items</span>
+                </div>
+                <p className="ud-todo-subtitle">Prioritized follow-ups, pending tasks, and support updates</p>
+              </div>
             </div>
+
+            <div className="ud-todo-filter-tabs">
+              <button
+                type="button"
+                className={`ud-todo-tab ${todoFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setTodoFilter('all')}
+              >
+                All ({counts.all})
+              </button>
+              <button
+                type="button"
+                className={`ud-todo-tab ${todoFilter === 'reminder' ? 'active' : ''}`}
+                onClick={() => setTodoFilter('reminder')}
+              >
+                Reminders ({counts.reminder})
+              </button>
+              <button
+                type="button"
+                className={`ud-todo-tab ${todoFilter === 'task' ? 'active' : ''}`}
+                onClick={() => setTodoFilter('task')}
+              >
+                Tasks ({counts.task})
+              </button>
+              <button
+                type="button"
+                className={`ud-todo-tab ${todoFilter === 'reply' ? 'active' : ''}`}
+                onClick={() => setTodoFilter('reply')}
+              >
+                Replies ({counts.reply})
+              </button>
+            </div>
+
             <div className="ud-card-header-right">
               <button
                 type="button"
@@ -281,18 +342,23 @@ const UserDashboardPage = () => {
             </div>
           </div>
 
-          <div className="ud-todo-list">
-            {todoItems.length > 0 ? todoItems.slice(0, 6).map((item) => (
-              <div key={item.id} className="ud-todo-row" onClick={item.onClick}>
-                <div className="ud-todo-icon-box">
+          <div className="ud-todo-list ud-todo-list--expansive">
+            {displayedTodoItems.length > 0 ? displayedTodoItems.map((item) => (
+              <div key={item.id} className={`ud-todo-row ud-todo-row--${item.type.toLowerCase().replace(/[^a-z]/g, '')}`} onClick={item.onClick}>
+                <div className={`ud-todo-icon-box ud-todo-icon-box--${item.type.toLowerCase().includes('reminder') ? 'reminder' : item.type.toLowerCase().includes('task') ? 'task' : 'reply'}`}>
                   <FaCalendarAlt />
                 </div>
                 <div className="ud-todo-body">
                   <div className="ud-todo-meta-line">
-                    <span className="ud-todo-badge">{item.type}</span>
+                    <span className={`ud-todo-badge ud-todo-badge--${item.type.toLowerCase().includes('reminder') ? 'reminder' : item.type.toLowerCase().includes('task') ? 'task' : 'reply'}`}>
+                      {item.type}
+                    </span>
                     <span className="ud-todo-date">{item.meta}</span>
                   </div>
                   <div className="ud-todo-title-text">{item.title || item.message}</div>
+                  {item.message && item.title && item.message !== item.title ? (
+                    <div className="ud-todo-desc-text">{item.message}</div>
+                  ) : null}
                 </div>
                 {item.reminder ? (
                   <div className="ud-todo-btn-group">
@@ -311,97 +377,77 @@ const UserDashboardPage = () => {
                       Close
                     </button>
                   </div>
-                ) : null}
+                ) : (
+                  <div className="ud-todo-btn-group">
+                    <button
+                      type="button"
+                      className="ud-view-action-btn"
+                      onClick={item.onClick}
+                    >
+                      Open &rarr;
+                    </button>
+                  </div>
+                )}
               </div>
             )) : (
-              <div className="ud-todo-row">
-                <div className="ud-todo-icon-box">
-                  <FaCalendarAlt />
-                </div>
-                <div className="ud-todo-body">
-                  <div className="ud-todo-meta-line">
-                    <span className="ud-todo-badge">REMINDER (NONE)</span>
-                    <span className="ud-todo-date">30 Sept, 05:30 am</span>
-                  </div>
-                  <div className="ud-todo-title-text">abc</div>
-                </div>
-                <div className="ud-todo-btn-group">
-                  <button type="button" className="ud-active-pill-btn">Active</button>
-                  <button type="button" className="ud-close-pill-btn">Close</button>
-                </div>
+              <div className="ud-todo-empty-state">
+                <FaClipboardList className="ud-todo-empty-icon" />
+                <p>No {todoFilter !== 'all' ? todoFilter : ''} to-do items found right now.</p>
               </div>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Right Stacked Column: Integrations & Live Activity */}
-        <div className="ud-right-column">
-          {/* Integrations Card */}
-          <div className="ud-card ud-integrations-card">
-            <div className="ud-card-header">
-              <div className="ud-card-header-left">
-                <FaThLarge className="ud-card-header-icon" />
-                <h3>Integrations</h3>
-              </div>
-              <button
-                type="button"
-                className="ud-link-btn"
-                onClick={() => navigate('/integrations')}
-              >
-                Manage &rarr;
-              </button>
-            </div>
-            <div className="ud-integrations-grid">
-              <div className="ud-integration-box" onClick={() => navigate('/outlook')}>
-                <div className="ud-integ-icon-box ud-integ-icon-box--blue">
-                  <FaEnvelope />
-                </div>
-                <div className="ud-integ-info">
-                  <div className="ud-integ-title">Outlook Mail</div>
-                  <div className="ud-integ-subtext">Connect...</div>
-                </div>
-                <FaArrowRight className="ud-integ-arrow" />
-              </div>
-
-              <div className="ud-integration-box" onClick={() => navigate('/support-requests/help')}>
-                <div className="ud-integ-icon-box ud-integ-icon-box--red">
-                  <FaHeadset />
-                </div>
-                <div className="ud-integ-info">
-                  <div className="ud-integ-title">CRM Support</div>
-                  <div className="ud-integ-subtext">Open Su...</div>
-                </div>
-                <FaArrowRight className="ud-integ-arrow" />
-              </div>
+      {/* Integrations & Live Activity Row */}
+      <div className="ud-side-widgets-row">
+        {/* Integrations Card */}
+        <div className="ud-card ud-integrations-card">
+          <div className="ud-card-header">
+            <div className="ud-card-header-left">
+              <FaThLarge className="ud-card-header-icon" />
+              <h3>Integrations</h3>
             </div>
           </div>
-
-          {/* Live Activity Card */}
-          <div className="ud-card ud-live-card">
-            <div className="ud-card-header">
-              <div className="ud-card-header-left">
-                <span className="ud-green-dot" />
-                <h3>Live Activity</h3>
+          <div className="ud-integrations-grid">
+            <div className="ud-integration-box" onClick={() => navigate('/support-requests/help')}>
+              <div className="ud-integ-icon-box ud-integ-icon-box--red">
+                <FaHeadset />
               </div>
-              <button
-                type="button"
-                className="ud-link-btn"
-                onClick={() => navigate('/team-view')}
-              >
-                Team View &rarr;
-              </button>
+              <div className="ud-integ-info">
+                <div className="ud-integ-title">CRM Support</div>
+                <div className="ud-integ-subtext">Open help desk & tickets...</div>
+              </div>
+              <FaArrowRight className="ud-integ-arrow" />
             </div>
-            <div className="ud-live-card-body">
-              <div className="ud-live-user-pill">
-                <div className="ud-live-user-left">
-                  <span className="ud-live-status-chip">• LIVE</span>
-                  <div className="ud-live-user-details">
-                    <span className="ud-live-user-name">{user?.name || 'Keval V Shah...'}</span>
-                    <span className="ud-live-user-sub">{user?.role || 'Director'} • Active...</span>
-                  </div>
+          </div>
+        </div>
+
+        {/* Live Activity Card */}
+        <div className="ud-card ud-live-card">
+          <div className="ud-card-header">
+            <div className="ud-card-header-left">
+              <span className="ud-green-dot" />
+              <h3>Live Activity</h3>
+            </div>
+            <button
+              type="button"
+              className="ud-link-btn"
+              onClick={() => navigate('/team-view')}
+            >
+              Team View &rarr;
+            </button>
+          </div>
+          <div className="ud-live-card-body">
+            <div className="ud-live-user-pill">
+              <div className="ud-live-user-left">
+                <span className="ud-live-status-chip">• LIVE</span>
+                <div className="ud-live-user-details">
+                  <span className="ud-live-user-name">{user?.name || 'Keval V Shah...'}</span>
+                  <span className="ud-live-user-sub">{user?.role || 'Director'} • Active...</span>
                 </div>
-                <span className="ud-live-time-chip">{currentFormattedDateTime}</span>
               </div>
+              <span className="ud-live-time-chip">{currentFormattedDateTime}</span>
             </div>
           </div>
         </div>

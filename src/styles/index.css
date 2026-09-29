@@ -102,7 +102,7 @@ html.is-admin .layout--admin .header-panel::after {
 .sidebar--admin .sb-view-toolbar-button--route-active,
 .sidebar--admin .sb-view-toolbar-button:active {
   background: #dc2626 !important;
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   color: #ffffff !important;
 }
 
@@ -136,7 +136,7 @@ html.is-admin .layout--admin .header-panel::after {
 .sidebar--admin .sb-group-trigger--route-active {
   background: #fdebec !important;
   border-color: #fca5a5 !important;
-  color: #b91c1c !important;
+  color: #c60016 !important;
 }
 
 .sidebar--admin .sb-link--active :where(svg, svg *, .sb-link-icon *, .sb-group-icon *),
@@ -208,17 +208,19 @@ html.is-admin .sidebar--admin .sb-today-section {
    DESIGN TOKENS - Premium SaaS CRM (No Animations)
    ============================================================ */
 :root {
-  /* Brand — Corporate Red & Charcoal Premium Theme */
+  /* Brand — Corporate Red (#c60016) & Charcoal Premium Theme */
+  --admin-red: #c60016;
+  --admin-red-border: #a80012;
   --color-primary: #111827;
   --color-primary-hover: #1f2937;
-  --color-primary-soft: rgba(220, 38, 38, 0.06);
-  --color-primary-border: rgba(220, 38, 38, 0.2);
+  --color-primary-soft: rgba(198, 0, 22, 0.06);
+  --color-primary-border: rgba(198, 0, 22, 0.2);
   --color-primary-strong: #000000;
 
-  --color-accent-admin: #dc2626;
-  --color-accent-admin-soft: #fef2f2;
-  --color-accent-user: #dc2626;
-  --color-accent-user-soft: #fef2f2;
+  --color-accent-admin: #c60016;
+  --color-accent-admin-soft: #fff5f5;
+  --color-accent-user: #c60016;
+  --color-accent-user-soft: #fff5f5;
 
   /* Status */
   --color-success: #16a34a;
@@ -227,8 +229,8 @@ html.is-admin .sidebar--admin .sb-today-section {
   --color-warning: #ea580c;
   --color-warning-soft: #fff7ed;
   --color-warning-border: #fed7aa;
-  --color-danger: #dc2626;
-  --color-danger-soft: #fef2f2;
+  --color-danger: #c60016;
+  --color-danger-soft: #fff5f5;
   --color-danger-border: #fecaca;
   --color-info: #0284c7;
   --color-info-soft: #f0f9ff;
@@ -676,14 +678,14 @@ samp {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(79, 106, 245, 0.28);
+  background: #c60016;
   border: 2px solid transparent;
   background-clip: padding-box;
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(79, 106, 245, 0.48);
+  background: #a80012;
   background-clip: padding-box;
   border: 2px solid transparent;
 }
@@ -1912,10 +1914,11 @@ html.is-user[data-theme="dark"] *::after {
 }
 
 .layout :where(.btn-primary, button.btn-primary, [class$="-primary-btn"], [class*="-primary-btn "]) {
-  background: linear-gradient(135deg, #2563eb 0%, #14b8a6 54%, #f97316 100%) !important;
-  border-color: color-mix(in srgb, #14b8a6 70%, #2563eb) !important;
+  background: #c60016 !important;
+  border-color: #c60016 !important;
   color: #ffffff !important;
-  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.16) !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(198, 0, 22, 0.2) !important;
 }
 
 .layout :where(
@@ -1948,10 +1951,11 @@ html.is-user[data-theme="dark"] *::after {
   [class*="option"],
   [class*="tab"]
 ) {
-  border: 1px solid color-mix(in srgb, #14b8a6 70%, #2563eb) !important;
-  background: linear-gradient(135deg, #2563eb 0%, #14b8a6 54%, #f97316 100%) !important;
+  border: 1px solid #c60016 !important;
+  background: #c60016 !important;
   color: #ffffff !important;
-  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.16) !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(198, 0, 22, 0.2) !important;
 }
 
 .layout :where(
@@ -1985,25 +1989,22 @@ html.is-user[data-theme="dark"] *::after {
   [class*="option"],
   [class*="tab"]
 ) {
-  border-color: color-mix(in srgb, #0f766e 72%, #1d4ed8) !important;
-  background: linear-gradient(135deg, #1d4ed8 0%, #0f766e 54%, #ea580c 100%) !important;
+  border-color: #a80012 !important;
+  background: #a80012 !important;
   color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .layout :where(.btn-secondary, .btn-outline, .btn-ghost) {
   border-color: var(--border-default) !important;
-  background:
-    linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(20, 184, 166, 0.12), rgba(249, 115, 22, 0.12)),
-    var(--crm-control-bg) !important;
+  background: var(--surface-card) !important;
   color: var(--text-primary) !important;
 }
 
 .layout :where(.btn-secondary, .btn-outline, .btn-ghost):hover:not(:disabled) {
-  border-color: var(--crm-accent-border) !important;
-  background:
-    linear-gradient(135deg, rgba(37, 99, 235, 0.16), rgba(20, 184, 166, 0.18), rgba(249, 115, 22, 0.18)),
-    var(--crm-accent-soft) !important;
-  color: var(--text-primary) !important;
+  border-color: #c60016 !important;
+  background: var(--surface-muted) !important;
+  color: #c60016 !important;
 }
 
 .layout :where(
@@ -2120,10 +2121,10 @@ body:not([data-theme="dark"]) .btn-red-theme:hover {
    Admin red action theme
    ============================================================ */
 :root {
-  --admin-red: #b91c1c;
-  --admin-red-hover: #991b1b;
+  --admin-red: #c60016;
+  --admin-red-hover: #a80012;
   --admin-red-soft: rgba(185, 28, 28, 0.12);
-  --admin-red-border: #991b1b;
+  --admin-red-border: #a80012;
 }
 
 [data-theme="dark"] {
@@ -2307,7 +2308,7 @@ html:not([data-theme="dark"]) .layout--admin :where(
   align-items: center !important;
   visibility: visible !important;
   opacity: 1 !important;
-  border-color: var(--admin-red-border, #b91c1c) !important;
+  border-color: var(--admin-red-border, #c60016) !important;
   background: var(--admin-red, #dc2626) !important;
   background-color: var(--admin-red, #dc2626) !important;
   color: #ffffff !important;
@@ -2355,7 +2356,7 @@ html:not([data-theme="dark"]) :where(
   .admin-customers-grid-number-button:hover,
   .admin-customers-grid-number-button:focus-visible
 ) {
-  border-color: var(--admin-red-border, #b91c1c) !important;
+  border-color: var(--admin-red-border, #c60016) !important;
   background: var(--admin-red, #dc2626) !important;
   background-color: var(--admin-red, #dc2626) !important;
   color: #ffffff !important;
@@ -2395,7 +2396,7 @@ html:not([data-theme="dark"]) :is(.admin-customers-page, .admin-customers-search
 html:not([data-theme="dark"]) :is(.admin-customers-page, .admin-customers-search-page) .admin-customers-grid-number-button:focus-visible {
   background: #dc2626 !important;
   background-color: #dc2626 !important;
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   opacity: 1 !important;
@@ -2425,7 +2426,7 @@ html:not([data-theme="dark"]) .layout--admin :is(.deals-crm-page, .deals-page) .
   min-width: 78px !important;
   min-height: 26px !important;
   padding: 0.18rem 0.5rem !important;
-  border: 1px solid var(--admin-red-border, #b91c1c) !important;
+  border: 1px solid var(--admin-red-border, #c60016) !important;
   background: var(--admin-red, #dc2626) !important;
   background-color: var(--admin-red, #dc2626) !important;
   color: #ffffff !important;
@@ -2468,7 +2469,7 @@ html:not([data-theme="dark"]) :is(.support-request-legacy-page, .support-ticket-
   min-width: 122px !important;
   min-height: 32px !important;
   padding: 0 0.8rem !important;
-  border: 1px solid #b91c1c !important;
+  border: 1px solid #c60016 !important;
   background: #dc2626 !important;
   background-color: #dc2626 !important;
   color: #ffffff !important;
@@ -2520,7 +2521,7 @@ html:not([data-theme="dark"]) .layout--admin .header.header--admin .header-actio
 html:not([data-theme="dark"]) .layout--admin .header.header--admin .header-action-cluster > .hdr-message-wrap > button.hdr-icon-btn:hover,
 html:not([data-theme="dark"]) .layout--admin .header.header--admin .header-action-cluster > .hdr-message-wrap > button.hdr-icon-btn:focus-visible,
 html:not([data-theme="dark"]) .layout--admin .header.header--admin .header-action-cluster > .hdr-message-wrap > button.hdr-icon-btn:active {
-  border: 1px solid var(--admin-red-border, #b91c1c) !important;
+  border: 1px solid var(--admin-red-border, #c60016) !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
   color: var(--admin-red, #dc2626) !important;
@@ -2549,7 +2550,7 @@ html:not([data-theme="dark"]) .layout--admin .right-panel button.rp-action-card.
 html:not([data-theme="dark"]) .layout--admin .right-panel button.rp-action-card.rp-action-card--integration.rp-action-card--outlook:hover,
 html:not([data-theme="dark"]) .layout--admin .right-panel button.rp-action-card.rp-action-card--integration.rp-action-card--outlook:focus-visible,
 html:not([data-theme="dark"]) .layout--admin .right-panel button.rp-action-card.rp-action-card--integration.rp-action-card--outlook:active {
-  border: 1px solid var(--admin-red-border, #b91c1c) !important;
+  border: 1px solid var(--admin-red-border, #c60016) !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
   color: #111827 !important;
@@ -2559,7 +2560,7 @@ html:not([data-theme="dark"]) .layout--admin .right-panel button.rp-action-card.
 }
 
 html:not([data-theme="dark"]) .layout--admin .right-panel button.rp-action-card.rp-action-card--integration.rp-action-card--outlook .rp-action-card__icon {
-  border-color: var(--admin-red-border, #b91c1c) !important;
+  border-color: var(--admin-red-border, #c60016) !important;
   background: var(--admin-red, #dc2626) !important;
   background-color: var(--admin-red, #dc2626) !important;
   color: #ffffff !important;
@@ -2593,19 +2594,19 @@ html:not([data-theme="dark"]) .layout--admin .right-panel button.rp-action-card.
 
 /* User CRM red skin. Scoped away from /admin/* by Layout's html.is-user and .layout--user hooks. */
 html.is-user:not([data-theme="dark"]) body {
-  --user-crm-red: #b91c1c;
-  --user-crm-red-dark: #991b1b;
+  --user-crm-red: #c60016;
+  --user-crm-red-dark: #a80012;
   --user-crm-red-soft: #fff5f5;
   --user-crm-bg: #F4F8FA;
   --user-crm-border: #DCE3E8;
   --user-crm-text: #111827;
   --user-crm-muted: #667085;
-  --color-primary: #b91c1c;
-  --color-primary-hover: #991b1b;
+  --color-primary: #c60016;
+  --color-primary-hover: #a80012;
   --color-primary-soft: #fff5f5;
   --color-primary-border: rgba(185, 28, 28, 0.32);
-  --color-primary-strong: #991b1b;
-  --color-accent-user: #b91c1c;
+  --color-primary-strong: #a80012;
+  --color-accent-user: #c60016;
   --color-accent-user-soft: #fff5f5;
   --surface-app: #F4F8FA;
   --body-bg: #F4F8FA;
@@ -2847,7 +2848,7 @@ html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(
   .sb-plain-link--active,
   .sb-group-trigger--route-active
 ) :where(.sb-link-icon, .sb-plain-icon, .sb-group-icon) {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  background: #c60016 !important;
   color: #ffffff !important;
 }
 
@@ -2881,8 +2882,8 @@ html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-tool
 html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button.sb-view-toolbar-button--route-active,
 html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button.active,
 html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button:active {
-  border-color: #b91c1c !important;
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  border-color: #c60016 !important;
+  background: #c60016 !important;
   color: #ffffff !important;
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
 }
@@ -3738,10 +3739,8 @@ html.is-user:not([data-theme="dark"]) .layout--user .active-reminders-page :is(
 html.is-user:not([data-theme="dark"]) .layout--user .aqp-page :is(
   .aqp-table-wrap,
   .aqp-table,
-  .aqp-thead-row,
   .aqp-search-row,
   .aqp-row,
-  .aqp-th,
   .aqp-search-th,
   .aqp-td
 ) {
@@ -3750,6 +3749,22 @@ html.is-user:not([data-theme="dark"]) .layout--user .aqp-page :is(
   background-color: transparent !important;
   color: #111827 !important;
   -webkit-text-fill-color: #111827 !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) .aqp-page :is(.aqp-thead-row, .aqp-th, thead th) {
+  border-color: #a80012 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) .aqp-page :is(.aqp-thead-row, .aqp-th, thead th) :is(*, span, strong, button, svg, path, .aqp-sort-icon) {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
 }
 
 html.is-user:not([data-theme="dark"]) .layout--user .aqp-page .aqp-row:hover .aqp-td {
@@ -4462,59 +4477,82 @@ html.is-user:not([data-theme="dark"]) .layout--user .support-request-view-page :
   -webkit-text-fill-color: #111827 !important;
 }
 
-/* Final light-mode SR board screenshot override. Dark mode intentionally uses its own rules. */
-html:not([data-theme="dark"]) body #root .layout .support-request-view-page :is(.sr-status-filter-trigger, .sr-status-filter-load, .sr-status-board-column-header) {
-  border-color: #E31B23 !important;
-  background: #E31B23 !important;
-  background-color: #E31B23 !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-
-html:not([data-theme="dark"]) body #root .layout .support-request-view-page :is(.sr-status-filter-trigger, .sr-status-filter-load, .sr-status-board-column-header) :is(svg, span, strong) {
-  color: #ffffff !important;
-  fill: currentColor !important;
-  stroke: currentColor !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-
-html:not([data-theme="dark"]) body #root .layout .support-request-view-page :is(.sr-status-board-toolbar, .sr-status-board-column, .sr-status-board-column-body, .sr-status-board-card) {
+/* Modern Enterprise Support Request Board Styles */
+html:not([data-theme="dark"]) body #root .layout .support-request-view-page .sr-status-board-column-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  height: auto !important;
+  min-height: 42px !important;
+  padding: 0.65rem 0.85rem !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
-  box-shadow: none !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  border-top: 3.5px solid #c60016 !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
 }
 
-html:not([data-theme="dark"]) body #root .layout .support-request-view-page .sr-status-board-shell {
-  border: 0 !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
+html:not([data-theme="dark"]) body #root .layout .support-request-view-page .sr-column-label {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  font-weight: 800 !important;
+  font-size: 0.86rem !important;
 }
 
-html:not([data-theme="dark"]) body #root .layout .support-request-view-page .sr-status-board-wrap {
-  background: #f5f6f8 !important;
-  background-color: #f5f6f8 !important;
+html:not([data-theme="dark"]) body #root .layout .support-request-view-page .sr-column-count-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 1.45rem !important;
+  height: 1.45rem !important;
+  padding: 0 0.4rem !important;
+  border-radius: 999px !important;
+  background: #f1f5f9 !important;
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  font-size: 0.74rem !important;
+  font-weight: 800 !important;
 }
 
-html:not([data-theme="dark"]) body #root .layout .support-request-view-page :is(.sr-status-board-column-body, .sr-status-board-empty, .sr-status-board-card, .sr-status-board-card:hover) {
+html:not([data-theme="dark"]) body #root .layout .support-request-view-page .sr-status-filter-trigger {
+  border-color: #cbd5e1 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
-  color: #111827 !important;
-  box-shadow: none !important;
+  color: #1e293b !important;
+  -webkit-text-fill-color: #1e293b !important;
 }
 
-html:not([data-theme="dark"]) body #root .layout .support-request-view-page .sr-status-board-edge {
-  border-color: #E31B23 !important;
-  background: #E31B23 !important;
-  background-color: #E31B23 !important;
+html:not([data-theme="dark"]) body #root .layout .support-request-view-page .sr-status-board-card {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 9px !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  color: #0f172a !important;
+  padding: 0.75rem 0.85rem !important;
+}
+
+html:not([data-theme="dark"]) body #root .layout .support-request-view-page .sr-status-board-card:hover {
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.07) !important;
+}
+
+html:not([data-theme="dark"]) body #root .layout .support-request-view-page .sr-card-action-view {
+  border: 1px solid #c60016 !important;
+  background: rgba(198, 0, 22, 0.05) !important;
+  color: #c60016 !important;
+  -webkit-text-fill-color: #c60016 !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+}
+
+html:not([data-theme="dark"]) body #root .layout .support-request-view-page .sr-card-action-view:hover {
+  background: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
-}
-
-html:not([data-theme="dark"]) body #root .layout .support-request-view-page .sr-status-board-edge svg {
-  color: #ffffff !important;
-  fill: currentColor !important;
-  stroke: currentColor !important;
 }
 
 /* Active reminders user cards: light mode only, keep all users visible like the Keval card. */
@@ -4578,7 +4616,7 @@ html.is-user:not([data-theme="dark"]) body #root .layout--user .deals-page :is(
   .deals-search-table.table-container,
   .table-container:not(.deals-search-table)
 ) {
-  border: 1px solid #b91c1c !important;
+  border: 1px solid #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
 }
@@ -4589,7 +4627,7 @@ html.is-user:not([data-theme="dark"]) body #root .layout--user .deals-page :is(
   .deals-table,
   .deals-search-table
 ) {
-  border: 1px solid #b91c1c !important;
+  border: 1px solid #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
   color: #111827 !important;
@@ -4602,9 +4640,9 @@ html.is-user:not([data-theme="dark"]) body #root .layout--user .deals-page :is(
   .deals-table th,
   .deals-search-table .table-header-cell
 ) {
-  border: 1px solid #991b1b !important;
-  background: #b91c1c !important;
-  background-color: #b91c1c !important;
+  border: 1px solid #a80012 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   opacity: 1 !important;
@@ -4631,7 +4669,7 @@ html.is-user:not([data-theme="dark"]) body #root .layout--user .deals-page :is(
   .deals-table td,
   .deals-search-table .table-cell
 ) {
-  border: 1px solid #b91c1c !important;
+  border: 1px solid #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
   color: #111827 !important;
@@ -4645,7 +4683,15 @@ html.is-user:not([data-theme="dark"]) body #root .layout--user .deals-page :is(
   .deals-ownerwise-table td,
   .deals-table td,
   .deals-search-table .table-cell
-) :is(span, strong, small, p, a, button:not(.deals-crm-number-button), svg) {
+) :is(
+  span:not(.deals-crm-number-button, .deals-crm-number-button *, .deals-deal-number-link, .deals-deal-number-link *, .admin-accounts-cell-link, .admin-accounts-cell-link *),
+  strong:not(.deals-crm-number-button, .deals-crm-number-button *, .deals-deal-number-link, .deals-deal-number-link *, .admin-accounts-cell-link, .admin-accounts-cell-link *),
+  small,
+  p,
+  a:not(.deals-deal-number-link, .admin-accounts-cell-link),
+  button:not(.deals-crm-number-button, .deals-deal-number-link, .admin-accounts-cell-link),
+  svg:not(.deals-crm-number-button, .deals-crm-number-button *, .deals-deal-number-link, .deals-deal-number-link *, .admin-accounts-cell-link, .admin-accounts-cell-link *)
+) {
   color: #111827 !important;
   fill: currentColor !important;
   stroke: currentColor !important;
@@ -4675,9 +4721,9 @@ html.is-user:not([data-theme="dark"]) body #root .layout--user .deals-page :is(
   .deals-crm-pagination-button:focus-visible,
   .deals-crm-page-number-active
 ):not(:disabled) {
-  border-color: #991b1b !important;
-  background: #b91c1c !important;
-  background-color: #b91c1c !important;
+  border-color: #a80012 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   box-shadow: none !important;
@@ -4774,7 +4820,15 @@ html.is-user[data-theme="dark"] body #root .layout--user .deals-page :is(
   .deals-ownerwise-table td,
   .deals-table td,
   .deals-search-table .table-cell
-) :is(span, strong, small, p, a, button:not(.deals-crm-number-button), svg) {
+) :is(
+  span:not(.deals-crm-number-button, .deals-crm-number-button *, .deals-deal-number-link, .deals-deal-number-link *, .admin-accounts-cell-link, .admin-accounts-cell-link *),
+  strong:not(.deals-crm-number-button, .deals-crm-number-button *, .deals-deal-number-link, .deals-deal-number-link *, .admin-accounts-cell-link, .admin-accounts-cell-link *),
+  small,
+  p,
+  a:not(.deals-deal-number-link, .admin-accounts-cell-link),
+  button:not(.deals-crm-number-button, .deals-deal-number-link, .admin-accounts-cell-link),
+  svg:not(.deals-crm-number-button, .deals-crm-number-button *, .deals-deal-number-link, .deals-deal-number-link *, .admin-accounts-cell-link, .admin-accounts-cell-link *)
+) {
   color: #f9fafb !important;
   fill: currentColor !important;
   stroke: currentColor !important;
@@ -4835,7 +4889,7 @@ html.is-user:not([data-theme="dark"]) body #root .layout--user .admin-customers-
   .admin-customers-grid-table-wrap,
   .admin-customers-grid-table
 ) {
-  border: 1px solid #b91c1c !important;
+  border: 1px solid #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
   box-shadow: none !important;
@@ -4843,9 +4897,9 @@ html.is-user:not([data-theme="dark"]) body #root .layout--user .admin-customers-
 
 html.is-user:not([data-theme="dark"]) body #root .layout--user .admin-customers-page .admin-customers-grid-head-row th,
 html.is-user:not([data-theme="dark"]) body #root .layout--user .admin-customers-page .admin-customers-grid-checkbox-head {
-  border: 1px solid #991b1b !important;
-  background: #b91c1c !important;
-  background-color: #b91c1c !important;
+  border: 1px solid #a80012 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   opacity: 1 !important;
@@ -4872,7 +4926,7 @@ html.is-user:not([data-theme="dark"]) body #root .layout--user .admin-customers-
 }
 
 html.is-user:not([data-theme="dark"]) body #root .layout--user .admin-customers-page .admin-customers-grid-row td {
-  border: 1px solid #b91c1c !important;
+  border: 1px solid #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
   color: #111827 !important;
@@ -4908,9 +4962,9 @@ html.is-user:not([data-theme="dark"]) body #root .layout--user .admin-customers-
   .admin-customers-icon-button:hover,
   .admin-customers-icon-button:focus-visible
 ):not(:disabled) {
-  border-color: #991b1b !important;
-  background: #b91c1c !important;
-  background-color: #b91c1c !important;
+  border-color: #a80012 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   box-shadow: none !important;
@@ -4938,16 +4992,16 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
   .admin-customers-grid-table-wrap,
   .admin-customers-grid-table
 ) {
-  border: 1px solid #b91c1c !important;
+  border: 1px solid #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
   box-shadow: none !important;
 }
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .admin-customers-page .admin-customers-grid-head-row th {
-  border: 1px solid #991b1b !important;
-  background: #b91c1c !important;
-  background-color: #b91c1c !important;
+  border: 1px solid #a80012 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   opacity: 1 !important;
@@ -4970,7 +5024,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
 }
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .admin-customers-page .admin-customers-grid-row td {
-  border: 1px solid #b91c1c !important;
+  border: 1px solid #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
   color: #111827 !important;
@@ -4982,7 +5036,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .admin-customers-page .admin-customers-grid-empty-cell {
   height: 4.5rem !important;
   padding: 1rem !important;
-  border: 1px solid #b91c1c !important;
+  border: 1px solid #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
   color: #111827 !important;
@@ -5021,9 +5075,9 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
   .admin-customers-filter-btn:hover,
   .admin-customers-filter-btn:focus-visible
 ):not(:disabled) {
-  border-color: #991b1b !important;
-  background: #b91c1c !important;
-  background-color: #b91c1c !important;
+  border-color: #a80012 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   box-shadow: none !important;
@@ -5047,23 +5101,23 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
 }
 
 /* ============================================================
-   Light mode #b91c1c table/action unification for admin + user.
+   Light mode #c60016 table/action unification for admin + user.
    Covers account, customer, deal, support, reminder, quotation,
    right-panel CRM Support, and Outlook entry points.
    ============================================================ */
 html:not([data-theme="dark"]) body {
-  --admin-red: #b91c1c;
-  --admin-red-hover: #991b1b;
-  --admin-red-border: #b91c1c;
-  --admin-red-soft: rgba(185, 28, 28, 0.12);
-  --user-crm-red: #b91c1c;
-  --user-crm-red-dark: #991b1b;
+  --admin-red: #c60016;
+  --admin-red-hover: #a80012;
+  --admin-red-border: #c60016;
+  --admin-red-soft: rgba(198, 0, 22, 0.12);
+  --user-crm-red: #c60016;
+  --user-crm-red-dark: #a80012;
   --user-crm-red-soft: #fff5f5;
-  --color-primary: #b91c1c;
-  --color-primary-hover: #991b1b;
-  --color-primary-border: rgba(185, 28, 28, 0.32);
+  --color-primary: #c60016;
+  --color-primary-hover: #a80012;
+  --color-primary-border: rgba(198, 0, 22, 0.32);
   --color-primary-soft: #fff5f5;
-  --color-danger: #b91c1c;
+  --color-danger: #c60016;
 }
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
@@ -5078,7 +5132,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   .quotations-table,
   table
 ) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
 }
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
@@ -5100,9 +5154,9 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   .aqp-support-table,
   .aqp-quotation-table
 ) .support-request-legacy-th-content {
-  border-color: #b91c1c !important;
-  background: #b91c1c !important;
-  background-color: #b91c1c !important;
+  border-color: #c60016 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
@@ -5151,7 +5205,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   .quotation-manager-table tbody td,
   .quotations-table tbody td
 ) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
 }
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
@@ -5189,9 +5243,9 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   .aqp-quotation-number-btn:hover,
   .aqp-quotation-number-btn:focus-visible
 ) {
-  border-color: #b91c1c !important;
-  background: #b91c1c !important;
-  background-color: #b91c1c !important;
+  border-color: #c60016 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   box-shadow: none !important;
@@ -5248,9 +5302,9 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   .aqp-support-paging-num:focus-visible,
   .aqp-support-paging-num--active
 ):not(:disabled) {
-  border-color: #b91c1c !important;
-  background: #b91c1c !important;
-  background-color: #b91c1c !important;
+  border-color: #c60016 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   box-shadow: none !important;
@@ -5295,9 +5349,9 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   .quotation-action-btn,
   .btn-red-theme
 ):not(:disabled) {
-  border-color: #b91c1c !important;
-  background: #b91c1c !important;
-  background-color: #b91c1c !important;
+  border-color: #c60016 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   box-shadow: none !important;
@@ -5315,7 +5369,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   .aqp-page,
   .quotations-page
 ) :is(svg) {
-  color: #b91c1c;
+  color: #c60016;
 }
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
@@ -5335,9 +5389,9 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .rig
   .rp-action-card--outlook:hover,
   .rp-action-card--outlook:focus-visible
 ) {
-  border-color: #b91c1c !important;
-  background: #b91c1c !important;
-  background-color: #b91c1c !important;
+  border-color: #c60016 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   box-shadow: none !important;
@@ -5373,7 +5427,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   background-color: #ffffff !important;
   color: #111827 !important;
   -webkit-text-fill-color: #111827 !important;
-  caret-color: #b91c1c !important;
+  caret-color: #c60016 !important;
   opacity: 1 !important;
   visibility: visible !important;
   box-shadow: none !important;
@@ -5408,7 +5462,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   table input[type="search"],
   table input[type="text"]
 ):focus {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   outline: none !important;
   box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.12) !important;
 }
@@ -5453,9 +5507,9 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   .admin-accounts-cell-menu-trigger:hover,
   .admin-accounts-cell-menu-trigger:focus-visible
 ) {
-  border-color: #b91c1c !important;
-  background: #b91c1c !important;
-  background-color: #b91c1c !important;
+  border-color: #c60016 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
 }
 
 /* Right-panel Outlook is border-only in light mode; CRM Support remains readable. */
@@ -5464,11 +5518,11 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .rig
   .rp-action-card--outlook:hover,
   .rp-action-card--outlook:focus-visible
 ) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
-  color: #b91c1c !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  color: #c60016 !important;
+  -webkit-text-fill-color: #c60016 !important;
 }
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .right-panel .rp-action-card--outlook :is(
@@ -5487,10 +5541,10 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .rig
   polyline,
   polygon
 ) {
-  color: #b91c1c !important;
+  color: #c60016 !important;
   fill: currentColor !important;
   stroke: currentColor !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  -webkit-text-fill-color: #c60016 !important;
 }
 
 /* Final light-mode icon corrections: integration/mail icons are border-only. */
@@ -5521,11 +5575,11 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   .aqp-support-icon-btn:hover,
   .aqp-support-icon-btn:focus-visible
 ):not(:disabled) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
-  color: #b91c1c !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  color: #c60016 !important;
+  -webkit-text-fill-color: #c60016 !important;
   box-shadow: none !important;
 }
 
@@ -5539,17 +5593,17 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   .deals-icon-button,
   .aqp-support-icon-btn
 ) :is(svg, path, circle, rect, line, polyline, polygon, span) {
-  color: #b91c1c !important;
+  color: #c60016 !important;
   fill: currentColor !important;
   stroke: currentColor !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  -webkit-text-fill-color: #c60016 !important;
   opacity: 1 !important;
 }
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .hdr-icon-btn .hdr-badge {
   border-color: #ffffff !important;
-  background: #b91c1c !important;
-  background-color: #b91c1c !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
@@ -5562,11 +5616,11 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   .hdr-quick-add-item:hover,
   .hdr-quick-add-item:focus-visible
 ) :is(.hdr-dropdown-icon, .hdr-quick-add-icon-wrap, svg, path, circle, rect, line, polyline, polygon) {
-  border-color: #b91c1c !important;
-  color: #b91c1c !important;
+  border-color: #c60016 !important;
+  color: #c60016 !important;
   fill: currentColor !important;
   stroke: currentColor !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  -webkit-text-fill-color: #c60016 !important;
 }
 
 /* Customer number buttons: force white label in customer search and my-customer grids. */
@@ -5579,9 +5633,9 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
   .admin-customers-grid-number-button svg,
   .admin-customers-grid-number-button svg *
 ) {
-  border-color: #b91c1c !important;
-  background: #b91c1c !important;
-  background-color: #b91c1c !important;
+  border-color: #c60016 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
   color: #ffffff !important;
   fill: currentColor !important;
   stroke: currentColor !important;
@@ -5598,7 +5652,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .sr-
   .sr-new-step.is-active,
   .sr-new-step.is-complete
 ) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
   color: #111827 !important;
@@ -5622,11 +5676,11 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .sr-
   .sr-new-step.is-active .sr-new-step-index,
   .sr-new-step.is-complete .sr-new-step-index
 ) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
-  color: #b91c1c !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  color: #c60016 !important;
+  -webkit-text-fill-color: #c60016 !important;
 }
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .sr-new-page :is(
@@ -5635,7 +5689,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .sr-
   .sr-new-field textarea,
   .sr-new-searchable-select input
 ) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
   color: #111827 !important;
@@ -5648,7 +5702,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .sr-
   .sr-new-field textarea:focus,
   .sr-new-searchable-select input:focus
 ) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   outline: none !important;
   box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.12) !important;
 }
@@ -5667,11 +5721,11 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .rig
   .rp-ticket-add-btn:focus-visible,
   .rp-ticket-add-btn:active
 ) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
-  color: #b91c1c !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  color: #c60016 !important;
+  -webkit-text-fill-color: #c60016 !important;
   box-shadow: none !important;
 }
 
@@ -5680,9 +5734,9 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .rig
   .rp-action-card--outlook .rp-action-card__icon,
   .rp-ticket-add-btn__icon
 ) {
-  border: 1px solid #b91c1c !important;
-  background: #b91c1c !important;
-  background-color: #b91c1c !important;
+  border: 1px solid #c60016 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   box-shadow: none !important;
@@ -5715,10 +5769,10 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .rig
 ) {
   background: transparent !important;
   background-color: transparent !important;
-  color: #b91c1c !important;
+  color: #c60016 !important;
   fill: currentColor !important;
   stroke: currentColor !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  -webkit-text-fill-color: #c60016 !important;
   opacity: 1 !important;
 }
 
@@ -5738,7 +5792,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
   .admin-customers-step,
   .admin-customers-step-active
 ) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
   color: #111827 !important;
@@ -5759,17 +5813,17 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
   .admin-customers-step-count,
   .admin-customers-step-active .admin-customers-step-count
 ) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
-  color: #b91c1c !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  color: #c60016 !important;
+  -webkit-text-fill-color: #c60016 !important;
   box-shadow: none !important;
 }
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .admin-customers-page .admin-customers-wizard-card .admin-customers-step-arrow {
-  color: #b91c1c !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  color: #c60016 !important;
+  -webkit-text-fill-color: #c60016 !important;
 }
 
 /* Screenshot-matched light-mode icon buttons: white fill, red border, red icon. */
@@ -5832,12 +5886,12 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   height: 40px !important;
   min-height: 40px !important;
   padding: 0 !important;
-  border: 1px solid #b91c1c !important;
+  border: 1px solid #c60016 !important;
   border-radius: 6px !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
-  color: #b91c1c !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  color: #c60016 !important;
+  -webkit-text-fill-color: #c60016 !important;
   box-shadow: none !important;
   text-shadow: none !important;
   filter: none !important;
@@ -5884,11 +5938,11 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   .admin-manage-deal-icon-button,
   .cc-filter-action-btn
 ):not(:disabled):not([class*="delete"]):not([class*="remove"]):not([class*="danger"]):not([class*="cancel"]):not([class*="close"]):is(:hover, :focus-visible, :active) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
-  color: #b91c1c !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  color: #c60016 !important;
+  -webkit-text-fill-color: #c60016 !important;
   box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.12) !important;
   transform: none !important;
 }
@@ -5946,10 +6000,10 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
 ) {
   width: 16px;
   height: 16px;
-  color: #b91c1c !important;
+  color: #c60016 !important;
   fill: currentColor !important;
   stroke: currentColor !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  -webkit-text-fill-color: #c60016 !important;
   opacity: 1 !important;
   visibility: visible !important;
 }
@@ -5963,7 +6017,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .acc
 
 /* Final account search/header polish: frontend UI only. */
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .admin-accounts-page .admin-accounts-filter-row :is(th, td) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   background: #fff5f5 !important;
   background-color: #fff5f5 !important;
 }
@@ -5975,13 +6029,13 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
   height: 30px !important;
   min-height: 30px !important;
   padding: 0 0.5rem !important;
-  border: 1px solid #b91c1c !important;
+  border: 1px solid #c60016 !important;
   border-radius: 4px !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
   color: #111827 !important;
   -webkit-text-fill-color: #111827 !important;
-  caret-color: #b91c1c !important;
+  caret-color: #c60016 !important;
   font-size: 0.78rem !important;
   font-weight: 600 !important;
   opacity: 1 !important;
@@ -5996,7 +6050,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
 }
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .admin-accounts-page .admin-accounts-filter-input:focus {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   outline: none !important;
   box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.12) !important;
 }
@@ -6009,7 +6063,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
   .admin-customers-step,
   .admin-customers-step-active
 ) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
   box-shadow: none !important;
@@ -6075,12 +6129,12 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   height: 40px !important;
   min-height: 40px !important;
   padding: 0 !important;
-  border: 1px solid #b91c1c !important;
+  border: 1px solid #c60016 !important;
   border-radius: 6px !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
-  color: #b91c1c !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  color: #c60016 !important;
+  -webkit-text-fill-color: #c60016 !important;
   box-shadow: none !important;
   transform: none !important;
 }
@@ -6088,10 +6142,10 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   .header .hdr-icon-btn
 ) :is(svg, path, circle, rect, line, polyline, polygon) {
-  color: #b91c1c !important;
+  color: #c60016 !important;
   fill: currentColor !important;
   stroke: currentColor !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  -webkit-text-fill-color: #c60016 !important;
   opacity: 1 !important;
   visibility: visible !important;
 }
@@ -6122,11 +6176,11 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
   .contact-integration-action--outlook:hover,
   .contact-integration-action--outlook:focus-visible
 ) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
-  color: #b91c1c !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  color: #c60016 !important;
+  -webkit-text-fill-color: #c60016 !important;
   box-shadow: none !important;
   text-shadow: none !important;
   filter: none !important;
@@ -6146,7 +6200,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .admin-accounts-page .admin-accounts-actions-trigger-caret {
   min-width: 38px !important;
   min-height: 38px !important;
-  border-left-color: #b91c1c !important;
+  border-left-color: #c60016 !important;
 }
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .admin-accounts-page :is(
@@ -6164,7 +6218,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
   height: 40px !important;
   min-height: 40px !important;
   padding: 0 !important;
-  border: 1px solid #b91c1c !important;
+  border: 1px solid #c60016 !important;
   border-radius: 6px !important;
 }
 
@@ -6176,16 +6230,16 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
   .admin-accounts-workspace-field-edit-btn,
   .contact-integration-action
 ) :is(svg, path, circle, rect, line, polyline, polygon) {
-  color: #b91c1c !important;
+  color: #c60016 !important;
   fill: currentColor !important;
   stroke: currentColor !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  -webkit-text-fill-color: #c60016 !important;
   opacity: 1 !important;
   visibility: visible !important;
 }
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .admin-accounts-page .admin-accounts-actions-menu {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12) !important;
@@ -6220,12 +6274,12 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .hea
   min-height: 40px !important;
   padding: 0 0.85rem !important;
   gap: 0.42rem !important;
-  border: 1px solid #b91c1c !important;
+  border: 1px solid #c60016 !important;
   border-radius: 6px !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
-  color: #b91c1c !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  color: #c60016 !important;
+  -webkit-text-fill-color: #c60016 !important;
   box-shadow: none !important;
   overflow: visible !important;
   white-space: nowrap !important;
@@ -6234,8 +6288,8 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .hea
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .header .hdr-theme-toggle span {
   display: inline-flex !important;
-  color: #b91c1c !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  color: #c60016 !important;
+  -webkit-text-fill-color: #c60016 !important;
   font-size: 0.82rem !important;
   font-weight: 700 !important;
   line-height: 1 !important;
@@ -6253,12 +6307,12 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
   height: 36px !important;
   min-height: 36px !important;
   padding: 0 0.95rem !important;
-  border: 1px solid #b91c1c !important;
+  border: 1px solid #c60016 !important;
   border-radius: 6px !important;
   background: #ffffff !important;
   background-color: #ffffff !important;
-  color: #b91c1c !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  color: #c60016 !important;
+  -webkit-text-fill-color: #c60016 !important;
   font-size: 0.82rem !important;
   font-weight: 700 !important;
   line-height: 1 !important;
@@ -6270,10 +6324,10 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .adm
 }
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .admin-accounts-page--myGroup .admin-accounts-toolbar-refresh-btn :is(span, svg) {
-  color: #b91c1c !important;
+  color: #c60016 !important;
   fill: currentColor !important;
   stroke: currentColor !important;
-  -webkit-text-fill-color: #b91c1c !important;
+  -webkit-text-fill-color: #c60016 !important;
 }
 
 html:not([data-theme="dark"]) select,
@@ -6294,7 +6348,7 @@ html:not([data-theme="dark"]) .quotation-item-modal-btn--save,
 html:not([data-theme="dark"]) .quotation-panel-btn-primary,
 html:not([data-theme="dark"]) .quotation-panel-btn-success {
   background: #dc2626 !important;
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
@@ -6305,7 +6359,7 @@ html:not([data-theme="dark"]) .quotation-account-list-search-icon,
 html:not([data-theme="dark"]) .quotation-form-search-icon {
   background: #dc2626 !important;
   background-color: #dc2626 !important;
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
@@ -6343,7 +6397,7 @@ html:not([data-theme="dark"]) body .modal-content:has(.quotation-builder) :is(
   .quotation-builder-close-icon,
   .quotation-builder-top-action
 ):not(:disabled) {
-  border-color: #b91c1c !important;
+  border-color: #c60016 !important;
   background: #dc2626 !important;
   background-color: #dc2626 !important;
   color: #ffffff !important;
@@ -6611,6 +6665,417 @@ html body #root .layout--user .add-account-landscape-form {
   padding: 0 !important;
 }
 
+/* ==========================================================================
+   UNIFIED COMPACT CRM TABLE STYLING (ADMIN & USER SIDES)
+   Proper, sleek, balanced sizing across Accounts, Deals, Customers, Support Requests, and Reminders
+   ========================================================================== */
+
+/* 1. Table Headers */
+html body #root :is(.layout--admin, .layout--user) :is(
+  .admin-accounts-board-table,
+  .admin-customers-grid-table,
+  .deals-crm-table,
+  .deals-search-table,
+  .deals-ownerwise-table,
+  .support-request-legacy-table
+) thead th {
+  height: 2.35rem !important;
+  min-height: 2.35rem !important;
+  padding: 0.45rem 0.65rem !important;
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) :is(
+  .admin-accounts-board-table,
+  .admin-customers-grid-table,
+  .deals-crm-table,
+  .deals-search-table,
+  .deals-ownerwise-table,
+  .support-request-legacy-table
+) thead th :is(span, strong, svg, button) {
+  font-size: 0.8rem !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) :is(
+  .admin-accounts-board-table,
+  .admin-customers-grid-table,
+  .deals-crm-table,
+  .deals-search-table,
+  .deals-ownerwise-table,
+  .support-request-legacy-table
+) thead th svg {
+  width: 0.85rem !important;
+  height: 0.85rem !important;
+}
+
+/* 2. Filter Rows & Filter Inputs */
+html body #root :is(.layout--admin, .layout--user) :is(
+  .admin-accounts-filter-row th,
+  .admin-accounts-filter-row-select th,
+  .admin-customers-grid-filter-row th,
+  .deals-crm-filter-row th,
+  .deals-filter-row th,
+  .support-request-legacy-filter-row th,
+  .support-request-legacy-filter-row td
+) {
+  padding: 0.3rem 0.45rem !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) :is(
+  .admin-accounts-filter-input,
+  .admin-customers-grid-filter-input,
+  .deals-crm-filter-input,
+  .support-request-legacy-filter-row input,
+  .deals-crm-filter-row input
+) {
+  display: block !important;
+  width: 100% !important;
+  height: 1.85rem !important;
+  min-height: 1.85rem !important;
+  padding: 0 0.55rem !important;
+  font-size: 0.76rem !important;
+  font-weight: 500 !important;
+  border-radius: 6px !important;
+  line-height: 1.85rem !important;
+  box-sizing: border-box !important;
+}
+
+/* 3. Table Rows & Data Cells */
+html body #root :is(.layout--admin, .layout--user) :is(
+  .admin-accounts-board-table,
+  .admin-customers-grid-table,
+  .deals-crm-table,
+  .deals-search-table,
+  .deals-ownerwise-table,
+  .support-request-legacy-table
+) tbody td {
+  height: 2.35rem !important;
+  padding: 0.35rem 0.65rem !important;
+  font-size: 0.8rem !important;
+  font-weight: 550 !important;
+  line-height: 1.3 !important;
+  vertical-align: middle !important;
+}
+
+/* 4. Number Badges / Pill Buttons */
+html body #root :is(.layout--admin, .layout--user) :is(
+  .admin-accounts-cell-link,
+  .admin-accounts-cell-link-standalone,
+  .admin-customers-grid-number-button,
+  .deals-crm-number-button,
+  .deals-deal-number-link,
+  .support-request-sr-number-chip,
+  .support-request-related-number-button,
+  .sr-list-sr-number
+) {
+  min-width: 3.8rem !important;
+  height: 1.65rem !important;
+  min-height: 1.65rem !important;
+  padding: 0 0.55rem !important;
+  font-size: 0.78rem !important;
+  font-weight: 750 !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-decoration: none !important;
+}
+
+/* 5. Top Search Bar Inputs & Dropdowns */
+html body #root :is(.layout--admin, .layout--user) :is(
+  .admin-accounts-toolbar-search-input,
+  .admin-accounts-toolbar-owner-select,
+  .admin-customers-search-input,
+  .deals-crm-search-input,
+  .deals-ownerwise-owner-filter select,
+  .deals-crm-owner-filter select,
+  .mga-view-all-filter-select
+) {
+  height: 2rem !important;
+  min-height: 2rem !important;
+  padding: 0 0.65rem !important;
+  font-size: 0.78rem !important;
+  border-radius: 6px !important;
+}
+
+/* 6. Pagination Controls */
+html body #root :is(.layout--admin, .layout--user) :is(
+  .admin-accounts-pag-btn,
+  .admin-customers-grid-pagination-button,
+  .admin-customers-grid-page-number,
+  .deals-crm-pagination-button,
+  .deals-crm-page-number,
+  .support-request-legacy-footer-pagination button,
+  .support-request-legacy-footer-pagination span
+) {
+  min-width: 1.85rem !important;
+  height: 1.85rem !important;
+  padding: 0 0.45rem !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) :is(
+  .admin-accounts-pagination-rows-indicator,
+  .support-request-legacy-footer-total
+) {
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+}
+
+/* ==========================================================================
+   UNIFIED CREATIVE UI SUITE: 9 KEY VIEWS (ADMIN & USER PORTALS)
+   1. /team-view & /admin/team-view
+   2. /reminders/my & /admin/reminders/my
+   3. /reminders/active & /admin/reminders/active
+   4. /reminders/closed & /admin/reminders/closed
+   5. /tasks & /admin/tasks
+   6. /reports/custom & /admin/reports/custom
+   7. /reports/summary & /admin/reports/summary
+   8. /quotation-manager/view & /admin/quotation-manager/view
+   9. /reports/quotation-summary & /admin/reports/quotation-summary
+   ========================================================================== */
+
+/* 1. Page Shells & Cards (Seamless containers without behind-card boxes) */
+html body #root :is(.layout--admin, .layout--user) :is(
+  .tasks-page,
+  .cr-list-page,
+  .summary-reports-page
+) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) :is(
+  .team-view-shell,
+  .active-reminders-shell,
+  .admin-my-reminders-shell,
+  .aqp-page,
+  .qsr-page,
+  .qsr-search-in-card,
+  .qsr-filter-card
+) {
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+}
+
+[data-theme="dark"] html body #root :is(.layout--admin, .layout--user) :is(
+  .team-view-shell,
+  .active-reminders-shell,
+  .admin-my-reminders-shell,
+  .aqp-page,
+  .qsr-page,
+  .qsr-search-in-card,
+  .qsr-filter-card
+) {
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* 2. Top Navigation & Stage Tabs */
+html body #root :is(.layout--admin, .layout--user) :is(
+  .team-view-top-tab,
+  .admin-my-reminders-tab,
+  .active-reminders-detail-tab,
+  .cr-list-tabs button,
+  .aqp-tab
+) {
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  transition: all 0.15s ease !important;
+}
+
+/* 3. Primary Red Buttons & White Icons (Brand Color #c60016) */
+html body #root :is(.layout--admin, .layout--user) :is(
+  .team-view-top-tab-active,
+  .team-view-inner-tab-active,
+  .team-view-company-pill,
+  .team-view-attendance-view-btn,
+  .ug-btn--active,
+  .active-reminders-user-row-selected,
+  .active-reminders-detail-tab-active,
+  .active-reminders-filter-apply,
+  .admin-my-reminders-tab-active,
+  .admin-reminders-action-button,
+  .admin-my-reminders-item-action,
+  .tasks-reminders-add-btn,
+  .cr-list-primary-btn,
+  .cr-list-caret-btn,
+  .cr-list-tabs button.active,
+  .summary-reports-primary-btn,
+  .summary-reports-sidebar-item-active,
+  .summary-reports-chip--active,
+  .aqp-btn--red,
+  .aqp-btn--generate
+) {
+  background: #c60016 !important;
+  border-color: #a80012 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) :is(
+  .team-view-top-tab-active,
+  .team-view-inner-tab-active,
+  .team-view-company-pill,
+  .team-view-attendance-view-btn,
+  .ug-btn--active,
+  .active-reminders-user-row-selected,
+  .active-reminders-detail-tab-active,
+  .active-reminders-filter-apply,
+  .admin-my-reminders-tab-active,
+  .admin-reminders-action-button,
+  .admin-my-reminders-item-action,
+  .tasks-reminders-add-btn,
+  .cr-list-primary-btn,
+  .cr-list-caret-btn,
+  .cr-list-tabs button.active,
+  .summary-reports-primary-btn,
+  .summary-reports-sidebar-item-active,
+  .summary-reports-chip--active,
+  .aqp-btn--red,
+  .aqp-btn--generate
+) :is(svg, svg *, path, circle, rect, line, polyline, polygon) {
+  color: #ffffff !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* 4. Universal SVG Icon Clarity & Alignment */
+html body #root :is(.layout--admin, .layout--user) :is(
+  .team-view-page,
+  .active-reminders-page,
+  .admin-my-reminders-page,
+  .tasks-page,
+  .cr-list-page,
+  .summary-reports-page,
+  .aqp-page,
+  .qsr-page
+) svg {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  flex-shrink: 0 !important;
+}
+
+/* 5. Tables & Density Across All 9 Views */
+html body #root :is(.layout--admin, .layout--user) :is(
+  .team-view-users-table,
+  .team-view-attendance-table,
+  .ug-table,
+  .cr-table,
+  .summary-reports-table,
+  .aqp-table,
+  .qsr-results-table
+) th {
+  padding: 0.6rem 0.8rem !important;
+  font-size: 0.78rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em !important;
+  white-space: nowrap !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) :is(
+  .team-view-users-table,
+  .team-view-attendance-table,
+  .ug-table,
+  .cr-table,
+  .summary-reports-table,
+  .aqp-table,
+  .qsr-results-table
+) td {
+  padding: 0.52rem 0.8rem !important;
+  font-size: 0.8rem !important;
+}
 
 
 
+
+
+
+
+/* 6. Universal Table Header & Deal/Quotation/Account Badges: Absolute White Font & Brand Red Guarantee */
+html body #root :is(.layout--admin, .layout--user) :is(
+  .deals-crm-number-button,
+  .deals-deal-number-link,
+  .admin-accounts-cell-link,
+  .deals-crm-number-button-content,
+  .deals-crm-number-button-label,
+  .aqp-num-badge,
+  .aqp-quotation-number-btn,
+  .aqp-support-number-btn
+) {
+  background: #c60016 !important;
+  background-color: #c60016 !important;
+  border-color: #a80012 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) :is(
+  .deals-crm-number-button,
+  .deals-deal-number-link,
+  .admin-accounts-cell-link,
+  .deals-crm-number-button-content,
+  .deals-crm-number-button-label,
+  .aqp-num-badge,
+  .aqp-quotation-number-btn,
+  .aqp-support-number-btn
+) :is(*, span, strong, small, svg, path) {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) :is(
+  .aqp-table,
+  .admin-accounts-board-table,
+  .admin-customers-grid-table,
+  .deals-crm-table,
+  .deals-search-table,
+  .deals-ownerwise-table,
+  .support-request-legacy-table,
+  .quotations-table,
+  .qsr-table,
+  .qsr-results-table
+) thead :is(tr, th, .aqp-thead-row, .aqp-th) {
+  background: #c60016 !important;
+  background-color: #c60016 !important;
+  border-color: #a80012 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) :is(
+  .aqp-table,
+  .admin-accounts-board-table,
+  .admin-customers-grid-table,
+  .deals-crm-table,
+  .deals-search-table,
+  .deals-ownerwise-table,
+  .support-request-legacy-table,
+  .quotations-table,
+  .qsr-table,
+  .qsr-results-table
+) thead :is(tr, th, .aqp-thead-row, .aqp-th) :is(*, span, strong, button, svg, path, .aqp-sort-icon, .qsr-sort-icon) {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}

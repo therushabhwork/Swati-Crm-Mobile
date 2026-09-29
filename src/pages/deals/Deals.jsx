@@ -12,6 +12,9 @@ import {
   FaFileImport,
   FaFileAlt,
   FaFilter,
+  FaComments,
+  FaHistory,
+  FaHome,
   FaListAlt,
   FaListUl,
   FaPlus,
@@ -28,6 +31,7 @@ import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
 import { useModal, useSearch, useFilter } from '../../hooks'
 import AddReminderModal from '../../components/common/AddReminderModal'
+import AddRemarksModal from '../../components/common/AddRemarksModal'
 import Badge from '../../components/common/Badge'
 import Button from '../../components/common/Button'
 import Card from '../../components/common/Card'
@@ -47,6 +51,7 @@ import { getCrmOwnerDisplay, getCrmOwnerCode, isSameCrmOwner, normalizeCrmUserNa
 import { authService } from '../../services/authService'
 import { customerService } from '../../services/customerService'
 import { dealApi } from '../../services/dealApi'
+import { remarkApi } from '../../services/remarkApi'
 import { reminderApi } from '../../services/reminderApi'
 import { calendarApi } from '../../services/calendarApi'
 import { exportCsvWorkbook, exportExcelWorkbook } from '../../utils/excelExport'
@@ -1108,6 +1113,105 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
   const [isBoardOwnershipOpen, setIsBoardOwnershipOpen] = useState(false)
   const [boardOwnership, setBoardOwnership] = useState(() => (variantKey === 'search' ? 'overall' : 'me'))
   const [dealStatusTableFilter, setDealStatusTableFilter] = useState('all')
+  const [remarkModalDeal, setRemarkModalDeal] = useState(null)
+  const [isSavingRemark, setIsSavingRemark] = useState(false)
+  const [isDealHistoryModalOpen, setIsDealHistoryModalOpen] = useState(false)
+  const [dealHistoryRemarks, setDealHistoryRemarks] = useState([])
+  const [isLoadingDealHistory, setIsLoadingHistory] = useState(false)
+  const [historyModalTitle, setHistoryModalTitle] = useState('')
+
+  const handleOpenDealHistory = async (targetDeal) => {
+    const targetDealId = targetDeal?.id || targetDeal?._id || targetDeal?.dealId
+    if (!targetDealId) return
+    setIsLoadingHistory(true)
+    setIsDealHistoryModalOpen(true)
+    setHistoryModalTitle(`Remarks & Communication History - ${targetDeal.projectName || targetDeal.dealName || targetDeal.title || 'Deal'}`)
+    try {
+      const response = await remarkApi.getRemarks({ relatedEntityId: targetDealId, relatedEntityType: 'deal' })
+      const rawApiRemarks = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : []
+
+      const merged = [...rawApiRemarks]
+      const singleRemark = targetDeal.remark || targetDeal.notes || targetDeal.description || targetDeal.data?.remark
+      if (singleRemark && typeof singleRemark === 'string' && singleRemark.trim()) {
+        const text = singleRemark.trim()
+        if (!merged.some((r) => String(r.content || r.remark || '').trim() === text)) {
+          merged.push({
+            id: `deal-remark-single-${targetDealId}`,
+            content: text,
+            category: 'general',
+            createdByName: targetDeal.addedBy || targetDeal.dealOwner || targetDeal.ownerName || 'User',
+            createdAt: targetDeal.lastUpdated || targetDeal.dealDate || targetDeal.createdAt || new Date().toISOString(),
+          })
+        }
+      }
+
+      const embeddedList = Array.isArray(targetDeal.remarks)
+        ? targetDeal.remarks
+        : Array.isArray(targetDeal.data?.remarks)
+          ? targetDeal.data.remarks
+          : Array.isArray(targetDeal.history)
+            ? targetDeal.history
+            : []
+
+      embeddedList.forEach((item, idx) => {
+        const text = typeof item === 'string' ? item : item.content || item.remark || item.note || item.text || ''
+        if (text && text.trim()) {
+          const cleanText = text.trim()
+          if (!merged.some((r) => String(r.content || r.remark || '').trim() === cleanText)) {
+            merged.push({
+              id: item.id || item._id || `deal-embedded-${idx}`,
+              content: cleanText,
+              category: item.category || 'general',
+              createdByName: item.createdByName || item.userName || item.addedBy || targetDeal.dealOwner || 'User',
+              createdAt: item.createdAt || item.date || targetDeal.createdAt || new Date().toISOString(),
+              startTime: item.startTime || null,
+              endTime: item.endTime || null,
+            })
+          }
+        }
+      })
+
+      merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      setDealHistoryRemarks(merged)
+    } catch (error) {
+      console.error('Failed to fetch deal history remarks:', error)
+      setDealHistoryRemarks([])
+    } finally {
+      setIsLoadingHistory(false)
+    }
+  }
+
+  const handleSaveDealRemark = async (remarkData) => {
+    setIsSavingRemark(true)
+    try {
+      await remarkApi.createRemark(remarkData)
+      if (remarkData?.reminder && remarkData.reminder.date) {
+        try {
+          const remindAt = new Date(`${remarkData.reminder.date}T${remarkData.reminder.time || '09:00'}:00`).toISOString()
+          await reminderApi.createReminder({
+            title: `Followup ${remarkData.reminder.actionType || 'Call'} - ${remarkData.dealName || remarkModalDeal?.projectName || remarkModalDeal?.dealName || 'Deal'}`,
+            message: remarkData.content || remarkData.reminder.note || '',
+            remindAt,
+            reminderDate: remarkData.reminder.date,
+            reminderTime: remarkData.reminder.time || '09:00',
+            status: 'scheduled',
+            relatedEntityType: 'deal',
+            relatedEntityId: String(remarkData.dealId || remarkModalDeal?.id || ''),
+            assignedTo: remarkData.reminder.assignedTo || '',
+          })
+        } catch (rErr) {
+          console.warn('Deal reminder creation error:', rErr)
+        }
+      }
+      addNotification('success', 'Remark added', 'Remark saved successfully.')
+      setRemarkModalDeal(null)
+    } catch (error) {
+      console.error('Failed to save deal remark:', error)
+      addNotification('error', 'Error', 'Failed to save remark.')
+    } finally {
+      setIsSavingRemark(false)
+    }
+  }
 
   const viewConfig = useMemo(
     () => buildDealViewConfig(customViewDefinition ? customViewDefinition.baseViewKey : variantKey, customViewDefinition),
@@ -5283,6 +5387,14 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
                                         zIndex: 2147483600,
                                       }}
                                     >
+                                      <button type="button" className="deals-board-card-action-item" onClick={() => { setOpenBoardActionMenuDealId(''); setRemarkModalDeal(deal); }}>
+                                        <FaEdit />
+                                        <span>Add Notes/Remarks</span>
+                                      </button>
+                                      <button type="button" className="deals-board-card-action-item" onClick={() => { setOpenBoardActionMenuDealId(''); handleOpenDealHistory(deal); }}>
+                                        <FaHistory />
+                                        <span>History</span>
+                                      </button>
                                       <button type="button" className="deals-board-card-action-item deals-board-card-action-item-orange" onClick={() => handleBoardActionMenuItem('reminder', deal)}>
                                         <FaBell />
                                         <span>Add Reminder</span>
@@ -6254,6 +6366,84 @@ const Deals = ({ isAdmin = false, variantKey = 'default', customViewDefinition =
           preselectedDeal={inlineQuotationDeal}
           onClose={() => setInlineQuotationDeal(null)}
         />
+      )}
+      {remarkModalDeal ? (
+        <AddRemarksModal
+          isOpen={Boolean(remarkModalDeal)}
+          onClose={() => setRemarkModalDeal(null)}
+          dealData={remarkModalDeal}
+          onSave={handleSaveDealRemark}
+          isLoading={isSavingRemark}
+        />
+      ) : null}
+
+      {isDealHistoryModalOpen && (
+        <Modal
+          isOpen={isDealHistoryModalOpen}
+          onClose={() => setIsDealHistoryModalOpen(false)}
+          title={historyModalTitle}
+          size="large"
+        >
+          <div style={{ padding: '8px', maxHeight: '70vh', overflowY: 'auto' }}>
+            {isLoadingDealHistory ? (
+              <div style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>
+                Loading deal history...
+              </div>
+            ) : dealHistoryRemarks.length === 0 ? (
+              <div style={{ padding: '30px', textAlign: 'center', color: '#64748b' }}>
+                No remarks history found for this deal.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {dealHistoryRemarks.map((rem) => (
+                  <div
+                    key={rem.id || rem._id}
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      background: '#f8fafc',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '12px',
+                    }}
+                  >
+                    <FaComments style={{ color: '#2563eb', fontSize: '18px', marginTop: '2px', flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          background: rem.category === 'call-log' ? '#fef3c7' : '#e2e8f0',
+                          color: rem.category === 'call-log' ? '#92400e' : '#1e293b',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                        }}>
+                          {rem.category || 'GENERAL'}
+                        </span>
+                        <span style={{ fontSize: '12px', color: '#64748b' }}>
+                          {rem.createdAt ? new Date(rem.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                        </span>
+                      </div>
+                      <p style={{ margin: '4px 0 8px 0', fontSize: '14px', color: '#334155', whiteSpace: 'pre-wrap' }}>
+                        {rem.content || rem.remark || rem.note}
+                      </p>
+                      {rem.category === 'call-log' && (rem.startTime || rem.endTime || rem.callLogTime) && (
+                        <div style={{ fontSize: '12px', color: '#0284c7', marginBottom: '4px', fontWeight: 600 }}>
+                          Call Duration: {rem.startTime || rem.callLogTime || '09:00'} - {rem.endTime || '09:30'}
+                        </div>
+                      )}
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>
+                        Added by: <strong>{rem.createdByName || rem.userName || rem.createdBy || rem.ownerCode || 'User'}</strong>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Modal>
       )}
     </div>
   )

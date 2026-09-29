@@ -904,6 +904,381 @@
   border-color: var(--admin-red-border, #b91c1c);
 }
 
+/* Modern red account board skin */
+.admin-accounts-page {
+  background:
+    linear-gradient(135deg, rgba(198, 0, 22, 0.06) 0 18%, transparent 18% 68%, rgba(198, 0, 22, 0.08) 68% 82%, transparent 82%),
+    #faf9f7;
+  padding: 0.75rem 1rem;
+  gap: 0.6rem;
+  overflow: auto;
+}
+
+.mga-titlebar {
+  position: relative;
+  min-height: 3.2rem;
+  padding: 0.6rem 1.25rem 0.6rem 2.8rem;
+  border: 1px solid rgba(226, 232, 240, 0.86);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.86)),
+    #ffffff;
+  box-shadow: 0 4px 16px rgba(20, 33, 61, 0.05);
+  overflow: hidden;
+}
+
+.mga-titlebar::before {
+  content: "";
+  position: absolute;
+  left: 1.15rem;
+  top: 0.7rem;
+  bottom: 0.7rem;
+  width: 0.32rem;
+  border-radius: 999px;
+  background: #c60016;
+}
+
+.mga-titlebar::after {
+  content: "";
+  position: absolute;
+  inset: auto 6rem -3rem auto;
+  width: 18rem;
+  height: 6rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(198, 0, 22, 0.1), rgba(198, 0, 22, 0.02));
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+
+.mga-titlebar-heading {
+  position: relative;
+  z-index: 1;
+  color: #14213d;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.account-board-header-actions {
+  position: relative;
+  z-index: 2;
+  gap: 0.5rem;
+}
+
+.account-board-header-btn,
+.account-board-header-icon-btn,
+.admin-accounts-board-toolbar-actions :is(.btn, button),
+.admin-accounts-board-toolbar-actions > * > :is(.btn, button) {
+  min-height: 2.1rem !important;
+  height: 2.1rem !important;
+  padding: 0 0.75rem !important;
+  border-radius: 8px !important;
+  border-color: rgba(226, 232, 240, 0.9) !important;
+  background: #ffffff !important;
+  color: #c60016 !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(20, 33, 61, 0.04) !important;
+}
+
+.account-board-header-icon-btn svg,
+.account-board-header-btn svg,
+.admin-accounts-board-toolbar-actions :is(.btn, button) svg {
+  color: currentColor !important;
+  stroke: currentColor;
+  width: 0.85rem !important;
+  height: 0.85rem !important;
+}
+
+.account-board-header-icon-btn-green,
+.account-board-header-icon-btn-import {
+  min-width: 5.5rem !important;
+  padding-inline: 0.85rem !important;
+  border-color: #c60016 !important;
+  background: linear-gradient(180deg, #e02231, #c60016) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(198, 0, 22, 0.2) !important;
+}
+
+.account-board-header-icon-btn-green + .account-board-header-menu-wrap .account-board-header-icon-btn,
+.account-board-header-icon-btn-filter,
+.account-board-header-icon-btn-refresh {
+  min-width: 2.1rem !important;
+  width: 2.1rem !important;
+  height: 2.1rem !important;
+  padding: 0 !important;
+}
+
+.admin-accounts-stage-tabs-wrapper,
+.admin-accounts-stage-dropdown-wrapper {
+  border: 0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(20, 33, 61, 0.04);
+}
+
+.admin-accounts-board-card {
+  flex: initial;
+  min-height: 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 6px 20px rgba(20, 33, 61, 0.04);
+  overflow: hidden;
+}
+
+.admin-accounts-board-toolbar {
+  min-height: 2.6rem;
+  margin-bottom: 0.65rem;
+  padding: 0.4rem 0.65rem;
+  border: 0;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 2px 10px rgba(20, 33, 61, 0.04);
+  gap: 0.6rem;
+}
+
+.admin-accounts-board-subtitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 1.85rem;
+  margin: 0;
+  padding: 0.15rem 0.75rem;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #fff1f2, #ffffff);
+  color: #14213d;
+  font-size: 0.78rem;
+  font-weight: 750;
+  box-shadow: 0 2px 8px rgba(198, 0, 22, 0.06);
+}
+
+.admin-accounts-toolbar-search-filter,
+.admin-accounts-toolbar-owner-filter,
+.mga-view-all-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #14213d;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.admin-accounts-toolbar-search-input,
+.admin-accounts-toolbar-owner-select,
+.mga-view-all-filter-select {
+  min-height: 2rem;
+  height: 2rem;
+  border: 1px solid #d9e0ec;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #14213d;
+  font-size: 0.78rem;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(20, 33, 61, 0.03);
+}
+
+.admin-accounts-toolbar-search-input {
+  width: min(22rem, 36vw);
+  padding: 0 0.75rem;
+}
+
+.admin-accounts-toolbar-owner-select,
+.mga-view-all-filter-select {
+  min-width: 10rem;
+  padding: 0 0.65rem;
+}
+
+.admin-accounts-board-shell {
+  flex: initial;
+  min-height: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(20, 33, 61, 0.03);
+}
+
+.admin-accounts-board-scroll {
+  flex: initial;
+  max-height: none;
+  background: #ffffff;
+}
+
+.admin-accounts-board-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 1000px;
+  color: #14213d;
+}
+
+.admin-accounts-board-table thead th {
+  height: 2.35rem;
+  padding: 0.45rem 0.75rem;
+  border-color: rgba(255, 255, 255, 0.18);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0)),
+    #c60016;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 750;
+  text-align: left;
+}
+
+.admin-accounts-board-table thead tr:first-child th:first-child {
+  border-top-left-radius: 9px;
+}
+
+.admin-accounts-board-table thead tr:first-child th:last-child {
+  border-top-right-radius: 9px;
+}
+
+.admin-accounts-th-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.admin-accounts-th-content svg {
+  flex: 0 0 auto;
+  width: 0.85rem;
+  height: 0.85rem;
+  color: #ffffff;
+}
+
+.admin-accounts-th-content-center {
+  justify-content: center;
+  width: 100%;
+}
+
+.admin-accounts-filter-row th,
+.admin-accounts-filter-row-select th {
+  padding: 0.35rem 0.5rem;
+  border-color: #e2e8f0;
+  background: #fbfcfe;
+}
+
+.admin-accounts-filter-input {
+  min-height: 1.85rem;
+  height: 1.85rem;
+  padding: 0 0.55rem;
+  border: 1px solid #d9e0ec;
+  border-color: #d9e0ec;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #14213d;
+  font-size: 0.76rem;
+  box-shadow: inset 0 1px 2px rgba(20, 33, 61, 0.03);
+}
+
+.admin-accounts-filter-input:focus {
+  border-color: #c60016;
+  box-shadow: 0 0 0 2px rgba(198, 0, 22, 0.08);
+}
+
+.admin-accounts-filter-placeholder {
+  color: #74819a;
+  font-size: 0.74rem;
+}
+
+.admin-accounts-board-table tbody td {
+  height: 2.35rem;
+  padding: 0.4rem 0.75rem;
+  border-color: #e2e8f0;
+  background: #ffffff;
+  color: #14213d;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.admin-accounts-board-table tbody td:first-child {
+  text-align: center;
+}
+
+.admin-accounts-board-row:hover td {
+  background: #fff8f9;
+}
+
+.admin-accounts-cell-link,
+.admin-accounts-cell-link-standalone {
+  min-width: 4rem;
+  min-height: 1.65rem;
+  height: 1.65rem;
+  padding: 0 0.6rem;
+  border: 0;
+  border-radius: 6px;
+  background: #c60016;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 750;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-accounts-cell-link:hover {
+  background: #a90013;
+  color: #ffffff;
+}
+
+.admin-accounts-pagination {
+  margin-top: 0.55rem;
+  padding: 0.45rem 0.5rem 0.15rem;
+  border: 0;
+  background: transparent;
+}
+
+.admin-accounts-pagination-left {
+  gap: 0.75rem;
+}
+
+.admin-accounts-pagination-rows-indicator {
+  min-width: 2.8rem;
+  height: 1.85rem;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: 6px;
+  background: #fff1f2;
+  color: #c60016;
+  font-size: 0.78rem;
+  font-weight: 750;
+  box-shadow: 0 2px 8px rgba(198, 0, 22, 0.06);
+}
+
+.admin-accounts-pagination-total {
+  color: #14213d;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.admin-accounts-pagination-pages {
+  gap: 0.35rem;
+}
+
+.admin-accounts-pag-btn {
+  min-width: 1.85rem;
+  height: 1.85rem;
+  padding: 0 0.45rem;
+  border: 1px solid #d9e0ec;
+  border-color: #d9e0ec;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #66728a;
+  font-size: 0.78rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(20, 33, 61, 0.04);
+}
+
+.admin-accounts-pag-btn--active {
+  border-color: #c60016;
+  background: #c60016;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(198, 0, 22, 0.2);
+}
+
 .admin-accounts-board-table,
 .admin-accounts-board-table tbody,
 .admin-accounts-board-table tr,

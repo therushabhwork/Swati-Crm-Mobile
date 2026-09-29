@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import swatiLogo from '../../assets/swati-logo.png'
 import lumosLogo from '../../assets/lumos-logo.svg'
 import {
@@ -117,8 +117,15 @@ const todayDateKey = () => {
 
 const Sidebar = ({ isAdmin = false }) => {
   const location = useLocation()
+  const navigate = useNavigate()
   const { user } = useAuth()
   const { accounts } = useData()
+
+  const handleToolbarNav = (e, path) => {
+    e.preventDefault()
+    e.stopPropagation()
+    navigate(path)
+  }
 
   const isAccountsRoute = isAdmin && location.pathname.startsWith('/admin/accounts')
   const isCustomersRoute = isAdmin && location.pathname.startsWith('/admin/customers')
@@ -311,15 +318,17 @@ const Sidebar = ({ isAdmin = false }) => {
           <div className="sb-view-toolbar" aria-label="Sidebar view options">
             {USER_SIDEBAR_TOOLBAR.map((item) => {
               const Icon = item.icon
-              const isRouteActive = location.pathname.startsWith(item.to) ||
-                (item.key === 'dashboard' && (location.pathname === '/dashboard' || location.pathname === '/monitoring')) ||
+              const isRouteActive = (
+                (item.key === 'data-manager' && (location.pathname.startsWith('/data-manager') || location.pathname.startsWith('/image-gallery') || location.pathname.startsWith('/bulk-uploads'))) ||
                 (item.key === 'calendar' && location.pathname.startsWith('/calendar')) ||
-                (item.key === 'data-manager' && (location.pathname.startsWith('/data-manager') || location.pathname === '/image-gallery'))
+                (item.key === 'dashboard' && (location.pathname === '/dashboard' || location.pathname === '/monitoring' || location.pathname === '/' || location.pathname === '/home'))
+              )
 
               return (
                 <NavLink
                   key={item.key}
                   to={item.to}
+                  onClick={(e) => handleToolbarNav(e, item.to)}
                   className={({ isActive }) => `sb-view-toolbar-button ${isRouteActive || isActive ? 'sb-view-toolbar-button--route-active active' : ''}`}
                   title={item.title}
                   aria-label={item.ariaLabel}
@@ -430,7 +439,8 @@ const Sidebar = ({ isAdmin = false }) => {
         <div className="sb-view-toolbar" aria-label="Sidebar view options">
           <NavLink
             to="/admin/data-manager"
-            className={() => `sb-view-toolbar-button ${location.pathname.startsWith('/admin/data-manager') || location.pathname.startsWith('/admin/bulk-uploads') ? 'sb-view-toolbar-button--route-active' : ''}`}
+            onClick={(e) => handleToolbarNav(e, '/admin/data-manager')}
+            className={({ isActive }) => `sb-view-toolbar-button ${location.pathname.startsWith('/admin/data-manager') || location.pathname.startsWith('/admin/bulk-uploads') || location.pathname.startsWith('/admin/image-gallery') || isActive ? 'sb-view-toolbar-button--route-active active' : ''}`}
             title="Data Manager"
             aria-label="Data Manager"
           >
@@ -438,7 +448,8 @@ const Sidebar = ({ isAdmin = false }) => {
           </NavLink>
           <NavLink
             to="/admin/calendar"
-            className={() => `sb-view-toolbar-button ${location.pathname.startsWith('/admin/calendar') ? 'sb-view-toolbar-button--route-active' : ''}`}
+            onClick={(e) => handleToolbarNav(e, '/admin/calendar')}
+            className={({ isActive }) => `sb-view-toolbar-button ${location.pathname.startsWith('/admin/calendar') || isActive ? 'sb-view-toolbar-button--route-active active' : ''}`}
             title="Calendar"
             aria-label="Calendar"
           >
@@ -446,7 +457,8 @@ const Sidebar = ({ isAdmin = false }) => {
           </NavLink>
           <NavLink
             to="/admin/dashboard"
-            className={() => `sb-view-toolbar-button ${location.pathname === '/admin/dashboard' || location.pathname === '/admin/monitoring' || location.pathname === '/admin/sales-dashboard' || location.pathname === '/admin' ? 'sb-view-toolbar-button--route-active' : ''}`}
+            onClick={(e) => handleToolbarNav(e, '/admin/dashboard')}
+            className={({ isActive }) => `sb-view-toolbar-button ${location.pathname === '/admin/dashboard' || location.pathname === '/admin/monitoring' || location.pathname === '/admin/sales-dashboard' || location.pathname === '/admin' || location.pathname === '/admin/home' || isActive ? 'sb-view-toolbar-button--route-active active' : ''}`}
             title="Dashboard"
             aria-label="Dashboard"
           >
@@ -640,7 +652,7 @@ const Sidebar = ({ isAdmin = false }) => {
           </div>
         )}
 
-        {!isSidebarCollapsed && (
+        {!isSidebarCollapsed && !isAdmin && (
           <div className="sb-brand-footer">
             <div className="sb-brand-footer-line" />
             <div className="sb-brand-footer-text">

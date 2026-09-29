@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   FaAddressCard,
+  FaArrowRight,
+  FaCalendarAlt,
   FaBell,
   FaBriefcase,
   FaClipboardList,
@@ -227,6 +229,7 @@ const AdminPanel = () => {
   const [collapsedMyCrmCards, setCollapsedMyCrmCards] = useState([])
   const [todoReplies, setTodoReplies] = useState([])
   const [activeTodoTab, setActiveTodoTab] = useState('all')
+  const [todoFilter, setTodoFilter] = useState('all')
   const [reminderStatesById, setReminderStatesById] = useState(() => getAdminReminderStates())
   const menuRef = useClickOutside(() => setOpenMenuState(null))
   const customers = useMemo(() => customerService.getCustomers(), [])
@@ -594,15 +597,27 @@ const AdminPanel = () => {
       .slice(0, 8)
   }, [accounts, deals, isAdmin, navigate, reminderStatesById, reminders, supportRequests, tasks, todoReplies, user])
 
-  const filteredTodoItems = useMemo(() => {
-    if (activeTodoTab === 'reminders') {
-      return todoItems.filter((item) => item.reminder)
+    const todoCounts = useMemo(() => {
+    return {
+      all: todoItems.length,
+      reminder: todoItems.filter((i) => i.type?.toLowerCase().includes('reminder')).length,
+      task: todoItems.filter((i) => i.type?.toLowerCase().includes('task') || i.type?.toLowerCase().includes('reassignment')).length,
+      reply: todoItems.filter((i) => i.type?.toLowerCase().includes('reply')).length,
     }
-    if (activeTodoTab === 'followups' || activeTodoTab === 'documents') {
-      return []
+  }, [todoItems])
+
+  const displayedTodoItems = useMemo(() => {
+    if (todoFilter === 'reminder') {
+      return todoItems.filter((i) => i.type?.toLowerCase().includes('reminder'))
+    }
+    if (todoFilter === 'task') {
+      return todoItems.filter((i) => i.type?.toLowerCase().includes('task') || i.type?.toLowerCase().includes('reassignment'))
+    }
+    if (todoFilter === 'reply') {
+      return todoItems.filter((i) => i.type?.toLowerCase().includes('reply'))
     }
     return todoItems
-  }, [activeTodoTab, todoItems])
+  }, [todoFilter, todoItems])
 
   const handleMyCrmViewList = (card) => {
     addNotification('info', 'View list', `Opening ${card.title}.`)
@@ -753,207 +768,207 @@ const AdminPanel = () => {
           </div>
         </div>
 
-        {/* 2-Column Main Content Section: Left ~63%, Right ~37% */}
-        <div className="ap-dashboard-main-grid">
-          {/* Left Column */}
-          <div className="ap-dashboard-left-col">
-            {/* To Do List */}
-            <div className="ap-card-box ap-todo-box">
-              <div className="ap-card-head">
-                <div className="ap-card-head-title">
-                  <FaClipboardList className="ap-card-head-icon" />
-                  <span>To Do List</span>
+        {/* Expansive Full-Width To Do List Section */}
+        <div className="ap-todo-full-container">
+          <div className="ap-card-box ap-todo-card--expansive">
+            <div className="ap-todo-header-expansive">
+              <div className="ap-todo-header-left">
+                <div className="ap-todo-header-icon-box">
+                  <FaClipboardList />
                 </div>
-                <div className="ap-card-head-right">
-                  <button type="button" className="ap-link-btn" onClick={() => navigate('/admin/reminders')}>
-                    View All &rarr;
-                  </button>
-                  <button type="button" className="ap-btn-red" onClick={() => navigate('/admin/tasks')}>
-                    + Add Task
-                  </button>
+                <div>
+                  <div className="ap-todo-title-row">
+                    <h3 className="ap-todo-main-title">To Do List</h3>
+                    <span className="ap-todo-count-badge">{todoCounts.all} items</span>
+                  </div>
+                  <p className="ap-todo-subtitle">Prioritized follow-ups, pending tasks, and support updates</p>
                 </div>
               </div>
 
-              {filteredTodoItems.length > 0 ? (
-                <div className="ap-todo-rows">
-                  {filteredTodoItems.map((item) => (
-                    <div key={item.id} className="ap-todo-row" onClick={item.onClick}>
-                      <div className="ap-todo-row-left">
-                        <span className="ap-todo-calendar-icon">&#128197;</span>
-                        <div className="ap-todo-row-info">
-                          <div className="ap-todo-header-line">
-                            <span className="ap-todo-tag">{item.type || 'REMINDER'}</span>
-                            <span className="ap-todo-row-meta">{item.meta}</span>
-                          </div>
-                          <div className="ap-todo-row-title">{item.title}</div>
-                        </div>
+              <div className="ap-todo-filter-tabs">
+                <button
+                  type="button"
+                  className={`ap-todo-tab ${todoFilter === 'all' ? 'active' : ''}`}
+                  onClick={() => setTodoFilter('all')}
+                >
+                  All ({todoCounts.all})
+                </button>
+                <button
+                  type="button"
+                  className={`ap-todo-tab ${todoFilter === 'reminder' ? 'active' : ''}`}
+                  onClick={() => setTodoFilter('reminder')}
+                >
+                  Reminders ({todoCounts.reminder})
+                </button>
+                <button
+                  type="button"
+                  className={`ap-todo-tab ${todoFilter === 'task' ? 'active' : ''}`}
+                  onClick={() => setTodoFilter('task')}
+                >
+                  Tasks ({todoCounts.task})
+                </button>
+                <button
+                  type="button"
+                  className={`ap-todo-tab ${todoFilter === 'reply' ? 'active' : ''}`}
+                  onClick={() => setTodoFilter('reply')}
+                >
+                  Replies ({todoCounts.reply})
+                </button>
+              </div>
+
+              <div className="ap-todo-header-right">
+                <button
+                  type="button"
+                  className="ap-link-btn"
+                  onClick={() => navigate('/admin/reminders/my')}
+                >
+                  View All &rarr;
+                </button>
+                <button
+                  type="button"
+                  className="ap-btn-red"
+                  onClick={() => navigate('/admin/tasks')}
+                >
+                  + Add Task
+                </button>
+              </div>
+            </div>
+
+            <div className="ap-todo-list--expansive">
+              {displayedTodoItems.length > 0 ? (
+                displayedTodoItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`ap-todo-row ap-todo-row--${item.type.toLowerCase().replace(/[^a-z]/g, '')}`}
+                    onClick={item.onClick}
+                  >
+                    <div className={`ap-todo-icon-box ap-todo-icon-box--${item.type.toLowerCase().includes('reminder') ? 'reminder' : item.type.toLowerCase().includes('task') ? 'task' : 'reply'}`}>
+                      <FaCalendarAlt />
+                    </div>
+                    <div className="ap-todo-body">
+                      <div className="ap-todo-meta-line">
+                        <span className={`ap-todo-badge ap-todo-badge--${item.type.toLowerCase().includes('reminder') ? 'reminder' : item.type.toLowerCase().includes('task') ? 'task' : 'reply'}`}>
+                          {item.type}
+                        </span>
+                        <span className="ap-todo-date">{item.meta}</span>
                       </div>
-                      {item.reminder ? (
-                        <div className="ap-todo-row-actions" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            type="button"
-                            className="ap-btn-solid-red"
-                            onClick={(event) => handleTodoReminderActive(item.reminder, event)}
-                          >
-                            Active
-                          </button>
-                          <button
-                            type="button"
-                            className="ap-btn-outline-red"
-                            onClick={(event) => handleTodoReminderClose(item.reminder, event)}
-                          >
-                            Close
-                          </button>
-                        </div>
+                      <div className="ap-todo-title-text">{item.title || item.message}</div>
+                      {item.message && item.title && item.message !== item.title ? (
+                        <div className="ap-todo-desc-text">{item.message}</div>
                       ) : null}
                     </div>
-                  ))}
-                </div>
+                    {item.reminder ? (
+                      <div className="ap-todo-btn-group" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="ap-active-pill-btn"
+                          onClick={(e) => handleTodoReminderActive(item.reminder, e)}
+                        >
+                          Active
+                        </button>
+                        <button
+                          type="button"
+                          className="ap-close-pill-btn"
+                          onClick={(e) => handleTodoReminderClose(item.reminder, e)}
+                        >
+                          Close
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="ap-todo-btn-group" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="ap-view-action-btn"
+                          onClick={item.onClick}
+                        >
+                          Open &rarr;
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
               ) : (
-                <div className="ap-todo-empty">No todo items found</div>
+                <div className="ap-todo-empty-state">
+                  <FaClipboardList className="ap-todo-empty-icon" />
+                  <p>No {todoFilter !== 'all' ? todoFilter : ''} to-do items found right now.</p>
+                </div>
               )}
             </div>
+          </div>
+        </div>
 
+        {/* Integrations & Live Activity Row */}
+        <div className="ap-side-widgets-row">
+          {/* Integrations Card */}
+          <div className="ap-card-box ap-integrations-card">
+            <div className="ap-card-head">
+              <div className="ap-card-head-title">
+                <FaThLarge className="ap-card-head-icon" />
+                <h3 className="text-base font-bold text-slate-800 m-0">Integrations</h3>
+              </div>
+              <button
+                type="button"
+                className="ap-link-btn"
+                onClick={() => navigate('/admin/settings')}
+              >
+                Manage &rarr;
+              </button>
+            </div>
+            <div className="ap-integrations-grid">
+              <div className="ap-integration-box" onClick={() => navigate('/admin/settings')}>
+                <div className="ap-integ-icon-box ap-integ-icon-box--blue">
+                  <FaEnvelope />
+                </div>
+                <div className="ap-integ-info">
+                  <div className="ap-integ-title">Outlook Mail</div>
+                  <div className="ap-integ-subtext">Connect & sync emails...</div>
+                </div>
+                <FaArrowRight className="ap-integ-arrow" />
+              </div>
 
+              <div className="ap-integration-box" onClick={() => navigate('/admin/tickets')}>
+                <div className="ap-integ-icon-box ap-integ-icon-box--red">
+                  <FaHeadset />
+                </div>
+                <div className="ap-integ-info">
+                  <div className="ap-integ-title">CRM Support</div>
+                  <div className="ap-integ-subtext">Open help desk & tickets...</div>
+                </div>
+                <FaArrowRight className="ap-integ-arrow" />
+              </div>
+            </div>
           </div>
 
-          {/* Right Column */}
-          <div className="ap-dashboard-right-col">
-            {/* Integrations */}
-            <div className="ap-card-box ap-integrations-box">
-              <div className="ap-card-head">
-                <div className="ap-card-head-title">
-                  <FaThLarge className="ap-card-head-icon" />
-                  <span>Integrations</span>
-                </div>
-                <button type="button" className="ap-link-btn" onClick={() => navigate('/admin/settings')}>
-                  Manage &rarr;
-                </button>
+          {/* Live Activity Card */}
+          <div className="ap-card-box ap-live-card">
+            <div className="ap-card-head">
+              <div className="ap-card-head-title">
+                <span className="ap-live-pulse-dot" />
+                <h3 className="text-base font-bold text-slate-800 m-0">Live Activity</h3>
               </div>
-
-              <div className="ap-integrations-tiles">
-                <div
-                  className="ap-integration-tile"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => navigate('/admin/settings')}
-                >
-                  <div className="ap-integration-tile-icon ap-integration-tile-icon--outlook">
-                    <FaEnvelope />
-                  </div>
-                  <div className="ap-integration-tile-info">
-                    <div className="ap-integration-tile-name">Outlook Mail</div>
-                    <div className="ap-integration-tile-sub">Connect Outlook</div>
-                  </div>
-                  <span className="ap-integration-tile-arrow">&rarr;</span>
-                </div>
-
-                <div
-                  className="ap-integration-tile"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => navigate('/admin/tickets')}
-                >
-                  <div className="ap-integration-tile-icon ap-integration-tile-icon--support">
-                    <FaHeadset />
-                  </div>
-                  <div className="ap-integration-tile-info">
-                    <div className="ap-integration-tile-name">CRM Support</div>
-                    <div className="ap-integration-tile-sub">Open Support Module</div>
-                  </div>
-                  <span className="ap-integration-tile-arrow">&rarr;</span>
-                </div>
-              </div>
+              <button
+                type="button"
+                className="ap-link-btn"
+                onClick={() => navigate('/admin/team-view')}
+              >
+                Team View &rarr;
+              </button>
             </div>
-
-            {/* Live Activity */}
-            <div className="ap-card-box ap-activity-box">
-              <div className="ap-card-head">
-                <div className="ap-card-head-title">
-                  <span className="ap-live-pulse-dot" />
-                  <span>Live Activity</span>
-                </div>
-                <button type="button" className="ap-link-btn" onClick={() => navigate('/admin/team-view')}>
-                  Team View &rarr;
-                </button>
-              </div>
-
-              <div className="ap-activity-list">
-                {displayedActivities.map((act) => (
-                  <div key={act.id} className="ap-activity-item ap-activity-item--live">
-                    <div className="ap-activity-badge-pulse">
-                      <span className="ap-activity-dot-pulse" />
-                      <span>LIVE</span>
-                    </div>
-                    <div className="ap-activity-content">
-                      <span className="ap-activity-title">{act.title}</span>
-                      {act.subtitle ? <span className="ap-activity-sub">{act.subtitle}</span> : null}
-                    </div>
-                    <span className="ap-activity-time">{act.time}</span>
+            <div className="ap-live-card-body">
+              <div className="ap-live-user-pill">
+                <div className="ap-live-user-left">
+                  <span className="ap-live-status-chip">• LIVE</span>
+                  <div className="ap-live-user-details">
+                    <span className="ap-live-user-name">{user?.name || 'Keval V Shah'}</span>
+                    <span className="ap-live-user-sub">{user?.role === 'admin' || user?.actualRole === 'admin' ? 'Director • Active Session' : 'Workspace User • Active Session'}</span>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Row 2: Upcoming Tasks */}
-            <div className="ap-grid-row">
-              <div className="ap-card-box ap-upcoming-box">
-                <div className="ap-card-head">
-                  <span className="ap-card-head-title">
-                    <FaRegClock className="ap-card-head-icon" />
-                    <span>Upcoming Tasks</span>
-                  </span>
-                  <button type="button" className="ap-link-btn" onClick={() => navigate(isAdmin ? '/admin/accounts/my-accounts' : '/accounts/my-accounts')}>
-                    View All &rarr;
-                  </button>
                 </div>
-                {(() => {
-                  const pendingTasksList = (tasks || []).filter(
-                    (t) => String(t.status || '').toLowerCase() === 'pending' || String(t.status || '').toLowerCase() === 'open'
-                  )
-
-                  if (pendingTasksList.length === 0) {
-                    return (
-                      <div className="ap-empty-task-block">
-                        <div className="ap-empty-task-icon">&#128203;</div>
-                        <div className="ap-empty-task-title">
-                          <span className="ap-empty-task-num">0</span> pending Tasks
-                        </div>
-                        <div className="ap-empty-task-sub">You&apos;re all caught up! Great work.</div>
-                      </div>
-                    )
-                  }
-
-                  return (
-                    <div className="ap-upcoming-tasks-scroll flex flex-col gap-2 p-1">
-                      {pendingTasksList.map((task) => (
-                        <div
-                          key={task.id || task._id}
-                          onClick={() => navigate(isAdmin ? '/admin/accounts/my-accounts' : '/accounts/my-accounts')}
-                          className="p-2.5 bg-slate-50 hover:bg-blue-50/60 border border-slate-200 rounded-lg cursor-pointer transition-colors flex items-center justify-between"
-                        >
-                          <div className="min-w-0 flex-1">
-                            <div className="text-xs font-semibold text-slate-800 truncate">
-                              {task.title || task.name || 'Pending Task'}
-                            </div>
-                            <div className="text-[11px] text-slate-500 truncate mt-0.5">
-                              {task.description || task.note || (task.activityType ? `Type: ${task.activityType}` : 'No description')}
-                            </div>
-                          </div>
-                          <div className="ml-3 flex-shrink-0 text-right">
-                            <span className="inline-block text-[10px] font-bold px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded">
-                              {formatTodoDateTime(task.dueDate || task.createdAt) || 'Pending'}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )
-                })()}
+                <span className="ap-live-time-chip">{formattedNow}</span>
               </div>
             </div>
           </div>
         </div>
+
         <AnalyticsSection
         accounts={accounts}
         deals={deals}

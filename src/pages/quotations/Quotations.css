@@ -2165,3 +2165,24 @@ html:not([data-theme="dark"]) .quotation-modal-title-icon,
   background-color: transparent !important;
   border: 1px solid var(--border-subtle, #d1d5db) !important;
 }
+
+/* Quotation Table Header & Badges - Brand Red & Crisp White Font */
+.aqp-table .aqp-thead-row,
+.aqp-table .aqp-thead-row .aqp-th,
+.aqp-table thead th {
+  background: #c60016 !important;
+  background-color: #c60016 !important;
+  border-color: #a80012 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.aqp-table .aqp-thead-row .aqp-th *,
+.aqp-table thead th *,
+.aqp-table .aqp-sort-icon {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}

@@ -1,6 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FiChevronDown } from 'react-icons/fi'
+import {
+  FaCalendarAlt,
+  FaCog,
+  FaFileAlt,
+  FaHashtag,
+  FaLayerGroup,
+  FaRegBuilding,
+  FaRegUser,
+  FaUserAlt,
+} from 'react-icons/fa'
 import { useClickOutside } from '../../../hooks'
 import { useData } from '../../../context/DataContext'
 import { ACCOUNT_ROW_ACTIONS } from '../../../features/adminAccounts/config/accountActions'
@@ -19,6 +29,34 @@ const renderCellValue = (column, row) => {
   }
 
   return value
+}
+
+const getColumnIcon = (key = '') => {
+  switch (key) {
+    case 'accountNumber':
+    case 'accountNo':
+      return <FaRegBuilding />
+    case 'name':
+    case 'accountName':
+      return <FaRegUser />
+    case 'accountDate':
+    case 'createdAt':
+    case 'updatedAtDisplay':
+      return <FaCalendarAlt />
+    case 'projectName':
+      return <FaFileAlt />
+    case 'accountOwner':
+    case 'accountOwnerName':
+    case 'owner':
+      return <FaUserAlt />
+    case 'accountCategory':
+    case 'productCategory':
+      return <FaLayerGroup />
+    case 'actions':
+      return <FaCog />
+    default:
+      return <FaHashtag />
+  }
 }
 
 const AccountsLegacyBoard = ({
@@ -188,7 +226,11 @@ const AccountsLegacyBoard = ({
         <thead>
           <tr>
             {showSerialNumber ? (
-              <th style={{ width: '52px', textAlign: 'center' }}>Sr. No.</th>
+              <th style={{ width: '52px', textAlign: 'center' }}>
+                <span className="admin-accounts-th-content admin-accounts-th-content-center">
+                  <FaHashtag />
+                </span>
+              </th>
             ) : null}
             {selectable ? (
               <th className="admin-accounts-select-col">
@@ -206,7 +248,10 @@ const AccountsLegacyBoard = ({
             ) : null}
             {columns.map((column) => (
               <th key={column.key} style={{ width: column.width }}>
-                {column.label}
+                <span className="admin-accounts-th-content">
+                  {getColumnIcon(column.key)}
+                  <span>{column.label}</span>
+                </span>
               </th>
             ))}
           </tr>

@@ -155,12 +155,347 @@
 .ud-stat-curve--orange { background: radial-gradient(circle, #fdba74 0%, transparent 80%); }
 
 /* Main 2-Column Section */
-.ud-main-layout {
+/* Expansive Full-Width To Do List Section */
+.ud-todo-full-container {
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.ud-todo-card--expansive {
+  border-radius: 20px;
+  background: #ffffff !important;
+  border: 1px solid #f0eae1 !important;
+  box-shadow: 0 8px 30px rgba(180, 160, 140, 0.07) !important;
+  transition: all 0.25s ease;
+}
+
+.ud-todo-header-expansive {
+  padding: 1.15rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #f1ece1;
+  background: linear-gradient(180deg, #ffffff 0%, #faf8f5 100%);
+}
+
+.ud-todo-header-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.ud-todo-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.ud-todo-title-row h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.ud-todo-count-badge {
+  background: #dc2626;
+  color: #ffffff;
+  padding: 0.15rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.ud-todo-subtitle {
+  margin: 0.15rem 0 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.ud-todo-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #f1f5f9;
+  padding: 0.25rem;
+  border-radius: 12px;
+}
+
+.ud-todo-tab {
+  background: transparent;
+  border: none;
+  padding: 0.35rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.ud-todo-tab:hover {
+  color: #0f172a;
+}
+
+.ud-todo-tab.active {
+  background: #ffffff;
+  color: #dc2626;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.ud-todo-list--expansive {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+  gap: 0.85rem;
+  padding: 1.25rem;
+  background: #fdfcfb;
+}
+
+@media (max-width: 900px) {
+  .ud-todo-list--expansive {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ud-todo-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.95rem 1.15rem;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  position: relative;
+  overflow: hidden;
+}
+
+.ud-todo-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #cbd5e1;
+  transition: background 0.2s ease;
+}
+
+.ud-todo-row:hover {
+  transform: translateY(-2px);
+  border-color: #e2e8f0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.ud-todo-row--remindernone::before,
+.ud-todo-row--reminder::before {
+  background: #dc2626;
+}
+
+.ud-todo-row--task::before {
+  background: #d97706;
+}
+
+.ud-todo-row--reply::before {
+  background: #059669;
+}
+
+.ud-todo-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.85rem;
+  height: 2.85rem;
+  border-radius: 12px;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.ud-todo-row:hover .ud-todo-icon-box {
+  transform: scale(1.06);
+}
+
+.ud-todo-icon-box--reminder {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.ud-todo-icon-box--task {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.ud-todo-icon-box--reply {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.ud-todo-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.ud-todo-meta-line {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ud-todo-badge {
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ud-todo-badge--reminder {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.ud-todo-badge--task {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.ud-todo-badge--reply {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.ud-todo-date {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.ud-todo-title-text {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.25;
+}
+
+.ud-todo-desc-text {
+  font-size: 0.78rem;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ud-todo-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.ud-active-pill-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 1rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+}
+
+.ud-active-pill-btn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+}
+
+.ud-close-pill-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  border-radius: 8px;
+  padding: 0.45rem 0.95rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.ud-close-pill-btn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.ud-view-action-btn {
+  background: #f1f5f9;
+  color: #334155;
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 0.95rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.ud-view-action-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.ud-todo-empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.ud-todo-empty-icon {
+  font-size: 2.2rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.5;
+}
+
+/* Side Widgets Row (Integrations & Live Activity) */
+.ud-side-widgets-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
   gap: 1.15rem;
   margin-bottom: 1.5rem;
-  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .ud-side-widgets-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .ud-card {
@@ -236,140 +571,10 @@
   background: #b91c1c;
 }
 
-/* To Do List Column */
-.ud-todo-card {
-  min-height: auto;
-}
-
-.ud-todo-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  padding: 0.95rem;
-}
-
-.ud-todo-row {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  padding: 0.75rem 0.9rem;
-  border-radius: 14px;
-  background: #ffffff;
-  border: 1px solid #f1f5f9;
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-.ud-todo-row:hover {
-  background: #fafafa;
-  border-color: #e2e8f0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-}
-
-.ud-todo-icon-box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 10px;
-  background: #ffe4e6;
-  color: #dc2626;
-  font-size: 1rem;
-  flex-shrink: 0;
-}
-
-.ud-todo-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  flex: 1;
-  min-width: 0;
-}
-
-.ud-todo-meta-line {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-}
-
-.ud-todo-badge {
-  padding: 0.12rem 0.45rem;
-  border-radius: 6px;
-  background: #ffe4e6;
-  color: #dc2626;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.ud-todo-date {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #64748b;
-}
-
-.ud-todo-title-text {
-  font-size: 0.9rem;
-  font-weight: 800;
-  color: #0f172a;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ud-todo-btn-group {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex-shrink: 0;
-}
-
-.ud-active-pill-btn {
-  background: #dc2626;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 0.38rem 0.85rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.ud-active-pill-btn:hover {
-  background: #b91c1c;
-}
-
-.ud-close-pill-btn {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #475569;
-  border-radius: 8px;
-  padding: 0.38rem 0.85rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.ud-close-pill-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
-}
-
-/* Right Stacked Column */
-.ud-right-column {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
 /* Integrations Card */
 .ud-integrations-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr; /* single item */
   gap: 0.85rem;
   padding: 1.1rem;
 }

@@ -9,6 +9,8 @@ router.use(requireAuth)
 
 // Remark endpoints
 router.post('/remarks', remarkController.createRemark)
+router.get('/remarks', remarkController.getAllRemarks)
+router.get('/remarks/all', remarkController.getAllRemarks)
 router.get('/remarks/account/:accountId', remarkController.getRemarksByAccount)
 router.put('/remarks/:remarkId', remarkController.updateRemark)
 router.delete('/remarks/:remarkId', remarkController.deleteRemark)

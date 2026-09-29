@@ -562,10 +562,17 @@
 .sidebar--user .sb-view-toolbar-button--route-active,
 .sidebar--user .sb-view-toolbar-button.active,
 .sidebar--user .sb-view-toolbar-button:active {
-  background: linear-gradient(135deg, #c60016 0%, #9e0012 100%) !important;
-  border-color: #a30012 !important;
+  background: #c60016 !important;
+  border-color: #c60016 !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 12px rgba(198, 0, 22, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(198, 0, 22, 0.25) !important;
+}
+
+.sidebar--admin .sb-view-toolbar-button svg,
+.sidebar--user .sb-view-toolbar-button svg,
+.sidebar--admin .sb-view-toolbar-button svg *,
+.sidebar--user .sb-view-toolbar-button svg * {
+  pointer-events: none !important;
 }
 
 .sidebar--admin .sb-view-toolbar-button--route-active svg,

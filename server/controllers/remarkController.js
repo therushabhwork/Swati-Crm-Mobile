@@ -4,7 +4,7 @@ const { AppError } = require('../utils/appError')
 class RemarkController {
   async createRemark(req, res, next) {
     try {
-      const { accountId, category, content, reminder, assignment } = req.body
+      const { accountId, dealId, category, content, reminder, assignment, startTime, endTime, remarkDate, callLogTime, relatedEntityType } = req.body
       const userId = req.user?.id
 
       if (!userId) {
@@ -14,11 +14,17 @@ class RemarkController {
       const remark = await remarkService.createRemark({
         actor: req.user,
         accountId,
+        dealId,
         category: category || 'general',
         content,
         createdBy: userId,
         reminder,
-        assignment
+        assignment,
+        startTime,
+        endTime,
+        remarkDate,
+        callLogTime,
+        relatedEntityType,
       })
 
       res.status(201).json({
@@ -129,6 +135,18 @@ class RemarkController {
         success: true,
         message: 'Reminder updated successfully',
         data: reminder
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async getAllRemarks(req, res, next) {
+    try {
+      const remarks = await remarkService.getAllRemarks(req.user)
+      res.status(200).json({
+        success: true,
+        data: remarks
       })
     } catch (error) {
       next(error)

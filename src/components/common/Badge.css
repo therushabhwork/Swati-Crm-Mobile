@@ -37,31 +37,32 @@
 }
 
 .badge-primary {
-  background-color: #eef2ff;
-  color: #3b55e6;
-  border-color: rgba(79, 106, 245, 0.22);
+  background-color: rgba(198, 0, 22, 0.08);
+  color: #c60016;
+  border-color: rgba(198, 0, 22, 0.25);
 }
 
 .badge-success {
-  background-color: #ecfdf5;
-  color: #065f46;
-  border-color: rgba(5, 150, 105, 0.18);
+  background-color: rgba(198, 0, 22, 0.08);
+  color: #c60016;
+  border-color: rgba(198, 0, 22, 0.25);
 }
 
 .badge-warning {
-  background-color: #fffbeb;
-  color: #92400e;
-  border-color: rgba(217, 119, 6, 0.18);
+  background-color: rgba(198, 0, 22, 0.05);
+  color: #c60016;
+  border-color: rgba(198, 0, 22, 0.18);
 }
 
 .badge-danger {
-  background-color: #fef2f2;
-  color: #991b1b;
-  border-color: rgba(220, 38, 38, 0.18);
+  background-color: rgba(198, 0, 22, 0.1);
+  color: #c60016;
+  border-color: #c60016;
+  font-weight: 800;
 }
 
 .badge-info {
-  background-color: #f0f9ff;
-  color: #075985;
-  border-color: rgba(2, 132, 199, 0.18);
+  background-color: rgba(198, 0, 22, 0.06);
+  color: #c60016;
+  border-color: rgba(198, 0, 22, 0.2);
 }

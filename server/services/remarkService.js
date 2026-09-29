@@ -5,6 +5,7 @@ const { assertRecordAccess, isPrivilegedRole, toNumberOrNull } = require('../sec
 
 const Remark = getMongoModel('remarks')
 const RemarkReminder = getMongoModel('remark_reminders')
+const MainReminder = getMongoModel('reminders')
 const User = getMongoModel('users')
 const AuditLog = getMongoModel('audit_log')
 
@@ -193,27 +194,34 @@ class RemarkService {
   }
 
   async createRemark(remarkData) {
-    const { actor, accountId, category = 'general', content, createdBy, reminder } = remarkData
+    const { actor, accountId, dealId, category = 'general', content, createdBy, reminder, startTime, endTime, remarkDate, callLogTime, relatedEntityType } = remarkData
     const assignment = this.normalizeAssignment(remarkData.assignment)
-    if (!actor || !accountId || !content) {
-      throw new AppError('Account ID and content are required', 400)
+    if (!actor || (!accountId && !dealId) || !content) {
+      throw new AppError('Account ID or Deal ID and content are required', 400)
     }
 
-    const lead = await this.getAccessibleLead(accountId, actor)
+    const lead = accountId ? await this.getAccessibleLead(accountId, actor).catch(() => null) : null
     const legacyId = await getNextLegacyId('remarks')
-    const companyId = actor.companyId || lead.companyId || 1
+    const companyId = actor.companyId || lead?.companyId || 1
     const now = new Date()
 
     const remark = await Remark.create({
       legacyId,
-      accountId: toNumber(accountId),
+      accountId: accountId ? toNumber(accountId) : null,
+      dealId: dealId ? toNumber(dealId) : null,
+      relatedEntityId: String(dealId || accountId || ''),
+      relatedEntityType: relatedEntityType || (dealId ? 'deal' : 'account'),
       category,
       content,
+      startTime: startTime || null,
+      endTime: endTime || null,
+      remarkDate: remarkDate || null,
+      callLogTime: callLogTime || null,
       createdBy,
       companyId,
       ownerUserId: actor.id,
-      projectId: lead.projectId || null,
-      workflowId: remarkData.workflowId || lead.workflowId || null,
+      projectId: lead?.projectId || null,
+      workflowId: remarkData.workflowId || lead?.workflowId || null,
       assignmentMode: assignment.mode,
       assignedUserIds: assignment.userIds,
       assignedUserTypes: assignment.userTypes,
@@ -355,16 +363,24 @@ class RemarkService {
   }
 
   async getRemarksByAccount(accountId, actor) {
-    await this.getAccessibleLead(accountId, actor)
+    await this.getAccessibleLead(accountId, actor).catch(() => null)
+    const numId = toNumber(accountId)
+    const strId = String(accountId || '')
     const remarks = await Remark
-      .find({ accountId: toNumber(accountId), companyId: actor.companyId || 1 })
+      .find({
+        companyId: actor?.companyId || 1,
+        $or: [
+          ...(numId !== null ? [{ accountId: numId }, { relatedEntityId: numId }, { relatedEntityId: String(numId) }] : []),
+          ...(strId ? [{ accountId: strId }, { relatedEntityId: strId }] : []),
+        ]
+      })
       .sort({ createdAt: -1, legacyId: -1 })
       .lean()
 
     const mappedRemarks = []
     for (const remark of remarks) {
       const mappedRemark = await mapRemark(remark)
-      const reminders = await RemarkReminder.find({ remarkId: mappedRemark.id, companyId: actor.companyId || 1 }).lean()
+      const reminders = await RemarkReminder.find({ remarkId: mappedRemark.id, companyId: actor?.companyId || 1 }).lean()
       mappedRemarks.push({
         ...mappedRemark,
         reminders: reminders.map(mapReminder),
@@ -372,6 +388,35 @@ class RemarkService {
     }
 
     return mappedRemarks
+  }
+
+  async getRemarksByDeal(dealId, limit = 50, offset = 0, actor = null) {
+    const numId = toNumber(dealId)
+    const strId = String(dealId || '')
+    const baseFilter = {
+      companyId: actor?.companyId || 1,
+      $or: [
+        ...(numId !== null ? [{ dealId: numId }, { relatedEntityId: numId }, { relatedEntityId: String(numId) }] : []),
+        ...(strId ? [{ dealId: strId }, { relatedEntityId: strId }] : []),
+      ]
+    }
+    const records = await Remark
+      .find(baseFilter)
+      .sort({ createdAt: -1, legacyId: -1 })
+      .skip(Math.max(0, Number(offset) || 0))
+      .limit(Math.max(1, Number(limit) || 50))
+      .lean()
+
+    const visibleRecords = records.filter((remark) => this.canSeeRemark(actor, remark))
+    const remarks = []
+    for (const remark of visibleRecords) {
+      remarks.push(await mapRemark(remark))
+    }
+
+    return {
+      remarks,
+      total: await Remark.countDocuments(baseFilter),
+    }
   }
 
   async updateRemark(remarkId, updateData) {
@@ -469,8 +514,16 @@ class RemarkService {
   }
 
   async getRemarksHistory(accountId, limit = 50, offset = 0, actor = null) {
-    await this.getAccessibleLead(accountId, actor)
-    const baseFilter = { accountId: toNumber(accountId), companyId: actor.companyId || 1 }
+    await this.getAccessibleLead(accountId, actor).catch(() => null)
+    const numId = toNumber(accountId)
+    const strId = String(accountId || '')
+    const baseFilter = {
+      companyId: actor?.companyId || 1,
+      $or: [
+        ...(numId !== null ? [{ accountId: numId }, { relatedEntityId: numId }, { relatedEntityId: String(numId) }] : []),
+        ...(strId ? [{ accountId: strId }, { relatedEntityId: strId }] : []),
+      ]
+    }
     const records = await Remark
       .find(baseFilter)
       .sort({ createdAt: -1, legacyId: -1 })
@@ -488,6 +541,22 @@ class RemarkService {
       remarks,
       total: await Remark.countDocuments(baseFilter),
     }
+  }
+
+  async getAllRemarks(actor = null, limit = 200) {
+    const baseFilter = { companyId: actor?.companyId || 1 }
+    const records = await Remark
+      .find(baseFilter)
+      .sort({ createdAt: -1, legacyId: -1 })
+      .limit(Math.max(1, Number(limit) || 200))
+      .lean()
+
+    const visibleRecords = actor ? records.filter((remark) => this.canSeeRemark(actor, remark)) : records
+    const remarks = []
+    for (const remark of visibleRecords) {
+      remarks.push(await mapRemark(remark))
+    }
+    return remarks
   }
 }
 

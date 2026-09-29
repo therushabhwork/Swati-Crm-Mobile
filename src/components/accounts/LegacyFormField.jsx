@@ -1,7 +1,7 @@
 import React from 'react'
 
 const inputClasses =
-  'legacy-form-control w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition duration-200 ease-in-out focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
+  'legacy-form-control w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 bg-white outline-none transition duration-150 ease-in-out focus:border-[#c60016] focus:ring-1 focus:ring-[#c60016]/20'
 
 const normalizeOptionValue = (value) => (
   value === null || value === undefined ? '' : String(value)
@@ -61,7 +61,7 @@ const LegacyFormField = ({
     ? [{ value: normalizedValue, label: normalizedValue }, ...normalizedOptions]
     : normalizedOptions
 
-  const errorClasses = error ? 'border-red-500 ring-2 ring-red-100 focus:border-red-500 focus:ring-red-100' : ''
+  const errorClasses = error ? 'border-[#c60016] ring-1 ring-[#c60016]/20 focus:border-[#c60016]' : ''
   
   const control =
     type === 'textarea' ? (

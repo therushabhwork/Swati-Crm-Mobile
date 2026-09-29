@@ -23,18 +23,18 @@ export const USER_SIDEBAR_TOOLBAR = [
     icon: FaCloud,
   },
   {
-    key: 'dashboard',
-    to: '/dashboard',
-    title: 'Dashboard',
-    ariaLabel: 'Dashboard',
-    icon: FaDesktop,
-  },
-  {
     key: 'calendar',
     to: '/calendar',
     title: 'Calendar',
     ariaLabel: 'Calendar',
     icon: FaCalendarAlt,
+  },
+  {
+    key: 'dashboard',
+    to: '/dashboard',
+    title: 'Dashboard',
+    ariaLabel: 'Dashboard',
+    icon: FaDesktop,
   },
 ]
 

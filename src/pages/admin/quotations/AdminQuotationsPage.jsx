@@ -1713,8 +1713,8 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
             <div className="aqp-modal-footer-group">
               <button
                 type="button"
-                className="aqp-btn aqp-btn--blue"
-                style={{ backgroundColor: '#16a34a', borderColor: '#15803d', color: '#ffffff' }}
+                className="aqp-btn aqp-btn--red"
+                style={{ backgroundColor: '#c60016', borderColor: '#a80012', color: '#ffffff' }}
                 onClick={() => handleApproveRevisionItem(viewRow)}
               >
                 <FaCheck className="aqp-btn-icon" />

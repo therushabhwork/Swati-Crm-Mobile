@@ -275,10 +275,8 @@ function App() {
                 <Route path="data-manager/knowledge-base" element={<KnowledgeBasePage basePath="/data-manager" />} />
                 <Route path="data-manager/knowledge-base/add" element={<AddKnowledgeBasePage basePath="/data-manager" />} />
                 <Route path="image-gallery" element={<ImageGalleryPage />} />
-                <Route path="integrations/outlook" element={<Navigate to="/settings" replace />} />
-                <Route path="integrations" element={<IntegrationQrPage />} />
-                <Route path="integrations/:channel" element={<IntegrationQrPage />} />
-                <Route path="outlook" element={<OutlookMailPage />} />
+                <Route path="integrations/*" element={<Navigate to="/dashboard" replace />} />
+                <Route path="outlook" element={<Navigate to="/dashboard" replace />} />
                 <Route path="messages" element={<AdminMessagesPage />} />
                 <Route path="settings" element={<AdminSettingsPage />} />
               </Route>

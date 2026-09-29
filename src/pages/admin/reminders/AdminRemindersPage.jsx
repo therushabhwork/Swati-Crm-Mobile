@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { FaCheck, FaChevronDown, FaFilter, FaHandPointRight, FaPlus, FaRedo, FaTimes, FaUser } from 'react-icons/fa'
+import { FaBuilding, FaCalendarAlt, FaCheck, FaChevronDown, FaClock, FaFilter, FaHandPointRight, FaPlus, FaRedo, FaSearch, FaTimes, FaUser, FaUsers } from 'react-icons/fa'
 import { ExcelExportActionButton } from '../../../components/common/ExcelExportButton'
 import { useAuth } from '../../../context/AuthContext'
 import { useData } from '../../../context/DataContext'
@@ -628,6 +628,7 @@ const AdminRemindersPage = ({ variantKey = 'active' }) => {
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false)
   const [draftActiveFilter, setDraftActiveFilter] = useState(() => createDefaultActiveFilterState())
   const [appliedActiveFilter, setAppliedActiveFilter] = useState(null)
+  const [userSearchTerm, setUserSearchTerm] = useState('')
   const [remarkReminders, setRemarkReminders] = useState([])
 
   useEffect(() => subscribeAdminReminderStates(setReminderStatesById), [])
@@ -1191,66 +1192,155 @@ const AdminRemindersPage = ({ variantKey = 'active' }) => {
   if (variantKey === 'active') {
     const currentModuleStatuses = MODULE_STATUS_OPTIONS[draftActiveFilter.searchIn] || []
 
+    const filteredUserGroups = userSearchTerm.trim()
+      ? userGroups.filter((g) => g.name.toLowerCase().includes(userSearchTerm.trim().toLowerCase()))
+      : userGroups
+
+    const totalActiveRemindersCount = userGroups.reduce((acc, g) => acc + (g.count || 0), 0)
+
     return (
       <div className="active-reminders-page">
         <section className="active-reminders-shell">
           <header className="active-reminders-header">
-            <h1>Active Reminders</h1>
-            <ExcelExportActionButton
-              label="Download Excel"
-              title="Download all reminders as Excel"
-              className="active-reminders-header-download btn-red-theme"
-              onClick={handleExportAllActiveRows}
-              disabled={reminders.length === 0}
-            />
-          </header>
-
-          <div className="active-reminders-layout">
-            <div className="active-reminders-users-panel">
-              <div className="active-reminders-users-panel-header">Users</div>
-              <div className="active-reminders-users-list">
-                {userGroups.map((group) => (
-                  <button
-                    key={group.name}
-                    type="button"
-                    className={`active-reminders-user-row${selectedOwner === group.name ? ' active-reminders-user-row-selected' : ''}`}
-                    onClick={() => setSelectedOwner(group.name)}
-                  >
-                    <FaUser className="active-reminders-user-icon" size={12} />
-                    <span className="active-reminders-user-name">{group.name}</span>
-                    <span className="active-reminders-user-badge">{group.count}</span>
-                  </button>
-                ))}
+            <div className="active-reminders-header-left">
+              <div className="active-reminders-header-title-row">
+                <span className="active-reminders-header-icon-pill">
+                  <FaClock />
+                </span>
+                <div>
+                  <div className="active-reminders-title-with-pill">
+                    <h1>Active Reminders</h1>
+                    <span className="active-reminders-header-count">
+                      {totalActiveRemindersCount} {totalActiveRemindersCount === 1 ? 'reminder' : 'reminders'}
+                    </span>
+                  </div>
+                  <p className="active-reminders-subtitle">
+                    Team-wide follow-ups, scheduled reminders, and pending customer actions
+                  </p>
+                </div>
               </div>
             </div>
 
+            <div className="active-reminders-header-actions">
+              <ExcelExportActionButton
+                label="Download Excel"
+                title="Download all reminders as Excel"
+                className="active-reminders-header-download btn-red-theme"
+                onClick={handleExportAllActiveRows}
+                disabled={reminders.length === 0}
+              />
+            </div>
+          </header>
+
+          <div className="active-reminders-layout">
+            {/* Left Panel: Team Directory */}
+            <div className="active-reminders-users-panel">
+              <div className="active-reminders-users-panel-header">
+                <div className="active-reminders-users-header-row">
+                  <div className="active-reminders-users-title-group">
+                    <FaUsers className="active-reminders-users-header-icon" size={13} />
+                    <span>Team Directory</span>
+                  </div>
+                  <span className="active-reminders-users-total-badge" title="Total active reminders">
+                    {totalActiveRemindersCount}
+                  </span>
+                </div>
+
+                <div className="active-reminders-user-search-wrap">
+                  <FaSearch className="active-reminders-user-search-icon" size={11} />
+                  <input
+                    type="text"
+                    className="active-reminders-user-search-input"
+                    placeholder="Find team member..."
+                    value={userSearchTerm}
+                    onChange={(e) => setUserSearchTerm(e.target.value)}
+                  />
+                  {userSearchTerm && (
+                    <button
+                      type="button"
+                      className="active-reminders-user-search-clear"
+                      onClick={() => setUserSearchTerm('')}
+                      title="Clear search"
+                    >
+                      <FaTimes size={10} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="active-reminders-users-list">
+                {filteredUserGroups.map((group) => {
+                  const isSelected = selectedOwner === group.name
+                  const initials = group.name.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase() || 'U'
+
+                  return (
+                    <button
+                      key={group.name}
+                      type="button"
+                      className={`active-reminders-user-row${isSelected ? ' active-reminders-user-row-selected' : ''}`}
+                      onClick={() => {
+                        setSelectedOwner(group.name)
+                        setIsFilterPanelOpen(false)
+                      }}
+                    >
+                      <div className="active-reminders-user-info">
+                        <span className="active-reminders-user-avatar">
+                          {initials}
+                        </span>
+                        <span className="active-reminders-user-name">{group.name}</span>
+                      </div>
+                      <span className="active-reminders-user-badge">{group.count}</span>
+                    </button>
+                  )
+                })}
+
+                {filteredUserGroups.length === 0 && (
+                  <div className="active-reminders-no-users">
+                    <p>No team members match "{userSearchTerm}"</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Stage: Reminders Detail & Filters */}
             <div className="active-reminders-detail-stage">
               {selectedOwner ? (
                 isFilterPanelOpen ? (
                   <div className="active-reminders-filter-panel">
                     <div className="active-reminders-filter-header">
-                      <span className="active-reminders-filter-title">{selectedOwner}</span>
+                      <div className="active-reminders-filter-header-left">
+                        <span className="active-reminders-filter-icon-pill">
+                          <FaFilter size={11} />
+                        </span>
+                        <div>
+                          <span className="active-reminders-filter-title">Filter Options: {selectedOwner}</span>
+                          <span className="active-reminders-filter-subtitle">Refine by source module, dates, or stages</span>
+                        </div>
+                      </div>
+
                       <div className="active-reminders-filter-header-actions">
                         <button
                           type="button"
                           className="active-reminders-filter-action-btn active-reminders-filter-action-btn-green"
                           onClick={handleApplyActiveFilter}
                         >
-                          Search
+                          <FaSearch size={11} />
+                          <span>Search</span>
                         </button>
                         <button
                           type="button"
                           className="active-reminders-filter-action-btn active-reminders-filter-action-btn-red"
                           onClick={() => setIsFilterPanelOpen(false)}
                         >
-                          Close
+                          <FaTimes size={11} />
+                          <span>Close</span>
                         </button>
                       </div>
                     </div>
 
                     <div className="active-reminders-filter-body">
                       <div className="active-reminders-filter-control">
-                        <label htmlFor="active-reminders-search-in">Search in</label>
+                        <label htmlFor="active-reminders-search-in">Search in Module</label>
                         <select
                           id="active-reminders-search-in"
                           value={draftActiveFilter.searchIn}
@@ -1264,7 +1354,7 @@ const AdminRemindersPage = ({ variantKey = 'active' }) => {
 
                       <div className="active-reminders-filter-block">
                         <div className="active-reminders-filter-toggle-row">
-                          <span>Date Filter</span>
+                          <span className="active-reminders-filter-block-label">Date Filter</span>
                           <button
                             type="button"
                             className={`active-reminders-filter-toggle-btn${draftActiveFilter.dateFilterEnabled ? ' active-reminders-filter-toggle-btn-active' : ''}`}
@@ -1273,7 +1363,7 @@ const AdminRemindersPage = ({ variantKey = 'active' }) => {
                               dateFilterEnabled: !current.dateFilterEnabled,
                             }))}
                           >
-                            {draftActiveFilter.dateFilterEnabled ? 'YES' : 'NO'}
+                            {draftActiveFilter.dateFilterEnabled ? 'ENABLED' : 'DISABLED'}
                           </button>
                         </div>
 
@@ -1319,7 +1409,7 @@ const AdminRemindersPage = ({ variantKey = 'active' }) => {
 
                       <div className="active-reminders-filter-block">
                         <div className="active-reminders-filter-toggle-row">
-                          <span>Status Filter</span>
+                          <span className="active-reminders-filter-block-label">Status Filter</span>
                           <button
                             type="button"
                             className={`active-reminders-filter-toggle-btn${draftActiveFilter.statusFilterEnabled ? ' active-reminders-filter-toggle-btn-active' : ''}`}
@@ -1328,7 +1418,7 @@ const AdminRemindersPage = ({ variantKey = 'active' }) => {
                               statusFilterEnabled: !current.statusFilterEnabled,
                             }))}
                           >
-                            {draftActiveFilter.statusFilterEnabled ? 'YES' : 'NO'}
+                            {draftActiveFilter.statusFilterEnabled ? 'ENABLED' : 'DISABLED'}
                           </button>
                         </div>
 
@@ -1350,10 +1440,31 @@ const AdminRemindersPage = ({ variantKey = 'active' }) => {
                 ) : (
                   <div className="active-reminders-detail-panel">
                     <div className="active-reminders-detail-header">
-                      <span className="active-reminders-detail-title">{selectedOwner}</span>
+                      <div className="active-reminders-detail-header-left">
+                        <div className="active-reminders-owner-avatar">
+                          {selectedOwner.replace(/[^a-zA-Z0-9 ]/g, '').split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase() || 'U'}
+                        </div>
+                        <div>
+                          <h2 className="active-reminders-detail-title">{selectedOwner}</h2>
+                          <span className="active-reminders-detail-subtitle">
+                            {detailBaseRows.length} active reminder{detailBaseRows.length !== 1 ? 's' : ''} assigned
+                          </span>
+                        </div>
+                      </div>
+
                       <div className="active-reminders-detail-actions">
+                        <button
+                          type="button"
+                          className="active-reminders-filter-toggle-btn-modern"
+                          onClick={() => setIsFilterPanelOpen(true)}
+                          title="Open filter criteria"
+                        >
+                          <FaFilter size={11} />
+                          <span>Filter Options</span>
+                        </button>
+
                         <ExcelExportActionButton
-                          label="Export"
+                          label="Export Excel"
                           title="Download selected user's active reminders Excel"
                           className="active-reminders-detail-btn btn-red-theme"
                           onClick={handleExportSelectedOwnerRows}
@@ -1363,78 +1474,138 @@ const AdminRemindersPage = ({ variantKey = 'active' }) => {
                     </div>
 
                     <div className="active-reminders-detail-tabs">
-                      {ACTIVE_DETAIL_TABS.map((tab) => (
-                        <button
-                          key={tab.key}
-                          type="button"
-                          className={`active-reminders-detail-tab${activeDetailTab === tab.key ? ' active-reminders-detail-tab-active' : ''}`}
-                          onClick={() => setActiveDetailTab(tab.key)}
-                        >
-                          {tab.label} ({(detailTabData[tab.key] || []).length})
-                        </button>
-                      ))}
+                      {ACTIVE_DETAIL_TABS.map((tab) => {
+                        const count = (detailTabData[tab.key] || []).length
+                        const isActive = activeDetailTab === tab.key
+
+                        return (
+                          <button
+                            key={tab.key}
+                            type="button"
+                            className={`active-reminders-detail-tab${isActive ? ' active-reminders-detail-tab-active' : ''}`}
+                            onClick={() => setActiveDetailTab(tab.key)}
+                          >
+                            <span>{tab.label}</span>
+                            <span className="active-reminders-tab-count">{count}</span>
+                          </button>
+                        )
+                      })}
                     </div>
 
                     <div className="active-reminders-detail-body">
                       {(detailTabData[activeDetailTab] || []).length > 0 ? (
                         <div className="active-reminders-detail-list">
-                          {(detailTabData[activeDetailTab] || []).map((reminder) => (
-                            <article key={reminder.id} className="active-reminders-detail-item">
-                              <div className="active-reminders-detail-item-main">
-                                <strong>{reminder.name}</strong>
-                                <p>
-                                  <span>{String(reminder.sourceLabel || reminder.sourceType || '-').toUpperCase()}</span>
-                                  <span>{reminder.sourceNumber || '-'}</span>
-                                  <span>{reminder.reminderDateDisplay}</span>
-                                  <span>{formatReminderExportTime(reminder.reminderDate, reminder.reminderTime || reminder.reminderMode)}</span>
-                                </p>
-                                <p>
-                                  <span>{reminder.customerNumber || '-'}</span>
-                                  <span>{reminder.customerName || '-'}</span>
-                                  <span>{reminder.ownerName || '-'}</span>
-                                  <span>{reminder.filterStatusLabel || reminder.accountStatus || '-'}</span>
-                                </p>
-                                <span>{reminder.note !== '-' ? reminder.note : ''}</span>
-                              </div>
-                              <div className="active-reminders-item-actions" aria-label="Reminder actions">
-                                <button
-                                  type="button"
-                                  className="active-reminders-item-action active-reminders-item-action-add"
-                                  title="Add reminder"
-                                  aria-label="Add reminder"
-                                  onClick={() => handleUpdateReminderDate(reminder, 'Add')}
-                                >
-                                  <FaPlus style={{ color: '#fff' }} />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="active-reminders-item-action active-reminders-item-action-close"
-                                  title="Close reminder"
-                                  aria-label="Close reminder"
-                                  onClick={() => handleCloseReminder(reminder)}
-                                  style={{ backgroundColor: '#b91c1c', borderColor: '#b91c1c' }}
-                                >
-                                  <FaCheck style={{ color: '#fff' }} />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="active-reminders-item-action active-reminders-item-action-reschedule"
-                                  title="Reschedule reminder"
-                                  aria-label="Reschedule reminder"
-                                  onClick={() => handleUpdateReminderDate(reminder, 'Reschedule')}
-                                >
-                                  <FaRedo style={{ color: '#fff' }} />
-                                </button>
-                              </div>
-                            </article>
-                          ))}
+                          {(detailTabData[activeDetailTab] || []).map((reminder) => {
+                            const sourceLabel = String(reminder.sourceLabel || reminder.sourceType || 'REMINDER').toUpperCase()
+                            const timeText = formatReminderExportTime(reminder.reminderDate, reminder.reminderTime || reminder.reminderMode)
+
+                            return (
+                              <article key={reminder.id} className="active-reminders-detail-item">
+                                <div className="active-reminders-detail-item-main">
+                                  {/* Top badges bar */}
+                                  <div className="active-reminders-item-top">
+                                    <div className="active-reminders-source-wrap">
+                                      <span className={`active-reminders-source-pill active-reminders-source-pill--${sourceLabel.toLowerCase()}`}>
+                                        {sourceLabel}
+                                      </span>
+                                      {reminder.sourceNumber && (
+                                        <span className="active-reminders-number-pill">
+                                          {reminder.sourceNumber}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="active-reminders-date-badge">
+                                      <FaCalendarAlt size={10} />
+                                      <span>{reminder.reminderDateDisplay}</span>
+                                      {timeText !== '-' && (
+                                        <span className="active-reminders-time-text">
+                                          <FaClock size={9} style={{ marginLeft: '4px' }} /> {timeText}
+                                        </span>
+                                      )}
+                                    </span>
+                                  </div>
+
+                                  {/* Title / Name */}
+                                  <strong className="active-reminders-item-title" title={reminder.name}>{reminder.name}</strong>
+
+                                  {/* Metadata chips */}
+                                  <div className="active-reminders-meta-row">
+                                    {reminder.customerName && reminder.customerName !== '-' && (
+                                      <span className="active-reminders-meta-chip" title={reminder.customerName}>
+                                        <FaBuilding size={10} className="active-reminders-chip-icon" />
+                                        <span>{reminder.customerName}</span>
+                                      </span>
+                                    )}
+                                    {reminder.ownerName && reminder.ownerName !== '-' && (
+                                      <span className="active-reminders-meta-chip" title={reminder.ownerName}>
+                                        <FaUser size={10} className="active-reminders-chip-icon" />
+                                        <span>{reminder.ownerName}</span>
+                                      </span>
+                                    )}
+                                    {(reminder.filterStatusLabel || reminder.accountStatus) && (
+                                      <span className="active-reminders-status-chip">
+                                        {reminder.filterStatusLabel || reminder.accountStatus}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Note callout */}
+                                  {reminder.note && reminder.note !== '-' && (
+                                    <div className="active-reminders-note-box">
+                                      <span className="active-reminders-note-label">Note:</span>
+                                      <span className="active-reminders-note-text" title={reminder.note}>{reminder.note}</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="active-reminders-item-actions" aria-label="Reminder actions">
+                                  <button
+                                    type="button"
+                                    className="active-reminders-item-action active-reminders-item-action-add"
+                                    title="Add follow-up reminder"
+                                    aria-label="Add reminder"
+                                    onClick={() => handleUpdateReminderDate(reminder, 'Add')}
+                                  >
+                                    <FaPlus size={10} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="active-reminders-item-action active-reminders-item-action-close"
+                                    title="Close / Complete reminder"
+                                    aria-label="Close reminder"
+                                    onClick={() => handleCloseReminder(reminder)}
+                                  >
+                                    <FaCheck size={10} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="active-reminders-item-action active-reminders-item-action-reschedule"
+                                    title="Reschedule reminder"
+                                    aria-label="Reschedule reminder"
+                                    onClick={() => handleUpdateReminderDate(reminder, 'Reschedule')}
+                                  >
+                                    <FaRedo size={10} />
+                                  </button>
+                                </div>
+                              </article>
+                            )
+                          })}
                         </div>
                       ) : (
-                        <p className="active-reminders-detail-empty-msg">
-                          {activeDetailTab === 'today' && 'No tasks for today'}
-                          {activeDetailTab === 'pending' && 'No pending reminders'}
-                          {activeDetailTab === 'scheduled' && 'No scheduled reminders'}
-                        </p>
+                        <div className="active-reminders-detail-empty-box">
+                          <FaClock size={28} className="active-reminders-empty-icon" />
+                          <strong>
+                            {activeDetailTab === 'today' && 'No reminders for today'}
+                            {activeDetailTab === 'pending' && 'No pending reminders'}
+                            {activeDetailTab === 'scheduled' && 'No scheduled reminders'}
+                          </strong>
+                          <p>
+                            {activeDetailTab === 'today' && 'Great job! All follow-up actions for today are complete.'}
+                            {activeDetailTab === 'pending' && 'There are no overdue or pending reminders for this user.'}
+                            {activeDetailTab === 'scheduled' && 'No upcoming reminders have been scheduled yet.'}
+                          </p>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1442,8 +1613,11 @@ const AdminRemindersPage = ({ variantKey = 'active' }) => {
               ) : (
                 <div className="active-reminders-select-card">
                   <div className="active-reminders-select-prompt">
-                    <FaHandPointRight className="active-reminders-select-icon" size={18} />
-                    <span>Select the User</span>
+                    <div className="active-reminders-select-hero-icon">
+                      <FaUsers size={36} />
+                    </div>
+                    <h3>Select a Team Member</h3>
+                    <p>Choose an owner from the team directory on the left to inspect active reminders, tasks, and follow-ups.</p>
                   </div>
                 </div>
               )}
