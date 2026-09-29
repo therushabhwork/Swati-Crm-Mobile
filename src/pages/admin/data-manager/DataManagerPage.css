@@ -1,124 +1,261 @@
-/* ── Page shell ─────────────────────────────────────────── */
+/* ── Data Manager Page Shell ─────────────────────────────── */
 .dm-page {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background: var(--surface-app);
-  padding: 2rem 1rem;
+  width: 100%;
+  padding: 0.5rem 0 2rem 0;
+  box-sizing: border-box;
 }
 
-/* ── Header ──────────────────────────────────────────────– */
+/* ── Data Manager Header ─────────────────────────────────── */
 .dm-header {
-  margin-bottom: 3rem;
-  text-align: center;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 2.75rem;
+  text-align: left;
+}
+
+.dm-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #94A3B8;
+  margin-bottom: 0.6rem;
 }
 
 .dm-title {
-  margin: 0;
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  margin: 0 0 0.4rem 0;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+.dm-title-highlight {
+  color: #c60016;
 }
 
 .dm-subtitle {
   margin: 0;
   font-size: 0.95rem;
-  color: var(--text-secondary);
+  color: #64748B;
+  font-weight: 400;
+  line-height: 1.45;
+  max-width: 680px;
 }
 
-/* ── Container ───────────────────────────────────────────– */
+/* ── Container & Grid ────────────────────────────────────── */
 .dm-container {
+  position: relative;
+  z-index: 1;
   max-width: 1400px;
-  margin: 0 auto;
   width: 100%;
 }
 
-/* ── Cards grid ──────────────────────────────────────────– */
 .dm-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
 }
 
-/* ── Card component ──────────────────────────────────────– */
+/* ── Card Shell ─────────────────────────────────────────── */
 .dm-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  position: relative;
+  background: #FFFFFF;
+  border-radius: 14px;
+  padding: 1.15rem 1.15rem 1.15rem 1.35rem;
+  border: 1px solid rgba(241, 245, 249, 0.95);
+  box-shadow: 0 4px 14px -3px rgba(0, 0, 0, 0.03), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
   display: flex;
-  flex-direction: column;
-  height: 100%;
+  flex-direction: row;
+  justify-content: space-between;
+  min-height: 145px;
+  overflow: hidden;
   cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease;
+  box-sizing: border-box;
+  text-align: left;
+  width: 100%;
 }
 
 .dm-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  border-color: var(--text-primary);
-  transform: translateY(-4px);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.07), 0 4px 10px -2px rgba(0, 0, 0, 0.03);
+  border-color: rgba(226, 232, 240, 0.9);
 }
 
-.dm-card-header {
-  padding: 2rem 2rem 1.5rem;
-  border-bottom: 1px solid var(--surface-app);
+/* Card Left Content */
+.dm-card-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  max-width: 58%;
+  z-index: 2;
 }
 
-.dm-card-icon {
-  display: inline-flex;
+.dm-card-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-md);
-  font-size: 1.8rem;
-  transition: all 0.2s;
+  font-size: 1rem;
+  margin-bottom: 0.6rem;
+  transition: transform 0.25s ease;
 }
 
-.dm-card:nth-child(1) .dm-card-icon {
-  background: var(--surface-card);
-  color: #f57c00;
-}
-
-.dm-card:nth-child(2) .dm-card-icon {
-  background: var(--surface-muted);
-  color: var(--color-primary);
-}
-
-.dm-card:nth-child(3) .dm-card-icon {
-  background: var(--surface-muted);
-  color: var(--text-primary);
-}
-
-.dm-card:nth-child(4) .dm-card-icon {
-  background: var(--surface-card);
-  color: var(--text-primary);
-}
-
-.dm-card:hover .dm-card-icon {
-  transform: scale(1.1);
-}
-
-.dm-card-body {
-  padding: 1.5rem 2rem 2rem;
-  flex: 1;
+.dm-card:hover .dm-card-badge {
+  transform: scale(1.05);
 }
 
 .dm-card-title {
-  margin: 0 0 0.5rem;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  margin: 0 0 0.2rem 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0F172A;
+  letter-spacing: -0.01em;
 }
 
 .dm-card-description {
   margin: 0;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  line-height: 1.5;
+  font-size: 0.82rem;
+  color: #64748B;
+  line-height: 1.35;
 }
+
+.dm-card-action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+  transition: transform 0.25s ease, background-color 0.25s ease;
+}
+
+.dm-card:hover .dm-card-action-btn {
+  transform: translateX(3px);
+}
+
+/* Themes */
+/* Orange Theme */
+.dm-card--orange .dm-card-badge {
+  background: #FFEDD5;
+  color: #EA580C;
+}
+
+.dm-card--orange .dm-card-action-btn {
+  background: #FFEDD5;
+  color: #EA580C;
+}
+
+/* Blue Theme */
+.dm-card--blue .dm-card-badge {
+  background: #DBEAFE;
+  color: #2563EB;
+}
+
+.dm-card--blue .dm-card-action-btn {
+  background: #DBEAFE;
+  color: #2563EB;
+}
+
+/* Green Theme */
+.dm-card--green .dm-card-badge {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+
+.dm-card--green .dm-card-action-btn {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+
+/* Purple Theme */
+.dm-card--purple .dm-card-badge {
+  background: #F3E8FF;
+  color: #9333EA;
+}
+
+.dm-card--purple .dm-card-action-btn {
+  background: #F3E8FF;
+  color: #9333EA;
+}
+
+/* Card Right Illustration */
+.dm-card-illustration {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  pointer-events: none;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dm-card-arc {
+  position: absolute;
+  right: -20%;
+  top: -20%;
+  bottom: -20%;
+  width: 120%;
+  border-radius: 50%;
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+.dm-card--orange .dm-card-arc {
+  background: radial-gradient(circle at 65% 50%, rgba(254, 215, 170, 0.6) 0%, rgba(255, 237, 213, 0.3) 55%, transparent 80%);
+}
+
+.dm-card--blue .dm-card-arc {
+  background: radial-gradient(circle at 65% 50%, rgba(191, 219, 254, 0.6) 0%, rgba(219, 234, 254, 0.3) 55%, transparent 80%);
+}
+
+.dm-card--green .dm-card-arc {
+  background: radial-gradient(circle at 65% 50%, rgba(187, 247, 208, 0.6) 0%, rgba(220, 252, 231, 0.3) 55%, transparent 80%);
+}
+
+.dm-card--purple .dm-card-arc {
+  background: radial-gradient(circle at 65% 50%, rgba(233, 213, 255, 0.6) 0%, rgba(243, 232, 255, 0.3) 55%, transparent 80%);
+}
+
+.dm-card-graphic {
+  position: relative;
+  z-index: 1;
+  width: 145px;
+  height: 130px;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dm-card:hover .dm-card-graphic {
+  transform: scale(1.05) translateY(-2px);
+}
+
+/* High-specificity protection to prevent global CSS from tinting Data Manager SVG illustrations */
+.dm-page :is(.dm-card-graphic, .dm-header-bg-graphic) {
+  color: unset !important;
+}
+
+.dm-page :is(.dm-card-graphic, .dm-header-bg-graphic) :is(svg, path, circle, rect, line, polyline, polygon, ellipse, g) {
+  fill: revert !important;
+  stroke: revert !important;
+}
+
+
+
 
 /* ── Modal styles ────────────────────────────────────────– */
 .dm-modal-overlay {
@@ -141,7 +278,7 @@
 }
 
 .dm-modal {
-  background: var(--surface-card);
+  background: var(--surface-card, #ffffff);
   border-radius: 12px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   max-width: 500px;
@@ -167,14 +304,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem;
-  border-bottom: 1px solid var(--surface-app);
+  border-bottom: 1px solid var(--surface-app, #f1f5f9);
 }
 
 .dm-modal-title {
   margin: 0;
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-primary, #0f172a);
 }
 
 .dm-modal-close {
@@ -188,208 +325,43 @@
   font-size: 1.5rem;
   color: #999;
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   transition: all 0.2s;
 }
 
 .dm-modal-close:hover {
-  background: var(--surface-card);
-  color: var(--text-primary);
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
 .dm-modal-body {
   padding: 2rem 1.5rem;
 }
 
-.dm-upload-area {
-  position: relative;
-}
-
-.dm-file-input {
-  display: none;
-}
-
-.dm-upload-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1.5rem;
-  border: 2px dashed var(--border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--surface-card);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.dm-upload-label:hover {
-  border-color: var(--text-primary);
-  background: var(--surface-card);
-}
-
-.dm-file-input:focus + .dm-upload-label {
-  border-color: var(--text-primary);
-  box-shadow: 0 0 0 3px rgba(26, 95, 170, 0.1);
-}
-
-.dm-upload-icon {
-  font-size: 2.5rem;
-  color: var(--text-primary);
-  margin-bottom: 0.8rem;
-}
-
-.dm-upload-text {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  text-align: center;
-}
-
-.dm-upload-hint {
-  font-size: 0.8rem;
-  color: #999;
-  margin-top: 0.4rem;
-}
-
-/* ── Modal footer ────────────────────────────────────────– */
-.dm-modal-footer {
-  display: flex;
-  gap: 0.8rem;
-  justify-content: flex-end;
-  padding: 1.5rem;
-  border-top: 1px solid var(--surface-app);
-  background: var(--surface-card);
-}
-
-/* ── Buttons ─────────────────────────────────────────────– */
-.dm-btn {
-  padding: 0.7rem 1.5rem;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.dm-btn-primary {
-  background: #1a5faa;
-  color: white;
-}
-
-.dm-btn-primary:hover:not(:disabled) {
-  background: #154a8a;
-  box-shadow: 0 4px 12px rgba(26, 95, 170, 0.3);
-}
-
-.dm-btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.dm-btn-secondary {
-  background: var(--surface-card);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-subtle);
-}
-
-.dm-btn-secondary:hover {
-  background: var(--surface-card);
-  border-color:  var(--border-subtle);
-}
-
-/* ── Toast notification ──────────────────────────────────– */
-.dm-toast {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  padding: 1rem 1.5rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
-  font-weight: 500;
-  z-index: 2000;
-  animation: slideInRight 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.dm-toast--success {
-  background: var(--surface-muted);
-  color: var(--text-primary);
-  border-left: 4px solid var(--border-subtle);
-}
-
-.dm-toast--error {
-  background: var(--surface-card);
-  color: var(--text-primary);
-  border-left: 4px solid var(--border-subtle);
-}
-
-.dm-toast--info {
-  background: var(--surface-muted);
-  color: var(--text-primary);
-  border-left: 4px solid var(--border-subtle);
-}
-
-/* ── Responsive design ───────────────────────────────────– */
-@media (max-width: 900px) {
-  .dm-cards-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-  }
-
-  .dm-page {
-    padding: 1.5rem 0.75rem;
-  }
-
-  .dm-header {
-    margin-bottom: 2rem;
-  }
-
-  .dm-title {
-    font-size: 1.6rem;
-  }
-}
-
-@media (max-width: 600px) {
+/* Responsive */
+@media (max-width: 992px) {
   .dm-cards-grid {
     grid-template-columns: 1fr;
   }
+}
 
+@media (max-width: 640px) {
   .dm-page {
-    padding: 1rem;
+    padding: 1.5rem 1rem;
   }
-
   .dm-title {
-    font-size: 1.4rem;
+    font-size: 2rem;
   }
-
-  .dm-modal {
-    width: 95%;
+  .dm-card {
+    padding: 1.75rem 1.5rem;
+    min-height: 200px;
   }
-
-  .dm-modal-footer {
-    flex-direction: column-reverse;
+  .dm-card-left {
+    max-width: 65%;
   }
-
-  .dm-btn {
-    width: 100%;
-  }
-
-  .dm-toast {
-    left: 1rem;
-    right: 1rem;
-    bottom: 1rem;
+  .dm-card-graphic {
+    width: 125px;
+    height: 125px;
   }
 }
+

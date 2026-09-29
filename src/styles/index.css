@@ -2634,24 +2634,52 @@ html.is-user:not([data-theme="dark"]) body {
 }
 
 html.is-user:not([data-theme="dark"]) .layout--user {
-  background: #F4F8FA;
-  color: #111827;
+  background: #FAF7F2 !important;
+  color: #0f172a !important;
 }
 
-html.is-user:not([data-theme="dark"]) .layout--user .layout-main,
+html.is-user:not([data-theme="dark"]) .layout--user :where(
+  .layout-main,
+  .layout-main-shell,
+  .layout-main-inner,
+  .layout-content-frame,
+  .layout-stage,
+  .ud-page,
+  .ud-welcome-section,
+  .analytics-section
+) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
 html.is-user:not([data-theme="dark"]) .layout--user .sidebar,
 html.is-user:not([data-theme="dark"]) .layout--user :where(
   .ud-card,
   .ud-stat-card,
   .dashboard-card,
-  .card,
-  .panel
+  .panel,
+  .admin-accounts-card,
+  .deals-page,
+  .quotations-page,
+  .tasks-page,
+  .reminders-page,
+  .custom-reports-page,
+  .support-requests-page,
+  .team-view-page,
+  .data-manager-page,
+  .board-card,
+  .grid-card
 ) {
-  border-color: #DCE3E8 !important;
-  background: #FFFFFF !important;
-  background-color: #FFFFFF !important;
-  color: #111827 !important;
-  box-shadow: 0 10px 28px rgba(17, 24, 39, 0.07) !important;
+  border-color: #f0eae1 !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 6px 22px rgba(180, 160, 140, 0.05) !important;
+  border-radius: 20px !important;
 }
 
 html.is-user:not([data-theme="dark"]) .layout--user .layout-content-frame,
@@ -2762,46 +2790,98 @@ html.is-user:not([data-theme="dark"]) .layout--user :where(.text-muted, .muted, 
 }
 
 html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(.sb-link, .sb-link--team, .sb-plain-link, .sb-group-trigger, .sb-sub-link) {
-  color: #667085 !important;
+  color: #1e293b !important;
+  font-weight: 700 !important;
 }
 
-html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(.sb-link-icon, .sb-plain-icon, .sb-group-icon, .sb-group-chevron, .sb-sub-arrow) {
-  color: #98A2B3 !important;
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-group-chevron,
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-sub-arrow {
+  color: #64748b !important;
+}
+
+/* Reference-matching Red Sidebar Icon Containers */
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(.sb-link-icon, .sb-plain-icon, .sb-group-icon) {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 10px !important;
+  font-size: 0.95rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  background: #fdebec !important;
+  color: #dc2626 !important;
+  box-shadow: none !important;
+}
+
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(.sb-link-icon svg, .sb-plain-icon svg, .sb-group-icon svg) {
+  color: #dc2626 !important;
+  fill: currentColor !important;
 }
 
 html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(.sb-link:hover, .sb-link--team:hover, .sb-plain-link:hover, .sb-group-trigger:hover, .sb-sub-link:hover, .sb-group-trigger--open) {
   border-color: rgba(229, 31, 37, 0.28) !important;
-  background: #FDEBEC !important;
-  color: #111827 !important;
+  background: #fff5f5 !important;
+  color: #0f172a !important;
 }
 
+/* Active Link & Route Styling */
 html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(
-  .sb-view-toolbar-button--route-active,
-  .sb-view-toolbar-button:active,
   .sb-link--active,
   .sb-link--team.sb-link--active,
   .sb-plain-link--active,
   .sb-group-trigger--route-active,
   .sb-sub-link--active
 ) {
-  border-color: #E51F25 !important;
-  background: #FDEBEC !important;
-  background-color: #FDEBEC !important;
-  color: #E51F25 !important;
+  border-color: #f87171 !important;
+  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%) !important;
+  color: #dc2626 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.12) !important;
 }
 
 html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(
-  .sb-view-toolbar-button--route-active,
-  .sb-view-toolbar-button:active,
   .sb-link--active,
   .sb-link--team.sb-link--active,
   .sb-plain-link--active,
-  .sb-group-trigger--route-active,
-  .sb-sub-link--active
-) :where(svg, .sb-link-icon, .sb-plain-icon, .sb-group-icon, .sb-group-chevron, .sb-sub-arrow) {
-  color: #E51F25 !important;
-  fill: currentColor !important;
-  stroke: currentColor !important;
+  .sb-group-trigger--route-active
+) :where(.sb-link-icon, .sb-plain-icon, .sb-group-icon) {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: #ffffff !important;
+}
+
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(
+  .sb-link--active,
+  .sb-link--team.sb-link--active,
+  .sb-plain-link--active,
+  .sb-group-trigger--route-active
+) :where(.sb-link-icon svg, .sb-plain-icon svg, .sb-group-icon svg) {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* Top View Toolbar Buttons Contrast */
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user .sb-view-toolbar-button svg {
+  color: #334155 !important;
+}
+
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(.sb-view-toolbar-button--route-active, .sb-view-toolbar-button:active) {
+  border-color: #b91c1c !important;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
+}
+
+html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(.sb-view-toolbar-button--route-active, .sb-view-toolbar-button:active) svg {
+  color: #ffffff !important;
+  fill: #ffffff !important;
 }
 
 html.is-user:not([data-theme="dark"]) .layout--user .sidebar--user :where(.sb-link--active, .sb-link--team.sb-link--active, .sb-plain-link--active, .sb-group-trigger--route-active)::after {
@@ -5225,7 +5305,7 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   button,
   .btn,
   [role="button"]
-):not(:disabled) :is(svg, path, circle, rect, line, polyline, polygon) {
+):not(.dm-card):not(:disabled) :is(svg, path, circle, rect, line, polyline, polygon):not(.dm-card-graphic *):not(.dm-header-bg-graphic *) {
   fill: currentColor;
   stroke: currentColor;
 }
@@ -6358,10 +6438,12 @@ html:not([data-theme="dark"]) body .admin-customers-page .admin-customers-wizard
 .ap-tabbar,
 .ap-welcome-block,
 .ud-page,
+.ud-welcome-section,
 .ud-header,
 .dashboard-header,
 .crm-header-box {
   background: transparent !important;
+  background-color: transparent !important;
   border: none !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
@@ -6479,6 +6561,39 @@ html, body, #root, .layout {
   padding-left: 0 !important;
   padding-right: 0 !important;
 }
+
+/* ANALYTICS SECTION TRANSPARENCY OVERRIDE FOR BOTH ADMIN AND USER LAYOUTS */
+html body #root .analytics-section,
+html body #root section.analytics-section,
+html body #root .analytics-section__header,
+html body #root .layout--admin .analytics-section,
+html body #root .layout--admin section.analytics-section,
+html body #root .layout--admin .analytics-section__header,
+html body #root .layout--user .analytics-section,
+html body #root .layout--user section.analytics-section,
+html body #root .layout--user .analytics-section__header {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* OUTER PAGE WIZARD FORM CONTAINER TRANSPARENCY FOR ADMIN & USER LAYOUTS */
+html body #root .add-account-landscape-page,
+html body #root .add-account-landscape-form,
+html body #root .layout--admin .add-account-landscape-page,
+html body #root .layout--admin .add-account-landscape-form,
+html body #root .layout--user .add-account-landscape-page,
+html body #root .layout--user .add-account-landscape-form {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
 
 
 

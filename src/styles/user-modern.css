@@ -1,13 +1,13 @@
 /* User portal visual system.
    Presentation-only overrides, deliberately scoped to .layout--user. */
 .layout--user {
-  --user-ink: #172033;
-  --user-muted: #667085;
-  --user-border: #e6eaf0;
-  --user-surface: rgba(255, 255, 255, 0.94);
-  --user-primary: #c60016;
-  --user-primary-soft: #fff1f2;
-  background: #f7f8fb !important;
+  --user-ink: #0f172a;
+  --user-muted: #64748b;
+  --user-border: #f0eae1;
+  --user-surface: #ffffff;
+  --user-primary: #dc2626;
+  --user-primary-soft: #ffe4e6;
+  background: #FAF7F2 !important;
   color: var(--user-ink);
 }
 
@@ -53,7 +53,8 @@
 .layout--user .sidebar--user .sb-group-trigger {
   min-height: 44px;
   border-radius: 12px;
-  color: #526071;
+  color: #1e293b;
+  font-weight: 700;
 }
 
 .layout--user .sidebar--user .sb-link:hover,
@@ -61,16 +62,17 @@
 .layout--user .sidebar--user .sb-group-trigger:hover {
   background: #fff5f5;
   border-color: #f4c8cc;
-  color: var(--user-primary);
+  color: #dc2626;
 }
 
 .layout--user .sidebar--user .sb-link--active,
 .layout--user .sidebar--user .sb-plain-link--active,
 .layout--user .sidebar--user .sb-group-trigger--route-active {
-  background: var(--user-primary-soft) !important;
-  border-color: #f0b8be !important;
-  color: var(--user-primary) !important;
-  box-shadow: 0 5px 14px rgba(198, 0, 22, 0.08) !important;
+  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%) !important;
+  border-color: #f87171 !important;
+  color: #dc2626 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 5px 14px rgba(220, 38, 38, 0.1) !important;
 }
 
 .layout--user .header--user {
@@ -120,4 +122,140 @@
 @media (max-width: 980px) {
   .layout--user .layout-body { padding-top: calc(var(--header-height) + 12px); }
   .layout--user .header--user { padding-inline: 12px; }
+}
+
+/* Unique Wizard Stepper Animations & Card Styling */
+.wizard-stepper {
+  position: relative;
+  border-radius: 24px !important;
+  border: 1px solid #f0eae1 !important;
+  background: #ffffff !important;
+  box-shadow: 0 6px 22px rgba(180, 160, 140, 0.05) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.wizard-stepper__step {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.wizard-stepper__step:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.wizard-stepper__step--active {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%) !important;
+  border: 1px solid #bbf7d0 !important;
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.09) !important;
+}
+
+.wizard-stepper__index {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+@keyframes bounceShort {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+.animate-bounce-short {
+  animation: bounceShort 1.5s ease-in-out infinite;
+}
+
+/* CREATIVE PROJECT DETAILS UI SYSTEM FOR ADMIN & USER PORTALS */
+.add-account-landscape-section,
+.admin-accounts-placeholder-card,
+.project-details-card {
+  background: #ffffff !important;
+  border: 1px solid #f0eae1 !important;
+  border-radius: 20px !important;
+  padding: 1.5rem 1.75rem !important;
+  box-shadow: 0 6px 22px rgba(180, 160, 140, 0.05) !important;
+  margin-bottom: 1.5rem !important;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.add-account-landscape-section:hover,
+.admin-accounts-placeholder-card:hover,
+.project-details-card:hover {
+  border-color: #e5dec9 !important;
+  box-shadow: 0 10px 28px rgba(180, 160, 140, 0.1) !important;
+  transform: translateY(-2px);
+}
+
+.add-account-landscape-section h2,
+.admin-accounts-placeholder-card h1 {
+  font-size: 1.25rem !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  letter-spacing: -0.02em !important;
+  margin-bottom: 0.35rem !important;
+}
+
+.add-account-landscape-section p,
+.admin-accounts-placeholder-card p {
+  color: #64748b !important;
+  font-size: 0.84rem !important;
+  font-weight: 500 !important;
+}
+
+/* Icon badges inside Project Details form rows */
+.legacy-form-icon-wrap,
+.add-account-project-details-grid .legacy-form-icon-wrap,
+.add-account-landscape-section .legacy-form-icon-wrap {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 2.3rem !important;
+  height: 2.3rem !important;
+  border-radius: 12px !important;
+  background-color: #ffe4e6 !important;
+  color: #dc2626 !important;
+  font-size: 1.05rem !important;
+  flex-shrink: 0 !important;
+  box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.08) !important;
+}
+
+/* Form Controls & Inputs inside Project Details */
+.add-account-landscape-section .legacy-form-control,
+.project-details-card input,
+.project-details-card select {
+  width: 100% !important;
+  min-height: 2.75rem !important;
+  padding: 0.55rem 0.85rem !important;
+  border: 1px solid #f0eae1 !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 6px rgba(180, 160, 140, 0.04) !important;
+}
+
+.add-account-landscape-section .legacy-form-control:hover,
+.project-details-card input:hover,
+.project-details-card select:hover {
+  border-color: #e5dec9 !important;
+  background: #ffffff !important;
+}
+
+.add-account-landscape-section .legacy-form-control:focus,
+.project-details-card input:focus,
+.project-details-card select:focus {
+  border-color: #dc2626 !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12) !important;
+  outline: none !important;
+}
+
+.add-account-landscape-section .legacy-form-label {
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+}
+
+.add-account-landscape-section .legacy-form-required-marker {
+  color: #dc2626 !important;
+  font-weight: 900 !important;
 }

@@ -534,6 +534,9 @@
 
 .sidebar--admin .sb-view-toolbar,
 .sidebar--user .sb-view-toolbar {
+  position: relative !important;
+  z-index: 10 !important;
+  pointer-events: auto !important;
   margin-top: 2px;
   padding: 5px;
   border: 1px solid rgba(226, 232, 240, 0.9);
@@ -544,6 +547,10 @@
 
 .sidebar--admin .sb-view-toolbar-button,
 .sidebar--user .sb-view-toolbar-button {
+  position: relative !important;
+  z-index: 11 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
   min-height: 38px;
   border-radius: 10px;
   transition: all 0.2s ease-out;

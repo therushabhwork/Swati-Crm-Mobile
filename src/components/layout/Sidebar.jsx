@@ -311,12 +311,16 @@ const Sidebar = ({ isAdmin = false }) => {
           <div className="sb-view-toolbar" aria-label="Sidebar view options">
             {USER_SIDEBAR_TOOLBAR.map((item) => {
               const Icon = item.icon
+              const isRouteActive = location.pathname.startsWith(item.to) ||
+                (item.key === 'dashboard' && (location.pathname === '/dashboard' || location.pathname === '/monitoring')) ||
+                (item.key === 'calendar' && location.pathname.startsWith('/calendar')) ||
+                (item.key === 'data-manager' && (location.pathname.startsWith('/data-manager') || location.pathname === '/image-gallery'))
 
               return (
                 <NavLink
                   key={item.key}
                   to={item.to}
-                  className={({ isActive }) => `sb-view-toolbar-button ${isActive ? 'sb-view-toolbar-button--route-active' : ''}`}
+                  className={() => `sb-view-toolbar-button ${isRouteActive ? 'sb-view-toolbar-button--route-active' : ''}`}
                   title={item.title}
                   aria-label={item.ariaLabel}
                 >
@@ -413,22 +417,6 @@ const Sidebar = ({ isAdmin = false }) => {
               )
             })}
           </div>
-
-          {!isSidebarCollapsed && (
-            <div className="sb-today-section">
-              <div className="sb-today-header">Today</div>
-              <div className="sb-today-stat">
-                <span className="sb-today-count">{todayAccounts}</span>
-                <FaUserCircle className="sb-today-icon" />
-                <span className="sb-today-label">New Accounts</span>
-              </div>
-              <div className="sb-today-stat">
-                <span className="sb-today-count">{todayCustomers}</span>
-                <FaUserCircle className="sb-today-icon" />
-                <span className="sb-today-label">New Customers</span>
-              </div>
-            </div>
-          )}
         </nav>
       </aside>
     )
@@ -442,7 +430,7 @@ const Sidebar = ({ isAdmin = false }) => {
         <div className="sb-view-toolbar" aria-label="Sidebar view options">
           <NavLink
             to="/admin/data-manager"
-            className={({ isActive }) => `sb-view-toolbar-button ${isActive ? 'sb-view-toolbar-button--route-active' : ''}`}
+            className={() => `sb-view-toolbar-button ${location.pathname.startsWith('/admin/data-manager') || location.pathname.startsWith('/admin/bulk-uploads') ? 'sb-view-toolbar-button--route-active' : ''}`}
             title="Data Manager"
             aria-label="Data Manager"
           >
@@ -450,15 +438,15 @@ const Sidebar = ({ isAdmin = false }) => {
           </NavLink>
           <NavLink
             to="/admin/calendar"
-            className={({ isActive }) => `sb-view-toolbar-button ${isActive ? 'sb-view-toolbar-button--route-active' : ''}`}
+            className={() => `sb-view-toolbar-button ${location.pathname.startsWith('/admin/calendar') ? 'sb-view-toolbar-button--route-active' : ''}`}
             title="Calendar"
             aria-label="Calendar"
           >
             <FaCalendarAlt />
           </NavLink>
           <NavLink
-            to="/admin/monitoring"
-            className={({ isActive }) => `sb-view-toolbar-button ${isActive ? 'sb-view-toolbar-button--route-active' : ''}`}
+            to="/admin/dashboard"
+            className={() => `sb-view-toolbar-button ${location.pathname === '/admin/dashboard' || location.pathname === '/admin/monitoring' || location.pathname === '/admin/sales-dashboard' || location.pathname === '/admin' ? 'sb-view-toolbar-button--route-active' : ''}`}
             title="Dashboard"
             aria-label="Dashboard"
           >

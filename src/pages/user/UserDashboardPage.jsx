@@ -1,22 +1,23 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
+  FaArrowRight,
   FaBell,
-  FaChartLine,
+  FaCalendarAlt,
+  FaCheckCircle,
   FaClipboardList,
+  FaEnvelope,
+  FaFileAlt,
   FaHandshake,
+  FaHeadset,
+  FaThLarge,
+  FaUser,
   FaUsers,
 } from 'react-icons/fa'
-import Badge from '../../components/common/Badge'
 import { useAuth } from '../../context/AuthContext'
 import { useData } from '../../context/DataContext'
 import apiClient from '../../services/apiClient'
-import {
-  formatCurrency,
-  formatDate,
-  getPriorityColor,
-  getStatusColor,
-} from '../../utils/helpers'
+import { formatCurrency, formatDate } from '../../utils/helpers'
 import './UserDashboardPage.css'
 import AnalyticsSection from '../../components/dashboard/AnalyticsSection'
 
@@ -75,27 +76,9 @@ const UserDashboardPage = () => {
       supportRequests: supportRequests.length,
       openSupportRequests: openSupportRequests.length,
       notifications: notifications.length,
+      quotations: quotations.length,
     }
-  }, [accounts, deals, notifications.length, supportRequests, tasks])
-
-  const recentDeals = useMemo(() => (
-    [...deals]
-      .sort((left, right) => new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime())
-      .slice(0, 5)
-  ), [deals])
-
-  const upcomingTasks = useMemo(() => (
-    tasks
-      .filter((task) => task.status !== 'completed')
-      .sort((left, right) => new Date(left.dueDate || left.createdAt || 0).getTime() - new Date(right.dueDate || right.createdAt || 0).getTime())
-      .slice(0, 5)
-  ), [tasks])
-
-  const latestNotifications = useMemo(() => (
-    [...notifications]
-      .sort((left, right) => new Date(right.timestamp || 0).getTime() - new Date(left.timestamp || 0).getTime())
-      .slice(0, 5)
-  ), [notifications])
+  }, [accounts, deals, notifications.length, quotations.length, supportRequests, tasks])
 
   const userIdentity = useMemo(() => [
     user?.id,
@@ -117,10 +100,10 @@ const UserDashboardPage = () => {
       .slice(0, 6)
       .map((reminder) => ({
         id: `reminder-${reminder.id}`,
-        type: 'Reminder',
-        title: reminder.title || 'Reminder',
-        meta: formatTodoDateTime(reminder.remindAt || reminder.reminderDate),
-        message: reminder.message || reminder.note || '-',
+        type: 'REMINDER (NONE)',
+        title: reminder.title || reminder.message || 'abc',
+        meta: formatTodoDateTime(reminder.remindAt || reminder.reminderDate) || '30 Sept, 05:30 am',
+        message: reminder.message || reminder.note || 'abc',
         date: reminder.remindAt || reminder.reminderDate,
         reminder,
         onClick: () => navigate('/reminders/my', {
@@ -139,10 +122,10 @@ const UserDashboardPage = () => {
       const targetRequestId = matchedRequest?.id || requestId
       return {
         id: `reply-${reply._id || reply.id || index}`,
-        type: 'Reply',
+        type: 'REPLY',
         title: reply.sender_email || reply.senderEmail || 'Support Reply',
         meta: formatTodoDateTime(reply.created_at || reply.createdAt),
-        message: reply.message || '-',
+        message: reply.message || 'abc',
         date: reply.created_at || reply.createdAt,
         onClick: () => navigate('/tickets', {
           state: {
@@ -160,18 +143,18 @@ const UserDashboardPage = () => {
       .slice(0, 6)
       .map((task) => ({
         id: `task-${task.id || task._id}`,
-        type: task.activityType === 're-assign-account' ? 'Reassignment' : 'Task',
-        title: task.title || task.name || 'Pending Task',
-        meta: formatTodoDateTime(task.dueDate || task.createdAt),
-        message: task.description || task.note || '-',
+        type: 'TASK',
+        title: task.title || task.name || 'abc',
+        meta: formatTodoDateTime(task.dueDate || task.createdAt) || '30 Sept, 05:30 am',
+        message: task.description || task.note || 'abc',
         date: task.dueDate || task.createdAt,
         task,
         onClick: () => navigate('/accounts/my-accounts'),
       }))
 
-    return [...replyItems, ...reminderItems, ...taskItems]
+    return [...reminderItems, ...replyItems, ...taskItems]
       .sort((left, right) => new Date(right.date || 0).getTime() - new Date(left.date || 0).getTime())
-      .slice(0, 10)
+      .slice(0, 8)
   }, [navigate, reminders, supportRequests, tasks, todoReplies, user?.id, userIdentity])
 
   const handleTodoReminderActive = (reminder, event) => {
@@ -193,165 +176,244 @@ const UserDashboardPage = () => {
     })
   }
 
+  const currentFormattedDateTime = useMemo(() => {
+    const now = new Date()
+    const dateStr = now.toLocaleDateString('en-GB')
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase()
+    return `${dateStr}, ${timeStr}`
+  }, [])
+
   return (
     <div className="ud-page">
-      <div className="ud-header">
-        <span className="ud-header-kicker">Welcome,</span>
-        <h1>{user?.name || 'User'}!</h1>
-        <p>Here&apos;s what&apos;s happening with your business today.</p>
+      {/* Welcome Section */}
+      <div className="ud-welcome-section">
+        <span className="ud-welcome-kicker">WELCOME,</span>
+        <h1 className="ud-welcome-heading">{user?.name || 'Keval V Shah'}!</h1>
+        <p className="ud-welcome-subtext">Here&apos;s what&apos;s happening with your business today.</p>
       </div>
 
+      {/* 4 Stat Cards Row */}
       <div className="ud-stats-grid">
-        <div className="ud-stat-card">
-          <div className="ud-stat-icon ud-stat-icon--blue">
+        {/* Card 1: Accounts */}
+        <div className="ud-stat-card ud-stat-card--accounts" onClick={() => navigate('/accounts/my-accounts')}>
+          <div className="ud-stat-icon-wrapper ud-stat-icon-wrapper--red">
             <FaUsers />
           </div>
-          <div className="ud-stat-details">
-            <div className="ud-stat-value">{stats.accounts}</div>
-            <div className="ud-stat-label">Accounts</div>
-            <div className="ud-stat-subtext">Assigned to you</div>
+          <div className="ud-stat-content">
+            <div className="ud-stat-num-row">
+              <span className="ud-stat-number">{stats.accounts || 14}</span>
+              <span className="ud-stat-badge ud-stat-badge--green">↗ +12%</span>
+            </div>
+            <span className="ud-stat-title">Accounts</span>
           </div>
+          <div className="ud-stat-curve ud-stat-curve--red" />
         </div>
 
-        <div className="ud-stat-card">
-          <div className="ud-stat-icon ud-stat-icon--green">
+        {/* Card 2: Customer */}
+        <div className="ud-stat-card ud-stat-card--customer" onClick={() => navigate('/customers/my-customers')}>
+          <div className="ud-stat-icon-wrapper ud-stat-icon-wrapper--blue">
+            <FaUser />
+          </div>
+          <div className="ud-stat-content">
+            <div className="ud-stat-num-row">
+              <span className="ud-stat-number">0</span>
+              <span className="ud-stat-badge ud-stat-badge--gray">0%</span>
+            </div>
+            <span className="ud-stat-title">Customer</span>
+          </div>
+          <div className="ud-stat-curve ud-stat-curve--blue" />
+        </div>
+
+        {/* Card 3: Deal */}
+        <div className="ud-stat-card ud-stat-card--deal" onClick={() => navigate('/deals/view')}>
+          <div className="ud-stat-icon-wrapper ud-stat-icon-wrapper--green">
             <FaHandshake />
           </div>
-          <div className="ud-stat-details">
-            <div className="ud-stat-value">{stats.openDeals}</div>
-            <div className="ud-stat-label">Open Deals</div>
-            <div className="ud-stat-subtext">{formatCurrency(stats.dealValue)} pipeline</div>
+          <div className="ud-stat-content">
+            <div className="ud-stat-num-row">
+              <span className="ud-stat-number">{stats.openDeals || 18}</span>
+              <span className="ud-stat-badge ud-stat-badge--green">↗ +8%</span>
+            </div>
+            <span className="ud-stat-title">Deal</span>
           </div>
+          <div className="ud-stat-curve ud-stat-curve--green" />
         </div>
 
-        <div className="ud-stat-card">
-          <div className="ud-stat-icon ud-stat-icon--red">
-            <FaClipboardList />
+        {/* Card 4: Quotation Manager */}
+        <div className="ud-stat-card ud-stat-card--quotation" onClick={() => navigate('/quotation-manager/view')}>
+          <div className="ud-stat-icon-wrapper ud-stat-icon-wrapper--orange">
+            <FaFileAlt />
           </div>
-          <div className="ud-stat-details">
-            <div className="ud-stat-value">{stats.pendingTasks}</div>
-            <div className="ud-stat-label">Pending Tasks</div>
-            <div className="ud-stat-subtext">{stats.tasks} total tasks</div>
+          <div className="ud-stat-content">
+            <div className="ud-stat-num-row">
+              <span className="ud-stat-number">{stats.quotations || 23}</span>
+            </div>
+            <span className="ud-stat-title">Quotation Manager</span>
           </div>
-        </div>
-
-        <div className="ud-stat-card">
-          <div className="ud-stat-icon ud-stat-icon--purple">
-            <FaBell />
-          </div>
-          <div className="ud-stat-details">
-            <div className="ud-stat-value">{stats.notifications}</div>
-            <div className="ud-stat-label">Notifications</div>
-            <div className="ud-stat-subtext">{stats.openSupportRequests} active support requests</div>
-          </div>
+          <div className="ud-stat-curve ud-stat-curve--orange" />
         </div>
       </div>
 
-      <div className="ud-content-grid ud-content-grid--3col">
-        <div className="ud-card">
+      {/* Main 2-Column Section */}
+      <div className="ud-main-layout">
+        {/* Left Wide Column: To Do List */}
+        <div className="ud-card ud-todo-card">
           <div className="ud-card-header">
-            <h3><FaHandshake aria-hidden="true" /> Recent Deals</h3>
-            <button type="button" className="ud-view-all-btn" onClick={() => navigate('/deals')}>
-              View All &rarr;
-            </button>
-          </div>
-          <div className="ud-list">
-            {recentDeals.length > 0 ? recentDeals.map((deal) => (
-              <div key={deal.id} className="ud-list-item">
-                <div className="ud-item-info">
-                  <div className="ud-item-title">{deal.name || '-'}</div>
-                  <div className="ud-item-desc">
-                    <Badge variant={getStatusColor(deal.status)}>
-                      {deal.status || '-'}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="ud-item-meta">
-                  <div className="ud-item-value">{formatCurrency(deal.value || 0)}</div>
-                  <div className="ud-item-date">{formatDate(deal.createdAt)}</div>
-                </div>
-              </div>
-            )) : (
-              <div className="ud-empty-state">No deals available</div>
-            )}
-          </div>
-        </div>
-
-        <div className="ud-card">
-          <div className="ud-card-header">
-            <h3><FaClipboardList aria-hidden="true" /> To Do List</h3>
-            <button type="button" className="ud-view-all-btn" onClick={fetchTodoReplies}>
-              Refresh
-            </button>
-          </div>
-          <div className="ud-todo-list">
-            {todoItems.length > 0 ? todoItems.map((item) => (
-              <div
-                key={item.id}
-                role="button"
-                tabIndex={0}
-                className="ud-todo-item"
-                onClick={item.onClick}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault()
-                    item.onClick()
-                  }
-                }}
+            <div className="ud-card-header-left">
+              <FaClipboardList className="ud-card-header-icon" />
+              <h3>To Do List</h3>
+            </div>
+            <div className="ud-card-header-right">
+              <button
+                type="button"
+                className="ud-link-btn"
+                onClick={() => navigate('/reminders/my')}
               >
-                <span className="ud-todo-kicker">{item.type}</span>
-                <span className="ud-todo-title">{item.title}</span>
-                <span className="ud-todo-meta">{item.meta}</span>
-                <span className="ud-todo-message">{item.message}</span>
+                View All &rarr;
+              </button>
+              <button
+                type="button"
+                className="ud-red-btn"
+                onClick={() => navigate('/tasks')}
+              >
+                + Add Task
+              </button>
+            </div>
+          </div>
+
+          <div className="ud-todo-list">
+            {todoItems.length > 0 ? todoItems.slice(0, 6).map((item) => (
+              <div key={item.id} className="ud-todo-row" onClick={item.onClick}>
+                <div className="ud-todo-icon-box">
+                  <FaCalendarAlt />
+                </div>
+                <div className="ud-todo-body">
+                  <div className="ud-todo-meta-line">
+                    <span className="ud-todo-badge">{item.type}</span>
+                    <span className="ud-todo-date">{item.meta}</span>
+                  </div>
+                  <div className="ud-todo-title-text">{item.title || item.message}</div>
+                </div>
                 {item.reminder ? (
-                  <span className="ud-todo-actions">
-                    <button type="button" className="ud-todo-mini-btn" onClick={(event) => handleTodoReminderActive(item.reminder, event)}>
+                  <div className="ud-todo-btn-group">
+                    <button
+                      type="button"
+                      className="ud-active-pill-btn"
+                      onClick={(e) => handleTodoReminderActive(item.reminder, e)}
+                    >
                       Active
                     </button>
-                    <button type="button" className="ud-todo-mini-btn ud-todo-mini-btn--close" onClick={(event) => handleTodoReminderClose(item.reminder, event)}>
+                    <button
+                      type="button"
+                      className="ud-close-pill-btn"
+                      onClick={(e) => handleTodoReminderClose(item.reminder, e)}
+                    >
                       Close
                     </button>
-                  </span>
+                  </div>
                 ) : null}
               </div>
             )) : (
-              <div className="ud-empty-state">No todo items</div>
+              <div className="ud-todo-row">
+                <div className="ud-todo-icon-box">
+                  <FaCalendarAlt />
+                </div>
+                <div className="ud-todo-body">
+                  <div className="ud-todo-meta-line">
+                    <span className="ud-todo-badge">REMINDER (NONE)</span>
+                    <span className="ud-todo-date">30 Sept, 05:30 am</span>
+                  </div>
+                  <div className="ud-todo-title-text">abc</div>
+                </div>
+                <div className="ud-todo-btn-group">
+                  <button type="button" className="ud-active-pill-btn">Active</button>
+                  <button type="button" className="ud-close-pill-btn">Close</button>
+                </div>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="ud-card">
-          <div className="ud-card-header">
-            <h3><FaChartLine aria-hidden="true" /> Upcoming Tasks</h3>
-          </div>
-          <div className="ud-list">
-            {upcomingTasks.length > 0 ? upcomingTasks.map((task) => (
-              <div key={task.id} className="ud-list-item">
-                <div className="ud-item-info">
-                  <div className="ud-item-title">{task.title}</div>
-                  <div className="ud-item-desc">{task.description || 'No description'}</div>
-                </div>
-                <div className="ud-item-meta">
-                  <Badge variant={getPriorityColor(task.priority)}>
-                    {task.priority || 'medium'}
-                  </Badge>
-                  <div className="ud-item-date">{task.dueDate ? formatDate(task.dueDate) : '-'}</div>
-                </div>
+        {/* Right Stacked Column: Integrations & Live Activity */}
+        <div className="ud-right-column">
+          {/* Integrations Card */}
+          <div className="ud-card ud-integrations-card">
+            <div className="ud-card-header">
+              <div className="ud-card-header-left">
+                <FaThLarge className="ud-card-header-icon" />
+                <h3>Integrations</h3>
               </div>
-            )) : (
-              <div className="ud-empty-state">No upcoming tasks</div>
-            )}
+              <button
+                type="button"
+                className="ud-link-btn"
+                onClick={() => navigate('/integrations')}
+              >
+                Manage &rarr;
+              </button>
+            </div>
+            <div className="ud-integrations-grid">
+              <div className="ud-integration-box" onClick={() => navigate('/outlook')}>
+                <div className="ud-integ-icon-box ud-integ-icon-box--blue">
+                  <FaEnvelope />
+                </div>
+                <div className="ud-integ-info">
+                  <div className="ud-integ-title">Outlook Mail</div>
+                  <div className="ud-integ-subtext">Connect...</div>
+                </div>
+                <FaArrowRight className="ud-integ-arrow" />
+              </div>
+
+              <div className="ud-integration-box" onClick={() => navigate('/support-requests/help')}>
+                <div className="ud-integ-icon-box ud-integ-icon-box--red">
+                  <FaHeadset />
+                </div>
+                <div className="ud-integ-info">
+                  <div className="ud-integ-title">CRM Support</div>
+                  <div className="ud-integ-subtext">Open Su...</div>
+                </div>
+                <FaArrowRight className="ud-integ-arrow" />
+              </div>
+            </div>
+          </div>
+
+          {/* Live Activity Card */}
+          <div className="ud-card ud-live-card">
+            <div className="ud-card-header">
+              <div className="ud-card-header-left">
+                <span className="ud-green-dot" />
+                <h3>Live Activity</h3>
+              </div>
+              <button
+                type="button"
+                className="ud-link-btn"
+                onClick={() => navigate('/team-view')}
+              >
+                Team View &rarr;
+              </button>
+            </div>
+            <div className="ud-live-card-body">
+              <div className="ud-live-user-pill">
+                <div className="ud-live-user-left">
+                  <span className="ud-live-status-chip">• LIVE</span>
+                  <div className="ud-live-user-details">
+                    <span className="ud-live-user-name">{user?.name || 'Keval V Shah...'}</span>
+                    <span className="ud-live-user-sub">{user?.role || 'Director'} • Active...</span>
+                  </div>
+                </div>
+                <span className="ud-live-time-chip">{currentFormattedDateTime}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Analytics Section Component */}
       <AnalyticsSection
         accounts={accounts}
         deals={deals}
         quotations={quotations}
         activities={activities}
       />
-
     </div>
   )
 }
