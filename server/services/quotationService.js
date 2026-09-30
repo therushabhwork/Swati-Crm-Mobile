@@ -311,8 +311,8 @@ const buildPayload = async (body, actor, existing) => {
     }
   }
 
-  // Duplicate detection runs before quote-number allocation only if NOT a revision
-  if (!existing && !isRevision) {
+  // Duplicate detection runs before quote-number allocation only if NOT a revision and NOT an upload payload
+  if (!existing && !isRevision && !isUploadQuotationPayload(body)) {
     const candidateFingerprint = buildQuotationFingerprint({
       customerName: body.customerName ?? body.companyName ?? body.clientName,
       projectName: body.projectName,

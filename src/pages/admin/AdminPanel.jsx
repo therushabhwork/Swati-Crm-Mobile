@@ -23,6 +23,7 @@ import {
   FaThLarge,
   FaUser,
   FaUsers,
+  FaComments,
 } from 'react-icons/fa'
 import { FiArrowLeft, FiArrowRight, FiChevronDown, FiEdit2, FiPlus, FiSettings, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal'
@@ -967,6 +968,27 @@ const AdminPanel = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Communication Activity Summary Section */}
+        <div className="ap-card-box ap-communication-summary-card" style={{ marginTop: '1.25rem', marginBottom: '1.25rem', padding: '1.25rem', background: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FaComments style={{ color: '#740a03', fontSize: '1.2rem' }} />
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#0f172a' }}>Communication Activity</h3>
+            </div>
+            <button
+              type="button"
+              className="ap-link-btn"
+              onClick={() => navigate('/admin/communication-activities')}
+              style={{ background: 'none', border: 'none', color: '#740a03', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem' }}
+            >
+              View All &rarr;
+            </button>
+          </div>
+          <p style={{ margin: 0, color: '#64748b', fontSize: '0.875rem' }}>
+            Track and monitor all recent call logs, general remarks, feedback, and interactive team discussion threads across Accounts and Deals.
+          </p>
         </div>
 
         <AnalyticsSection

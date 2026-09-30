@@ -19,6 +19,7 @@ import {
   FaHeadset,
   FaArrowRight,
   FaChevronDown,
+  FaComments,
 } from 'react-icons/fa'
 import {
   ResponsiveContainer,
@@ -85,8 +86,14 @@ const Dashboard = () => {
     dealValue: deals.reduce((sum, d) => sum + (d.value || 0), 0),
     wonValue: deals.filter((d) => d.status === 'won').reduce((sum, d) => sum + (d.value || 0), 0),
     totalTasks: tasks.length,
-    pendingTasks: tasks.filter((t) => t.status === 'pending').length,
-    completedTasks: tasks.filter((t) => t.status === 'completed').length,
+    pendingTasks: tasks.filter((t) => {
+      const s = String(t.status || t.taskStatus || 'pending').toLowerCase()
+      return s !== 'completed' && s !== 'closed' && s !== 'done'
+    }).length,
+    completedTasks: tasks.filter((t) => {
+      const s = String(t.status || t.taskStatus || '').toLowerCase()
+      return s === 'completed' || s === 'done'
+    }).length,
   }), [accounts, deals, tasks])
 
   const trendData = useMemo(() => buildMonthlyTrend(deals), [deals])
@@ -117,8 +124,11 @@ const Dashboard = () => {
 
   const upcomingTasks = useMemo(() => (
     [...tasks]
-      .filter((t) => t.status === 'pending')
-      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+      .filter((t) => {
+        const s = String(t.status || t.taskStatus || 'pending').toLowerCase()
+        return s !== 'completed' && s !== 'closed' && s !== 'done'
+      })
+      .sort((a, b) => new Date(a.dueDate || a.createdAt) - new Date(b.dueDate || b.createdAt))
       .slice(0, 5)
   ), [tasks])
 
@@ -419,6 +429,28 @@ const Dashboard = () => {
               <h4 className="md-upcoming-value"><span className="text-red">{stats.pendingTasks}</span> pending Tasks</h4>
               <p className="md-upcoming-sub">You're all caught up! Great work.</p>
             </div>
+          </div>
+        </div>
+
+        {/* Communication Activity Summary Section */}
+        <div className="md-widget md-communication-widget" style={{ marginTop: '1.5rem', background: '#ffffff', borderRadius: '12px', padding: '1.25rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+          <div className="md-widget-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <h3 className="md-widget-title" style={{ fontSize: '1rem', fontWeight: '600', color: '#1e293b', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FaComments style={{ color: '#740a03', fontSize: '1.1rem' }} />
+              Communication Activity
+            </h3>
+            <button
+              className="md-link-btn"
+              onClick={() => navigate(user?.role === 'admin' ? '/admin/communication-activities' : '/communication-activities')}
+              style={{ background: 'none', border: 'none', color: '#740a03', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem' }}
+            >
+              View All &rarr;
+            </button>
+          </div>
+          <div className="md-communication-content">
+            <p style={{ color: '#64748b', fontSize: '0.875rem', margin: 0 }}>
+              Track all recent calls, general remarks, feedback notes, and discussion threads across Accounts and Deals.
+            </p>
           </div>
         </div>
       </div>

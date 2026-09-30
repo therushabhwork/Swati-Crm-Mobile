@@ -173,26 +173,32 @@
 
 /* ── Existing Customer Banner ────────────────────────────────────── */
 .add-account-mockup-existing-banner {
-  min-height: 2.8rem;
-  background-color: rgba(198, 0, 22, 0.05);
+  min-height: 2.6rem;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: rgba(198, 0, 22, 0.04);
   border: 1px solid rgba(198, 0, 22, 0.15);
   border-radius: 8px;
-  padding: 0.65rem 1rem;
+  padding: 0.55rem 1rem;
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  justify-content: flex-start;
+  gap: 0.6rem;
   margin-bottom: 1.25rem;
   color: var(--text-primary);
   font-weight: 700;
-  font-size: 0.86rem;
+  font-size: 0.85rem;
   cursor: pointer;
+  text-align: left;
 }
 
 .add-account-mockup-existing-banner input[type="checkbox"] {
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 0.95rem;
+  height: 0.95rem;
   accent-color: #c60016;
   cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
 }
 
 /* ── 2-Column Mockup Columns & Alignment ───────────────────────── */
@@ -703,3 +709,36 @@ html body #root :is(.layout--admin, .layout--user) .add-account-landscape-form t
     gap: 1.25rem !important;
   }
 }
+
+/* ── Existing Customer Checkmark Banner & Checkbox Alignment ── */
+html body #root :is(.layout--admin, .layout--user) .add-account-mockup-existing-banner {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 0.65rem !important;
+  margin: 0.5rem 0 1rem 0 !important;
+  padding: 0.6rem 0.9rem !important;
+  border-radius: 8px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  font-size: 0.86rem !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  width: auto !important;
+  align-self: flex-start !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) .add-account-mockup-existing-banner input[type="checkbox"] {
+  width: 0.95rem !important;
+  height: 0.95rem !important;
+  min-height: 0.95rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  accent-color: #c60016 !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+}
+

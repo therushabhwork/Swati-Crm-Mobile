@@ -509,6 +509,7 @@ const updateLead = async (actor, leadId, payload) => {
   if (isPoConversionTarget) {
     const { getMongoModel } = require('../models/mongoModels')
     const Deal = getMongoModel('deals')
+    const Customer = getMongoModel('customers')
     await Deal.updateMany(
       { accountId: normalizeLeadId(leadId), frontendDeleted: { $ne: true } },
       {
@@ -526,6 +527,20 @@ const updateLead = async (actor, leadId, payload) => {
         },
       }
     )
+    await Customer.updateMany(
+      { $or: [{ accountId: normalizeLeadId(leadId) }, { accountId: String(leadId) }] },
+      {
+        $set: {
+          customerStatus: 'convert_to_po',
+          status: 'convert_to_po',
+          accountState: 'convert_to_po',
+          poValue: leadPayload.poValue,
+          gstin: leadPayload.gstin,
+          jobNo: leadPayload.jobNo,
+          updatedAt: new Date().toISOString(),
+        },
+      }
+    ).catch(() => {})
   }
 
   // Create re-assignment To-Do task if owner has changed
@@ -555,7 +570,7 @@ const updateLead = async (actor, leadId, payload) => {
   }
 
   const hasDealDetails = Boolean(payload.dealName || payload.dealValue || payload.dealDescription || payload.expectedClosureDate || payload.dealOwner)
-  const isStatusConverted = payload.status === 'converted' || payload.stage === 'converted' || payload.accountState === 'converted'
+  const isStatusConverted = payload.status === 'converted' || payload.stage === 'converted' || payload.accountState === 'converted' || payload.status === 'staged' || payload.stage === 'staged' || payload.accountState === 'staged' || payload.status === 'convert_to_po' || payload.stage === 'convert_to_po' || payload.accountState === 'convert_to_po' || Boolean(payload.poValue)
   
   if (!updatedLead.isConverted && (hasDealDetails || isStatusConverted)) {
     const { getMongoModel } = require('../models/mongoModels')

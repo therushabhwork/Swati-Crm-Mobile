@@ -35,8 +35,18 @@ import './AddAccountWizard.css'
 const steps = [
   { id: 'basic', label: 'Account Basic Details' },
   { id: 'contacts', label: 'Contacts' },
-  { id: 'reminder', label: 'Reminders & Remark' },
 ]
+
+const MANDATORY_BASIC_FIELDS = new Set([
+  'accountName',
+  'accountCategory',
+  'accountOwner',
+  'accountDate',
+  'accountSource',
+  'state',
+  'industryType',
+  'customerType',
+])
 
 const accountCategories = [
   { value: 'LUMOS', label: 'LUMOS' },
@@ -368,8 +378,15 @@ const AddAccountWizard = () => {
         if (!selectedCustomerId) {
           nextErrors.customer = 'Select an existing customer before continuing.'
         }
-      } else if (!String(formData.accountName || '').trim()) {
-        nextErrors.accountName = 'Account Name is required.'
+      } else {
+        if (!String(formData.accountName || '').trim()) nextErrors.accountName = 'Account Name is required.'
+        if (!String(formData.accountCategory || '').trim()) nextErrors.accountCategory = 'Vertical Name is required.'
+        if (!String(formData.accountOwner || '').trim()) nextErrors.accountOwner = 'Account Owner is required.'
+        if (!String(formData.accountDate || '').trim()) nextErrors.accountDate = 'Account Date is required.'
+        if (!String(formData.accountSource || '').trim()) nextErrors.accountSource = 'Account Source is required.'
+        if (!String(formData.state || formData.accountState || '').trim()) nextErrors.state = 'State is required.'
+        if (!String(formData.industryType || '').trim()) nextErrors.industryType = 'Industry Type is required.'
+        if (!String(formData.customerType || formData.customerCategory || '').trim()) nextErrors.customerType = 'Customer Type is required.'
       }
     }
 
@@ -388,8 +405,15 @@ const AddAccountWizard = () => {
       if (!selectedCustomerId) {
         collectedErrors.customer = 'Select an existing customer before saving.'
       }
-    } else if (!String(formData.accountName || '').trim()) {
-      collectedErrors.accountName = 'Account Name is required.'
+    } else {
+      if (!String(formData.accountName || '').trim()) collectedErrors.accountName = 'Account Name is required.'
+      if (!String(formData.accountCategory || '').trim()) collectedErrors.accountCategory = 'Vertical Name is required.'
+      if (!String(formData.accountOwner || '').trim()) collectedErrors.accountOwner = 'Account Owner is required.'
+      if (!String(formData.accountDate || '').trim()) collectedErrors.accountDate = 'Account Date is required.'
+      if (!String(formData.accountSource || '').trim()) collectedErrors.accountSource = 'Account Source is required.'
+      if (!String(formData.state || formData.accountState || '').trim()) collectedErrors.state = 'State is required.'
+      if (!String(formData.industryType || '').trim()) collectedErrors.industryType = 'Industry Type is required.'
+      if (!String(formData.customerType || formData.customerCategory || '').trim()) collectedErrors.customerType = 'Customer Type is required.'
     }
 
     if (formData.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)) {
@@ -446,12 +470,10 @@ const AddAccountWizard = () => {
       // Find which step failed and redirect
       const errorKeys = Object.keys(validationErrors)
       let stepWithError = 0
-      if (errorKeys.some(key => ['accountName', 'accountOwner', 'accountSource', 'state', 'industryType', 'customer'].includes(key))) {
+      if (errorKeys.some(key => ['accountName', 'accountCategory', 'accountOwner', 'accountDate', 'accountSource', 'state', 'industryType', 'customerType', 'customer'].includes(key))) {
         stepWithError = 0
-      } else if (errorKeys.some(key => ['dealOwner', 'dealValue'].includes(key))) {
+      } else if (errorKeys.some(key => ['dealOwner', 'dealValue', 'contactEmail'].includes(key))) {
         stepWithError = 1
-      } else if (errorKeys.some(key => ['contactEmail'].includes(key))) {
-        stepWithError = 2
       }
       
       if (currentStep !== stepWithError) {
@@ -617,6 +639,7 @@ const AddAccountWizard = () => {
 
   const renderFieldGroup = (fields, options = {}) =>
     fields.map((field) => {
+      const isRequired = field.required || (!isExistingCustomer && MANDATORY_BASIC_FIELDS.has(field.name))
       const isCurrencyField = field.name === 'poValue' || field.name === 'dealValue'
       if (isCurrencyField) {
         return (
@@ -628,7 +651,7 @@ const AddAccountWizard = () => {
                 </span>
               ) : null}
               <span className="legacy-form-label-text">
-                {field.label} {field.required && <span className="text-red-500">*</span>}
+                {field.label} {isRequired && <span className="text-red-500">*</span>}
               </span>
             </label>
             <div>
@@ -665,7 +688,7 @@ const AddAccountWizard = () => {
           type={field.type}
           value={formData[field.name]}
           onChange={handleChange}
-          required={field.required}
+          required={isRequired}
           options={field.options}
           error={errors[field.name]}
           placeholder={field.placeholder}
@@ -917,38 +940,6 @@ const AddAccountWizard = () => {
           </div>
         ) : null}
 
-        {currentStep === 2 ? (
-          <div className="add-account-landscape-section add-account-unified-section">
-            <div className="add-account-mockup-header-row">
-              <div className="add-account-mockup-header-title">
-                <div className="add-account-mockup-header-title-bar"></div>
-                <div>
-                  <h2>Reminders & Remark</h2>
-                  <p>Capture follow-up details and internal notes before saving the account.</p>
-                </div>
-              </div>
-              <div className="add-account-mockup-step-chip" aria-label={`Step 3 of ${steps.length}`}>
-                <span>STEP 3 OF {steps.length}</span>
-                {steps.map((step, index) => (
-                  <i
-                    key={step.id}
-                    className={index === 2 ? 'is-active' : ''}
-                    aria-hidden="true"
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="add-account-mockup-columns">
-              <div className="add-account-mockup-column">
-                {renderFieldGroup(fieldGroups.reminderLeft, { layout: 'inline' })}
-              </div>
-              <div className="add-account-mockup-column">
-                {renderFieldGroup(fieldGroups.reminderRight, { layout: 'inline' })}
-              </div>
-            </div>
-          </div>
-        ) : null}
 
         <div className="add-account-landscape-footer">
           <button

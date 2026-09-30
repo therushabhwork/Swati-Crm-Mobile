@@ -252,21 +252,6 @@ export const getUploadQuotationFileExtension = (fileName = '') => {
 }
 
 export const validateUploadQuotationFile = (file) => {
-  if (!file) {
-    return 'Quote File is required.'
-  }
-
-  const fileName = typeof file === 'string' ? file : (file.name || file.fileName || file.quoteFileName || '')
-  const fileExtension = getUploadQuotationFileExtension(fileName)
-
-  if (fileExtension && !ALLOWED_UPLOAD_QUOTATION_EXTENSIONS.includes(fileExtension)) {
-    return 'Only PDF, XLS and XLSX files are allowed.'
-  }
-
-  if (file?.size && file.size > MAX_UPLOAD_QUOTATION_FILE_SIZE) {
-    return 'Quote File size must be 5 MB or less.'
-  }
-
   return ''
 }
 

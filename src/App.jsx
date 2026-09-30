@@ -120,6 +120,7 @@ const Quotations = React.lazy(() => import('./pages/quotations/Quotations'))
 const SalesDashboard = React.lazy(() => import('./pages/admin/SalesDashboard'))
 const SummaryReportsPage = React.lazy(() => import('./pages/admin/reports/SummaryReportsPage'))
 const TeamViewPage = React.lazy(() => import('./pages/admin/team-view/TeamViewPage'))
+const CommunicationActivitiesPage = React.lazy(() => import('./pages/communication/CommunicationActivitiesPage'))
 
 const LandingPage = React.lazy(() => import('./pages/landing/LandingPage'))
 const PrivacyPolicyPage = React.lazy(() => import('./pages/legal/PrivacyPolicyPage'))
@@ -218,6 +219,7 @@ function App() {
                 <Route path="deals/converted" element={<ConvertedDeals />} />
                 <Route path="tasks" element={<Tasks />} />
                 <Route path="team-view" element={<TeamViewPage isAdminView={false} />} />
+                <Route path="communication-activities" element={<CommunicationActivitiesPage isAdmin={false} />} />
                 <Route path="quotations" element={<Quotations />} />
                 <Route path="quotation-manager" element={<Navigate to="/quotation-manager/view" replace />} />
                 <Route path="quotation-manager/view" element={<AdminQuotationsPage allowUsers generatorPath="/quotations" />} />
@@ -348,6 +350,7 @@ function App() {
                 <Route path="reminders/closed" element={<AdminRemindersPage variantKey="closed" />} />
                 <Route path="tasks" element={<Tasks />} />
                 <Route path="team-view" element={<TeamViewPage />} />
+                <Route path="communication-activities" element={<CommunicationActivitiesPage isAdmin />} />
                 <Route path="reports"               element={<Navigate to="/admin/reports/custom" replace />} />
                 <Route path="reports/custom"       element={<CustomReportsPage />} />
                 <Route path="reports/custom/builder" element={<CustomReportBuilderPage />} />

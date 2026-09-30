@@ -1141,26 +1141,38 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
     newWindow.document.write(html)
     newWindow.document.close()
 
-    // Store generated report in MongoDB reports collection
-    try {
-      await reportApi.saveGeneratedReport({
-        templateId: report._id || report.id,
-        reportName,
-        entityType: targetCategory,
-        selectedFields: columns.map((col) => col.key),
-        displayFields: columns.map((col) => col.key),
-        filters: Array.isArray(report.filters) ? report.filters : [],
-        totalRecords: rows.length,
-        createdBy: user?.name || user?.username || 'User',
-        creatorName: user?.name || user?.username || 'User',
-        visibility: report.visibility || 'All',
-        createdAt: new Date().toISOString(),
-      })
-      loadBackendReportsData()
-    } catch (saveErr) {
-      console.error('Error saving generated custom report:', saveErr)
+    // Store generated report in MongoDB reports collection if not already generated with identical template config
+    const isDuplicate = generatedReports.some((gen) => {
+      const genTplId = String(gen.templateId || gen.id || gen._id || '')
+      const currTplId = String(report._id || report.id || '')
+      const sameTemplate = genTplId === currTplId || (gen.reportName === reportName && gen.entityType === targetCategory)
+      const sameFields = JSON.stringify((gen.selectedFields || gen.displayFields || []).slice().sort()) === JSON.stringify(columns.map((c) => c.key).slice().sort())
+      const sameFilters = JSON.stringify(gen.filters || []) === JSON.stringify(report.filters || [])
+      const templateUpdated = report.updatedAt && gen.createdAt && new Date(report.updatedAt) > new Date(gen.createdAt)
+      return sameTemplate && sameFields && sameFilters && !templateUpdated
+    })
+
+    if (!isDuplicate) {
+      try {
+        await reportApi.saveGeneratedReport({
+          templateId: report._id || report.id,
+          reportName,
+          entityType: targetCategory,
+          selectedFields: columns.map((col) => col.key),
+          displayFields: columns.map((col) => col.key),
+          filters: Array.isArray(report.filters) ? report.filters : [],
+          totalRecords: rows.length,
+          createdBy: user?.name || user?.username || 'User',
+          creatorName: user?.name || user?.username || 'User',
+          visibility: report.visibility || 'All',
+          createdAt: new Date().toISOString(),
+        })
+        loadBackendReportsData()
+      } catch (saveErr) {
+        console.error('Error saving generated custom report:', saveErr)
+      }
     }
-  }, [activeFilter, user, loadBackendReportsData, accounts, deals, customers, quotations])
+  }, [activeFilter, user, loadBackendReportsData, accounts, deals, customers, quotations, generatedReports])
 
   const handleExport = async (report, format = 'excel') => {
     const reportName = report.reportName || report.title || report.name || 'Custom Report'
@@ -1486,23 +1498,36 @@ const CustomReportsPage = ({ basePath = '/admin/reports' }) => {
       })
     }
 
-    try {
-      await reportApi.saveGeneratedReport({
-        templateId: report._id || report.id,
-        reportName,
-        entityType: targetCategory,
-        selectedFields: getReportDisplayFieldKeys(report),
-        displayFields: getReportDisplayFieldKeys(report),
-        filters: Array.isArray(report.filters) ? report.filters : [],
-        totalRecords: dataSets.length,
-        createdBy: user?.name || user?.username || 'User',
-        creatorName: user?.name || user?.username || 'User',
-        visibility: report.visibility || 'All',
-        createdAt: new Date().toISOString(),
-      })
-      loadBackendReportsData()
-    } catch (saveErr) {
-      console.error('Error saving exported custom report:', saveErr)
+    // Store generated report in MongoDB reports collection if not already generated with identical template config
+    const isDuplicate = generatedReports.some((gen) => {
+      const genTplId = String(gen.templateId || gen.id || gen._id || '')
+      const currTplId = String(report._id || report.id || '')
+      const sameTemplate = genTplId === currTplId || (gen.reportName === reportName && gen.entityType === targetCategory)
+      const sameFields = JSON.stringify((gen.selectedFields || gen.displayFields || []).slice().sort()) === JSON.stringify(getReportDisplayFieldKeys(report).slice().sort())
+      const sameFilters = JSON.stringify(gen.filters || []) === JSON.stringify(report.filters || [])
+      const templateUpdated = report.updatedAt && gen.createdAt && new Date(report.updatedAt) > new Date(gen.createdAt)
+      return sameTemplate && sameFields && sameFilters && !templateUpdated
+    })
+
+    if (!isDuplicate) {
+      try {
+        await reportApi.saveGeneratedReport({
+          templateId: report._id || report.id,
+          reportName,
+          entityType: targetCategory,
+          selectedFields: getReportDisplayFieldKeys(report),
+          displayFields: getReportDisplayFieldKeys(report),
+          filters: Array.isArray(report.filters) ? report.filters : [],
+          totalRecords: dataSets.length,
+          createdBy: user?.name || user?.username || 'User',
+          creatorName: user?.name || user?.username || 'User',
+          visibility: report.visibility || 'All',
+          createdAt: new Date().toISOString(),
+        })
+        loadBackendReportsData()
+      } catch (saveErr) {
+        console.error('Error saving exported custom report:', saveErr)
+      }
     }
   }
 

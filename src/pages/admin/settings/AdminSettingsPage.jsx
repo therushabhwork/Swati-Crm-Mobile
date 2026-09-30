@@ -251,8 +251,8 @@ const AdminSettingsPage = () => {
           </div>
 
           <div className="outlook-admin-actions">
-            <Button onClick={handleConnect} disabled={!configured || action === 'connect'}>
-              {action === 'connect' ? 'Connecting...' : connected ? 'Reconnect Outlook' : 'Connect Outlook'}
+            <Button onClick={handleStartCode} disabled={!configured || action === 'code'}>
+              {action === 'code' ? 'Generating Code...' : connected ? 'Reconnect Outlook' : 'Connect Outlook'}
             </Button>
             <Button variant="outline" onClick={handleSendTest} disabled={!connected || action === 'email'}>
               Send Test Email

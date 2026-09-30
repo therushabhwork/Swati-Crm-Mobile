@@ -19,6 +19,7 @@ import {
   FaUsers,
   FaUserTie,
   FaTasks,
+  FaComments,
 } from 'react-icons/fa'
 import { FiChevronDown, FiChevronRight, FiChevronUp } from 'react-icons/fi'
 import { useAuth } from '../../context/AuthContext'
@@ -438,15 +439,6 @@ const Sidebar = ({ isAdmin = false }) => {
 
         <div className="sb-view-toolbar" aria-label="Sidebar view options">
           <NavLink
-            to="/admin/data-manager"
-            onClick={(e) => handleToolbarNav(e, '/admin/data-manager')}
-            className={({ isActive }) => `sb-view-toolbar-button ${location.pathname.startsWith('/admin/data-manager') || location.pathname.startsWith('/admin/bulk-uploads') || location.pathname.startsWith('/admin/image-gallery') || isActive ? 'sb-view-toolbar-button--route-active active' : ''}`}
-            title="Data Manager"
-            aria-label="Data Manager"
-          >
-            <FaCloud />
-          </NavLink>
-          <NavLink
             to="/admin/calendar"
             onClick={(e) => handleToolbarNav(e, '/admin/calendar')}
             className={({ isActive }) => `sb-view-toolbar-button ${location.pathname.startsWith('/admin/calendar') || isActive ? 'sb-view-toolbar-button--route-active active' : ''}`}
@@ -484,6 +476,15 @@ const Sidebar = ({ isAdmin = false }) => {
           >
             <span className="sb-link-icon"><FaUsers /></span>
             <span>Team View</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/communication-activities"
+            className={({ isActive }) => `sb-link ${isActive || location.pathname === '/admin/communication-activities' ? 'sb-link--active' : ''}`}
+            title="Communication Activities"
+          >
+            <span className="sb-link-icon"><FaComments /></span>
+            <span>Communication Activities</span>
           </NavLink>
 
         </div>

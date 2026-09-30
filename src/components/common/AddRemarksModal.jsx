@@ -7,11 +7,9 @@ import { getVisibleAccountStages } from '../../features/adminAccounts/config/acc
 import './AddRemarksModal.css'
 
 const REMARK_CATEGORIES = [
-  { value: 'call-log', label: 'CALL LOG' },
-  { value: 'meeting', label: 'MEETING' },
-  { value: 'email', label: 'EMAIL' },
   { value: 'feedback', label: 'FEEDBACK' },
   { value: 'general', label: 'GENERAL' },
+  { value: 'call-log', label: 'CALL LOG' },
 ]
 
 const FOLLOW_UP_TIMES = [
@@ -594,6 +592,45 @@ const AddRemarksModal = ({ isOpen, onClose, accountData, dealData, onSave, onSav
             required
           />
         </div>
+
+        {/* Call Log Duration Picker */}
+        {category === 'call-log' && (
+          <div className="remark-section followup-subsection" style={{ marginTop: '12px' }}>
+            <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: 600, color: '#334155' }}>Call Log Duration</h4>
+            <div className="followup-time-buttons" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+              {FOLLOW_UP_TIMES.map((time) => (
+                <button
+                  key={time}
+                  type="button"
+                  className={`time-btn ${startTime === time ? 'active' : ''}`}
+                  onClick={() => setStartTime(time)}
+                >
+                  {time}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '16px', marginTop: '6px' }}>
+              <div className="custom-time-input">
+                <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>Start Time</label>
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="time-picker"
+                />
+              </div>
+              <div className="custom-time-input">
+                <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>End Time</label>
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="time-picker"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Follow-up Section */}
         {category === 'general' ? (

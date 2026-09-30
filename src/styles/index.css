@@ -5409,17 +5409,20 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) .rig
 }
 
 /* Corrective light-mode table controls: keep search/filter fields readable. */
-html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
+html body #root :is(.layout--admin, .layout--user) :is(
   .admin-accounts-filter-input,
   .admin-customers-grid-filter-input,
   .deals-crm-filter-input,
+  .deals-search-input,
   .support-request-legacy-filter-row input,
   .aqp-search-input,
   .aqp-support-search-input,
   .aqp-account-list-search-input,
   .quotation-report-builder-filter-row input,
   table input[type="search"],
-  table input[type="text"]
+  table input[type="text"],
+  input[type="search"].table-filter-input,
+  input[type="text"].table-filter-input
 ) {
   min-height: 1.85rem;
   border: 1px solid #f3b6b6 !important;
@@ -5431,6 +5434,8 @@ html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
   opacity: 1 !important;
   visibility: visible !important;
   box-shadow: none !important;
+  font-weight: 600 !important;
+  font-size: 0.84rem !important;
 }
 
 html:not([data-theme="dark"]) body #root :is(.layout--admin, .layout--user) :is(
