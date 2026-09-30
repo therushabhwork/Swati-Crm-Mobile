@@ -35,6 +35,7 @@ import {
 } from 'recharts'
 import { useData } from '../../context/DataContext'
 import { useAuth } from '../../context/AuthContext'
+import { remarkApi } from '../../services/remarkApi'
 import { formatCurrency, formatDate, getStatusColor } from '../../utils/helpers'
 import './Dashboard.css'
 
@@ -76,6 +77,19 @@ const Dashboard = () => {
   const navigate = useNavigate()
   const { accounts, deals, tasks, reminders = [] } = useData()
   const { user } = useAuth()
+  const [recentRemarks, setRecentRemarks] = React.useState([])
+
+  React.useEffect(() => {
+    let isMounted = true
+    remarkApi.getAllRemarks()
+      .then((data) => {
+        if (isMounted && Array.isArray(data)) {
+          setRecentRemarks(data.slice(0, 4))
+        }
+      })
+      .catch(() => {})
+    return () => { isMounted = false }
+  }, [])
 
   const stats = useMemo(() => ({
     totalAccounts: accounts.length,
@@ -448,9 +462,34 @@ const Dashboard = () => {
             </button>
           </div>
           <div className="md-communication-content">
-            <p style={{ color: '#64748b', fontSize: '0.875rem', margin: 0 }}>
-              Track all recent calls, general remarks, feedback notes, and discussion threads across Accounts and Deals.
-            </p>
+            {recentRemarks.length === 0 ? (
+              <p style={{ color: '#64748b', fontSize: '0.875rem', margin: 0 }}>
+                Track all recent calls, general remarks, feedback notes, and discussion threads across Accounts and Deals.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {recentRemarks.map((rem, idx) => (
+                  <div
+                    key={rem.id || rem._id || idx}
+                    onClick={() => navigate(user?.role === 'admin' ? '/admin/communication-activities' : '/communication-activities')}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', cursor: 'pointer' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                      <span style={{ padding: '2px 6px', borderRadius: '4px', background: rem.category === 'call-log' ? '#fef3c7' : '#e0f2fe', color: rem.category === 'call-log' ? '#92400e' : '#0369a1', fontSize: '11px', fontWeight: 700, textTransform: 'capitalize' }}>
+                        {rem.category || 'General'}
+                      </span>
+                      <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>
+                        {rem.dealName || rem.accountName || 'Record'}
+                        <span style={{ fontWeight: 400, color: '#475569', marginLeft: '6px' }}>- {rem.content || '-'}</span>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap', marginLeft: '10px', fontWeight: 500 }}>
+                      {rem.createdByName || 'User'} • {rem.remarkDate ? formatDate(rem.remarkDate, 'short') : 'Today'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

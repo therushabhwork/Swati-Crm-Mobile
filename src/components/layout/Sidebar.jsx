@@ -439,6 +439,15 @@ const Sidebar = ({ isAdmin = false }) => {
 
         <div className="sb-view-toolbar" aria-label="Sidebar view options">
           <NavLink
+            to="/admin/monitoring"
+            onClick={(e) => handleToolbarNav(e, '/admin/monitoring')}
+            className={({ isActive }) => `sb-view-toolbar-button ${location.pathname === '/admin/dashboard' || location.pathname === '/admin/monitoring' || location.pathname === '/admin/sales-dashboard' || location.pathname === '/admin' || location.pathname === '/admin/home' || isActive ? 'sb-view-toolbar-button--route-active active' : ''}`}
+            title="Dashboard"
+            aria-label="Dashboard"
+          >
+            <FaDesktop />
+          </NavLink>
+          <NavLink
             to="/admin/calendar"
             onClick={(e) => handleToolbarNav(e, '/admin/calendar')}
             className={({ isActive }) => `sb-view-toolbar-button ${location.pathname.startsWith('/admin/calendar') || isActive ? 'sb-view-toolbar-button--route-active active' : ''}`}
@@ -446,15 +455,6 @@ const Sidebar = ({ isAdmin = false }) => {
             aria-label="Calendar"
           >
             <FaCalendarAlt />
-          </NavLink>
-          <NavLink
-            to="/admin/dashboard"
-            onClick={(e) => handleToolbarNav(e, '/admin/dashboard')}
-            className={({ isActive }) => `sb-view-toolbar-button ${location.pathname === '/admin/dashboard' || location.pathname === '/admin/monitoring' || location.pathname === '/admin/sales-dashboard' || location.pathname === '/admin' || location.pathname === '/admin/home' || isActive ? 'sb-view-toolbar-button--route-active active' : ''}`}
-            title="Dashboard"
-            aria-label="Dashboard"
-          >
-            <FaDesktop />
           </NavLink>
         </div>
 

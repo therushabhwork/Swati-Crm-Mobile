@@ -595,11 +595,19 @@
 }
 
 .sales-dashboard .table-header {
-  border: 1px solid #fee2e2;
-  border-radius: 12px;
-  background: #fff6f7;
-  color: #9f1239;
-  letter-spacing: 0.1em;
+  border: 1px solid #fee2e2 !important;
+  border-radius: 12px !important;
+  background: #fff6f7 !important;
+  background-color: #fff6f7 !important;
+  color: #9f1239 !important;
+  -webkit-text-fill-color: #9f1239 !important;
+  letter-spacing: 0.1em !important;
+}
+
+.sales-dashboard .table-header > * {
+  color: #9f1239 !important;
+  -webkit-text-fill-color: #9f1239 !important;
+  white-space: nowrap !important;
 }
 
 .sales-dashboard .deal-row {

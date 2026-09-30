@@ -43,6 +43,10 @@ const isUploadQuotationPayload = (body = {}) => Boolean(
   || body.quoteFileName
   || body.quotationFileName
   || body.uploadedQuotationFileName
+  || body.isUploadPayload
+  || body.fileUrl
+  || body.fileName
+  || (Array.isArray(body.attachments) && body.attachments.length > 0)
 )
 
 const isInSequenceWindow = (sequence) => (

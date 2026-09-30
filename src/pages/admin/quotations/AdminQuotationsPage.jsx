@@ -157,6 +157,21 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
   const [searchParams, setSearchParams] = useSearchParams()
   const viewQuotationId = searchParams.get('view') || ''
 
+  const hasSpecificEntityContext = useMemo(() => {
+    const accountIdParam = searchParams.get('accountId') || searchParams.get('id')
+    const dealIdParam = searchParams.get('dealId')
+    return Boolean(
+      accountIdParam ||
+      dealIdParam ||
+      location.state?.accountId ||
+      location.state?.dealId ||
+      location.state?.fromAccountDetail ||
+      location.state?.fromDealDetail ||
+      location.pathname.includes('/my-accounts') ||
+      location.pathname.includes('/deals/view')
+    )
+  }, [searchParams, location.state, location.pathname])
+
   const selectedFieldDefinitions = useMemo(() => (
     orderQuotationNumberFirst(quotationLayout.selectedFields, activeTab)
       .map((fieldKey) => ADMIN_QUOTATION_FIELD_DEFINITIONS.find((field) => field.key === fieldKey))
@@ -519,43 +534,45 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
     if (uploadQuotationSaving) return
 
     const nextErrors = {}
-    if (!uploadQuotationForm.selectedAccountId) nextErrors.selectedAccountId = 'Please select an account from Account List.'
-    if (!uploadQuotationForm.quoteNumber.trim()) nextErrors.quoteNumber = 'Quote Number is required.'
-    if (!uploadQuotationForm.quotationDate) nextErrors.quotationDate = 'Quotation Date is required.'
-    if (!String(uploadQuotationForm.totalAmount).trim()) nextErrors.totalAmount = 'Total Amount is required.'
-    if (!uploadQuotationForm.quotationStatus) nextErrors.quotationStatus = 'Quotation Status is required.'
-
-    const fileError = validateUploadQuotationFile(uploadQuotationForm.quoteFile)
-    if (fileError) nextErrors.quoteFile = fileError
+    if (!uploadQuotationForm.quoteFile) {
+      nextErrors.quoteFile = 'Please select a quotation document file (.pdf, .xlsx, .xls).'
+    }
 
     setUploadQuotationErrors(nextErrors)
     setUploadQuotationMessage('')
     if (Object.keys(nextErrors).length > 0) return
 
+    const sanitizedAccountId = uploadQuotationForm.selectedAccountId
+      ? (Number.parseInt(String(uploadQuotationForm.selectedAccountId).replace(/\D/g, ''), 10) || null)
+      : null
+
     const payload = {
       quotationNumber: uploadQuotationForm.quoteNumber.trim(),
-      quotationDate: uploadQuotationForm.quotationDate,
-      validUntil: uploadQuotationForm.validUntilDate || uploadQuotationForm.quotationDate,
+      quotationDate: uploadQuotationForm.quotationDate || getTodayInputValue(),
+      validUntil: uploadQuotationForm.validUntilDate || uploadQuotationForm.quotationDate || null,
       amount: Number.parseFloat(uploadQuotationForm.totalAmount) || 0,
       totalAmount: Number.parseFloat(uploadQuotationForm.totalAmount) || 0,
       taxAmount: Number.parseFloat(uploadQuotationForm.totalProductTax) || 0,
       productTax: Number.parseFloat(uploadQuotationForm.totalProductTax) || 0,
       currency: uploadQuotationForm.amountCurrency || 'INR',
       taxCurrency: uploadQuotationForm.taxCurrency || uploadQuotationForm.amountCurrency || 'INR',
-      status: uploadQuotationForm.quotationStatus,
-      clientName: uploadQuotationForm.contactPerson || uploadQuotationForm.companyName || uploadQuotationForm.clientAccountNumber,
-      companyName: uploadQuotationForm.companyName,
-      clientAccountNumber: uploadQuotationForm.clientAccountNumber,
-      contactPerson: uploadQuotationForm.contactPerson,
-      telephone: uploadQuotationForm.phone,
-      email: uploadQuotationForm.email,
-      clientAddressDetails: uploadQuotationForm.address,
-      selectedAccountId: uploadQuotationForm.selectedAccountId,
-      selectedAccountOwner: uploadQuotationForm.accountOwner,
+      status: uploadQuotationForm.quotationStatus || 'draft',
+      clientName: uploadQuotationForm.contactPerson || uploadQuotationForm.companyName || uploadQuotationForm.clientAccountNumber || '',
+      companyName: uploadQuotationForm.companyName || '',
+      clientAccountNumber: uploadQuotationForm.clientAccountNumber || '',
+      contactPerson: uploadQuotationForm.contactPerson || '',
+      telephone: uploadQuotationForm.phone || '',
+      email: uploadQuotationForm.email || '',
+      clientAddressDetails: uploadQuotationForm.address || '',
+      selectedAccountId: sanitizedAccountId,
+      accountId: sanitizedAccountId,
+      customerId: sanitizedAccountId,
+      selectedAccountOwner: uploadQuotationForm.accountOwner || '',
       quotationFileName: uploadQuotationForm.quoteFile?.name || '',
       quotationFileSize: uploadQuotationForm.quoteFile?.size || 0,
       quotationFileType: uploadQuotationForm.quoteFile?.type || '',
-      projectName: selectedUploadAccount?.projectName || uploadQuotationForm.companyName || uploadQuotationForm.clientAccountNumber,
+      projectName: selectedUploadAccount?.projectName || uploadQuotationForm.companyName || uploadQuotationForm.clientAccountNumber || '',
+      isUploadPayload: true,
     }
 
     setUploadQuotationSaving(true)
@@ -1107,27 +1124,29 @@ const AdminQuotationsPage = ({ allowUsers = false, generatorPath = '/admin/quota
         </div>
 
         <div className="aqp-tab-actions">
-          <ExcelExportMenuButton
-            label="Export"
-            title="Export actions"
-            className="aqp-export-menu"
-            buttonClassName="aqp-btn aqp-btn--white"
-            menuClassName="aqp-export-dropdown"
-            items={[
-              {
-                key: 'export-excel',
-                label: 'Export to Excel .xlsx',
-                badge: 'XLSX',
-                onClick: () => handleExportRows('excel'),
-              },
-              {
-                key: 'export-csv',
-                label: 'Export to CSV',
-                badge: 'CSV',
-                onClick: () => handleExportRows('csv'),
-              },
-            ]}
-          />
+          {!hasSpecificEntityContext && (
+            <ExcelExportMenuButton
+              label="Export"
+              title="Export actions"
+              className="aqp-export-menu"
+              buttonClassName="aqp-btn aqp-btn--white"
+              menuClassName="aqp-export-dropdown"
+              items={[
+                {
+                  key: 'export-excel',
+                  label: 'Export to Excel .xlsx',
+                  badge: 'XLSX',
+                  onClick: () => handleExportRows('excel'),
+                },
+                {
+                  key: 'export-csv',
+                  label: 'Export to CSV',
+                  badge: 'CSV',
+                  onClick: () => handleExportRows('csv'),
+                },
+              ]}
+            />
+          )}
           <button type="button" className="aqp-btn aqp-btn--gray" onClick={openUploadQuotationModal}>
             <FaUpload className="aqp-btn-icon" />
             Upload Quotation

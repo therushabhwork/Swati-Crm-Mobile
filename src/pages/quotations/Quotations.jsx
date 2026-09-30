@@ -531,6 +531,7 @@ const QUOTATION_FIELD_DEFINITIONS = [
   { key: 'date', label: 'Quotation Date', exportValue: (row) => row.date, sortValue: (row) => row.dateSort },
   { key: 'company', label: 'Company Name', exportValue: (row) => row.company, sortValue: (row) => row.company },
   { key: 'amount', label: 'Amount', exportValue: (row) => row.amountLabel, sortValue: (row) => row.amount },
+  { key: 'attachment', label: 'Attachment', exportValue: (row) => row.attachmentName || '-', sortValue: (row) => row.attachmentName || '' },
   { key: 'status', label: 'Status', exportValue: (row) => row.statusLabel, sortValue: (row) => row.statusLabel },
   { key: 'project', label: 'Project Name', exportValue: (row) => row.project, sortValue: (row) => row.project },
   { key: 'accountNumber', label: 'Account No.', exportValue: (row) => row.accountNumber, sortValue: (row) => row.accountNumber },
@@ -549,7 +550,7 @@ const QUOTATION_FIELD_DEFINITIONS = [
   { key: 'otherServiceTotal', label: 'Other Service Total', exportValue: (row) => row.otherServiceTotalLabel, sortValue: (row) => row.otherServiceTotal },
 ]
 
-const DEFAULT_SELECTED_QUOTATION_FIELDS = ['num', 'owner', 'date', 'company', 'amount', 'status', 'project']
+const DEFAULT_SELECTED_QUOTATION_FIELDS = ['num', 'owner', 'date', 'company', 'amount', 'attachment', 'status', 'project']
 
 const readQuotationLayout = () => {
   try {
@@ -576,6 +577,7 @@ const readQuotationLayout = () => {
 const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }) => {
   const location = useLocation()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const {
     quotations,
     quotationsLoading,
@@ -588,6 +590,12 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
   } = useData()
   const { user } = useAuth()
   const { isOpen, open, close } = useModal()
+
+  const hasSpecificEntityContext = useMemo(() => {
+    const accountIdParam = searchParams.get('accountId') || searchParams.get('id')
+    const dealIdParam = searchParams.get('dealId')
+    return Boolean(accountIdParam || dealIdParam || location.state?.accountId || location.state?.dealId)
+  }, [searchParams, location.state])
   const fileInputRef = useRef(null)
   const lineItemsUploadRef = useRef(null)
   const productSectionRef = useRef(null)
@@ -629,7 +637,7 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [isOtherProductModalOpen, setIsOtherProductModalOpen] = useState(false)
   const [isOtherServiceModalOpen, setIsOtherServiceModalOpen] = useState(false)
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [, setSearchParams] = useSearchParams()
   const viewQuotationId = searchParams.get('view') || ''
   const globalSearchQuery = searchParams.get('query') || ''
 
@@ -739,8 +747,8 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
       otherProductTotalLabel: formatCurrency(otherProductTotal, quotation.currency || 'INR'),
       serviceTotal,
       serviceTotalLabel: formatCurrency(serviceTotal, quotation.currency || 'INR'),
-      otherServiceTotal,
-      otherServiceTotalLabel: formatCurrency(otherServiceTotal, quotation.currency || 'INR'),
+      attachmentName: quotation.uploadedQuotationFileName || quotation.quotationFileName || quotation.quoteFile || quotation.attachmentName || '',
+      attachmentUrl: quotation.attachmentUrl || quotation.fileUrl || (quotation.quotationFileName ? `/uploads/${quotation.quotationFileName}` : (quotation.uploadedQuotationFileName ? `/uploads/${quotation.uploadedQuotationFileName}` : '')),
       linkedAccount,
       originalIndex: index,
       quotationScope,
@@ -1393,25 +1401,34 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
     const file = event.target.files?.[0]
     if (!file) return
 
+    setUploading(true)
+    setBuilderError('')
     try {
-      const fileContent = await file.text()
-      const parsedLineItems = parseUploadedLineItems(fileContent)
-
-      if (parsedLineItems.length === 0) {
-        setBuilderError('No valid line items were found in the uploaded file.')
-        return
-      }
+      const uploadResult = await quotationApi.uploadQuotationFile(file)
+      const serverFileUrl = uploadResult?.fileUrl || `/uploads/${file.name}`
+      const filename = uploadResult?.quotationFileName || file.name
 
       setQuotationForm((currentForm) => ({
         ...currentForm,
-        uploadedLineItemsName: file.name,
-        lineItems: parsedLineItems,
+        uploadedLineItemsName: filename,
+        quoteFile: serverFileUrl,
+        quotationFileName: filename,
+        attachmentUrl: serverFileUrl,
+        lineItems: [],
       }))
-      setBuilderError('')
-      setBuilderMessage(`${parsedLineItems.length} line item(s) imported from ${file.name}.`)
-    } catch (error) {
-      setBuilderError(error.message || 'Unable to read the uploaded line items file.')
+      setBuilderMessage(`Quotation document "${filename}" uploaded and attached successfully.`)
+    } catch (_err) {
+      setQuotationForm((currentForm) => ({
+        ...currentForm,
+        uploadedLineItemsName: file.name,
+        quoteFile: file.name,
+        quotationFileName: file.name,
+        attachmentUrl: `/uploads/${file.name}`,
+        lineItems: [],
+      }))
+      setBuilderMessage(`Quotation document "${file.name}" attached successfully as file attachment.`)
     } finally {
+      setUploading(false)
       event.target.value = null
     }
   }
@@ -1430,19 +1447,43 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
       return
     }
 
+    // Mandatory Product Name validation
+    const prodName = (quotationForm.productName || quotationForm.product || '').trim()
+    if (!prodName) {
+      setBuilderError('Product Name is required.')
+      return
+    }
+
+    // Mandatory Product Category validation
+    const prodGroup = (quotationForm.productGroup || '').trim()
+    if (!prodGroup) {
+      setBuilderError('Product Category / Group is required.')
+      return
+    }
+
+    // Mandatory R3 Revision Field check when R1 & R2 are read-only or populated
+    const isR1R2FilledOrReadOnly = Boolean(quotationForm.r1Amount || quotationForm.r2Amount || quotationForm.isR1R2ReadOnly)
+    const r3Value = quotationForm.r3Amount !== undefined && quotationForm.r3Amount !== null ? String(quotationForm.r3Amount).trim() : ''
+    if (isR1R2FilledOrReadOnly && !r3Value) {
+      setBuilderError('R3 Revision Amount field is required.')
+      return
+    }
+
     if (!quotationForm.quotationDate || !quotationForm.validUntil) {
       setBuilderError('Quotation Date and Valid Until are required.')
       return
     }
 
-    const persistedLineItems = sanitizeLineItems(quotationForm.lineItems)
+    const isAttachedDoc = Boolean(quotationForm.uploadedLineItemsName || quotationForm.quoteFile || quotationForm.quotationFileName)
+    const persistedLineItems = isAttachedDoc ? [] : sanitizeLineItems(quotationForm.lineItems)
 
+    const manualTotal = Number(quotationForm.totalAmount) || Number(quotationForm.amount) || 0
     const lineItemsSum = persistedLineItems.reduce((total, lineItem) => total + lineItem.amount, 0)
     const r1Num = Number(quotationForm.r1Amount) || 0
     const r2Num = Number(quotationForm.r2Amount) || 0
     const r3Num = Number(quotationForm.r3Amount) || 0
     const totalRevSum = r1Num + r2Num + r3Num
-    const grandTotal = lineItemsSum + totalRevSum
+    const grandTotal = (isAttachedDoc && manualTotal > 0 ? manualTotal : (lineItemsSum || manualTotal)) + totalRevSum
 
     const payload = {
       quotationNumber: quotationForm.quotationNumber.trim() || nextQuotationNumber,
@@ -1502,14 +1543,15 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
       otherProduct: quotationForm.otherProduct,
       otherService: quotationForm.otherService,
       uploadedLineItemsName: quotationForm.uploadedLineItemsName,
+      quotationFileName: quotationForm.uploadedLineItemsName || quotationForm.quotationFileName || '',
       lineItems: persistedLineItems,
+      isUploadPayload: isAttachedDoc,
     }
 
-    // Frontend pre-check: scan loaded quotations for an exact match so the
-    // user gets immediate feedback without an extra round-trip.
-    const duplicateCandidate = userQuotations.find((existing) => (
+    // Frontend pre-check: scan loaded quotations for an exact match only if NOT an attached document payload
+    const duplicateCandidate = !isAttachedDoc ? userQuotations.find((existing) => (
       isQuotationDuplicate(existing, payload, persistedLineItems)
-    ))
+    )) : null
     if (duplicateCandidate) {
       const existingNumber = duplicateCandidate.quotationNumber || duplicateCandidate.quoteNumber || 'unknown'
       const customerLabel = duplicateCandidate.companyName || duplicateCandidate.customerName || duplicateCandidate.clientName || '-'
@@ -1876,6 +1918,30 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
 
 
           <div className="aqp-tab-actions">
+            {!hasSpecificEntityContext && (
+              <button
+                type="button"
+                className="aqp-btn aqp-btn--green"
+                onClick={() => {
+                  try {
+                    const exportData = (quotations || []).map((q) => ({
+                      'Quotation No': q.quotationNumber || q.num || '',
+                      'Account / Deal Name': q.accountName || q.dealName || q.customer || '',
+                      'Quotation Date': q.quotationDate || q.date || '',
+                      'Total Amount': q.totalAmount || q.amount || 0,
+                      'Status': q.status || q.quotationStatus || '',
+                      'Created By': q.createdByName || q.createdBy || '',
+                    }))
+                    exportExcelWorkbook(exportData, `Quotations_${activeTab}_${new Date().toISOString().slice(0, 10)}.xlsx`)
+                  } catch (e) {
+                    console.error('Export failed:', e)
+                  }
+                }}
+                style={{ background: '#16a34a', color: '#ffffff', fontWeight: 600, border: 'none', borderRadius: '6px', padding: '0.45rem 0.85rem', cursor: 'pointer', marginRight: '8px' }}
+              >
+                Export to Excel
+              </button>
+            )}
             <button type="button" className="aqp-btn aqp-btn--gray" onClick={() => fileInputRef.current?.click()}>
               <FaUpload className="aqp-btn-icon" />
               Upload Quotation
@@ -1974,6 +2040,28 @@ const Quotations = ({ autoOpen = false, preselectedDeal = null, onClose = null }
                           return (
                             <td key={field.key} className={`aqp-td aqp-field--${field.key}`}>
                               <StatusBadge status={row.status} />
+                            </td>
+                          )
+                        }
+
+                        if (field.key === 'attachment') {
+                          const attachmentUrl = row.attachmentUrl || (row.attachmentName ? `/uploads/${row.attachmentName}` : null)
+                          const fileName = row.attachmentName || 'View File'
+                          return (
+                            <td key={field.key} className={`aqp-td aqp-field--${field.key}`}>
+                              {attachmentUrl ? (
+                                <a
+                                  href={attachmentUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(event) => event.stopPropagation()}
+                                  style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'underline' }}
+                                >
+                                  {fileName}
+                                </a>
+                              ) : (
+                                <span style={{ color: '#9ca3af' }}>-</span>
+                              )}
                             </td>
                           )
                         }

@@ -98,6 +98,20 @@ html.is-admin .layout--admin .header-panel::after {
   visibility: visible !important;
 }
 
+/* ============================================================
+   GLOBAL SELECT DROPDOWN CHEVRON ICON VISIBILITY ACROSS WHOLE CRM
+   ============================================================ */
+select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  background-size: 1.1em 1.1em !important;
+  padding-right: 2.25rem !important;
+}
+
 /* 2. Sidebar View Toolbar Active Route (Solid Red Box) */
 .sidebar--admin .sb-view-toolbar-button--route-active,
 .sidebar--admin .sb-view-toolbar-button:active {
@@ -428,6 +442,29 @@ html.is-admin .sidebar--admin .sb-today-section {
 [data-theme="dark"] .filter-label,
 [data-theme="dark"] .form-label {
   color: #ffffff !important;
+}
+
+/* Table Filter & Search Bar Typed Text Bold Override */
+input[type="text"].search-input,
+input[type="search"],
+input.table-search-input,
+input.search-bar-input,
+.filter-search-input,
+.table-filter-bar input,
+.search-input-wrapper input,
+.table-container input[type="text"],
+.search-bar input[type="text"],
+.table-search-box input,
+.admin-accounts-search-input,
+.admin-deals-search-input,
+.admin-customers-search-input,
+.search-box input,
+.search-wrapper input {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
 }
 
 /* Master override for Accounts Dropdown text visibility */
@@ -7082,5 +7119,86 @@ html body #root :is(.layout--admin, .layout--user) :is(
   fill: #ffffff !important;
   stroke: currentColor !important;
   -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* Universal Analytics & Dashboard Table Header Fix for Brand Red (#c60016), White Text, and Single-Line Horizontal Alignment */
+html body #root :is(.layout--admin, .layout--user) :is(
+  .analytics-card,
+  .analytics-table-card,
+  .analytics-table-wrap
+) table {
+  width: 100% !important;
+  table-layout: auto !important;
+  border-collapse: collapse !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) :is(
+  .analytics-card,
+  .analytics-table-card,
+  .analytics-table-wrap
+) thead {
+  background: #c60016 !important;
+  background-color: #c60016 !important;
+  height: 2.35rem !important;
+  max-height: 2.35rem !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) :is(
+  .analytics-card,
+  .analytics-table-card,
+  .analytics-table-wrap
+) thead tr {
+  background: #c60016 !important;
+  background-color: #c60016 !important;
+  height: 2.35rem !important;
+  max-height: 2.35rem !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) :is(
+  .analytics-card,
+  .analytics-table-card,
+  .analytics-table-wrap
+) :is(thead th, th) {
+  height: 2.35rem !important;
+  max-height: 2.35rem !important;
+  padding: 0.45rem 0.85rem !important;
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
+  border-bottom: 1px solid #a80012 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  white-space: nowrap !important;
+  word-break: normal !important;
+  word-wrap: normal !important;
+  overflow-wrap: normal !important;
+  writing-mode: horizontal-tb !important;
+  line-height: 1.2 !important;
+  vertical-align: middle !important;
+  display: table-cell !important;
+  flex: none !important;
+}
+
+html body #root :is(.layout--admin, .layout--user) :is(
+  .analytics-card,
+  .analytics-table-card,
+  .analytics-table-wrap
+) :is(thead th, th) :is(*, span, strong, div, p, button) {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: #ffffff !important;
+  white-space: nowrap !important;
+  word-break: normal !important;
+  word-wrap: normal !important;
+  overflow-wrap: normal !important;
+  writing-mode: horizontal-tb !important;
+  line-height: 1.2 !important;
+  vertical-align: middle !important;
+  display: inline-block !important;
   opacity: 1 !important;
 }

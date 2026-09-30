@@ -444,15 +444,31 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
   return (
     <>
       <header className={`header ${isAdmin ? 'header--admin' : 'header--user header--admin'}`}>
-        <div className="header-panel header-panel--brand" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img src={swatiLogo} alt="Swati Logo" className="hdr-brand-logo" style={{ width: '40px', height: '40px' }} />
-          <div className="hdr-brand-text" style={{ display: 'flex', flexDirection: 'column' }}>
-            <span className="hdr-brand-title" style={{ fontWeight: '800', fontSize: '1.1rem', color: 'var(--text-primary)', lineHeight: '1.2' }}>SWATI</span>
-            <span className="hdr-brand-subtitle" style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.1em' }}>POWERING A BRIGHTER TOMORROW</span>
+        <div
+          className="header-panel header-panel--brand"
+          onClick={handleBrandNavigate}
+          title="Go to Dashboard"
+          style={{ display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer', userSelect: 'none' }}
+        >
+          <img src={swatiLogo} alt="Swati Logo" className="hdr-brand-logo" style={{ width: 'auto', height: '58px', maxMaxHeight: '64px', objectFit: 'contain' }} />
+          <div className="hdr-brand-text" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <span className="hdr-brand-title" style={{ fontWeight: '800', fontSize: '1.35rem', color: '#740a03', lineHeight: '1.1', letterSpacing: '0.04em' }}>SWATI</span>
+            <span className="hdr-brand-subtitle" style={{ fontWeight: '400', fontSize: '0.72rem', color: '#475569', letterSpacing: '0.08em', marginTop: '2px', textTransform: 'uppercase' }}>POWERING A BRIGHTER TOMORROW</span>
           </div>
         </div>
         <div className="header-panel header-panel--actions">
           <div className="header-action-cluster">
+            <button
+              className="hdr-icon-btn hdr-icon-btn--circle"
+              title="Go to Dashboard"
+              style={{ cursor: 'pointer', pointerEvents: 'auto', zIndex: 10 }}
+              onClick={() => {
+                closeHeaderPanels()
+                navigate(isAdmin ? '/admin/monitoring' : '/dashboard')
+              }}
+            >
+              <FaDesktop />
+            </button>
             <div className="header-panel header-panel--center" ref={searchWrapRef}>
               <div className="hdr-search-pill-bar">
                 <FaSearch className="hdr-search-pill-icon" />
@@ -597,16 +613,7 @@ const Header = ({ isAdmin = false, isSidebarOpen = false, onToggleSidebar }) => 
               )}
             </div>
 
-            <button
-              type="button"
-              className={`hdr-icon-btn hdr-icon-btn--circle ${isDark ? 'hdr-theme-toggle--night' : 'hdr-theme-toggle--day'}`}
-              onClick={toggleTheme}
-              title={isDark ? 'Switch to Light' : 'Switch to Dark'}
-              aria-label={isDark ? 'Switch to Light mode' : 'Switch to Dark mode'}
-              aria-pressed={isDark}
-            >
-              {isDark ? <FaMoon /> : <FaSun />}
-            </button>
+
 
             <div className="hdr-user-menu-wrap" ref={menuWrapRef}>
               <button className="hdr-user-btn" onClick={() => setMenuOpen((previous) => !previous)}>

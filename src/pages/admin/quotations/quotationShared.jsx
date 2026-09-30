@@ -428,51 +428,88 @@ export const buildAddress = (...parts) => parts
   .join(', ')
 
 export const buildLineItems = (quotation = {}) => {
+  const isAttachedDoc = Boolean(
+    quotation.quotationFileName ||
+    quotation.uploadedLineItemsName ||
+    quotation.quoteFile ||
+    quotation.uploadedQuotationFileName ||
+    quotation.isUploadPayload ||
+    quotation.data?.quotationFileName ||
+    quotation.data?.uploadedLineItemsName ||
+    quotation.data?.isUploadPayload
+  )
+
   const items = Array.isArray(quotation.lineItems) ? quotation.lineItems : []
-  const mappedItems = items
-    .filter((item) => String(item?.description || '').trim())
-    .map((item, index) => {
-      const quantity = toNumber(item.quantity || item.qty || 0)
-      const rate = toNumber(item.rate || item.price || item.unitPrice || 0)
-      const amount = Number.isFinite(Number(item.amount))
-        ? Number(item.amount)
-        : quantity * rate
+  if (!isAttachedDoc && items.length > 0) {
+    const mappedItems = items
+      .filter((item) => String(item?.description || '').trim())
+      .map((item, index) => {
+        const quantity = toNumber(item.quantity || item.qty || 0)
+        const rate = toNumber(item.rate || item.price || item.unitPrice || 0)
+        const amount = Number.isFinite(Number(item.amount))
+          ? Number(item.amount)
+          : quantity * rate
 
-      return {
-        id: item.id || `line-${index + 1}`,
-        srNo: index + 1,
-        description: item.description,
-        quantity,
-        unit: item.unit || 'Nos',
-        rate,
-        amount,
-      }
+        return {
+          id: item.id || `line-${index + 1}`,
+          srNo: index + 1,
+          description: item.description,
+          quantity,
+          unit: item.unit || 'Nos',
+          rate,
+          amount,
+        }
+      })
+
+    if (mappedItems.length > 0) {
+      return mappedItems
+    }
+  }
+
+  // Fallback for attached document files or manual entries: display only manual product & revision details
+  const manualItems = []
+  let srCounter = 1
+
+  const addManualItem = (description, amount) => {
+    if (!description && !amount) return
+    manualItems.push({
+      id: `manual-item-${srCounter}`,
+      srNo: srCounter++,
+      description: description || 'Quotation Product',
+      quantity: 1,
+      unit: 'Nos',
+      rate: toNumber(amount),
+      amount: toNumber(amount),
     })
-
-  if (mappedItems.length > 0) {
-    return mappedItems
   }
 
-  const fallbackDescription = [
-    quotation.product,
-    quotation.otherProduct,
-    quotation.otherService,
-    quotation.projectName,
-  ].filter(Boolean).join(' / ')
+  const productName = quotation.productName || quotation.product || ''
+  const otherProduct = quotation.otherProduct || ''
+  const otherService = quotation.otherService || ''
+  const mainAmount = toNumber(quotation.amount || quotation.totalAmount)
 
-  if (!fallbackDescription && !toNumber(quotation.amount)) {
-    return []
+  const revAmounts = quotation.quotationRevisionAmounts || quotation.data?.quotationRevisionAmounts || {}
+  const r1 = toNumber(revAmounts.R1 || quotation.r1Amount)
+  const r2 = toNumber(revAmounts.R2 || quotation.r2Amount)
+  const r3 = toNumber(revAmounts.R3 || quotation.r3Amount)
+  const totalRev = r1 + r2 + r3
+
+  const baseProductAmount = mainAmount > totalRev ? (mainAmount - totalRev) : mainAmount
+
+  if (productName || otherProduct || otherService) {
+    if (productName) addManualItem(`Product: ${productName}`, baseProductAmount)
+    if (otherProduct) addManualItem(`Other Product: ${otherProduct}`, 0)
+    if (otherService) addManualItem(`Other Service: ${otherService}`, 0)
+  } else {
+    const fallbackDesc = quotation.companyName || quotation.projectName || 'Quotation Item'
+    addManualItem(fallbackDesc, baseProductAmount)
   }
 
-  return [{
-    id: quotation.id || 'line-1',
-    srNo: 1,
-    description: fallbackDescription || quotation.companyName || 'Quotation Item',
-    quantity: 1,
-    unit: 'Nos',
-    rate: toNumber(quotation.amount),
-    amount: toNumber(quotation.amount),
-  }]
+  if (r1 > 0) addManualItem('Revision R1 Amount', r1)
+  if (r2 > 0) addManualItem('Revision R2 Amount', r2)
+  if (r3 > 0) addManualItem('Revision R3 Amount', r3)
+
+  return manualItems
 }
 
 export const numberToWordsBelowThousand = (value) => {

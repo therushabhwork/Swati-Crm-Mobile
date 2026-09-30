@@ -232,6 +232,24 @@ const AddAccountWizard = () => {
   }, [])
 
   useEffect(() => {
+    if (user && ownerOptions.length > 0) {
+      const matchedOwner = ownerOptions.find((o) => (
+        String(o.name || '').toLowerCase() === String(user.name || '').toLowerCase() ||
+        String(o.email || '').toLowerCase() === String(user.email || '').toLowerCase() ||
+        String(o.username || '').toLowerCase() === String(user.username || '').toLowerCase()
+      ))
+      const resolvedOwnerName = matchedOwner ? matchedOwner.name : (user.name || '')
+      if (resolvedOwnerName) {
+        setFormData((prev) => ({
+          ...prev,
+          accountOwner: prev.accountOwner || resolvedOwnerName,
+          dealOwner: prev.dealOwner || resolvedOwnerName,
+        }))
+      }
+    }
+  }, [user, ownerOptions])
+
+  useEffect(() => {
     const unsubscribe = customerService.subscribe((nextCustomers) => {
       setCustomers([...nextCustomers])
     })

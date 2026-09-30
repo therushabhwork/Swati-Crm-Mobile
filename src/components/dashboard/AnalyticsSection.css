@@ -278,16 +278,56 @@
   font-size: 0.82rem;
 }
 
+html body #root .analytics-card thead,
+html body #root .analytics-table-wrap thead {
+  background: #c60016 !important;
+  background-color: #c60016 !important;
+}
+
+html body #root .analytics-card thead tr,
+html body #root .analytics-table-wrap thead tr {
+  background: #c60016 !important;
+  background-color: #c60016 !important;
+  height: 2.35rem !important;
+  max-height: 2.35rem !important;
+}
+
+html body #root .analytics-card th,
+html body #root .analytics-table-wrap th,
 .analytics-card th {
-  text-align: left;
-  padding: 0.75rem 1rem;
-  font-size: 0.72rem;
-  color: #475569;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 800;
-  background: #fafafa;
-  border-bottom: 1px solid #f1f5f9;
+  text-align: left !important;
+  padding: 0.45rem 0.85rem !important;
+  height: 2.35rem !important;
+  max-height: 2.35rem !important;
+  font-size: 0.76rem !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  font-weight: 800 !important;
+  background: #c60016 !important;
+  background-color: #c60016 !important;
+  border-bottom: 1px solid #a80012 !important;
+  white-space: nowrap !important;
+  word-break: normal !important;
+  word-wrap: normal !important;
+  writing-mode: horizontal-tb !important;
+  line-height: 1.2 !important;
+  vertical-align: middle !important;
+}
+
+html body #root .analytics-card th :is(*, span, strong, div) {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: currentColor !important;
+  -webkit-text-fill-color: #ffffff !important;
+  white-space: nowrap !important;
+  word-break: normal !important;
+  word-wrap: normal !important;
+  writing-mode: horizontal-tb !important;
+  line-height: 1.2 !important;
+  vertical-align: middle !important;
+  opacity: 1 !important;
 }
 
 .analytics-card td {

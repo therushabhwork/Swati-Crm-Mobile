@@ -25,14 +25,18 @@ if (!zod) {
 
   const integerInput = z.preprocess((value) => {
     const normalizedValue = normalizeTrimmedValue(value)
-    if (normalizedValue === null) return null
+    if (normalizedValue === null || normalizedValue === '') return null
     if (typeof normalizedValue === 'number') return normalizedValue
 
     if (/^-?\d+$/.test(String(normalizedValue))) {
       return Number.parseInt(String(normalizedValue), 10)
     }
 
-    return normalizedValue
+    if (typeof normalizedValue === 'string' && /^[a-f\d]{24}$/i.test(normalizedValue)) {
+      return normalizedValue
+    }
+
+    return null
   }, z.union([z.number().int(), z.string().regex(/^[a-f\d]{24}$/i), z.null()]))
 
   const auth = {
@@ -67,12 +71,12 @@ if (!zod) {
       const v = val.trim()
       if (v === '') return null
       const n = Number(v)
-      return Number.isFinite(n) ? n : val
+      return Number.isFinite(n) ? n : null
     }
     if (typeof val === 'number') {
       return Number.isFinite(val) ? val : null
     }
-    return val
+    return null
   }, z.union([z.number(), z.null()]))
 
   const optionalDateString = z.preprocess((value) => {

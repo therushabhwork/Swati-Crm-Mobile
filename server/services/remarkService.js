@@ -7,6 +7,8 @@ const Remark = getMongoModel('remarks')
 const RemarkReminder = getMongoModel('remark_reminders')
 const MainReminder = getMongoModel('reminders')
 const User = getMongoModel('users')
+const Lead = getMongoModel('leads')
+const Deal = getMongoModel('deals')
 const AuditLog = getMongoModel('audit_log')
 
 const byLegacyId = (id) => {
@@ -200,35 +202,161 @@ class RemarkService {
       throw new AppError('Account ID or Deal ID and content are required', 400)
     }
 
-    const lead = accountId ? await this.getAccessibleLead(accountId, actor).catch(() => null) : null
+    const lead = accountId ? (await this.getAccessibleLead(accountId, actor).catch(() => null) || await Lead.findOne(byLegacyId(accountId)).lean()) : null
+    const deal = dealId ? await Deal.findOne(byLegacyId(dealId)).lean() : null
+    const creatorUser = createdBy ? await User.findOne(byLegacyId(createdBy)).lean() : null
     const legacyId = await getNextLegacyId('remarks')
-    const companyId = actor.companyId || lead?.companyId || 1
+    const companyId = actor.companyId || lead?.companyId || deal?.companyId || 1
     const now = new Date()
+
+    const createdByName = creatorUser?.name || creatorUser?.username || actor?.name || actor?.username || ''
+    const createdByEmail = creatorUser?.email || actor?.email || ''
+
+    const accountName = lead?.accountName || lead?.name || lead?.companyName || remarkData.accountName || ''
+    const accountOwnerId = lead?.ownerUserId || lead?.accountOwnerId || null
+    const accountOwnerName = lead?.accountOwnerName || lead?.ownerName || ''
+    const accountCreatedById = lead?.createdBy || null
+    const accountCreatedByName = lead?.createdByName || ''
+
+    let resolvedAccountOwnerEmail = lead?.accountOwnerEmail || lead?.ownerEmail || lead?.userEmail || ''
+    if (!resolvedAccountOwnerEmail || !resolvedAccountOwnerEmail.includes('@')) {
+      try {
+        const foundOwnerUser = await User.findOne({
+          $or: [
+            ...(accountOwnerId ? [{ legacyId: toNumber(accountOwnerId) }, { id: toNumber(accountOwnerId) }] : []),
+            ...(lead?.accountOwnerCode || lead?.ownerCode ? [{ ownerCode: String(lead?.accountOwnerCode || lead?.ownerCode).trim() }] : []),
+            ...(accountOwnerName ? [{ name: String(accountOwnerName).trim() }] : []),
+          ].filter(Boolean),
+        }).lean()
+        resolvedAccountOwnerEmail = foundOwnerUser?.email || lead?.userEmail || lead?.contactEmail || lead?.email || ''
+      } catch (e) {
+        resolvedAccountOwnerEmail = lead?.userEmail || lead?.email || ''
+      }
+    }
+
+    let resolvedAccountCreatedByEmail = lead?.createdByEmail || ''
+    if (!resolvedAccountCreatedByEmail || !resolvedAccountCreatedByEmail.includes('@')) {
+      try {
+        const foundCreatorUser = await User.findOne({
+          $or: [
+            ...(accountCreatedById ? [{ legacyId: toNumber(accountCreatedById) }, { id: toNumber(accountCreatedById) }] : []),
+            ...(accountCreatedByName ? [{ name: String(accountCreatedByName).trim() }] : []),
+            ...(lead?.createdUserBy ? [{ username: String(lead.createdUserBy).trim() }] : []),
+          ].filter(Boolean),
+        }).lean()
+        resolvedAccountCreatedByEmail = foundCreatorUser?.email || lead?.userEmail || ''
+      } catch (e) {
+        resolvedAccountCreatedByEmail = lead?.userEmail || ''
+      }
+    }
+
+    const dealName = deal?.dealName || deal?.title || deal?.name || remarkData.dealName || ''
+    const dealOwnerId = deal?.ownerUserId || deal?.dealOwnerId || null
+    const dealOwnerName = deal?.dealOwnerName || deal?.ownerName || ''
+    let resolvedDealOwnerEmail = deal?.dealOwnerEmail || deal?.ownerEmail || deal?.contactEmail || ''
+    if (!resolvedDealOwnerEmail || !resolvedDealOwnerEmail.includes('@')) {
+      try {
+        const foundDealOwner = await User.findOne({
+          $or: [
+            ...(dealOwnerId ? [{ legacyId: toNumber(dealOwnerId) }, { id: toNumber(dealOwnerId) }] : []),
+            ...(dealOwnerName ? [{ name: String(dealOwnerName).trim() }] : []),
+          ].filter(Boolean),
+        }).lean()
+        resolvedDealOwnerEmail = foundDealOwner?.email || deal?.email || ''
+      } catch (e) {
+        resolvedDealOwnerEmail = deal?.email || ''
+      }
+    }
+    const dealCreatedById = deal?.createdBy || null
+    const dealCreatedByName = deal?.createdByName || ''
+    let resolvedDealCreatedByEmail = deal?.createdByEmail || ''
+    if (!resolvedDealCreatedByEmail || !resolvedDealCreatedByEmail.includes('@')) {
+      try {
+        const foundDealCreator = await User.findOne({
+          $or: [
+            ...(dealCreatedById ? [{ legacyId: toNumber(dealCreatedById) }, { id: toNumber(dealCreatedById) }] : []),
+            ...(dealCreatedByName ? [{ name: String(dealCreatedByName).trim() }] : []),
+          ].filter(Boolean),
+        }).lean()
+        resolvedDealCreatedByEmail = foundDealCreator?.email || ''
+      } catch (e) {
+        resolvedDealCreatedByEmail = ''
+      }
+    }
 
     const remark = await Remark.create({
       legacyId,
       accountId: accountId ? toNumber(accountId) : null,
+      accountName,
       dealId: dealId ? toNumber(dealId) : null,
+      dealName,
       relatedEntityId: String(dealId || accountId || ''),
       relatedEntityType: relatedEntityType || (dealId ? 'deal' : 'account'),
       category,
       content,
       startTime: startTime || null,
       endTime: endTime || null,
-      remarkDate: remarkDate || null,
+      remarkDate: remarkDate || now.toISOString().slice(0, 10),
       callLogTime: callLogTime || null,
-      createdBy,
+      createdBy: toNumber(createdBy) || actor.id,
+      createdByName,
+      createdByEmail,
+      accountOwnerId,
+      accountOwnerName,
+      accountOwnerEmail: resolvedAccountOwnerEmail,
+      accountCreatedById,
+      accountCreatedByName,
+      accountCreatedByEmail: resolvedAccountCreatedByEmail,
+      dealOwnerId,
+      dealOwnerName,
+      dealOwnerEmail: resolvedDealOwnerEmail,
+      dealCreatedById,
+      dealCreatedByName,
+      dealCreatedByEmail: resolvedDealCreatedByEmail,
       companyId,
       ownerUserId: actor.id,
-      projectId: lead?.projectId || null,
-      workflowId: remarkData.workflowId || lead?.workflowId || null,
-      assignmentMode: assignment.mode,
-      assignedUserIds: assignment.userIds,
+      projectId: lead?.projectId || deal?.projectId || null,
+      workflowId: remarkData.workflowId || lead?.workflowId || deal?.workflowId || null,
+      assignmentMode: assignment.mode || 'user',
+      assignedUserIds: assignment.userIds.length > 0 ? assignment.userIds : [String(actor.id)],
       assignedUserTypes: assignment.userTypes,
       assignedUserGroups: assignment.userGroups,
       createdAt: now,
       updatedAt: now,
     })
+
+    if (reminder && reminder.date) {
+      try {
+        const mainReminderLegacyId = await getNextLegacyId('reminders')
+        await MainReminder.create({
+          legacyId: mainReminderLegacyId,
+          title: `Followup ${reminder.actionType || 'Call'} - ${accountName || dealName || 'Record'}`,
+          message: reminder.note || content,
+          remindAt: new Date(`${reminder.date}T${reminder.time || '09:00'}:00`),
+          reminderDate: reminder.date,
+          reminderTime: reminder.time || '09:00',
+          status: 'scheduled',
+          relatedEntityType: dealId ? 'deal' : 'account',
+          relatedEntityId: String(dealId || accountId || ''),
+          assignedTo: reminder.assignedTo ? toNumber(reminder.assignedTo) : actor.id,
+          createdBy: toNumber(createdBy) || actor.id,
+          companyId,
+          data: {
+            actionType: reminder.actionType || 'followup',
+            priority: reminder.priority || 'medium',
+            followupType: reminder.followupType || 'phone',
+            note: reminder.note || '',
+            remarkId: legacyId,
+            dealId: dealId ? toNumber(dealId) : null,
+            accountId: accountId ? toNumber(accountId) : null,
+          },
+          createdAt: now,
+          updatedAt: now,
+        })
+      } catch (remErr) {
+        console.error('Failed to create MainReminder document:', remErr)
+      }
+    }
 
     const reminderUserRefs = reminder ? normalizeReminderUserRefs(reminder) : []
 

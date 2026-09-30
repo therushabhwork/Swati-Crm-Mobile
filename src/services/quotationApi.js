@@ -117,6 +117,15 @@ export const quotationApi = {
     return response.data
   },
 
+  async uploadQuotationFile(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await apiClient.post('/quotations/upload-file', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  },
+
   async frontendDeleteQuotation(id) {
     const response = await apiClient.patch(`/quotations/${encodeURIComponent(id)}/frontend-delete`)
     return response.data
